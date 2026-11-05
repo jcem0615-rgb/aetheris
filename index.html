@@ -1205,6 +1205,32 @@
             document.getElementById('fs-battle-log').innerText = msg;
         }
 
+        function handleVictory() {
+            const reward = currentDuelBet * 2;
+            const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
+            
+            currentUser.balance += reward;
+            currentUser.wins += 1;
+            currentUser.xp += earnedXp;
+
+            evaluateRankAndUnlocks();
+            updateWalletDisplay();
+
+            logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
+            alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})! Check Roster for unlocked champions.`);
+            surrenderDuel();
+        }
+
+        function handleDefeat() {
+            const consolationXp = 15;
+            currentUser.xp += consolationXp;
+            evaluateRankAndUnlocks();
+
+            logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
+            alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP.`);
+            surrenderDuel();
+        }
+
         function playCard(index) {
             if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
             const card = currentHand[index];
@@ -1245,20 +1271,10 @@
             renderHandCards();
             updateDuelUI();
 
+            // IMMEDIATE VICTORY CHECK
             if (duelState.enemyHp <= 0) {
-                const reward = currentDuelBet * 2;
-                const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
-                
-                currentUser.balance += reward;
-                currentUser.wins += 1;
-                currentUser.xp += earnedXp;
-
-                evaluateRankAndUnlocks();
-                updateWalletDisplay();
-
-                logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
-                alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})! Check Roster for unlocked champions.`);
-                surrenderDuel();
+                handleVictory();
+                return;
             }
         }
 
@@ -1272,6 +1288,14 @@
                 logDuel(`[Effect]: Enemy took ${duelState.enemyPoison} poison damage.`);
             }
 
+            updateDuelUI();
+
+            // IMMEDIATE VICTORY CHECK AFTER POISON
+            if (duelState.enemyHp <= 0) {
+                handleVictory();
+                return;
+            }
+
             setTimeout(() => {
                 if (duelState.enemyHp > 0) {
                     let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 10 : 14;
@@ -1280,19 +1304,17 @@
                     logDuel(`[Opponent]: Boss attacks for ${enemyDmg} damage!`);
                 }
                 
+                updateDuelUI();
+
+                // IMMEDIATE DEFEAT CHECK AFTER ENEMY ATTACK
+                if (duelState.playerHp <= 0) {
+                    handleDefeat();
+                    return;
+                }
+
                 duelState.playerAp = 3;
                 shuffleAndDrawHand();
                 updateDuelUI();
-
-                if (duelState.playerHp <= 0) {
-                    const consolationXp = 15;
-                    currentUser.xp += consolationXp;
-                    evaluateRankAndUnlocks();
-
-                    logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
-                    alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP.`);
-                    surrenderDuel();
-                }
             }, 800);
         }
 
@@ -1489,7 +1511,7 @@
         function rejectWithdrawal(id, email, amt) {
             const targetUser = registeredAccounts.find(acc => acc.email === email);
             if(targetUser) targetUser.balance += amt;
-            if(currentUser && currentUser.email === email) updateWalletDisplay(); // Fixed function name here
+            if(currentUser && currentUser.email === email) updateWalletDisplay();
             pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
             renderOwnerQueues();
             alert('Withdrawal rejected and refunded.');
