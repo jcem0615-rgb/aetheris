@@ -1120,6 +1120,9 @@
 
         function openBettingModal() {
             document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.remove('hidden');
         }
 
@@ -1148,9 +1151,9 @@
             currentUser.balance -= amount;
             currentDuelBet = amount;
             updateWalletDisplay();
-            
-            // Close modal immediately
-            closeModal();
+
+            // Hide the modal backdrop immediately and reveal battlefield view
+            document.getElementById('modal-backdrop').classList.add('hidden');
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
 
