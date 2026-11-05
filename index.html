@@ -446,24 +446,24 @@
         </div>
 
         <!-- PVP Bet Selection Modal -->
-        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
+        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center" onclick="event.stopPropagation()">
             <h3 class="font-cinzel text-lg font-bold text-amber-400">SELECT RANKED PVP WAGER</h3>
             <p class="text-xs text-slate-400">Choose your match stake. Winner takes double the bet and earns Rank XP!</p>
-            <div class="grid grid-cols-3 gap-2 pt-2" id="wager-buttons-grid">
-                <button data-wager="50" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱50</button>
-                <button data-wager="100" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱100</button>
-                <button data-wager="200" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱200</button>
-                <button data-wager="500" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱500</button>
-                <button data-wager="1000" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2 cursor-pointer">₱1,000</button>
+            <div class="grid grid-cols-3 gap-2 pt-2">
+                <button type="button" onclick="startDuelWithBet(50)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱50</button>
+                <button type="button" onclick="startDuelWithBet(100)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱100</button>
+                <button type="button" onclick="startDuelWithBet(200)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱200</button>
+                <button type="button" onclick="startDuelWithBet(500)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱500</button>
+                <button type="button" onclick="startDuelWithBet(1000)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2 cursor-pointer">₱1,000</button>
             </div>
-            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2">Cancel</button>
+            <button type="button" onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2 cursor-pointer">Cancel</button>
         </div>
 
         <!-- Receipt Preview Modal -->
-        <div id="modal-receipt" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg space-y-4 hidden text-center">
+        <div id="modal-receipt" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg space-y-4 hidden text-center" onclick="event.stopPropagation()">
             <h3 class="font-cinzel text-lg font-bold text-amber-400">Payment Receipt Inspection</h3>
             <div id="receipt-preview-container" class="max-h-80 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center p-2"></div>
-            <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Preview</button>
+            <button type="button" onclick="closeModal()" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl cursor-pointer">Close Preview</button>
         </div>
     </div>
 
@@ -777,18 +777,6 @@
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
                 role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
             });
-
-            // Clean single-bind event listener on the wager buttons grid to prevent double-firing or missing clicks
-            const wagerGrid = document.getElementById('wager-buttons-grid');
-            if (wagerGrid) {
-                wagerGrid.addEventListener('click', (e) => {
-                    const btn = e.target.closest('button[data-wager]');
-                    if (btn) {
-                        const amount = parseInt(btn.getAttribute('data-wager'), 10);
-                        startDuelWithBet(amount);
-                    }
-                });
-            }
         });
 
         function togglePass(inputId, btn) {
@@ -853,7 +841,7 @@
                         </div>
                     </div>
                     <div class="text-[11px] text-amber-400 font-mono">Stats: HP: ${h.stats.hp} | ATK: ${h.stats.atk} | DEF: ${h.stats.def} | SPD: ${h.stats.spd}</div>
-                    <button onclick="pickStarterHero('${h.id}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Choose Free Starter</button>
+                    <button type="button" onclick="pickStarterHero('${h.id}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer">Choose Free Starter</button>
                 </div>
             `).join('');
         }
@@ -995,11 +983,11 @@
                 if (isActive) {
                     actionBtn = `<span class="px-6 py-2.5 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/40">Active Champion</span>`;
                 } else if (isUnlocked) {
-                    actionBtn = `<button onclick="switchActiveHero('${h.id}')" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Equip Champion</button>`;
+                    actionBtn = `<button type="button" onclick="switchActiveHero('${h.id}')" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Equip Champion</button>`;
                 } else if (h.isStarter) {
-                    actionBtn = `<button onclick="buyBasicHero('${h.id}', ${h.price})" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Acquire for ₱${h.price}</button>`;
+                    actionBtn = `<button type="button" onclick="buyBasicHero('${h.id}', ${h.price})" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Acquire for ₱${h.price}</button>`;
                 } else if (meetsReqs) {
-                    actionBtn = `<button onclick="claimRankedHero('${h.id}')" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Claim Unlock</button>`;
+                    actionBtn = `<button type="button" onclick="claimRankedHero('${h.id}')" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Claim Unlock</button>`;
                 } else {
                     actionBtn = `<span class="text-xs text-amber-400 font-mono text-right block">Requires ${h.requiredWins} Wins & ${h.requiredXp} XP<br><span class="text-[10px] text-slate-500">(Your Stats: ${currentUser.wins} Wins, ${currentUser.xp} XP)</span></span>`;
                 }
@@ -1408,8 +1396,8 @@
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                         <div><span class="font-bold text-amber-400">Reset Request: ${r.name}</span><div class="text-slate-400">Email: ${r.email}</div></div>
                         <div class="space-x-2">
-                            <button onclick="approveReset(${r.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
-                            <button onclick="rejectReset(${r.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
+                            <button type="button" onclick="approveReset(${r.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg cursor-pointer">Approve</button>
+                            <button type="button" onclick="rejectReset(${r.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg cursor-pointer">Reject</button>
                         </div>
                     </div>
                 `).join('');
@@ -1424,9 +1412,9 @@
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                         <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.nickname})</span><div class="text-slate-400">Email: ${d.email} | Ref: ${d.ref} | Date: ${d.date}</div></div>
                         <div class="space-x-2 flex items-center">
-                            <button onclick="viewReceipt('${d.receipt}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg">View Receipt</button>
-                            <button onclick="approveDeposit(${d.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
-                            <button onclick="rejectDeposit(${d.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
+                            <button type="button" onclick="viewReceipt('${d.receipt}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg cursor-pointer">View Receipt</button>
+                            <button type="button" onclick="approveDeposit(${d.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg cursor-pointer">Approve</button>
+                            <button type="button" onclick="rejectDeposit(${d.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg cursor-pointer">Reject</button>
                         </div>
                     </div>
                 `).join('');
@@ -1441,8 +1429,8 @@
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                         <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname}</span><div class="text-slate-400">To: ${w.account} (${w.name}) | Date: ${w.date}</div></div>
                         <div class="space-x-2">
-                            <button onclick="approveWithdrawal(${w.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
-                            <button onclick="rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
+                            <button type="button" onclick="approveWithdrawal(${w.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg cursor-pointer">Approve</button>
+                            <button type="button" onclick="rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg cursor-pointer">Reject</button>
                         </div>
                     </div>
                 `).join('');
