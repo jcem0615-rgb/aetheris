@@ -1,233 +1,1438 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hero Icon System Matrix</title>
-  <style>
-    :root {
-      --bg-dark: #0b0c10;
-      --border-gold: #c5a059;
-      --fire-glow: #ff4500;
-      --wind-glow: #00ffcc;
-      --iron-glow: #c0c0c0;
-      --shadow-glow: #8a2be2;
-      --electric-glow: #00bfff;
-      --earth-glow: #8b4513;
-      --time-glow: #ffd700;
-      --light-glow: #fffacd;
-      --void-glow: #4b0082;
-      --blood-glow: #b22222;
-      --cosmic-glow: #1e90ff;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      font-family: sans-serif;
-      color: #fff;
-    }
-
-    .matrix-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 20px;
-      max-width: 800px;
-      padding: 20px;
-      margin-bottom: 30px;
-    }
-
-    .hero-icon-container {
-      width: 120px;
-      height: 120px;
-      position: relative;
-      border-radius: 50%;
-      border: 4px solid var(--border-gold);
-      background: radial-gradient(circle, #1f2833 0%, #0b0c10 100%);
-      box-shadow: 0 0 20px rgba(197, 160, 89, 0.3);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-
-    .hero-icon-container:hover {
-      transform: scale(1.05);
-    }
-
-    /* Target SVG styles inside the ring wrapper */
-    .hero-icon-container svg {
-      width: 55%;
-      height: 55%;
-      fill: #ffffff;
-      transition: fill 0.3s ease, filter 0.3s ease;
-    }
-
-    .hero-label {
-      font-size: 10px;
-      margin-top: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #c5a059;
-      font-weight: bold;
-    }
-
-    /* Dynamic Archetype Modifier States */
-    .hero-icon-container.pyra { box-shadow: 0 0 25px var(--fire-glow); border-color: #ff6347; }
-    .hero-icon-container.pyra svg { fill: #ff6347; filter: drop-shadow(0 0 8px var(--fire-glow)); }
-
-    .hero-icon-container.sylph { box-shadow: 0 0 25px var(--wind-glow); border-color: #00ffcc; }
-    .hero-icon-container.sylph svg { fill: #00ffcc; filter: drop-shadow(0 0 8px var(--wind-glow)); }
-
-    .hero-icon-container.valen { box-shadow: 0 0 25px rgba(255,255,255,0.4); border-color: #e0e0e0; }
-    .hero-icon-container.valen svg { fill: #e0e0e0; filter: drop-shadow(0 0 8px rgba(255,255,255,0.5)); }
-
-    .hero-icon-container.nyx { box-shadow: 0 0 25px var(--shadow-glow); border-color: #ba55d3; }
-    .hero-icon-container.nyx svg { fill: #ba55d3; filter: drop-shadow(0 0 8px var(--shadow-glow)); }
-
-    .hero-icon-container.storm-knight { box-shadow: 0 0 25px var(--electric-glow); border-color: #00bfff; }
-    .hero-icon-container.storm-knight svg { fill: #00bfff; filter: drop-shadow(0 0 8px var(--electric-glow)); }
-
-    .hero-icon-container.ironclad-titan { box-shadow: 0 0 25px var(--earth-glow); border-color: #cd853f; }
-    .hero-icon-container.ironclad-titan svg { fill: #cd853f; filter: drop-shadow(0 0 8px var(--earth-glow)); }
-
-    .hero-icon-container.chrono-warden { box-shadow: 0 0 25px var(--time-glow); border-color: #ffd700; }
-    .hero-icon-container.chrono-warden svg { fill: #ffd700; filter: drop-shadow(0 0 8px var(--time-glow)); }
-
-    .hero-icon-container.sky-valkyrie { box-shadow: 0 0 25px #fff; border-color: #fffacd; }
-    .hero-icon-container.sky-valkyrie svg { fill: #fffacd; filter: drop-shadow(0 0 8px #fff); }
-
-    .hero-icon-container.void-necromancer { box-shadow: 0 0 25px var(--void-glow); border-color: #9400d3; }
-    .hero-icon-container.void-necromancer svg { fill: #9400d3; filter: drop-shadow(0 0 8px var(--void-glow)); }
-
-    .hero-icon-container.blood-berserker { box-shadow: 0 0 25px var(--blood-glow); border-color: #ff0000; }
-    .hero-icon-container.blood-berserker svg { fill: #ff0000; filter: drop-shadow(0 0 8px var(--blood-glow)); }
-
-    .hero-icon-container.astral-archmage { box-shadow: 0 0 25px var(--cosmic-glow); border-color: #4169e1; }
-    .hero-icon-container.astral-archmage svg { fill: #00bfff; filter: drop-shadow(0 0 8px var(--cosmic-glow)); }
-
-    /* Hidden definitions block */
-    .svg-library { display: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aetheris Duel Arena</title>
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #07090e; color: #f3f4f6; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .glow-gold { text-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+        .glow-box { box-shadow: 0 0 25px rgba(59, 130, 246, 0.15); }
+        .card-hover { transition: all 0.2s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3); }
+        .fantasy-frame { border: 2px solid #64748b; box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.6); }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+    </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
 
-  <!-- SVGs Component Library Panel -->
-  <svg class="svg-library">
-    <defs>
-      <!-- Pyra (Fire Mage) -->
-      <g id="icon-pyra">
-        <path d="M12 2C6.5 2 2 6.5 2 12c0 4.4 2.9 8.2 7 9.5-.1-.8-.1-1.6.1-2.4C6.6 18.2 5 15.3 5 12c0-3.9 3.1-7 7-7s7 3.1 7 7c0 3.3-1.6 6.2-4.1 7.1.2.8.2 1.6.1 2.4 4.1-1.3 7-5.1 7-9.5 0-5.5-4.5-10-10-10zm0 4c-3.3 0-6 2.7-6 6 0 1.8.8 3.4 2 4.5.3-.8.8-1.5 1.5-2-1-1-1.5-2.4-1.5-4 0-2.2 1.8-4 4-4s4 1.8 4 4c0 1.6-.5 3-1.5 4 .7.5 1.2 1.2 1.5 2 1.2-1.1 2-2.7 2-4.5 0-3.3-2.7-6-6-6z"/>
-      </g>
-      <!-- Sylph (Wind Ranger) -->
-      <g id="icon-sylph">
-        <path d="M21 2l-9.5 9.5-3.5-3.5L2 14l4 4-4 4 2 2 4-4 4 4 6-6-3.5-3.5L21 2zm-2 2l-7 7-1.5-1.5 7-7H19z"/>
-      </g>
-      <!-- Valen (Iron Guardian) -->
-      <g id="icon-valen">
-        <path d="M12 2L4 5v6c0 5.5 3.8 10.7 8 12 4.2-1.3 8-6.5 8-12V5l-8-3zm6 9c0 4.3-3 8.3-6 9.5-3-1.2-6-5.2-6-9.5V6.4l6-2.2 6 2.2V11z"/>
-      </g>
-      <!-- Nyx (Shadow Assassin) -->
-      <g id="icon-nyx">
-        <path d="M21.9 2.1c-.3-.3-.8-.3-1.1 0l-4.2 4.2c-.8-.4-1.8-.4-2.6.1L4.7 15.7c-.4.4-.6 1-.6 1.6V20c0 .6.4 1 1 1h2.7c.6 0 1.1-.2 1.6-.6l9.3-9.3c.5-.8.5-1.8.1-2.6l4.2-4.2c.3-.3.3-.8 0-1.2zM7.3 19H6v-1.3l8.5-8.5 1.3 1.3L7.3 19z"/>
-      </g>
-      <!-- Storm Knight (Electric Knight) -->
-      <g id="icon-storm-knight">
-        <path d="M7 2v7h4v2H7v11l10-9h-5v-2h5L7 2z"/>
-      </g>
-      <!-- Ironclad Titan (Earth Titan) -->
-      <g id="icon-ironclad-titan">
-        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
-      </g>
-      <!-- Chrono Warden (Time Mage) -->
-      <g id="icon-chrono-warden">
-        <path d="M19 3.5c0-.8-.7-1.5-1.5-1.5h-11c-.8 0-1.5.7-1.5 1.5v3c0 2.2 1.4 4.1 3.4 4.8-.4.3-.8.6-1.1 1-1.4 1.6-2.3 3.6-2.3 5.9 0 2.6 2.1 4.8 4.8 4.8h1.2v-2h-1.2c-1.5 0-2.8-1.3-2.8-2.8 0-2 2.3-4.5 4.3-6.5l.7-.7.7.7c2 2 4.3 4.5 4.3 6.5 0 1.5-1.3 2.8-2.8 2.8h-1.2v2h1.2c2.6 0 4.8-2.1 4.8-4.8 0-2.3-.9-4.3-2.3-5.9-.3-.4-.7-.7-1.1-1 2-0.7 3.4-2.6 3.4-4.8v-3zm-2 3H7v-1h10v1z"/>
-      </g>
-      <!-- Sky Valkyrie (Light Warrior) -->
-      <g id="icon-sky-valkyrie">
-        <path d="M12 2L2 22h5l2-4h6l2 4h5L12 2zm-1 12l2-4 2 4H11z"/>
-      </g>
-      <!-- Void Necromancer (Void Sorcerer) -->
-      <g id="icon-void-necromancer">
-        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-3.3 0-6-2.7-6-6 0-1.5.5-2.8 1.4-3.9l1.4 1.4c-.5.7-.8 1.6-.8 2.5 0 2.2 1.8 4 4 4s4-1.8 4-4c0-.9-.3-1.8-.8-2.5l1.4-1.4c.9 1.1 1.4 2.4 1.4 3.9 0 3.3-2.7 6-6 6zm0-10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
-      </g>
-      <!-- Blood Berserker (Blood Brawler) -->
-      <g id="icon-blood-berserker">
-        <path d="M20.7 5.3l-4-4c-.4-.4-1-.4-1.4 0l-10 10c-.2.2-.3.4-.3.7v4c0 .6.4 1 1 1h4c.3 0 .5-.1.7-.3l10-10c.4-.4.4-1 0-1.4zM10.6 15H8v-2.6l7.5-7.5 2.6 2.6L10.6 15zM4 20h16v2H4v-2z"/>
-      </g>
-      <!-- Astral Archmage (Cosmic Sorcerer) -->
-      <g id="icon-astral-archmage">
-        <path d="M12 2L1 21h22L12 2zm0 4.3l6.7 11.7H5.3L12 6.3zm0 3.7c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-      </g>
-    </defs>
-  </svg>
+    <!-- Top Navigation Bar -->
+    <header id="main-header" class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div>
+                <h1 class="font-cinzel font-bold text-lg tracking-wider text-amber-400">AETHERIS DUEL</h1>
+                <p class="text-xs text-slate-400">Secure PWA Arena</p>
+            </div>
+        </div>
 
-  <h1>Hero Icon System Matrix</h1>
-  <p>Click any icon to activate its archetype state dynamically.</p>
+        <div class="flex items-center space-x-3">
+            <!-- PWA Install Button (Hidden by default until browser triggers prompt) -->
+            <button id="btn-install-pwa" onclick="installPWA()" class="hidden items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Install App</span>
+            </button>
 
-  <!-- Interactive Matrix Grid Showcase -->
-  <div class="matrix-grid">
-    <div class="hero-icon-container pyra" onclick="setHeroIcon('pyra', 'icon-pyra', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-pyra"></use></svg>
-      <span class="hero-label">Pyra</span>
-    </div>
-    <div class="hero-icon-container sylph" onclick="setHeroIcon('sylph', 'icon-sylph', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-sylph"></use></svg>
-      <span class="hero-label">Sylph</span>
-    </div>
-    <div class="hero-icon-container valen" onclick="setHeroIcon('valen', 'icon-valen', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-valen"></use></svg>
-      <span class="hero-label">Valen</span>
-    </div>
-    <div class="hero-icon-container nyx" onclick="setHeroIcon('nyx', 'icon-nyx', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-nyx"></use></svg>
-      <span class="hero-label">Nyx</span>
-    </div>
-    <div class="hero-icon-container storm-knight" onclick="setHeroIcon('storm-knight', 'icon-storm-knight', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-storm-knight"></use></svg>
-      <span class="hero-label">Storm Knight</span>
-    </div>
-    <div class="hero-icon-container ironclad-titan" onclick="setHeroIcon('ironclad-titan', 'icon-ironclad-titan', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-ironclad-titan"></use></svg>
-      <span class="hero-label">Titan</span>
-    </div>
-    <div class="hero-icon-container chrono-warden" onclick="setHeroIcon('chrono-warden', 'icon-chrono-warden', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-chrono-warden"></use></svg>
-      <span class="hero-label">Chrono</span>
-    </div>
-    <div class="hero-icon-container sky-valkyrie" onclick="setHeroIcon('sky-valkyrie', 'icon-sky-valkyrie', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-sky-valkyrie"></use></svg>
-      <span class="hero-label">Valkyrie</span>
-    </div>
-    <div class="hero-icon-container void-necromancer" onclick="setHeroIcon('void-necromancer', 'icon-void-necromancer', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-void-necromancer"></use></svg>
-      <span class="hero-label">Void</span>
-    </div>
-    <div class="hero-icon-container blood-berserker" onclick="setHeroIcon('blood-berserker', 'icon-blood-berserker', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-blood-berserker"></use></svg>
-      <span class="hero-label">Berserker</span>
-    </div>
-    <div class="hero-icon-container astral-archmage" onclick="setHeroIcon('astral-archmage', 'icon-astral-archmage', this)">
-      <svg viewBox="0 0 24 24"><use xlink:href="#icon-astral-archmage"></use></svg>
-      <span class="hero-label">Archmage</span>
-    </div>
-  </div>
+            <div id="nav-wallet-container" class="hidden items-center space-x-2 bg-slate-900 border border-slate-700 rounded-full px-3 py-1">
+                <span class="text-xs text-slate-400">Wallet:</span>
+                <span id="nav-wallet" class="text-sm font-bold text-emerald-400">₱0.00</span>
+            </div>
+            <nav id="nav-menu" class="hidden space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                <button onclick="switchTab('hub')" id="btn-hub" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">Home</button>
+                <button onclick="switchTab('select')" id="btn-roster" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">Roster</button>
+                <button onclick="switchTab('owner')" id="btn-owner" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition hidden">Owner Portal</button>
+                <button onclick="logoutPlayer()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-500/10 transition">Logout</button>
+            </nav>
+        </div>
+    </header>
 
-  <script>
-    // Dynamic archetype switcher function
-    function setHeroIcon(heroClassName, iconIdString, element) {
-      // Optional interactive feedback or standalone switcher logic
-      console.log(`Activated Hero Class: ${heroClassName} with icon reference #${iconIdString}`);
-    }
-  </script>
+    <!-- Main Content Container -->
+    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6 space-y-6">
 
+        <!-- AUTH VIEW -->
+        <div id="view-auth" class="max-w-md mx-auto py-10 space-y-6">
+            <div class="text-center space-y-2">
+                <h2 class="font-cinzel text-3xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
+                <p class="text-xs text-slate-400">Secured with SHA-256 Hashing & Role Isolation</p>
+            </div>
+
+            <!-- Login Box -->
+            <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 glow-box">
+                <h3 class="font-cinzel text-lg font-bold text-white">Secure Sign In</h3>
+                <div class="space-y-3">
+                    <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <div class="relative">
+                        <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <button type="button" onclick="togglePass('login-pass', this)" class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <button onclick="showAuthMode('register')" class="text-blue-400 hover:underline">Create Account</button>
+                    <button onclick="showAuthMode('forgot')" class="text-amber-400 hover:underline">Forgot Password?</button>
+                </div>
+                <button onclick="handleLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Sign In</button>
+                <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                    <div class="font-bold text-amber-400">Demo Accounts:</div>
+                    <div>👑 Owner: owner@logicgrid.com / owner123</div>
+                    <div>⚔️ Player: player@logicgrid.com / player123 (₱2,000 Balance)</div>
+                </div>
+            </div>
+
+            <!-- Register Box -->
+            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 glow-box hidden">
+                <h3 class="font-cinzel text-lg font-bold text-white">Create Player Account</h3>
+                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies to new account activation.</p>
+                <div class="space-y-3">
+                    <input type="text" id="reg-name" placeholder="Full Legal Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-nickname" placeholder="Player Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-phone" placeholder="Phone Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="email" id="reg-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 block">Birthday:</label>
+                        <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
+                        <button type="button" onclick="togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <button onclick="showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
+                </div>
+                <button onclick="handleRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Register & Pay ₱50 Fee</button>
+            </div>
+
+            <!-- Forgot Password Box -->
+            <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 glow-box hidden">
+                <h3 class="font-cinzel text-lg font-bold text-white">Request Password Reset</h3>
+                <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request to the owner.</p>
+                <div class="space-y-3">
+                    <input type="email" id="forgot-email" placeholder="Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 block">Registered Birthday:</label>
+                        <input type="date" id="forgot-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <button onclick="showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
+                </div>
+                <button onclick="submitResetRequest()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Submit Reset Request</button>
+            </div>
+        </div>
+
+        <!-- Initial Starter Hero Selection View -->
+        <div id="view-starter-pick" class="max-w-2xl mx-auto py-8 space-y-6 hidden">
+            <div class="text-center space-y-2">
+                <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-amber-400 glow-gold">CHOOSE YOUR STARTER CHAMPION</h2>
+                <p class="text-xs text-slate-400">Select <strong class="text-amber-400">only 1</strong> of the 4 basic foundational heroes below for free. Other basic heroes can be acquired later via payment.</p>
+            </div>
+            <div id="starter-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Force Change Password View -->
+        <div id="view-force-reset" class="max-w-md mx-auto py-16 space-y-4 hidden">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 glow-box">
+                <h3 class="font-cinzel text-lg font-bold text-amber-400">Force Password Change</h3>
+                <p class="text-xs text-slate-400">Your password reset request was approved by the owner. Please verify your identity and enter a new password.</p>
+                <div class="space-y-3">
+                    <input type="email" id="force-email" placeholder="Confirm Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 block">Confirm Birthday:</label>
+                        <input type="date" id="force-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="force-newpass" placeholder="New Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <button type="button" onclick="togglePass('force-newpass', this)" class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
+                </div>
+                <button onclick="executeForceReset()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Update Password & Login</button>
+            </div>
+        </div>
+
+        <!-- Hero Roster & Rank Unlocks View -->
+        <div id="view-select" class="hidden space-y-4">
+            <div class="text-center max-w-lg mx-auto mb-6">
+                <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANK PROGRESSION</h2>
+                <p class="text-slate-400 text-xs">Acquire additional basic heroes via wallet balance, or advance your rank through duels to unlock advanced champions and bosses!</p>
+                <div class="mt-3 inline-block bg-slate-900 border border-amber-500/40 rounded-xl px-4 py-3 text-xs space-y-2">
+                    <div class="flex items-center justify-between space-x-6">
+                        <span>Rank Tier: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
+                        <span>Rank XP: <strong id="player-xp-badge" class="text-emerald-400">0 / 100</strong></span>
+                        <span>Wins: <strong id="player-wins-badge" class="text-blue-400">0</strong></span>
+                    </div>
+                    <!-- XP Progress Bar -->
+                    <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div id="player-xp-bar" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="hero-cards-container" class="space-y-3"></div>
+        </div>
+
+        <!-- Player Hub View -->
+        <div id="view-hub" class="hidden space-y-6">
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between glow-box">
+                <div class="flex items-center space-x-4">
+                    <!-- Active Hero Canva Icon Badge -->
+                    <div id="active-hero-avatar" class="w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
+                        <img id="active-hero-img-el" src="" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span id="player-nickname-badge" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">ShadowStriker</span>
+                            <span id="hub-rank-badge" class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
+                        </div>
+                        <h2 id="active-hero-name" class="font-cinzel text-xl font-bold text-white">PYRA</h2>
+                        <p class="text-xs text-slate-400">Active Champion • Ready for Ranked Duels</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="openModal('topup')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow">+ Top-Up</button>
+                    <button onclick="openModal('withdraw')" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs rounded-xl shadow">Withdraw</button>
+                </div>
+            </div>
+
+            <!-- Owner Payment QR Banner for Players -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <div>
+                    <h3 class="font-cinzel font-bold text-amber-400 text-sm">OFFICIAL OWNER PAYMENT CHANNELS</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Scan the QR code or send funds to the official e-wallet accounts below before submitting a top-up request.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center space-x-4">
+                        <div id="player-gcash-qr" class="w-20 h-20 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
+                        <div>
+                            <span class="text-xs font-bold text-blue-400 block mb-1">GCASH PAYMENT</span>
+                            <span id="display-gcash-num" class="text-xs font-mono font-bold text-white block">0912-345-6789</span>
+                            <span id="display-gcash-name" class="text-[11px] text-slate-400 block">John Carlo M.</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center space-x-4">
+                        <div id="player-maya-qr" class="w-20 h-20 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
+                        <div>
+                            <span class="text-xs font-bold text-teal-400 block mb-1">MAYA PAYMENT</span>
+                            <span id="display-maya-num" class="text-xs font-mono font-bold text-white block">0918-987-6543</span>
+                            <span id="display-maya-name" class="text-[11px] text-slate-400 block">Logicgrid Hub</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div onclick="openBettingModal()" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-5 cursor-pointer card-hover">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-3">⚔</div>
+                    <h3 class="font-cinzel font-bold text-white text-base">RANKED PVP DUEL</h3>
+                    <p class="text-xs text-slate-400 mt-1">Select bet stake (₱50-₱1000) and win matches to gain Rank XP and unlock advanced heroes.</p>
+                </div>
+                <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 cursor-pointer card-hover">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-3">🛡</div>
+                    <h3 class="font-cinzel font-bold text-white text-base">HERO ROSTER & RANKS</h3>
+                    <p class="text-xs text-slate-400 mt-1">Acquire basic heroes or inspect rank unlock requirements.</p>
+                </div>
+                <div onclick="alert('P2P Room Code created! Share code with friend.')" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 cursor-pointer card-hover">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-3">🗝</div>
+                    <h3 class="font-cinzel font-bold text-white text-base">P2P ROOM DUEL</h3>
+                    <p class="text-xs text-slate-400 mt-1">Create private room codes to duel real players.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Owner Portal View -->
+        <div id="view-owner" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="font-cinzel text-xl font-bold text-amber-400">OWNER ADMIN PORTAL</h2>
+                    <span class="text-xs bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30">Secure Admin Mode</span>
+                </div>
+
+                <!-- Date Picker Filter & Metrics Summary -->
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
+                        <div class="flex items-center space-x-2 text-xs">
+                            <span class="text-slate-400">Filter Date:</span>
+                            <input type="date" id="filter-date" onchange="renderOwnerQueues()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white">
+                            <button onclick="document.getElementById('filter-date').value=''; renderOwnerQueues();" class="px-2 py-1 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700">Clear</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 pt-2">
+                        <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-center">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Total Approved Top-Ups</span>
+                            <span id="metric-total-deposits" class="text-lg font-bold text-emerald-400">₱0.00</span>
+                        </div>
+                        <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-center">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Total Approved Withdrawals</span>
+                            <span id="metric-total-withdrawals" class="text-lg font-bold text-amber-400">₱0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Owner Account & QR Upload Setup -->
+                <div class="space-y-3">
+                    <h3 class="font-cinzel text-sm font-bold text-white">Merchant E-Wallet Credentials & QR Codes</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                            <span class="text-xs font-bold text-blue-400 block">GCash Account & QR Setup</span>
+                            <input type="text" id="input-gcash-num" placeholder="Account Number" value="0912-345-6789" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+                            <input type="text" id="input-gcash-name" placeholder="Account Name" value="John Carlo M." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+                            <input type="file" id="input-gcash-qr" accept="image/*" onchange="handleQRUpload(event, 'gcash')" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
+                            <button onclick="saveOwnerDetails()" class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Save GCash Settings</button>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                            <span class="text-xs font-bold text-teal-400 block">Maya Account & QR Setup</span>
+                            <input type="text" id="input-maya-num" placeholder="Account Number" value="0918-987-6543" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+                            <input type="text" id="input-maya-name" placeholder="Account Name" value="Logicgrid Hub" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+                            <input type="file" id="input-maya-qr" accept="image/*" onchange="handleQRUpload(event, 'maya')" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
+                            <button onclick="saveOwnerDetails()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg">Save Maya Settings</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password Reset Approvals -->
+                <div class="space-y-3">
+                    <h3 class="font-cinzel text-sm font-bold text-white">Password Reset Requests</h3>
+                    <div id="owner-reset-list" class="space-y-2">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>
+                    </div>
+                </div>
+
+                <!-- Top-Up Monitoring & Approvals -->
+                <div class="space-y-3">
+                    <h3 class="font-cinzel text-sm font-bold text-white">Top-Up Monitoring & Approvals</h3>
+                    <div id="owner-deposit-list" class="space-y-2">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending deposit requests.</div>
+                    </div>
+                </div>
+
+                <!-- Withdrawal Monitoring & Approvals -->
+                <div class="space-y-3">
+                    <h3 class="font-cinzel text-sm font-bold text-white">Withdrawal Monitoring & Approvals</h3>
+                    <div id="owner-withdraw-list" class="space-y-2">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawal requests.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FULL-SCREEN PVP AXIE-STYLE BATTLE ARENA VIEW -->
+    <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-4 md:p-8 hidden overflow-y-auto">
+        <!-- Top Battle Bar -->
+        <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 rounded-2xl px-6 py-3 backdrop-blur">
+            <div class="flex items-center space-x-3">
+                <h2 class="font-cinzel font-bold text-lg text-amber-400 glow-gold">AXIE ARENA BATTLE</h2>
+                <span id="fullscreen-bet-badge" class="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
+            </div>
+            <button onclick="surrenderDuel()" class="px-4 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl transition">Surrender / Exit</button>
+        </div>
+
+        <!-- Main Combat Stage -->
+        <div class="flex-1 my-4 bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-950 border border-slate-800/80 rounded-3xl p-6 md:p-10 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
+
+            <!-- Opponent Stage Area (Top) -->
+            <div class="flex flex-col items-center space-y-2 z-10">
+                <div class="w-48 bg-slate-950/90 border border-red-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <span class="text-red-400">CHRONO WARDEN</span>
+                        <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                        <div id="fs-enemy-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-400">
+                        <span>Armor: <strong id="fs-enemy-armor" class="text-blue-300">0</strong></span>
+                        <span>Poison: <strong id="fs-enemy-poison" class="text-purple-300">0</strong></span>
+                        <span>Debuff: <strong id="fs-enemy-debuff" class="text-amber-400">None</strong></span>
+                    </div>
+                </div>
+                <div id="fs-enemy-sprite" class="w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.2)] p-2">
+                    <img id="fs-enemy-img-el" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231e1b4b'/><circle cx='50' cy='50' r='30' fill='%23eab308' opacity='0.3'/><text x='50' y='55' font-size='14' fill='%23eab308' font-weight='bold' text-anchor='middle'>CHRONO</text></svg>" alt="Chrono Warden" class="w-20 h-20 object-cover rounded-xl shadow-lg">
+                    <span class="font-cinzel text-xs font-bold text-amber-300 mt-1">CHRONO</span>
+                </div>
+            </div>
+
+            <!-- Central Battle Log Floating Pill -->
+            <div class="self-center z-20 max-w-lg w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-4 py-2 text-center text-xs text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
+                [Arena]: Deck shuffled! Combat engaged. Choose your drawn tactical skills below.
+            </div>
+
+            <!-- Player Stage Area (Bottom) -->
+            <div class="flex flex-col items-center space-y-2 z-10">
+                <div id="fs-player-sprite" class="w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)] p-2">
+                    <img id="fs-player-img-el" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23450a0a'/><circle cx='50' cy='50' r='30' fill='%23ef4444' opacity='0.3'/><text x='50' y='55' font-size='14' fill='%23ef4444' font-weight='bold' text-anchor='middle'>PYRA</text></svg>" alt="Pyra" class="w-20 h-20 object-cover rounded-xl shadow-lg">
+                    <span class="font-cinzel text-xs font-bold text-amber-300 mt-1">PYRA</span>
+                </div>
+                <div class="w-48 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <span id="fs-player-name" class="text-blue-400">PLAYER</span>
+                        <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                        <div id="fs-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-400">
+                        <span>Armor: <strong id="fs-player-armor" class="text-blue-300">0</strong></span>
+                        <span>AP: <strong id="fs-player-ap" class="text-amber-400">3</strong>/3</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Shuffled Action Cards Deck -->
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 space-y-3 backdrop-blur">
+            <div class="flex justify-between items-center px-1">
+                <span class="font-cinzel text-xs font-bold text-amber-400">SHUFFLED SKILL DECK (Drawn 4 / Turn)</span>
+                <button onclick="endDuelTurn()" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">End Turn & Shuffle</button>
+            </div>
+            <!-- Dynamically Rendered Shuffled Hand Cards -->
+            <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <!-- Populated dynamically via JS shuffle -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <!-- Top-up Modal -->
+        <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden">
+            <h3 class="font-cinzel text-lg font-bold text-amber-400">Submit Top-Up Request</h3>
+            <p class="text-xs text-slate-400">Send payment to owner's official e-wallet, enter reference, and upload payment receipt screenshot.</p>
+            <div class="space-y-3">
+                <input type="number" id="topup-amount" placeholder="Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-400 block">Upload Payment Receipt:</label>
+                    <input type="file" id="topup-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-600 file:text-white">
+                </div>
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="submitTopUp()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl">Submit Request</button>
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Withdrawal Modal -->
+        <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden">
+            <h3 class="font-cinzel text-lg font-bold text-amber-400">Withdrawal Request Form</h3>
+            <p class="text-xs text-slate-400">Fill out your cash-out destination details below.</p>
+            <div class="space-y-3">
+                <input type="number" id="withdraw-amount" placeholder="Withdrawal Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <select id="withdraw-method" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <option value="GCash">GCash</option>
+                    <option value="Maya">Maya</option>
+                </select>
+                <input type="text" id="withdraw-account" placeholder="Account Number / Phone" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="text" id="withdraw-name" placeholder="Account Holder Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl">Submit Withdrawal</button>
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
+            </div>
+        </div>
+
+        <!-- PVP Bet Selection Modal -->
+        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
+            <h3 class="font-cinzel text-lg font-bold text-amber-400">SELECT RANKED PVP WAGER</h3>
+            <p class="text-xs text-slate-400">Choose your match stake. Winner takes double the bet and earns Rank XP!</p>
+            <div class="grid grid-cols-3 gap-2 pt-2">
+                <button onclick="startDuelWithBet(50)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱50</button>
+                <button onclick="startDuelWithBet(100)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱100</button>
+                <button onclick="startDuelWithBet(200)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱200</button>
+                <button onclick="startDuelWithBet(500)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱500</button>
+                <button onclick="startDuelWithBet(1000)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2">₱1,000</button>
+            </div>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2">Cancel</button>
+        </div>
+
+        <!-- Receipt Preview Modal -->
+        <div id="modal-receipt" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg space-y-4 hidden text-center">
+            <h3 class="font-cinzel text-lg font-bold text-amber-400">Payment Receipt Inspection</h3>
+            <div id="receipt-preview-container" class="max-h-80 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center p-2"></div>
+            <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Preview</button>
+        </div>
+    </div>
+
+    <script>
+        // PWA Install Prompt Handler
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('btn-install-pwa');
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+            }
+        });
+
+        async function installPWA() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+            } else {
+                console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
+            const installBtn = document.getElementById('btn-install-pwa');
+            if (installBtn) {
+                installBtn.classList.add('hidden');
+                installBtn.classList.remove('flex');
+            }
+        }
+
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('Aetheris Duel Arena was successfully installed');
+        });
+
+        // SHA-256 Hashing Utility
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        let registeredAccounts = [];
+        let currentUser = null;
+        let currentDuelBet = 50;
+
+        let pendingDeposits = [];
+        let pendingWithdrawals = [];
+        let approvedDepositsLog = [];
+        let approvedWithdrawalsLog = [];
+        let pendingResets = [];
+        let uploadedGcashQR = null;
+        let uploadedMayaQR = null;
+
+        let duelState = { 
+            playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, 
+            enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' 
+        };
+
+        const masterSkillDeck = [
+            { type: 'strike', name: 'STRIKE', ap: 1, color: 'blue', desc: 'Deal 15 physical damage.' },
+            { type: 'defend', name: 'DEFEND', ap: 1, color: 'blue', desc: 'Gain 12 Armor block.' },
+            { type: 'poison', name: 'VENOM STRIKE', ap: 2, color: 'purple', desc: 'Apply 8 Poison stacks.' },
+            { type: 'debuff', name: 'PLAGUE BURST', ap: 2, color: 'emerald', desc: 'Apply Poison & inflict Armor-Break (-50% enemy defense).' },
+            { type: 'heal', name: 'MEDITATE', ap: 2, color: 'emerald', desc: 'Restore 15 HP instantly.' }
+        ];
+
+        let currentHand = [];
+
+        // Master Realigned 11-Character Data Matrix - Case Sensitive & Filename Corrected
+        const heroes = [
+          {
+            id: 'pyra',
+            name: 'PYRA',
+            role: 'Fire Mage',
+            rarity: 'STARTER (Basic)',
+            stats: 'HP: 2,800 | ATK: 2,400 | DEF: 1,200 | SPD: 140',
+            desc: 'Fire-elemental spellcaster with explosive burn damage.',
+            bg: 'from-red-950 to-slate-950',
+            border: 'border-red-500/50',
+            iconImg: 'image_b2781538.jpg',
+            price: 150,
+            requiredWins: 0,
+            requiredXp: 0,
+            isStarter: true,
+            spriteAnim: 'Casting / Flame Burst'
+          },
+          {
+            id: 'sylph',
+            name: 'SYLPH',
+            role: 'Wind Ranger',
+            rarity: 'STARTER (Basic)',
+            stats: 'HP: 2,600 | ATK: 2,200 | DEF: 1,300 | SPD: 190',
+            desc: 'Agile archer with high movement and gale evasion.',
+            bg: 'from-emerald-950 to-slate-950',
+            border: 'border-emerald-500/50',
+            iconImg: 'image_e51741b7.jpg',
+            price: 150,
+            requiredWins: 0,
+            requiredXp: 0,
+            isStarter: true,
+            spriteAnim: 'Evasion / Triple Gale Shot'
+          },
+          {
+            id: 'valen',
+            name: 'VALEN',
+            role: 'Iron Guardian',
+            rarity: 'STARTER (Basic)',
+            stats: 'HP: 4,200 | ATK: 1,500 | DEF: 2,600 | SPD: 90',
+            desc: 'Holy tank with impenetrable defense and holy barrier.',
+            bg: 'from-blue-950 to-slate-950',
+            border: 'border-blue-500/50',
+            iconImg: 'image_4b6fe95a.jpg',
+            price: 150,
+            requiredWins: 0,
+            requiredXp: 0,
+            isStarter: true,
+            spriteAnim: 'Guard / Shield Slam'
+          },
+          {
+            id: 'nyx',
+            name: 'NYX',
+            role: 'Shadow Assassin',
+            rarity: 'STARTER (Basic)',
+            stats: 'HP: 2,400 | ATK: 2,600 | DEF: 1,000 | SPD: 180',
+            desc: 'Deadly operative with stealth and shadow-strike bursts.',
+            bg: 'from-purple-950 to-slate-950',
+            border: 'border-purple-500/50',
+            iconImg: 'image_a9978665.jpg',
+            price: 150,
+            requiredWins: 0,
+            requiredXp: 0,
+            isStarter: true,
+            spriteAnim: 'Stealth / X-Slash'
+          },
+          {
+            id: 'storm-knight',
+            name: 'STORM KNIGHT',
+            role: 'Electric Knight',
+            rarity: 'RANKED (Silver I)',
+            stats: 'HP: 3,400 | ATK: 2,200 | DEF: 2,400 | SPD: 120',
+            desc: 'Electric armored duelist wielding lightning strikes.',
+            bg: 'from-amber-950 to-slate-950',
+            border: 'border-amber-500/50',
+            iconImg: 'image_d3c262a5.jpg',
+            price: 150,
+            requiredWins: 2,
+            requiredXp: 150,
+            isStarter: false,
+            spriteAnim: 'Channeled / Lightning Surge'
+          },
+          {
+            id: 'ironclad-titan',
+            name: 'IRONCLAD TITAN',
+            role: 'Earth Titan',
+            rarity: 'RANKED (Silver II)',
+            stats: 'HP: 4,800 | ATK: 1,600 | DEF: 3,200 | SPD: 80',
+            desc: 'Colossal earth juggernaut with earth-shattering slams.',
+            bg: 'from-stone-950 to-slate-950',
+            border: 'border-stone-500/50',
+            iconImg: 'image_e1196f4d.jpg',
+            price: 150,
+            requiredWins: 4,
+            requiredXp: 350,
+            isStarter: false,
+            spriteAnim: 'Heavy Slam / Earth Fracture'
+          },
+          {
+            id: 'chrono-warden',
+            name: 'CHRONO WARDEN',
+            role: 'Time Mage',
+            rarity: 'RANKED (Gold I)',
+            stats: 'HP: 3,000 | ATK: 2,300 | DEF: 1,800 | SPD: 160',
+            desc: 'Time controller manipulating action queues and hourglass power.',
+            bg: 'from-yellow-950 to-slate-950',
+            border: 'border-yellow-500/50',
+            iconImg: 'image_a4f1655c.jpg',
+            price: 150,
+            requiredWins: 7,
+            requiredXp: 600,
+            isStarter: false,
+            spriteAnim: 'Stasis / Quantum Rewind'
+          },
+          {
+            id: 'sky-valkyrie',
+            name: 'SKY VALKYRIE',
+            role: 'Light Warrior',
+            rarity: 'RANKED (Gold II)',
+            stats: 'HP: 3,200 | ATK: 2,500 | DEF: 2,000 | SPD: 170',
+            desc: 'Aerial divine warrior with celestial flight capabilities.',
+            bg: 'from-orange-950 to-slate-950',
+            border: 'border-orange-500/50',
+            iconImg: 'image_9b984ce7.jpg',
+            price: 150,
+            requiredWins: 10,
+            requiredXp: 950,
+            isStarter: false,
+            spriteAnim: 'Dive / Skyward Smite'
+          },
+          {
+            id: 'void-necromancer',
+            name: 'VOID NECROMANCER',
+            role: 'Void Sorcerer',
+            rarity: 'RANKED (Platinum I)',
+            stats: 'HP: 2,500 | ATK: 2,700 | DEF: 1,100 | SPD: 130',
+            desc: 'Dark sorcerer capable of summoning spectral minions.',
+            bg: 'from-violet-950 to-slate-950',
+            border: 'border-violet-500/50',
+            iconImg: 'image_42205d6.jpg',
+            price: 150,
+            requiredWins: 15,
+            requiredXp: 1400,
+            isStarter: false,
+            spriteAnim: 'Siphon / Necrotic Abyss'
+          },
+          {
+            id: 'blood-berserker',
+            name: 'BLOOD BERSERKER',
+            role: 'Blood Brawler',
+            rarity: 'ADVANCED (Elite)',
+            stats: 'HP: 3,600 | ATK: 2,800 | DEF: 1,400 | SPD: 135',
+            desc: 'Furious warrior scaling attack power as health drops.',
+            bg: 'from-rose-950 to-slate-950',
+            border: 'border-rose-500/50',
+            iconImg: 'image_2e90c1d9.jpg',
+            price: 300,
+            requiredWins: 25,
+            requiredXp: 2500,
+            isStarter: false,
+            spriteAnim: 'Frenzy / Savage Cleave'
+          },
+          {
+            id: 'astral-archmage',
+            name: 'ASTRAL ARCHMAGE',
+            role: 'Cosmic Sorcerer',
+            rarity: 'ADVANCED (Elite)',
+            stats: 'HP: 2,900 | ATK: 2,650 | DEF: 1,600 | SPD: 150',
+            desc: 'Cosmic spellcaster manipulating planetary layout orbits.',
+            bg: 'from-indigo-950 to-slate-950',
+            border: 'border-indigo-500/50',
+            iconImg: 'image_1d431b92.jpg',
+            price: 300,
+            requiredWins: 30,
+            requiredXp: 3200,
+            isStarter: false,
+            spriteAnim: 'Supernova / Gravity Collapse'
+          }
+        ];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const ownerHash = await hashPassword('owner123');
+            const playerHash = await hashPassword('player123');
+
+            registeredAccounts.push({
+                name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
+                email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: ownerHash,
+                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin'
+            });
+
+            registeredAccounts.push({
+                name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
+                email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
+            });
+        });
+
+        function togglePass(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') { input.type = 'text'; btn.innerText = 'HIDE'; }
+            else { input.type = 'password'; btn.innerText = 'SHOW'; }
+        }
+
+        function showAuthMode(mode) {
+            document.getElementById('auth-login-box').classList.add('hidden');
+            document.getElementById('auth-register-box').classList.add('hidden');
+            document.getElementById('auth-forgot-box').classList.add('hidden');
+            if(mode === 'login') document.getElementById('auth-login-box').classList.remove('hidden');
+            if(mode === 'register') document.getElementById('auth-register-box').classList.remove('hidden');
+            if(mode === 'forgot') document.getElementById('auth-forgot-box').classList.remove('hidden');
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('reg-name').value;
+            const nickname = document.getElementById('reg-nickname').value;
+            const phone = document.getElementById('reg-phone').value;
+            const email = document.getElementById('reg-email').value;
+            const bday = document.getElementById('reg-bday').value;
+            const pass = document.getElementById('reg-pass').value;
+
+            if(!name || !nickname || !phone || !email || !bday || !pass) { alert('Please fill in all registration fields.'); return; }
+            if(registeredAccounts.some(acc => acc.email === email)) { alert('An account with this email already exists.'); return; }
+
+            const passHash = await hashPassword(pass);
+
+            const newAcc = {
+                name, nickname, phone, email, bday, passHash,
+                role: 'player', balance: 0.00,
+                unlockedHeroes: [],
+                activeHero: '',
+                wins: 0,
+                xp: 0,
+                rank: 'Bronze I'
+            };
+            registeredAccounts.push(newAcc);
+            currentUser = newAcc;
+
+            alert('Account registered successfully! Registration fee of ₱50.00 processed. Please select your 1 free starter champion.');
+            
+            document.getElementById('view-auth').classList.add('hidden');
+            renderStarterPickOptions();
+            document.getElementById('view-starter-pick').classList.remove('hidden');
+        }
+
+        function renderStarterPickOptions() {
+            const starterHeroes = heroes.filter(h => h.isStarter);
+            document.getElementById('starter-options-container').innerHTML = starterHeroes.map(h => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 card-hover">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
+                            <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
+                        </div>
+                        <div>
+                            <h3 class="font-cinzel font-bold text-white text-base">${h.name} (${h.role})</h3>
+                            <span class="text-[10px] bg-emerald-600/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">Free Starter Choice</span>
+                            <p class="text-xs text-slate-400 mt-1">${h.desc}</p>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-amber-400 font-mono">Stats: ${h.stats}</div>
+                    <button onclick="pickStarterHero('${h.id}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Choose Free Starter</button>
+                </div>
+            `).join('');
+        }
+
+        function pickStarterHero(id) {
+            currentUser.unlockedHeroes = [id];
+            currentUser.activeHero = id;
+            document.getElementById('view-starter-pick').classList.add('hidden');
+            
+            document.getElementById('nav-wallet-container').classList.remove('hidden');
+            document.getElementById('nav-menu').classList.remove('hidden');
+            document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
+            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            updateWalletDisplay();
+            setActiveHeroUI(currentUser.activeHero);
+            switchTab('hub');
+            alert('Starter champion bound permanently to your account! Welcome to Aetheris Arena.');
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const inputHash = await hashPassword(pass);
+
+            const user = registeredAccounts.find(acc => acc.email === email && acc.passHash === inputHash);
+            if(!user) { alert('Invalid email or password.'); return; }
+
+            currentUser = user;
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('nav-wallet-container').classList.remove('hidden');
+            document.getElementById('nav-menu').classList.remove('hidden');
+            document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
+            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            updateWalletDisplay();
+            setActiveHeroUI(currentUser.activeHero);
+
+            if(currentUser.role === 'owner') {
+                document.getElementById('btn-hub').classList.add('hidden');
+                document.getElementById('btn-roster').classList.add('hidden');
+                document.getElementById('btn-owner').classList.remove('hidden');
+                switchTab('owner');
+            } else {
+                document.getElementById('btn-owner').classList.add('hidden');
+                document.getElementById('btn-hub').classList.remove('hidden');
+                document.getElementById('btn-roster').classList.remove('hidden');
+                switchTab('hub');
+            }
+        }
+
+        function logoutPlayer() {
+            currentUser = null;
+            document.getElementById('nav-wallet-container').classList.add('hidden');
+            document.getElementById('nav-menu').classList.add('hidden');
+            document.getElementById('view-hub').classList.add('hidden');
+            document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-starter-pick').classList.add('hidden');
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('view-force-reset').classList.add('hidden');
+            document.getElementById('view-auth').classList.remove('hidden');
+            showAuthMode('login');
+        }
+
+        function submitResetRequest() {
+            const email = document.getElementById('forgot-email').value;
+            const bday = document.getElementById('forgot-bday').value;
+            const user = registeredAccounts.find(acc => acc.email === email && acc.bday === bday);
+            if(!user) { alert('No matching account found with that email and birthday.'); return; }
+            if(pendingResets.some(r => r.email === email)) { alert('A password reset request is already pending.'); return; }
+
+            pendingResets.push({ id: Date.now(), email: email, name: user.name });
+            alert('Password reset request submitted to the owner successfully.');
+            showAuthMode('login');
+        }
+
+        async function executeForceReset() {
+            const email = document.getElementById('force-email').value;
+            const bday = document.getElementById('force-bday').value;
+            const newpass = document.getElementById('force-newpass').value;
+            const user = registeredAccounts.find(acc => acc.email === email && acc.bday === bday);
+            if(!user || !newpass) { alert('Invalid verification or missing password.'); return; }
+
+            user.passHash = await hashPassword(newpass);
+            alert('Password updated securely with SHA-256! Please log in.');
+            document.getElementById('view-force-reset').classList.add('hidden');
+            document.getElementById('view-auth').classList.remove('hidden');
+            showAuthMode('login');
+        }
+
+        function evaluateRankAndUnlocks() {
+            if (currentUser.xp >= 5000) currentUser.rank = 'Legendary';
+            else if (currentUser.xp >= 3500) currentUser.rank = 'Grandmaster';
+            else if (currentUser.xp >= 2500) currentUser.rank = 'Diamond';
+            else if (currentUser.xp >= 1900) currentUser.rank = 'Platinum II';
+            else if (currentUser.xp >= 1400) currentUser.rank = 'Platinum I';
+            else if (currentUser.xp >= 950) currentUser.rank = 'Gold II';
+            else if (currentUser.xp >= 600) currentUser.rank = 'Gold I';
+            else if (currentUser.xp >= 350) currentUser.rank = 'Silver II';
+            else if (currentUser.xp >= 150) currentUser.rank = 'Silver I';
+            else currentUser.rank = 'Bronze I';
+
+            heroes.forEach(h => {
+                if (!h.isStarter && !currentUser.unlockedHeroes.includes(h.id)) {
+                    if (currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp) {
+                        currentUser.unlockedHeroes.push(h.id);
+                    }
+                }
+            });
+        }
+
+        function renderHeroes() {
+            evaluateRankAndUnlocks();
+
+            document.getElementById('player-rank-badge').innerText = currentUser.rank;
+            document.getElementById('hub-rank-badge').innerText = currentUser.rank;
+            document.getElementById('player-wins-badge').innerText = currentUser.wins;
+            
+            let maxXpForTier = 150;
+            if (currentUser.xp >= 3500) maxXpForTier = 5000;
+            else if (currentUser.xp >= 2500) maxXpForTier = 3500;
+            else if (currentUser.xp >= 1900) maxXpForTier = 2500;
+            else if (currentUser.xp >= 1400) maxXpForTier = 1900;
+            else if (currentUser.xp >= 950) maxXpForTier = 1400;
+            else if (currentUser.xp >= 600) maxXpForTier = 950;
+            else if (currentUser.xp >= 350) maxXpForTier = 600;
+            else if (currentUser.xp >= 150) maxXpForTier = 350;
+
+            document.getElementById('player-xp-badge').innerText = `${currentUser.xp} / ${maxXpForTier} XP`;
+            const xpPercent = Math.min(100, Math.round((currentUser.xp / maxXpForTier) * 100));
+            document.getElementById('player-xp-bar').style.width = `${xpPercent}%`;
+
+            document.getElementById('hero-cards-container').innerHTML = heroes.map(h => {
+                const isUnlocked = currentUser && currentUser.unlockedHeroes.includes(h.id);
+                const isActive = currentUser && currentUser.activeHero === h.id;
+                const meetsReqs = currentUser && currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp;
+
+                let actionBtn = '';
+                if (isActive) {
+                    actionBtn = `<span class="px-6 py-2.5 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/40">Active Champion</span>`;
+                } else if (isUnlocked) {
+                    actionBtn = `<button onclick="switchActiveHero('${h.id}')" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Equip Champion</button>`;
+                } else if (h.isStarter) {
+                    actionBtn = `<button onclick="buyBasicHero('${h.id}', ${h.price})" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Acquire for ₱${h.price}</button>`;
+                } else if (meetsReqs) {
+                    actionBtn = `<button onclick="claimRankedHero('${h.id}')" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Claim Unlock</button>`;
+                } else {
+                    actionBtn = `<span class="text-xs text-amber-400 font-mono text-right block">Requires ${h.requiredWins} Wins & ${h.requiredXp} XP<br><span class="text-[10px] text-slate-500">(Your Stats: ${currentUser.wins} Wins, ${currentUser.xp} XP)</span></span>`;
+                }
+
+                return `
+                    <div class="bg-[#0e1322] border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between card-hover">
+                        <div class="flex items-center space-x-5">
+                            <div class="w-20 h-20 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-xl">
+                                <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-3 mb-1">
+                                    <h3 class="font-cinzel font-bold text-white text-base tracking-wide">${h.name} (${h.role})</h3>
+                                    <span class="text-[10px] bg-blue-600/20 text-blue-400 px-2.5 py-0.5 rounded-full border border-blue-500/30 font-medium">${h.rarity}</span>
+                                </div>
+                                <p class="text-xs text-slate-400 max-w-md">${h.desc}</p>
+                                <div class="text-[11px] text-amber-400 font-mono mt-1">Stats: ${h.stats}</div>
+                                <div class="text-[10px] text-indigo-300 mt-0.5">Battle Animation: ${h.spriteAnim}</div>
+                                ${h.isStarter && !isUnlocked ? `<span class="text-xs font-bold text-amber-400 mt-1 block">Acquisition Price: ₱${h.price}</span>` : ''}
+                            </div>
+                        </div>
+                        <div>${actionBtn}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchActiveHero(id) {
+            if (!currentUser) return;
+            currentUser.activeHero = id;
+            setActiveHeroUI(id);
+            renderHeroes();
+            alert('Active champion successfully switched!');
+            switchTab('hub');
+        }
+
+        function buyBasicHero(id, price) {
+            if (!currentUser) return;
+            if (currentUser.balance < price) {
+                alert('Insufficient wallet balance to purchase this basic hero! Please top up.');
+                return;
+            }
+            currentUser.balance -= price;
+            currentUser.unlockedHeroes.push(id);
+            currentUser.activeHero = id;
+            updateWalletDisplay();
+            setActiveHeroUI(id);
+            renderHeroes();
+            alert('Basic hero purchased and unlocked successfully! Set as active champion.');
+            switchTab('hub');
+        }
+
+        function claimRankedHero(id) {
+            if (!currentUser) return;
+            const h = heroes.find(item => item.id === id);
+            if (!h || currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) {
+                alert('Rank requirements not met yet!');
+                return;
+            }
+            if (!currentUser.unlockedHeroes.includes(id)) currentUser.unlockedHeroes.push(id);
+            currentUser.activeHero = id;
+            setActiveHeroUI(id);
+            renderHeroes();
+            alert(`Congratulations! You have unlocked ${h.name} through ranked progression and set it as your active champion.`);
+            switchTab('hub');
+        }
+
+        function setActiveHeroUI(id) {
+            const h = heroes.find(item => item.id === id);
+            if (!h) return;
+            document.getElementById('active-hero-name').innerText = `${h.name} (${h.role})`;
+            document.getElementById('hub-rank-badge').innerText = currentUser.rank;
+            
+            const avatar = document.getElementById('active-hero-avatar');
+            avatar.className = `w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
+            document.getElementById('active-hero-img-el').src = h.iconImg;
+
+            const fsPlayerSprite = document.getElementById('fs-player-sprite');
+            fsPlayerSprite.className = `w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)] p-2`;
+            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-20 h-20 object-cover rounded-xl shadow-lg mb-1"><span class="font-cinzel text-xs font-bold text-amber-300">${h.name}</span><span class="text-[9px] text-slate-300">[${h.spriteAnim}]</span>`;
+        }
+
+        function switchTab(tab) {
+            if (currentUser && currentUser.role === 'owner' && tab !== 'owner') {
+                alert('Security Notice: Owner accounts are strictly restricted to the Admin Portal.');
+                switchTab('owner');
+                return;
+            }
+            if (currentUser && currentUser.role === 'player' && tab === 'owner') {
+                alert('Security Notice: Access denied. Insufficient clearance for Admin Portal.');
+                switchTab('hub');
+                return;
+            }
+
+            document.getElementById('view-hub').classList.add('hidden');
+            document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+
+            document.getElementById('btn-hub').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('btn-roster').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('btn-owner').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('btn-hub').classList.add('text-slate-400');
+            document.getElementById('btn-roster').classList.add('text-slate-400');
+            document.getElementById('btn-owner').classList.add('text-slate-400');
+
+            if(tab === 'hub') {
+                document.getElementById('view-hub').classList.remove('hidden');
+                document.getElementById('btn-hub').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('btn-hub').classList.remove('text-slate-400');
+            } else if(tab === 'select') {
+                renderHeroes();
+                document.getElementById('view-select').classList.remove('hidden');
+                document.getElementById('btn-roster').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('btn-roster').classList.remove('text-slate-400');
+            } else if(tab === 'owner') {
+                document.getElementById('view-owner').classList.remove('hidden');
+                document.getElementById('btn-owner').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('btn-owner').classList.remove('text-slate-400');
+                renderOwnerQueues();
+            }
+        }
+
+        function openBettingModal() {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-bet').classList.remove('hidden');
+        }
+
+        function shuffleAndDrawHand() {
+            let deckCopy = [...masterSkillDeck];
+            for (let i = deckCopy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deckCopy[i], deckCopy[j]] = [deckCopy[j], deckCopy[i]];
+            }
+            currentHand = deckCopy.slice(0, 4);
+            renderHandCards();
+        }
+
+        function renderHandCards() {
+            const container = document.getElementById('shuffled-hand-container');
+            container.innerHTML = currentHand.map((card, idx) => `
+                <div onclick="playCard(${idx})" class="bg-slate-900 border border-slate-700 hover:border-${card.color}-500 rounded-xl p-3 cursor-pointer card-hover space-y-1">
+                    <div class="flex justify-between text-[10px] text-${card.color}-400 font-bold">
+                        <span>${card.name}</span><span>${card.ap} AP</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400">${card.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        function startDuelWithBet(amount) {
+            if (!currentUser) return;
+            if (currentUser.balance < amount) {
+                alert('Insufficient wallet balance for this bet stake!');
+                closeModal();
+                return;
+            }
+
+            currentUser.balance -= amount;
+            currentDuelBet = amount;
+            updateWalletDisplay();
+            closeModal();
+
+            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
+            duelState = { playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' };
+            
+            shuffleAndDrawHand();
+            document.getElementById('fs-battle-log').innerText = `[Arena]: Ranked match started with ₱${amount} wager! Deck shuffled. Your turn.`;
+            
+            updateDuelUI();
+
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('view-hub').classList.add('hidden');
+            document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-duel-fullscreen').classList.remove('hidden');
+        }
+
+        function surrenderDuel() {
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            switchTab('hub');
+        }
+
+        function updateDuelUI() {
+            document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
+            document.getElementById('fs-player-hp-bar').style.width = `${(duelState.playerHp / duelState.playerMaxHp) * 100}%`;
+            document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
+            document.getElementById('fs-player-ap').innerText = duelState.playerAp;
+
+            document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
+            document.getElementById('fs-enemy-hp-bar').style.width = `${(duelState.enemyHp / duelState.enemyMaxHp) * 100}%`;
+            document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
+            document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
+            document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
+        }
+
+        function logDuel(msg) {
+            document.getElementById('fs-battle-log').innerText = msg;
+        }
+
+        function playCard(index) {
+            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
+            const card = currentHand[index];
+            if (!card) return;
+
+            if (duelState.playerAp < card.ap) {
+                logDuel(`[System]: Not enough AP for ${card.name} (Requires ${card.ap} AP)!`);
+                return;
+            }
+
+            duelState.playerAp -= card.ap;
+
+            if (card.type === 'strike') {
+                let dmg = 15;
+                if (duelState.enemyDebuff === 'Armor-Break') dmg = Math.round(dmg * 1.5);
+                if (duelState.enemyArmor > 0) {
+                    if (duelState.enemyArmor >= dmg) { duelState.enemyArmor -= dmg; dmg = 0; }
+                    else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
+                }
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
+                logDuel(`[You]: Played Strike! Dealt ${dmg} damage.`);
+            } else if (card.type === 'defend') {
+                duelState.playerArmor += 12;
+                logDuel(`[You]: Played Defend! Gained 12 Armor block.`);
+            } else if (card.type === 'poison') {
+                duelState.enemyPoison += 8;
+                logDuel(`[You]: Played Venom Strike! Applied 8 Poison stacks.`);
+            } else if (card.type === 'debuff') {
+                duelState.enemyPoison += 5;
+                duelState.enemyDebuff = 'Armor-Break';
+                logDuel(`[You]: Played Plague Burst! Applied Poison & inflicted Armor-Break debuff!`);
+            } else if (card.type === 'heal') {
+                duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + 15);
+                logDuel(`[You]: Played Meditate! Restored 15 HP.`);
+            }
+
+            currentHand.splice(index, 1);
+            renderHandCards();
+            updateDuelUI();
+
+            if (duelState.enemyHp <= 0) {
+                const reward = currentDuelBet * 2;
+                const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
+                
+                currentUser.balance += reward;
+                currentUser.wins += 1;
+                currentUser.xp += earnedXp;
+
+                evaluateRankAndUnlocks();
+                updateWalletDisplay();
+
+                logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
+                alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})! Check Roster for unlocked champions.`);
+                surrenderDuel();
+            }
+        }
+
+        function endDuelTurn() {
+            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
+
+            logDuel(`[System]: Ending turn & shuffling skill deck... Enemy counterattacking...`);
+            
+            if (duelState.enemyPoison > 0) {
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
+                logDuel(`[Effect]: Enemy took ${duelState.enemyPoison} poison damage.`);
+            }
+
+            setTimeout(() => {
+                if (duelState.enemyHp > 0) {
+                    let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 10 : 14;
+                    duelState.playerArmor = 0;
+                    duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
+                    logDuel(`[Opponent]: Boss attacks for ${enemyDmg} damage!`);
+                }
+                
+                duelState.playerAp = 3;
+                shuffleAndDrawHand();
+                updateDuelUI();
+
+                if (duelState.playerHp <= 0) {
+                    const consolationXp = 15;
+                    currentUser.xp += consolationXp;
+                    evaluateRankAndUnlocks();
+
+                    logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
+                    alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP.`);
+                    surrenderDuel();
+                }
+            }, 800);
+        }
+
+        function handleQRUpload(event, type) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if(type === 'gcash') uploadedGcashQR = e.target.result;
+                    if(type === 'maya') uploadedMayaQR = e.target.result;
+                    alert(type.toUpperCase() + ' QR Code uploaded successfully! Click "Save" to apply.');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveOwnerDetails() {
+            const gNum = document.getElementById('input-gcash-num').value;
+            const gName = document.getElementById('input-gcash-name').value;
+            const mNum = document.getElementById('input-maya-num').value;
+            const mName = document.getElementById('input-maya-name').value;
+
+            document.getElementById('display-gcash-num').innerText = gNum;
+            document.getElementById('display-gcash-name').innerText = gName;
+            document.getElementById('display-maya-num').innerText = mNum;
+            document.getElementById('display-maya-name').innerText = mName;
+
+            if(uploadedGcashQR) document.getElementById('player-gcash-qr').innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            if(uploadedMayaQR) document.getElementById('player-maya-qr').innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+
+            alert('Owner merchant e-wallet credentials and QR codes updated successfully!');
+        }
+
+        function openModal(type) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
+            if(type === 'topup') document.getElementById('modal-topup').classList.remove('hidden');
+            if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
+
+        function viewReceipt(receiptDataUrl) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.remove('hidden');
+            document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-72 rounded object-contain">`;
+        }
+
+        function submitTopUp() {
+            const amt = parseFloat(document.getElementById('topup-amount').value);
+            const ref = document.getElementById('topup-ref').value;
+            const receiptFile = document.getElementById('topup-receipt').files[0];
+
+            if(!amt || !ref || !receiptFile) { alert('Please fill in all top-up details and upload your payment receipt screenshot.'); return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dateStr = new Date().toISOString().split('T')[0];
+                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
+                alert('Top-up request and receipt submitted successfully! Awaiting owner approval.');
+                closeModal();
+            };
+            reader.readAsDataURL(receiptFile);
+        }
+
+        function submitWithdrawal() {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value);
+            const method = document.getElementById('withdraw-method').value;
+            const acc = document.getElementById('withdraw-account').value;
+            const name = document.getElementById('withdraw-name').value;
+            if(!amt || !acc || !name) { alert('Please fill out all withdrawal form fields.'); return; }
+            if(amt > currentUser.balance) { alert('Insufficient wallet balance!'); return; }
+            
+            currentUser.balance -= amt;
+            updateWalletDisplay();
+            const dateStr = new Date().toISOString().split('T')[0];
+            pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: method, account: acc, name: name, date: dateStr });
+            alert('Withdrawal request submitted successfully! Awaiting owner approval.');
+            closeModal();
+        }
+
+        function updateWalletDisplay() {
+            if(currentUser) document.getElementById('nav-wallet').innerText = '₱' + currentUser.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function renderOwnerQueues() {
+            const filterDate = document.getElementById('filter-date').value;
+
+            const resetContainer = document.getElementById('owner-reset-list');
+            if(pendingResets.length === 0) {
+                resetContainer.innerHTML = '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
+            } else {
+                resetContainer.innerHTML = pendingResets.map(r => `
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-amber-400">Reset Request: ${r.name}</span><div class="text-slate-400">Email: ${r.email}</div></div>
+                        <div class="space-x-2">
+                            <button onclick="approveReset(${r.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
+                            <button onclick="rejectReset(${r.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const filteredDeposits = filterDate ? pendingDeposits.filter(d => d.date === filterDate) : pendingDeposits;
+            const depContainer = document.getElementById('owner-deposit-list');
+            if(filteredDeposits.length === 0) {
+                depContainer.innerHTML = '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>';
+            } else {
+                depContainer.innerHTML = filteredDeposits.map(d => `
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.nickname})</span><div class="text-slate-400">Email: ${d.email} | Ref: ${d.ref} | Date: ${d.date}</div></div>
+                        <div class="space-x-2 flex items-center">
+                            <button onclick="viewReceipt('${d.receipt}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg">View Receipt</button>
+                            <button onclick="approveDeposit(${d.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
+                            <button onclick="rejectDeposit(${d.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const filteredWithdrawals = filterDate ? pendingWithdrawals.filter(w => w.date === filterDate) : pendingWithdrawals;
+            const witContainer = document.getElementById('owner-withdraw-list');
+            if(filteredWithdrawals.length === 0) {
+                witContainer.innerHTML = '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>';
+            } else {
+                witContainer.innerHTML = filteredWithdrawals.map(w => `
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname}</span><div class="text-slate-400">To: ${w.account} (${w.name}) | Date: ${w.date}</div></div>
+                        <div class="space-x-2">
+                            <button onclick="approveWithdrawal(${w.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
+                            <button onclick="rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const totalDep = (filterDate ? approvedDepositsLog.filter(d => d.date === filterDate) : approvedDepositsLog).reduce((sum, item) => sum + item.amount, 0);
+            const totalWit = (filterDate ? approvedWithdrawalsLog.filter(w => w.date === filterDate) : approvedWithdrawalsLog).reduce((sum, item) => sum + item.amount, 0);
+
+            document.getElementById('metric-total-deposits').innerText = '₱' + totalDep.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('metric-total-withdrawals').innerText = '₱' + totalWit.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function approveReset(id) {
+            pendingResets = pendingResets.filter(r => r.id !== id);
+            alert('Password reset request approved!');
+            document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('view-force-reset').classList.remove('hidden');
+        }
+
+        function rejectReset(id) {
+            pendingResets = pendingResets.filter(r => r.id !== id);
+            renderOwnerQueues();
+            alert('Password reset request rejected.');
+        }
+
+        function approveDeposit(id) {
+            const idx = pendingDeposits.findIndex(d => d.id === id);
+            if(idx > -1) {
+                const item = pendingDeposits[idx];
+                const targetUser = registeredAccounts.find(acc => acc.email === item.email);
+                if(targetUser) targetUser.balance += item.amount;
+                if(currentUser && currentUser.email === item.email) updateWalletDisplay();
+                approvedDepositsLog.push(item);
+                pendingDeposits.splice(idx, 1);
+                renderOwnerQueues();
+                alert('Deposit approved and credited!');
+            }
+        }
+
+        function rejectDeposit(id) {
+            pendingDeposits = pendingDeposits.filter(d => d.id !== id);
+            renderOwnerQueues();
+            alert('Deposit rejected.');
+        }
+
+        function approveWithdrawal(id) {
+            const idx = pendingWithdrawals.findIndex(w => w.id === id);
+            if(idx > -1) {
+                approvedWithdrawalsLog.push(pendingWithdrawals[idx]);
+                pendingWithdrawals.splice(idx, 1);
+                renderOwnerQueues();
+                alert('Withdrawal approved!');
+            }
+        }
+
+        function rejectWithdrawal(id, email, amt) {
+            const targetUser = registeredAccounts.find(acc => acc.email === email);
+            if(targetUser) targetUser.balance += amt;
+            if(currentUser && currentUser.email === email) updateWalletDisplay();
+            pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
+            renderOwnerQueues();
+            alert('Withdrawal rejected and refunded.');
+        }
+    </script>
 </body>
 </html>
