@@ -329,8 +329,8 @@
         </div>
     </main>
 
-    <!-- FULL-SCREEN PVP AXIE-STYLE BATTLE ARENA VIEW -->
-    <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-4 md:p-8 hidden overflow-y-auto">
+    <!-- FULL-SCREEN PVP AXIE-STYLE BATTLE ARENA VIEW (Z-INDEX 100 FORCED) -->
+    <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-[100] flex flex-col justify-between p-4 md:p-8 hidden overflow-y-auto">
         <!-- Top Battle Bar -->
         <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 rounded-2xl px-6 py-3 backdrop-blur">
             <div class="flex items-center space-x-3">
@@ -1150,9 +1150,8 @@
                 return;
             }
 
-            // Immediately close modals and remove backdrop overlay first
-            document.getElementById('modal-bet').classList.add('hidden');
-            document.getElementById('modal-backdrop').classList.add('hidden');
+            // Explicitly close and clear backdrop first so it never blocks the arena
+            closeModal();
 
             // Deduct wager safely once
             currentUser.balance -= amount;
@@ -1193,7 +1192,7 @@
             
             updateDuelUI();
 
-            // Force visibility shift to display battlefield and hide main app views
+            // Force visibility shift: display battlefield with highest z-index
             document.getElementById('main-header').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
@@ -1346,7 +1345,13 @@
             if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
         }
 
-        function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
+        function closeModal() { 
+            document.getElementById('modal-backdrop').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.add('hidden');
+        }
 
         function viewReceipt(receiptDataUrl) {
             document.getElementById('modal-backdrop').classList.remove('hidden');
