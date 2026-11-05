@@ -537,7 +537,7 @@
 
         let currentHand = [];
 
-        // Master Realigned 11-Character Data Matrix with real numerical stats and specific skills
+        // Master Realigned Character Data Matrix
         const heroes = [
           {
             id: 'pyra',
@@ -1489,7 +1489,7 @@
         function rejectWithdrawal(id, email, amt) {
             const targetUser = registeredAccounts.find(acc => acc.email === email);
             if(targetUser) targetUser.balance += amt;
-            if(currentUser && currentUser.email === email) updateWalletDialog();
+            if(currentUser && currentUser.email === email) updateWalletDisplay(); // Fixed function name here
             pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
             renderOwnerQueues();
             alert('Withdrawal rejected and refunded.');
