@@ -401,7 +401,7 @@
             </div>
             <!-- Dynamically Rendered Active Hero Skills -->
             <div id="shuffled-hand-container" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <!-- Populated dynamically from active hero skills -->
+                <!-- Populated dynamically -->
             </div>
         </div>
     </div>
@@ -450,11 +450,11 @@
             <h3 class="font-cinzel text-lg font-bold text-amber-400">SELECT RANKED PVP WAGER</h3>
             <p class="text-xs text-slate-400">Choose your match stake. Winner takes double the bet and earns Rank XP!</p>
             <div class="grid grid-cols-3 gap-2 pt-2">
-                <button onclick="startDuelWithBet(50)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱50</button>
-                <button onclick="startDuelWithBet(100)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱100</button>
-                <button onclick="startDuelWithBet(200)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱200</button>
-                <button onclick="startDuelWithBet(500)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱500</button>
-                <button onclick="startDuelWithBet(1000)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2">₱1,000</button>
+                <button onclick="startDuelWithBet(50)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱50</button>
+                <button onclick="startDuelWithBet(100)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱100</button>
+                <button onclick="startDuelWithBet(200)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱200</button>
+                <button onclick="startDuelWithBet(500)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱500</button>
+                <button onclick="startDuelWithBet(1000)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2 cursor-pointer">₱1,000</button>
             </div>
             <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2">Cancel</button>
         </div>
@@ -1146,18 +1146,18 @@
                 return;
             }
 
+            // Immediately close modals and remove backdrop overlay first
+            document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-backdrop').classList.add('hidden');
+
             // Deduct wager safely once
             currentUser.balance -= amount;
             currentDuelBet = amount;
             updateWalletDisplay();
 
-            // Hide all modal views & backdrop explicitly
-            document.getElementById('modal-backdrop').classList.add('hidden');
-            document.getElementById('modal-bet').classList.add('hidden');
-
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
 
-            // Load actual active hero stats into duel state!
+            // Load active hero stats into duel state
             const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero) || heroes[0];
             const pMaxHp = activeHeroObj.stats.hp;
             
