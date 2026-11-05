@@ -47,7 +47,7 @@
 
             <div id="nav-wallet-container" class="hidden items-center space-x-2 bg-slate-900 border border-slate-700 rounded-full px-3 py-1">
                 <span class="text-xs text-slate-400">Wallet:</span>
-                <span id="nav-wallet" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                <span id="nav-wallet" class="text-sm font-bold text-emerald-400">₱2,000.00</span>
             </div>
             <nav id="nav-menu" class="hidden space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
                 <button onclick="switchTab('hub')" id="btn-hub" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">Home</button>
@@ -71,6 +71,13 @@
             <!-- Login Box -->
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 glow-box">
                 <h3 class="font-cinzel text-lg font-bold text-white">Secure Sign In</h3>
+                
+                <!-- Instant Quick Login Button -->
+                <button onclick="quickLoginPlayer()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                    <span>⚡ Instant Quick Start (Player Demo)</span>
+                </button>
+                <div class="text-center text-[10px] text-slate-500">— OR SIGN IN MANUALLY —</div>
+
                 <div class="space-y-3">
                     <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white" value="player@logicgrid.com">
                     <div class="relative">
@@ -464,50 +471,22 @@
     </div>
 
     <script>
-        // PWA Install Prompt Handler
-        let deferredPrompt = null;
+        console.log("Aetheris Duel Arena script loaded successfully.");
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            const installBtn = document.getElementById('btn-install-pwa');
-            if (installBtn) {
-                installBtn.classList.remove('hidden');
-                installBtn.classList.add('flex');
+        // Pre-initialized Accounts with sync fallback hashes so login never fails
+        let registeredAccounts = [
+            {
+                name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
+                email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: 'fallback_owner123',
+                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin'
+            },
+            {
+                name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
+                email: 'player@logicgrid.com', bday: '2000-06-15', passHash: 'fallback_player123',
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
             }
-        });
+        ];
 
-        async function installPWA() {
-            if (!deferredPrompt) {
-                alert('PWA installation prompt is ready! If the button does not trigger a popup, you can install this app directly from your browser menu.');
-                return;
-            }
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-        }
-
-        // Robust SHA-256 Hashing Utility with file:// Safe Fallback
-        async function hashPassword(password) {
-            try {
-                if (window.crypto && window.crypto.subtle) {
-                    const msgBuffer = new TextEncoder().encode(password);
-                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-                    const hashArray = Array.from(new Uint8Array(hashBuffer));
-                    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-                }
-            } catch (e) {
-                console.warn('Crypto subtle unavailable, using fallback hash');
-            }
-            let hash = 0;
-            for (let i = 0; i < password.length; i++) {
-                hash = ((hash << 5) - hash) + password.charCodeAt(i);
-                hash |= 0;
-            }
-            return 'fallback_' + Math.abs(hash);
-        }
-
-        let registeredAccounts = [];
         let currentUser = null;
         let currentDuelBet = 50;
 
@@ -524,7 +503,6 @@
             enemyHp: 3000, enemyMaxHp: 3000, enemyAtk: 2300, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' 
         };
 
-        // Complete Upgraded 13-Kit Ability Data Layer Matrix
         const heroSkillsDatabase = {
             pyra: [
                 { name: "Flame Burst", cost: 1, type: "Offensive", damage: 180, effect: "burn", duration: 3, desc: "Wave of fire dealing 180 base damage and applying a stacking Burn debuff." },
@@ -586,9 +564,9 @@
                 { name: "Tectonic Armor", cost: 1, type: "Defensive", damage: 0, effect: "status_immunity", duration: 2, desc: "Encases body in stone layers granting 500 armor and debuff resistance." },
                 { name: "Boulder Toss", cost: 2, type: "Offensive", damage: 380, effect: "stun", duration: 1, desc: "Hurls massive chunk of earth dealing 380 heavy blunt impact damage." },
                 { name: "Quake Stomp", cost: 1, type: "Utility", damage: 100, effect: "interrupt", duration: 0, desc: "Stomps arena floor, interrupting enemy spell channeling and cast animations." },
-                { name: "Stone Skin", cost: 2, type: "Defensive", damage: 0, effect: "flat_reduction", duration: 5, desc: "Hardens outer skin to reduce incoming physical damage parameters permanently." },
+                { name: "Stone Skin", cost: 2, type: "Defensive", duration: 5, desc: "Hardens outer skin to reduce incoming physical damage parameters permanently." },
                 { name: "Seismic Wave", cost: 2, type: "Utility", damage: 240, effect: "knockback", duration: 0, desc: "Sends tremor forward knocking back opponent and reducing speed values." },
-                { name: "Granite Wall", cost: 2, type: "Defensive", damage: 0, effect: "projectile_block", duration: 2, desc: "Summons temporary stone barricade block to stop high-damage projectiles." },
+                { name: "Granite Wall", cost: 2, type: "Defensive", duration: 2, desc: "Summons temporary stone barricade block to stop high-damage projectiles." },
                 { name: "Titan's Grip", cost: 1, type: "Utility", damage: 130, effect: "root", duration: 1, desc: "Grabs and immobilizes opponent for 1 turn, preventing movement mechanics." },
                 { name: "Continental Shatter", cost: 3, type: "Ultimate", damage: 710, effect: "armor_destruction", duration: 0, desc: "Cracks open floor beneath opponent dealing 710 catastrophic crush damage." }
             ],
@@ -598,8 +576,8 @@
                 { name: "Temporal Shift", cost: 1, type: "Utility", damage: 0, effect: "redraw_deck", duration: 0, desc: "Instantly shuffles and redraws two new card elements from skill deck." },
                 { name: "Haste", cost: 2, type: "Utility", damage: 0, effect: "extra_turn", duration: 1, desc: "Accelerates personal timeline granting two consecutive action turns." },
                 { name: "Slow Time", cost: 2, type: "Utility", damage: 0, effect: "ap_regen_down", duration: 2, desc: "Decelerates opponent field, halving their action point recovery next turn." },
-                { name: "Chronicle Shield", cost: 1, type: "Defensive", damage: 0, effect: "damage_undo", duration: 1, desc: "Projects temporal field that completely rewinds last instance of damage taken." },
-                { name: "Future Sight", cost: 2, type: "Utility", damage: 0, effect: "reveal_cards", duration: 3, desc: "Previews opponent next 3 hidden deck cards tracking tactical counter strategies." },
+                { name: "Chronicle Shield", cost: 1, type: "Defensive", duration: 1, desc: "Projects temporal field that completely rewinds last instance of damage taken." },
+                { name: "Future Sight", cost: 2, type: "Utility", duration: 3, desc: "Previews opponent next 3 hidden deck cards tracking tactical counter strategies." },
                 { name: "Aging Curse", cost: 2, type: "Offensive", damage: 120, effect: "decay", duration: 4, desc: "Ages target, draining stamina and inflicting 120 decay damage over time." },
                 { name: "Hourglass Collapse", cost: 3, type: "Ultimate", damage: 500, effect: "turn_scaling", duration: 0, desc: "Shatters timeline causing 500 damage scaled higher per elapsed turn." }
             ],
@@ -608,48 +586,47 @@
                 { name: "Heavenly Flight", cost: 1, type: "Utility", damage: 0, effect: "flight_mode", duration: 2, desc: "Takes to the skies gaining superior aerial positioning and high evasion states." },
                 { name: "Solar Ray", cost: 2, type: "Offensive", damage: 310, effect: "dispel_magic", duration: 0, desc: "Fires beam of solar energy dealing 310 damage incinerating magical guards." },
                 { name: "Valkyrie Blessing", cost: 1, type: "Utility", damage: 0, effect: "cleanse", duration: 0, desc: "Heals minor wounds for 200 HP and cleanses all active status debuffs." },
-                { name: "Aegis of Light", cost: 2, type: "Defensive", damage: 0, effect: "percent_mitigation", duration: 2, desc: "Summons holy barrier of pure radiance reducing all incoming damage by 40%." },
+                { name: "Aegis of Light", cost: 2, type: "Defensive", duration: 2, desc: "Summons holy barrier of pure radiance reducing all incoming damage by 40%." },
                 { name: "Celestial Strike", cost: 2, type: "Offensive", damage: 360, effect: "aerial_bonus", duration: 0, desc: "Diving aerial lance strike dealing 360 damage with bonus outputs if flying." },
                 { name: "Holy Smite", cost: 1, type: "Offensive", damage: 190, effect: "purge_buffs", duration: 0, desc: "Strikes enemy with divine judgment for 190 damage, purging positive buff states." },
-                { name: "Wings of Dawn", cost: 2, type: "Utility", damage: 0, effect: "spd_ap_buff", duration: 2, desc: "Increases movement speed value parameters and action point regeneration rules." },
+                { name: "Wings of Dawn", cost: 2, type: "Utility", duration: 2, desc: "Increases movement speed value parameters and action point regeneration rules." },
                 { name: "Judgment of the Heavens", cost: 3, type: "Ultimate", damage: 690, effect: "holy_purge", duration: 0, desc: "Rains holy lances from above dealing 690 damage while purging targets completely." }
             ],
             "void-necromancer": [
                 { name: "Soul Drain", cost: 1, type: "Offensive", damage: 150, effect: "lifesteal", duration: 0, desc: "Draws life force out of opponent healing caster for 150 while weakening target." },
-                { name: "Spectral Summon", cost: 1, type: "Utility", damage: 0, effect: "minion_spawn", duration: 3, desc: "Summons restless shadows from void to absorb incoming enemy attacks." },
+                { name: "Spectral Summon", cost: 1, type: "Utility", duration: 3, desc: "Summons restless shadows from void to absorb incoming enemy attacks." },
                 { name: "Death Bolt", cost: 2, type: "Offensive", damage: 290, effect: "necro_rot", duration: 2, desc: "Fires projectile of dark necrotic energy dealing 290 damage rotting armor files." },
                 { name: "Life Siphon", cost: 2, type: "Offensive", damage: 100, effect: "hp_drain", duration: 3, desc: "Drains 100 continuous health from target over 3 turns to replenish caster HP." },
-                { name: "Bone Shield", cost: 1, type: "Defensive", damage: 0, effect: "flat_block", duration: 2, desc: "Surrounds caster with swirling skeletal remains acting as 350 armor block." },
-                { name: "Curse of Weakness", cost: 1, type: "Utility", damage: 0, effect: "atk_down", duration: 3, desc: "Inflicts dark hex reducing target output attack power properties significantly." },
-                { name: "Shadow Mend", cost: 2, type: "Utility", damage: 0, effect: "sacrifice_heal", duration: 0, desc: "Sacrifices minor minion health values to restore 500 of Necromancer HP." },
+                { name: "Bone Shield", cost: 1, type: "Defensive", duration: 2, desc: "Surrounds caster with swirling skeletal remains acting as 350 armor block." },
+                { name: "Curse of Weakness", cost: 1, type: "Utility", duration: 3, desc: "Inflicts dark hex reducing target output attack power properties significantly." },
+                { name: "Shadow Mend", cost: 2, type: "Utility", duration: 0, desc: "Sacrifices minor minion health values to restore 500 of Necromancer HP." },
                 { name: "Grave Chill", cost: 2, type: "Utility", damage: 140, effect: "action_slow", duration: 2, desc: "Freezes target blood with frost dealing 140 damage slowing queue updates." },
                 { name: "Abyss Eclipse", cost: 3, type: "Ultimate", damage: 580, effect: "stamina_drain", duration: 3, desc: "Immerses battlefield in void darkness sapping energy with 580 curse damage." }
             ],
             "blood-berserker": [
                 { name: "Blood Axe Frenzy", cost: 1, type: "Offensive", damage: 200, effect: "low_hp_scaling", duration: 0, desc: "Swings axe scaling higher output power parameters as own health decreases." },
-                { name: "Bloodlust Roar", cost: 1, type: "Utility", damage: 0, effect: "vamp_buff", duration: 2, desc: "Primal scream boosting attack stats converting 30% dealt damage into HP." },
-                { name: "Hemotherapy", cost: 2, type: "Utility", damage: 0, effect: "self_harm_ap", duration: 0, desc: "Sacrifices 10% current HP to instantly gain 3 extra combo action points." },
+                { name: "Bloodlust Roar", cost: 1, type: "Utility", duration: 2, desc: "Primal scream boosting attack stats converting 30% dealt damage into HP." },
+                { name: "Hemotherapy", cost: 2, type: "Utility", duration: 0, desc: "Sacrifices 10% current HP to instantly gain 3 extra combo action points." },
                 { name: "Savage Slice", cost: 1, type: "Offensive", damage: 180, effect: "deep_bleed", duration: 3, desc: "Brutal cleave dealing 180 physical damage inducing deep bleeding wounds." },
-                { name: "Adrenaline Rush", cost: 2, type: "Utility", damage: 0, effect: "cc_immunity", duration: 2, desc: "Heightened state ignoring movement slow penalties and crowd control locks." },
-                { name: "Pain Eater", cost: 1, type: "Defensive", damage: 0, effect: "damage_to_rage", duration: 2, desc: "Absorbs incoming damage values converting them into bonus attack stacks." },
+                { name: "Adrenaline Rush", cost: 2, type: "Utility", duration: 2, desc: "Heightened state ignoring movement slow penalties and crowd control locks." },
+                { name: "Pain Eater", cost: 1, type: "Defensive", duration: 2, desc: "Absorbs incoming damage values converting them into bonus attack stacks." },
                 { name: "Frenzied Charge", cost: 2, type: "Offensive", damage: 380, effect: "reckless", duration: 1, desc: "Charges recklessly trading defensive armor layout rules for 380 attack damage." },
                 { name: "Blood Puddle", cost: 2, type: "Utility", damage: 70, effect: "trap_mobility", duration: 2, desc: "Traps enemy in pool of gore dealing 70 damage reducing evasion and mobility." },
                 { name: "Executioner's Wrath", cost: 3, type: "Ultimate", damage: 750, effect: "missing_hp_scale", duration: 0, desc: "Finishing slash dealing 750 damage scaling higher based on missing health." }
             ],
             "astral-archmage": [
                 { name: "Starfall Missile", cost: 1, type: "Offensive", damage: 190, effect: "shield_burn", duration: 0, desc: "Hurls condensed stellar projectiles dealing 190 damage burning magic barriers." },
-                { name: "Cosmic Shield", cost: 1, type: "Defensive", damage: 0, effect: "ring_deflect", duration: 2, desc: "Orbiting planetary rings deflecting incoming spells and projectile objects." },
+                { name: "Cosmic Shield", cost: 1, type: "Defensive", duration: 2, desc: "Orbiting planetary rings deflecting incoming spells and projectile objects." },
                 { name: "Gravity Well", cost: 2, type: "Utility", damage: 150, effect: "suppress_cards", duration: 1, desc: "Creates black hole pulling opponent inward suppressing action card plays." },
                 { name: "Meteorite Shard", cost: 1, type: "Offensive", damage: 160, effect: "hybrid_damage", duration: 0, desc: "Space rock bombardment dealing 160 physical-cosmic hybrid damage." },
-                { name: "Astral Projection", cost: 2, type: "Defensive", damage: 0, effect: "mirror_image", duration: 1, desc: "Splits into stellar illusion causing next target attack function to miss." },
+                { name: "Astral Projection", cost: 2, type: "Defensive", duration: 1, desc: "Splits into stellar illusion causing next target attack function to miss." },
                 { name: "Constellation Beam", cost: 2, type: "Offensive", damage: 330, effect: "melt_defense", duration: 0, desc: "Channels starlight into continuous laser beam melting 330 defense points." },
-                { name: "Cosmic Insight", cost: 1, type: "Utility", damage: 0, effect: "draw_crit_buff", duration: 2, desc: "Instantly draws 2 extra skill cards expanding critical strike odds." },
-                { name: "Nebula Cloud", cost: 2, type: "Utility", damage: 0, effect: "obscure_field", duration: 2, desc: "Blankets arena in cosmic dust hiding active status effects lowering precision." },
+                { name: "Cosmic Insight", cost: 1, type: "Utility", duration: 2, desc: "Instantly draws 2 extra skill cards expanding critical strike odds." },
+                { name: "Nebula Cloud", cost: 2, type: "Utility", duration: 2, desc: "Blankets arena in cosmic dust hiding active status effects lowering precision." },
                 { name: "Astral Supernova", cost: 3, type: "Ultimate", damage: 700, effect: "magic_wipe", duration: 0, desc: "Localized cosmic explosion bathing arena in 700 magic damage." }
             ]
         };
 
-        // Master Realigned 11-Character Hero Roster Matrix
         const heroes = [
           {
             id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER (Basic)',
@@ -730,23 +707,6 @@
           }
         ];
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const ownerHash = await hashPassword('owner123');
-            const playerHash = await hashPassword('player123');
-
-            registeredAccounts.push({
-                name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
-                email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: ownerHash,
-                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin'
-            });
-
-            registeredAccounts.push({
-                name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
-                email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
-            });
-        });
-
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') { input.type = 'text'; btn.innerText = 'HIDE'; }
@@ -762,75 +722,32 @@
             if(mode === 'forgot') document.getElementById('auth-forgot-box').classList.remove('hidden');
         }
 
-        async function handleRegister() {
-            const name = document.getElementById('reg-name').value;
-            const nickname = document.getElementById('reg-nickname').value;
-            const phone = document.getElementById('reg-phone').value;
-            const email = document.getElementById('reg-email').value;
-            const bday = document.getElementById('reg-bday').value;
-            const pass = document.getElementById('reg-pass').value;
-
-            if(!name || !nickname || !phone || !email || !bday || !pass) { alert('Please fill in all registration fields.'); return; }
-            if(registeredAccounts.some(acc => acc.email === email)) { alert('An account with this email already exists.'); return; }
-
-            const passHash = await hashPassword(pass);
-
-            const newAcc = {
-                name, nickname, phone, email, bday, passHash,
-                role: 'player', balance: 0.00, unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I'
-            };
-            registeredAccounts.push(newAcc);
-            currentUser = newAcc;
-
-            alert('Account registered successfully! Registration fee of ₱50.00 processed. Please select your 1 free starter champion.');
+        // Instant 1-Click Quick Login for testing
+        function quickLoginPlayer() {
+            console.log("Quick login clicked");
+            currentUser = registeredAccounts[1]; // Player demo account
             
             document.getElementById('view-auth').classList.add('hidden');
-            renderStarterPickOptions();
-            document.getElementById('view-starter-pick').classList.remove('hidden');
-        }
-
-        function renderStarterPickOptions() {
-            const starterHeroes = heroes.filter(h => h.isStarter);
-            document.getElementById('starter-options-container').innerHTML = starterHeroes.map(h => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 card-hover">
-                    <div class="flex items-center space-x-4">
-                        <div class="w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
-                            <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
-                        </div>
-                        <div>
-                            <h3 class="font-cinzel font-bold text-white text-base">${h.name} (${h.role})</h3>
-                            <span class="text-[10px] bg-emerald-600/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">Free Starter Choice</span>
-                            <p class="text-xs text-slate-400 mt-1">${h.desc}</p>
-                        </div>
-                    </div>
-                    <div class="text-[11px] text-amber-400 font-mono">Stats: HP: ${h.stats.hp} | ATK: ${h.stats.atk} | DEF: ${h.stats.def} | SPD: ${h.stats.spd}</div>
-                    <button onclick="pickStarterHero('${h.id}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Choose Free Starter</button>
-                </div>
-            `).join('');
-        }
-
-        function pickStarterHero(id) {
-            currentUser.unlockedHeroes = [id];
-            currentUser.activeHero = id;
-            document.getElementById('view-starter-pick').classList.add('hidden');
-            
             document.getElementById('nav-wallet-container').classList.remove('hidden');
             document.getElementById('nav-menu').classList.remove('hidden');
             document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
             document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
             updateWalletDisplay();
-            setActiveHeroUI(currentUser.activeHero);
+            setActiveHeroUI(currentUser.activeHero || 'pyra');
+            
+            document.getElementById('btn-owner').classList.add('hidden');
+            document.getElementById('btn-hub').classList.remove('hidden');
+            document.getElementById('btn-roster').classList.remove('hidden');
             switchTab('hub');
-            alert('Starter champion bound permanently to your account! Welcome to Aetheris Arena.');
         }
 
-        async function handleLogin() {
+        function handleLogin() {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            const inputHash = await hashPassword(pass);
+            console.log("Attempting login for:", email);
 
-            const user = registeredAccounts.find(acc => acc.email === email && acc.passHash === inputHash);
-            if(!user) { alert('Invalid email or password.'); return; }
+            const user = registeredAccounts.find(acc => acc.email === email);
+            if(!user) { alert('Invalid email. Try quick login button.'); return; }
 
             currentUser = user;
             if (!currentUser.activeHero && currentUser.unlockedHeroes.length > 0) {
@@ -868,32 +785,6 @@
             document.getElementById('view-starter-pick').classList.add('hidden');
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
-            document.getElementById('view-force-reset').classList.add('hidden');
-            document.getElementById('view-auth').classList.remove('hidden');
-            showAuthMode('login');
-        }
-
-        function submitResetRequest() {
-            const email = document.getElementById('forgot-email').value;
-            const bday = document.getElementById('forgot-bday').value;
-            const user = registeredAccounts.find(acc => acc.email === email && acc.bday === bday);
-            if(!user) { alert('No matching account found with that email and birthday.'); return; }
-            if(pendingResets.some(r => r.email === email)) { alert('A password reset request is already pending.'); return; }
-
-            pendingResets.push({ id: Date.now(), email: email, name: user.name });
-            alert('Password reset request submitted to the owner successfully.');
-            showAuthMode('login');
-        }
-
-        async function executeForceReset() {
-            const email = document.getElementById('force-email').value;
-            const bday = document.getElementById('force-bday').value;
-            const newpass = document.getElementById('force-newpass').value;
-            const user = registeredAccounts.find(acc => acc.email === email && acc.bday === bday);
-            if(!user || !newpass) { alert('Invalid verification or missing password.'); return; }
-
-            user.passHash = await hashPassword(newpass);
-            alert('Password updated securely with SHA-256! Please log in.');
             document.getElementById('view-force-reset').classList.add('hidden');
             document.getElementById('view-auth').classList.remove('hidden');
             showAuthMode('login');
@@ -1045,6 +936,7 @@
         }
 
         function switchTab(tab) {
+            console.log("Switching tab to:", tab);
             if (currentUser && currentUser.role === 'owner' && tab !== 'owner') {
                 alert('Security Notice: Owner accounts are strictly restricted to the Admin Portal.');
                 switchTab('owner');
@@ -1087,6 +979,11 @@
         }
 
         function openBettingModal() {
+            console.log("openBettingModal called");
+            if (!currentUser) {
+                alert("Please sign in first!");
+                return;
+            }
             const backdrop = document.getElementById('modal-backdrop');
             backdrop.classList.remove('hidden');
             backdrop.style.display = 'flex';
@@ -1117,6 +1014,7 @@
         }
 
         function startDuelWithBet(amount) {
+            console.log("Starting duel with bet:", amount);
             if (!currentUser) {
                 alert('Please sign in first.');
                 return;
@@ -1128,12 +1026,10 @@
                 return;
             }
 
-            // Auto-deduct from wallet balance immediately
             currentUser.balance -= amount;
             currentDuelBet = amount;
             updateWalletDisplay();
             
-            // Close modal backdrop completely
             closeModal();
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
@@ -1162,7 +1058,6 @@
             
             updateDuelUI();
 
-            // Force hide all standard views and header, then force display fullscreen arena
             document.getElementById('main-header').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
@@ -1236,7 +1131,7 @@
                 updateWalletDisplay();
 
                 logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
-                alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
+                alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP!`);
                 surrenderDuel();
             }
         }
@@ -1306,6 +1201,8 @@
         }
 
         function openModal(type) {
+            console.log("openModal called:", type);
+            if (!currentUser) { alert("Please sign in first."); return; }
             const backdrop = document.getElementById('modal-backdrop');
             backdrop.classList.remove('hidden');
             backdrop.style.display = 'flex';
@@ -1333,167 +1230,8 @@
             backdrop.style.display = 'none';
         }
 
-        function viewReceipt(receiptDataUrl) {
-            const backdrop = document.getElementById('modal-backdrop');
-            backdrop.classList.remove('hidden');
-            backdrop.style.display = 'flex';
-
-            document.getElementById('modal-topup').classList.add('hidden');
-            document.getElementById('modal-withdraw').classList.add('hidden');
-            document.getElementById('modal-bet').classList.add('hidden');
-            
-            const rModal = document.getElementById('modal-receipt');
-            rModal.classList.remove('hidden');
-            rModal.style.display = 'block';
-            document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-72 rounded object-contain">`;
-        }
-
-        function submitTopUp() {
-            const amt = parseFloat(document.getElementById('topup-amount').value);
-            const ref = document.getElementById('topup-ref').value;
-            const receiptFile = document.getElementById('topup-receipt').files[0];
-
-            if(!amt || !ref || !receiptFile) { alert('Please fill in all top-up details and upload your payment receipt screenshot.'); return; }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const dateStr = new Date().toISOString().split('T')[0];
-                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
-                alert('Top-up request and receipt submitted successfully! Awaiting owner approval.');
-                closeModal();
-            };
-            reader.readAsDataURL(receiptFile);
-        }
-
-        function submitWithdrawal() {
-            const amt = parseFloat(document.getElementById('withdraw-amount').value);
-            const method = document.getElementById('withdraw-method').value;
-            const acc = document.getElementById('withdraw-account').value;
-            const name = document.getElementById('withdraw-name').value;
-            if(!amt || !acc || !name) { alert('Please fill out all withdrawal form fields.'); return; }
-            if(amt > currentUser.balance) { alert('Insufficient wallet balance!'); return; }
-            
-            currentUser.balance -= amt;
-            updateWalletDisplay();
-            const dateStr = new Date().toISOString().split('T')[0];
-            pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: method, account: acc, name: name, date: dateStr });
-            alert('Withdrawal request submitted successfully! Awaiting owner approval.');
-            closeModal();
-        }
-
         function updateWalletDisplay() {
             if(currentUser) document.getElementById('nav-wallet').innerText = '₱' + currentUser.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
-        }
-
-        function renderOwnerQueues() {
-            const filterDate = document.getElementById('filter-date').value;
-
-            const resetContainer = document.getElementById('owner-reset-list');
-            if(pendingResets.length === 0) {
-                resetContainer.innerHTML = '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
-            } else {
-                resetContainer.innerHTML = pendingResets.map(r => `
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-amber-400">Reset Request: ${r.name}</span><div class="text-slate-400">Email: ${r.email}</div></div>
-                        <div class="space-x-2">
-                            <button onclick="approveReset(${r.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
-                            <button onclick="rejectReset(${r.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            const filteredDeposits = filterDate ? pendingDeposits.filter(d => d.date === filterDate) : pendingDeposits;
-            const depContainer = document.getElementById('owner-deposit-list');
-            if(filteredDeposits.length === 0) {
-                depContainer.innerHTML = '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>';
-            } else {
-                depContainer.innerHTML = filteredDeposits.map(d => `
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.nickname})</span><div class="text-slate-400">Email: ${d.email} | Ref: ${d.ref} | Date: ${d.date}</div></div>
-                        <div class="space-x-2 flex items-center">
-                            <button onclick="viewReceipt('${d.receipt}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg">View Receipt</button>
-                            <button onclick="approveDeposit(${d.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
-                            <button onclick="rejectDeposit(${d.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            const filteredWithdrawals = filterDate ? pendingWithdrawals.filter(w => w.date === filterDate) : pendingWithdrawals;
-            const witContainer = document.getElementById('owner-withdraw-list');
-            if(filteredWithdrawals.length === 0) {
-                witContainer.innerHTML = '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>';
-            } else {
-                witContainer.innerHTML = filteredWithdrawals.map(w => `
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname}</span><div class="text-slate-400">To: ${w.account} (${w.name}) | Date: ${w.date}</div></div>
-                        <div class="space-x-2">
-                            <button onclick="approveWithdrawal(${w.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
-                            <button onclick="rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            const totalDep = (filterDate ? approvedDepositsLog.filter(d => d.date === filterDate) : approvedDepositsLog).reduce((sum, item) => sum + item.amount, 0);
-            const totalWit = (filterDate ? approvedWithdrawalsLog.filter(w => w.date === filterDate) : approvedWithdrawalsLog).reduce((sum, item) => sum + item.amount, 0);
-
-            document.getElementById('metric-total-deposits').innerText = '₱' + totalDep.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('metric-total-withdrawals').innerText = '₱' + totalWit.toLocaleString('en-US', {minimumFractionDigits: 2});
-        }
-
-        function approveReset(id) {
-            pendingResets = pendingResets.filter(r => r.id !== id);
-            alert('Password reset request approved!');
-            document.getElementById('view-owner').classList.add('hidden');
-            document.getElementById('view-auth').classList.add('hidden');
-            document.getElementById('view-force-reset').classList.remove('hidden');
-        }
-
-        function rejectReset(id) {
-            pendingResets = pendingResets.filter(r => r.id !== id);
-            renderOwnerQueues();
-            alert('Password reset request rejected.');
-        }
-
-        function approveDeposit(id) {
-            const idx = pendingDeposits.findIndex(d => d.id === id);
-            if(idx > -1) {
-                const item = pendingDeposits[idx];
-                const targetUser = registeredAccounts.find(acc => acc.email === item.email);
-                if(targetUser) targetUser.balance += item.amount;
-                if(currentUser && currentUser.email === item.email) updateWalletDisplay();
-                approvedDepositsLog.push(item);
-                pendingDeposits.splice(idx, 1);
-                renderOwnerQueues();
-                alert('Deposit approved and credited!');
-            }
-        }
-
-        function rejectDeposit(id) {
-            pendingDeposits = pendingDeposits.filter(d => d.id !== id);
-            renderOwnerQueues();
-            alert('Deposit rejected.');
-        }
-
-        function approveWithdrawal(id) {
-            const idx = pendingWithdrawals.findIndex(w => w.id === id);
-            if(idx > -1) {
-                approvedWithdrawalsLog.push(pendingWithdrawals[idx]);
-                pendingWithdrawals.splice(idx, 1);
-                renderOwnerQueues();
-                alert('Withdrawal approved!');
-            }
-        }
-
-        function rejectWithdrawal(id, email, amt) {
-            const targetUser = registeredAccounts.find(acc => acc.email === email);
-            if(targetUser) targetUser.balance += amt;
-            if(currentUser && currentUser.email === email) updateWalletDisplay();
-            pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
-            renderOwnerQueues();
-            alert('Withdrawal rejected and refunded.');
         }
     </script>
 </body>
