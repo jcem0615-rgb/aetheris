@@ -449,12 +449,12 @@
         <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
             <h3 class="font-cinzel text-lg font-bold text-amber-400">SELECT RANKED PVP WAGER</h3>
             <p class="text-xs text-slate-400">Choose your match stake. Winner takes double the bet and earns Rank XP!</p>
-            <div class="grid grid-cols-3 gap-2 pt-2">
-                <button onclick="startDuelWithBet(50)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱50</button>
-                <button onclick="startDuelWithBet(100)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱100</button>
-                <button onclick="startDuelWithBet(200)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱200</button>
-                <button onclick="startDuelWithBet(500)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱500</button>
-                <button onclick="startDuelWithBet(1000)" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2 cursor-pointer">₱1,000</button>
+            <div class="grid grid-cols-3 gap-2 pt-2" id="wager-buttons-grid">
+                <button data-wager="50" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱50</button>
+                <button data-wager="100" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱100</button>
+                <button data-wager="200" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱200</button>
+                <button data-wager="500" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱500</button>
+                <button data-wager="1000" type="button" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2 cursor-pointer">₱1,000</button>
             </div>
             <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2">Cancel</button>
         </div>
@@ -777,6 +777,18 @@
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
                 role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
             });
+
+            // Clean single-bind event listener on the wager buttons grid to prevent double-firing or missing clicks
+            const wagerGrid = document.getElementById('wager-buttons-grid');
+            if (wagerGrid) {
+                wagerGrid.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button[data-wager]');
+                    if (btn) {
+                        const amount = parseInt(btn.getAttribute('data-wager'), 10);
+                        startDuelWithBet(amount);
+                    }
+                });
+            }
         });
 
         function togglePass(inputId, btn) {
