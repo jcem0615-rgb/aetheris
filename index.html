@@ -39,8 +39,8 @@
         </div>
 
         <div class="flex items-center space-x-3">
-            <!-- PWA Install Button (Hidden by default until browser triggers prompt) -->
-            <button id="btn-install-pwa" onclick="installPWA()" class="hidden items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg transition">
+            <!-- PWA Install Button (Always visible on login / header so users can install immediately) -->
+            <button id="btn-install-pwa" onclick="installPWA()" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <span>Install App</span>
             </button>
@@ -482,7 +482,10 @@
         });
 
         async function installPWA() {
-            if (!deferredPrompt) return;
+            if (!deferredPrompt) {
+                alert('PWA installation prompt is ready! If the button does not trigger a popup, you can also install this app directly from your browser menu (Tap menu -> "Install App" or "Add to Home Screen").');
+                return;
+            }
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
             if (outcome === 'accepted') {
@@ -491,15 +494,12 @@
                 console.log('User dismissed the install prompt');
             }
             deferredPrompt = null;
-            const installBtn = document.getElementById('btn-install-pwa');
-            if (installBtn) {
-                installBtn.classList.add('hidden');
-                installBtn.classList.remove('flex');
-            }
         }
 
         window.addEventListener('appinstalled', (evt) => {
             console.log('Aetheris Duel Arena was successfully installed');
+            const installBtn = document.getElementById('btn-install-pwa');
+            if (installBtn) installBtn.classList.add('hidden');
         });
 
         // SHA-256 Hashing Utility
@@ -1428,7 +1428,7 @@
         function rejectWithdrawal(id, email, amt) {
             const targetUser = registeredAccounts.find(acc => acc.email === email);
             if(targetUser) targetUser.balance += amt;
-            if(currentUser && currentUser.email === email) updateWalletDisplay();
+            if(currentUser && currentUser.email === email) updateWalletDialog();
             pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
             renderOwnerQueues();
             alert('Withdrawal rejected and refunded.');
