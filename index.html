@@ -870,13 +870,17 @@
             if(!user) { alert('Invalid email or password.'); return; }
 
             currentUser = user;
+            if (!currentUser.activeHero && currentUser.unlockedHeroes.length > 0) {
+                currentUser.activeHero = currentUser.unlockedHeroes[0];
+            }
+
             document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('nav-wallet-container').classList.remove('hidden');
             document.getElementById('nav-menu').classList.remove('hidden');
             document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
             document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
             updateWalletDisplay();
-            setActiveHeroUI(currentUser.activeHero);
+            setActiveHeroUI(currentUser.activeHero || 'pyra');
 
             if(currentUser.role === 'owner') {
                 document.getElementById('btn-hub').classList.add('hidden');
@@ -1062,10 +1066,10 @@
         }
 
         function setActiveHeroUI(id) {
-            const h = heroes.find(item => item.id === id);
+            const h = heroes.find(item => item.id === id) || heroes[0];
             if (!h) return;
             document.getElementById('active-hero-name').innerText = `${h.name} (${h.role})`;
-            document.getElementById('hub-rank-badge').innerText = currentUser.rank;
+            document.getElementById('hub-rank-badge').innerText = currentUser ? currentUser.rank : 'Bronze I';
             
             const avatar = document.getElementById('active-hero-avatar');
             avatar.className = `w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
@@ -1127,7 +1131,7 @@
         }
 
         function renderActiveHeroSkills() {
-            const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero) || heroes[0];
+            const activeHeroObj = heroes.find(h => h.id === (currentUser ? currentUser.activeHero : 'pyra')) || heroes[0];
             const container = document.getElementById('shuffled-hand-container');
             container.innerHTML = activeHeroObj.skills.map((skill, idx) => `
                 <div onclick="useHeroSkill(${idx})" class="bg-slate-900 border border-slate-700 hover:border-${skill.color || 'amber'}-500 rounded-xl p-3 cursor-pointer card-hover space-y-1">
@@ -1157,7 +1161,12 @@
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
 
-            // Load active hero stats into duel state
+            // Robust fallback check for active hero
+            if (!currentUser.activeHero) {
+                currentUser.activeHero = currentUser.unlockedHeroes[0] || 'pyra';
+            }
+
+            // Load active hero stats into duel state with guaranteed fallback to Pyra
             const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero) || heroes[0];
             const pMaxHp = activeHeroObj.stats.hp;
             
