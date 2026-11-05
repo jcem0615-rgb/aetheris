@@ -72,9 +72,9 @@
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 glow-box">
                 <h3 class="font-cinzel text-lg font-bold text-white">Secure Sign In</h3>
                 <div class="space-y-3">
-                    <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white" value="player@logicgrid.com">
                     <div class="relative">
-                        <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10" value="player123">
                         <button type="button" onclick="togglePass('login-pass', this)" class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
                 </div>
@@ -403,7 +403,7 @@
     </div>
 
     <!-- Modals Container Backdrop -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
         <!-- Top-up Modal -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden">
             <h3 class="font-cinzel text-lg font-bold text-amber-400">Submit Top-Up Request</h3>
@@ -487,12 +487,24 @@
             deferredPrompt = null;
         }
 
-        // SHA-256 Hashing Utility
+        // Robust SHA-256 Hashing Utility with file:// Safe Fallback
         async function hashPassword(password) {
-            const msgBuffer = new TextEncoder().encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            try {
+                if (window.crypto && window.crypto.subtle) {
+                    const msgBuffer = new TextEncoder().encode(password);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                }
+            } catch (e) {
+                console.warn('Crypto subtle unavailable, using fallback hash');
+            }
+            let hash = 0;
+            for (let i = 0; i < password.length; i++) {
+                hash = ((hash << 5) - hash) + password.charCodeAt(i);
+                hash |= 0;
+            }
+            return 'fallback_' + Math.abs(hash);
         }
 
         let registeredAccounts = [];
@@ -1075,11 +1087,17 @@
         }
 
         function openBettingModal() {
-            document.getElementById('modal-backdrop').classList.remove('hidden');
+            const backdrop = document.getElementById('modal-backdrop');
+            backdrop.classList.remove('hidden');
+            backdrop.style.display = 'flex';
+
             document.getElementById('modal-topup').classList.add('hidden');
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-receipt').classList.add('hidden');
-            document.getElementById('modal-bet').classList.remove('hidden');
+            
+            const betModal = document.getElementById('modal-bet');
+            betModal.classList.remove('hidden');
+            betModal.style.display = 'block';
         }
 
         function renderActiveHeroSkills() {
@@ -1288,23 +1306,45 @@
         }
 
         function openModal(type) {
-            document.getElementById('modal-backdrop').classList.remove('hidden');
+            const backdrop = document.getElementById('modal-backdrop');
+            backdrop.classList.remove('hidden');
+            backdrop.style.display = 'flex';
+
             document.getElementById('modal-topup').classList.add('hidden');
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
-            if(type === 'topup') document.getElementById('modal-topup').classList.remove('hidden');
-            if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
+
+            if(type === 'topup') {
+                const m = document.getElementById('modal-topup');
+                m.classList.remove('hidden');
+                m.style.display = 'block';
+            }
+            if(type === 'withdraw') {
+                const m = document.getElementById('modal-withdraw');
+                m.classList.remove('hidden');
+                m.style.display = 'block';
+            }
         }
 
-        function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
+        function closeModal() {
+            const backdrop = document.getElementById('modal-backdrop');
+            backdrop.classList.add('hidden');
+            backdrop.style.display = 'none';
+        }
 
         function viewReceipt(receiptDataUrl) {
-            document.getElementById('modal-backdrop').classList.remove('hidden');
+            const backdrop = document.getElementById('modal-backdrop');
+            backdrop.classList.remove('hidden');
+            backdrop.style.display = 'flex';
+
             document.getElementById('modal-topup').classList.add('hidden');
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
-            document.getElementById('modal-receipt').classList.remove('hidden');
+            
+            const rModal = document.getElementById('modal-receipt');
+            rModal.classList.remove('hidden');
+            rModal.style.display = 'block';
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-72 rounded object-contain">`;
         }
 
