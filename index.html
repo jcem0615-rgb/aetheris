@@ -850,7 +850,6 @@
                             <p class="text-xs text-slate-400 mt-1">${h.desc}</p>
                         </div>
                     </div>
-                    <div class="text-[11px] text-amber-400 font-mono">Stats: HP: ${h.stats.hp} | ATK: ${h.stats.atk} | DEF: ${h.stats.def} | SPD: ${h.stats.spd}</div>
                     <button onclick="pickStarterHero('${h.id}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Choose Free Starter</button>
                 </div>
             `).join('');
@@ -1002,8 +1001,6 @@
                     actionBtn = `<span class="text-xs text-amber-400 font-mono text-right block">Requires ${h.requiredWins} Wins & ${h.requiredXp} XP<br><span class="text-[10px] text-slate-500">(Your Stats: ${currentUser.wins} Wins, ${currentUser.xp} XP)</span></span>`;
                 }
 
-                const skillsListHtml = h.skills.map(s => `<span class="inline-block bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-md mr-1 mt-1 font-mono" title="${s.desc}">${s.name} (${s.type})</span>`).join('');
-
                 return `
                     <div class="bg-[#0e1322] border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between card-hover">
                         <div class="flex items-center space-x-5">
@@ -1016,12 +1013,6 @@
                                     <span class="text-[10px] bg-blue-600/20 text-blue-400 px-2.5 py-0.5 rounded-full border border-blue-500/30 font-medium">${h.rarity}</span>
                                 </div>
                                 <p class="text-xs text-slate-400 max-w-md">${h.desc}</p>
-                                <div class="text-[11px] text-amber-400 font-mono mt-1">Stats: HP: ${h.stats.hp} | ATK: ${h.stats.atk} | DEF: ${h.stats.def} | SPD: ${h.stats.spd}</div>
-                                <div class="mt-1 flex flex-wrap">
-                                    <span class="text-[10px] text-slate-400 font-bold mr-1 mt-1">Skills:</span>
-                                    ${skillsListHtml}
-                                </div>
-                                <div class="text-[10px] text-indigo-300 mt-1">Battle Animation: ${h.spriteAnim}</div>
                                 ${h.isStarter && !isUnlocked ? `<span class="text-xs font-bold text-amber-400 mt-1 block">Acquisition Price: ₱${h.price}</span>` : ''}
                             </div>
                         </div>
@@ -1083,7 +1074,7 @@
 
             const fsPlayerSprite = document.getElementById('fs-player-sprite');
             fsPlayerSprite.className = `w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)] p-2`;
-            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-20 h-20 object-cover rounded-xl shadow-lg mb-1"><span class="font-cinzel text-xs font-bold text-amber-300">${h.name}</span><span class="text-[9px] text-slate-300">[${h.spriteAnim}]</span>`;
+            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-20 h-20 object-cover rounded-xl shadow-lg mb-1"><span class="font-cinzel text-xs font-bold text-amber-300">${h.name}</span>`;
         }
 
         function switchTab(tab) {
