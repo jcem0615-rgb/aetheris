@@ -39,9 +39,15 @@
         </div>
 
         <div class="flex items-center space-x-3">
+            <!-- PWA Install Button -->
+            <button id="btn-install-pwa" onclick="installPWA()" class="hidden items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Install App</span>
+            </button>
+
             <div id="nav-wallet-container" class="hidden items-center space-x-2 bg-slate-900 border border-slate-700 rounded-full px-3 py-1">
                 <span class="text-xs text-slate-400">Wallet:</span>
-                <span id="nav-wallet" class="text-sm font-bold text-emerald-400">₱2,000.00</span>
+                <span id="nav-wallet" class="text-sm font-bold text-emerald-400">₱0.00</span>
             </div>
             <nav id="nav-menu" class="hidden space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
                 <button onclick="switchTab('hub')" id="btn-hub" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">Home</button>
@@ -59,23 +65,16 @@
         <div id="view-auth" class="max-w-md mx-auto py-10 space-y-6">
             <div class="text-center space-y-2">
                 <h2 class="font-cinzel text-3xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
-                <p class="text-xs text-slate-400">Pre-Skill Classic Combat Edition</p>
+                <p class="text-xs text-slate-400">Secured with SHA-256 Hashing & Role Isolation</p>
             </div>
 
             <!-- Login Box -->
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 glow-box">
                 <h3 class="font-cinzel text-lg font-bold text-white">Secure Sign In</h3>
-                
-                <!-- Instant Quick Login Button -->
-                <button onclick="quickLoginPlayer()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                    <span>⚡ Instant Quick Start (Player Demo)</span>
-                </button>
-                <div class="text-center text-[10px] text-slate-500">— OR SIGN IN MANUALLY —</div>
-
                 <div class="space-y-3">
-                    <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white" value="player@logicgrid.com">
+                    <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
                     <div class="relative">
-                        <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10" value="player123">
+                        <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
                         <button type="button" onclick="togglePass('login-pass', this)" class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
                 </div>
@@ -118,7 +117,7 @@
             <!-- Forgot Password Box -->
             <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 glow-box hidden">
                 <h3 class="font-cinzel text-lg font-bold text-white">Request Password Reset</h3>
-                <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request.</p>
+                <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request to the owner.</p>
                 <div class="space-y-3">
                     <input type="email" id="forgot-email" placeholder="Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
                     <div class="space-y-1">
@@ -133,17 +132,49 @@
             </div>
         </div>
 
+        <!-- Initial Starter Hero Selection View -->
+        <div id="view-starter-pick" class="max-w-2xl mx-auto py-8 space-y-6 hidden">
+            <div class="text-center space-y-2">
+                <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-amber-400 glow-gold">CHOOSE YOUR STARTER CHAMPION</h2>
+                <p class="text-xs text-slate-400">Select <strong class="text-amber-400">only 1</strong> of the 4 basic foundational heroes below for free. Other basic heroes can be acquired later via payment.</p>
+            </div>
+            <div id="starter-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Force Change Password View -->
+        <div id="view-force-reset" class="max-w-md mx-auto py-16 space-y-4 hidden">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 glow-box">
+                <h3 class="font-cinzel text-lg font-bold text-amber-400">Force Password Change</h3>
+                <p class="text-xs text-slate-400">Your password reset request was approved by the owner. Please verify your identity and enter a new password.</p>
+                <div class="space-y-3">
+                    <input type="email" id="force-email" placeholder="Confirm Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 block">Confirm Birthday:</label>
+                        <input type="date" id="force-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="force-newpass" placeholder="New Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <button type="button" onclick="togglePass('force-newpass', this)" class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
+                </div>
+                <button onclick="executeForceReset()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Update Password & Login</button>
+            </div>
+        </div>
+
         <!-- Hero Roster & Rank Unlocks View -->
         <div id="view-select" class="hidden space-y-4">
             <div class="text-center max-w-lg mx-auto mb-6">
                 <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANK PROGRESSION</h2>
-                <p class="text-slate-400 text-xs">Acquire additional basic heroes or advance through ranked combat.</p>
+                <p class="text-slate-400 text-xs">Acquire additional basic heroes via wallet balance, or advance your rank through duels to unlock advanced champions and bosses!</p>
                 <div class="mt-3 inline-block bg-slate-900 border border-amber-500/40 rounded-xl px-4 py-3 text-xs space-y-2">
                     <div class="flex items-center justify-between space-x-6">
                         <span>Rank Tier: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
-                        <span>Rank XP: <strong id="player-xp-badge" class="text-emerald-400">0 / 150</strong></span>
+                        <span>Rank XP: <strong id="player-xp-badge" class="text-emerald-400">0 / 100</strong></span>
                         <span>Wins: <strong id="player-wins-badge" class="text-blue-400">0</strong></span>
                     </div>
+                    <!-- XP Progress Bar -->
                     <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
                         <div id="player-xp-bar" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
                     </div>
@@ -156,6 +187,7 @@
         <div id="view-hub" class="hidden space-y-6">
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between glow-box">
                 <div class="flex items-center space-x-4">
+                    <!-- Active Hero Canva Icon Badge -->
                     <div id="active-hero-avatar" class="w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
                         <img id="active-hero-img-el" src="" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
                     </div>
@@ -165,7 +197,7 @@
                             <span id="hub-rank-badge" class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
                         </div>
                         <h2 id="active-hero-name" class="font-cinzel text-xl font-bold text-white">PYRA</h2>
-                        <p class="text-xs text-slate-400">Active Champion • Ready for Combat</p>
+                        <p class="text-xs text-slate-400">Active Champion • Ready for Ranked Duels</p>
                     </div>
                 </div>
                 <div class="flex space-x-2">
@@ -174,11 +206,11 @@
                 </div>
             </div>
 
-            <!-- Owner Payment QR Banner -->
+            <!-- Owner Payment QR Banner for Players -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
                 <div>
                     <h3 class="font-cinzel font-bold text-amber-400 text-sm">OFFICIAL OWNER PAYMENT CHANNELS</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Scan the QR code or send funds to the official e-wallet accounts below before submitting a top-up.</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Scan the QR code or send funds to the official e-wallet accounts below before submitting a top-up request.</p>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center space-x-4">
@@ -204,7 +236,7 @@
                 <div onclick="openBettingModal()" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-5 cursor-pointer card-hover">
                     <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-3">⚔</div>
                     <h3 class="font-cinzel font-bold text-white text-base">RANKED PVP DUEL</h3>
-                    <p class="text-xs text-slate-400 mt-1">Select bet stake (₱50-₱1000) and win matches to gain Rank XP.</p>
+                    <p class="text-xs text-slate-400 mt-1">Select bet stake (₱50-₱1000) and win matches to gain Rank XP and unlock advanced heroes.</p>
                 </div>
                 <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 cursor-pointer card-hover">
                     <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-3">🛡</div>
@@ -227,7 +259,7 @@
                     <span class="text-xs bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30">Secure Admin Mode</span>
                 </div>
 
-                <!-- Metrics Summary -->
+                <!-- Date Picker Filter & Metrics Summary -->
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                         <h3 class="font-cinzel text-xs font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
@@ -249,7 +281,7 @@
                     </div>
                 </div>
 
-                <!-- Owner Account & QR Setup -->
+                <!-- Owner Account & QR Upload Setup -->
                 <div class="space-y-3">
                     <h3 class="font-cinzel text-sm font-bold text-white">Merchant E-Wallet Credentials & QR Codes</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -278,7 +310,7 @@
                     </div>
                 </div>
 
-                <!-- Top-Up Approvals -->
+                <!-- Top-Up Monitoring & Approvals -->
                 <div class="space-y-3">
                     <h3 class="font-cinzel text-sm font-bold text-white">Top-Up Monitoring & Approvals</h3>
                     <div id="owner-deposit-list" class="space-y-2">
@@ -286,7 +318,7 @@
                     </div>
                 </div>
 
-                <!-- Withdrawal Approvals -->
+                <!-- Withdrawal Monitoring & Approvals -->
                 <div class="space-y-3">
                     <h3 class="font-cinzel text-sm font-bold text-white">Withdrawal Monitoring & Approvals</h3>
                     <div id="owner-withdraw-list" class="space-y-2">
@@ -297,81 +329,96 @@
         </div>
     </main>
 
-    <!-- CLASSIC COMBAT DUEL ARENA VIEW (PRE-SKILL) -->
+    <!-- FULL-SCREEN PVP AXIE-STYLE BATTLE ARENA VIEW -->
     <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-4 md:p-8 hidden overflow-y-auto">
+        <!-- Top Battle Bar -->
         <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 rounded-2xl px-6 py-3 backdrop-blur">
             <div class="flex items-center space-x-3">
-                <h2 class="font-cinzel font-bold text-lg text-amber-400 glow-gold">CLASSIC ARENA BATTLE</h2>
+                <h2 class="font-cinzel font-bold text-lg text-amber-400 glow-gold">AXIE ARENA BATTLE</h2>
                 <span id="fullscreen-bet-badge" class="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
             </div>
             <button onclick="surrenderDuel()" class="px-4 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl transition">Surrender / Exit</button>
         </div>
 
+        <!-- Main Combat Stage -->
         <div class="flex-1 my-4 bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-950 border border-slate-800/80 rounded-3xl p-6 md:p-10 flex flex-col justify-between relative overflow-hidden shadow-2xl">
             <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
 
-            <!-- Opponent Stage Area -->
+            <!-- Opponent Stage Area (Top) -->
             <div class="flex flex-col items-center space-y-2 z-10">
                 <div class="w-48 bg-slate-950/90 border border-red-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
                     <div class="flex justify-between text-[11px] font-bold">
-                        <span id="fs-enemy-title" class="text-red-400">CHRONO WARDEN</span>
-                        <span id="fs-enemy-hp-text" class="text-emerald-400">3000/3000</span>
+                        <span class="text-red-400">CHRONO WARDEN</span>
+                        <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
                         <div id="fs-enemy-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
                     </div>
+                    <div class="flex justify-between text-[10px] text-slate-400">
+                        <span>Armor: <strong id="fs-enemy-armor" class="text-blue-300">0</strong></span>
+                        <span>Poison: <strong id="fs-enemy-poison" class="text-purple-300">0</strong></span>
+                        <span>Debuff: <strong id="fs-enemy-debuff" class="text-amber-400">None</strong></span>
+                    </div>
                 </div>
                 <div id="fs-enemy-sprite" class="w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.2)] p-2">
                     <img id="fs-enemy-img-el" src="image_a4f1655c.jpg" alt="Chrono Warden" class="w-20 h-20 object-cover rounded-xl shadow-lg">
-                    <span id="fs-enemy-name-tag" class="font-cinzel text-xs font-bold text-amber-300 mt-1">CHRONO</span>
+                    <span class="font-cinzel text-xs font-bold text-amber-300 mt-1">CHRONO</span>
                 </div>
             </div>
 
-            <!-- Battle Log Pill -->
+            <!-- Central Battle Log Floating Pill -->
             <div class="self-center z-20 max-w-lg w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-4 py-2 text-center text-xs text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
-                [Arena]: Classic combat ready! Choose your combat action below.
+                [Arena]: Deck shuffled! Combat engaged. Choose your drawn tactical skills below.
             </div>
 
-            <!-- Player Stage Area -->
+            <!-- Player Stage Area (Bottom) -->
             <div class="flex flex-col items-center space-y-2 z-10">
                 <div id="fs-player-sprite" class="w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)] p-2">
                     <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-20 h-20 object-cover rounded-xl shadow-lg">
-                    <span id="fs-player-sprite-name" class="font-cinzel text-xs font-bold text-amber-300 mt-1">PYRA</span>
+                    <span class="font-cinzel text-xs font-bold text-amber-300 mt-1">PYRA</span>
                 </div>
                 <div class="w-48 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
                     <div class="flex justify-between text-[11px] font-bold">
                         <span id="fs-player-name" class="text-blue-400">PLAYER</span>
-                        <span id="fs-player-hp-text" class="text-emerald-400">2800/2800</span>
+                        <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
                         <div id="fs-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-400">
+                        <span>Armor: <strong id="fs-player-armor" class="text-blue-300">0</strong></span>
+                        <span>AP: <strong id="fs-player-ap" class="text-amber-400">3</strong>/3</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Combat Action Controls (Pre-Skill) -->
+        <!-- Bottom Shuffled Action Cards Deck -->
         <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 space-y-3 backdrop-blur">
             <div class="flex justify-between items-center px-1">
-                <span class="font-cinzel text-xs font-bold text-amber-400">COMBAT ACTIONS</span>
+                <span class="font-cinzel text-xs font-bold text-amber-400">SHUFFLED SKILL DECK (Drawn 4 / Turn)</span>
+                <button onclick="endDuelTurn()" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">End Turn & Shuffle</button>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <button onclick="executeCombatAction('attack')" class="py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">⚔️ Basic Attack (250 Dmg)</button>
-                <button onclick="executeCombatAction('heavy')" class="py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow transition">⚡ Heavy Strike (450 Dmg)</button>
-                <button onclick="executeCombatAction('shield')" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition">🛡️ Shield Block (+300 Armor)</button>
-                <button onclick="executeCombatAction('ultimate')" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow transition">🔥 Ultimate Burst (800 Dmg)</button>
+            <!-- Dynamically Rendered Shuffled Hand Cards -->
+            <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <!-- Populated dynamically via JS shuffle -->
             </div>
         </div>
     </div>
 
     <!-- Modals -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <!-- Top-up Modal -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden">
             <h3 class="font-cinzel text-lg font-bold text-amber-400">Submit Top-Up Request</h3>
+            <p class="text-xs text-slate-400">Send payment to owner's official e-wallet, enter reference, and upload payment receipt screenshot.</p>
             <div class="space-y-3">
                 <input type="number" id="topup-amount" placeholder="Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                <input type="file" id="topup-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-600 file:text-white">
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-400 block">Upload Payment Receipt:</label>
+                    <input type="file" id="topup-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-600 file:text-white">
+                </div>
             </div>
             <div class="flex space-x-2 pt-2">
                 <button onclick="submitTopUp()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl">Submit Request</button>
@@ -379,8 +426,10 @@
             </div>
         </div>
 
+        <!-- Withdrawal Modal -->
         <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden">
             <h3 class="font-cinzel text-lg font-bold text-amber-400">Withdrawal Request Form</h3>
+            <p class="text-xs text-slate-400">Fill out your cash-out destination details below.</p>
             <div class="space-y-3">
                 <input type="number" id="withdraw-amount" placeholder="Withdrawal Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <select id="withdraw-method" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
@@ -388,6 +437,7 @@
                     <option value="Maya">Maya</option>
                 </select>
                 <input type="text" id="withdraw-account" placeholder="Account Number / Phone" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="text" id="withdraw-name" placeholder="Account Holder Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
             </div>
             <div class="flex space-x-2 pt-2">
                 <button onclick="submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl">Submit Withdrawal</button>
@@ -395,47 +445,354 @@
             </div>
         </div>
 
+        <!-- PVP Bet Selection Modal -->
         <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
             <h3 class="font-cinzel text-lg font-bold text-amber-400">SELECT RANKED PVP WAGER</h3>
+            <p class="text-xs text-slate-400">Choose your match stake. Winner takes double the bet and earns Rank XP!</p>
             <div class="grid grid-cols-3 gap-2 pt-2">
-                <button type="button" onclick="startDuelWithBet(50)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱50</button>
-                <button type="button" onclick="startDuelWithBet(100)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱100</button>
-                <button type="button" onclick="startDuelWithBet(200)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱200</button>
-                <button type="button" onclick="startDuelWithBet(500)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱500</button>
-                <button type="button" onclick="startDuelWithBet(1000)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2 cursor-pointer">₱1,000</button>
+                <button onclick="startDuelWithBet(50)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱50</button>
+                <button onclick="startDuelWithBet(100)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱100</button>
+                <button onclick="startDuelWithBet(200)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱200</button>
+                <button onclick="startDuelWithBet(500)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱500</button>
+                <button onclick="startDuelWithBet(1000)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2">₱1,000</button>
             </div>
-            <button type="button" onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2 cursor-pointer">Cancel</button>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2">Cancel</button>
+        </div>
+
+        <!-- Receipt Preview Modal -->
+        <div id="modal-receipt" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-lg space-y-4 hidden text-center">
+            <h3 class="font-cinzel text-lg font-bold text-amber-400">Payment Receipt Inspection</h3>
+            <div id="receipt-preview-container" class="max-h-80 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center p-2"></div>
+            <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Preview</button>
         </div>
     </div>
 
     <script>
-        let registeredAccounts = [
-            {
-                name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
-                email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: 'fallback_owner123',
-                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin'
-            },
-            {
-                name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
-                email: 'player@logicgrid.com', bday: '2000-06-15', passHash: 'fallback_player123',
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 120, rank: 'Silver I'
-            }
-        ];
+        // PWA Install Prompt Handler
+        let deferredPrompt = null;
 
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('btn-install-pwa');
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+            }
+        });
+
+        async function installPWA() {
+            if (!deferredPrompt) {
+                alert('PWA installation prompt is ready! If the button does not trigger a popup, you can also install this app directly from your browser menu (Tap menu -> "Install App" or "Add to Home Screen").');
+                return;
+            }
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+            } else {
+                console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
+        }
+
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('Aetheris Duel Arena was successfully installed');
+            const installBtn = document.getElementById('btn-install-pwa');
+            if (installBtn) installBtn.classList.add('hidden');
+        });
+
+        // SHA-256 Hashing Utility
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        let registeredAccounts = [];
         let currentUser = null;
         let currentDuelBet = 50;
-        let duelState = { playerHp: 2800, playerMaxHp: 2800, playerArmor: 0, enemyHp: 3000, enemyMaxHp: 3000, enemyArmor: 0 };
 
-        const heroes = [
-          { id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER', stats: { hp: 2800, atk: 2400 }, bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', iconImg: 'image_b2781538.jpg', price: 150, requiredWins: 0, requiredXp: 0, isStarter: true },
-          { id: 'sylph', name: 'SYLPH', role: 'Wind Ranger', rarity: 'STARTER', stats: { hp: 2600, atk: 2200 }, bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', iconImg: 'image_e51741b7.jpg', price: 150, requiredWins: 0, requiredXp: 0, isStarter: true },
-          { id: 'storm-knight', name: 'STORM KNIGHT', role: 'Electric Knight', rarity: 'RANKED', stats: { hp: 3400, atk: 2200 }, bg: 'from-amber-950 to-slate-950', border: 'border-amber-500/50', iconImg: 'image_d3c262a5.jpg', price: 150, requiredWins: 2, requiredXp: 150, isStarter: false }
+        let pendingDeposits = [];
+        let pendingWithdrawals = [];
+        let approvedDepositsLog = [];
+        let approvedWithdrawalsLog = [];
+        let pendingResets = [];
+        let uploadedGcashQR = null;
+        let uploadedMayaQR = null;
+
+        let duelState = { 
+            playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, 
+            enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' 
+        };
+
+        const masterSkillDeck = [
+            { type: 'strike', name: 'STRIKE', ap: 1, color: 'blue', desc: 'Deal 15 physical damage.' },
+            { type: 'defend', name: 'DEFEND', ap: 1, color: 'blue', desc: 'Gain 12 Armor block.' },
+            { type: 'poison', name: 'VENOM STRIKE', ap: 2, color: 'purple', desc: 'Apply 8 Poison stacks.' },
+            { type: 'debuff', name: 'PLAGUE BURST', ap: 2, color: 'emerald', desc: 'Apply Poison & inflict Armor-Break (-50% enemy defense).' },
+            { type: 'heal', name: 'MEDITATE', ap: 2, color: 'emerald', desc: 'Restore 15 HP instantly.' }
         ];
+
+        let currentHand = [];
+
+        // Master Realigned 11-Character Data Matrix with real numerical stats and specific skills
+        const heroes = [
+          {
+            id: 'pyra',
+            name: 'PYRA',
+            role: 'Fire Mage',
+            rarity: 'STARTER (Basic)',
+            stats: { hp: 2800, atk: 2400, def: 1200, spd: 140 },
+            skills: [
+              { name: 'Flame Burst', type: 'fire', desc: 'Deals 350 fire magic damage to target.' },
+              { name: 'Ignition Aura', type: 'buff', desc: 'Increases attack power by 25% for 2 turns.' },
+              { name: 'Meteor Call', type: 'ultimate', desc: 'Summons a meteor dealing heavy AoE burn damage.' }
+            ],
+            desc: 'Fire-elemental spellcaster with explosive burn damage.',
+            bg: 'from-red-950 to-slate-950',
+            border: 'border-red-500/50',
+            iconImg: 'image_b2781538.jpg',
+            price: 150,
+            requiredWins: 0,
+            requiredXp: 0,
+            isStarter: true,
+            spriteAnim: 'Casting / Flame Burst'
+          },
+          {
+            id: 'sylph',
+            name: 'SYLPH',
+            role: 'Wind Ranger',
+            rarity: 'STARTER (Basic)',
+            stats: { hp: 2600, atk: 2200, def: 1300, spd: 190 },
+            skills: [
+              { name: 'Gale Shot', type: 'wind', desc: 'Fires a piercing wind arrow with high crit rate.' },
+              { name: 'Wind Step', type: 'buff', desc: 'Boosts evasion and speed by 30%.' },
+              { name: 'Hurricane Storm', type: 'ultimate', desc: 'Unleashes a tempest tearing through enemy defenses.' }
+            ],
+            desc: 'Agile archer with high movement and gale evasion.',
+            bg: 'from-emerald-950 to-slate-950',
+            border: 'border-emerald-500/50',
+            iconImg: 'image_e51741b7.jpg',
+            price: 150,
+            requiredWins: 0,
+            requiredXp: 0,
+            isStarter: true,
+            spriteAnim: 'Evasion / Triple Gale Shot'
+          },
+          {
+            id: 'valen',
+            name: 'VALEN',
+            role: 'Iron Guardian',
+            rarity: 'STARTER (Basic)',
+            stats: { hp: 4200, atk: 1500, def: 2600, spd: 90 },
+            skills: [
+              { name: 'Shield Slam', type: 'physical', desc: 'Bashes enemy with heavy shield dealing physical damage.' },
+              { name: 'Holy Barrier', type: 'buff', desc: 'Erects an unbreakable barrier blocking incoming attacks.' },
+              { name: 'Bastion Wrath', type: 'ultimate', desc: 'Unleashes stored defense power as a retaliatory shockwave.' }
+            ],
+            desc: 'Holy tank with impenetrable defense and holy barrier.',
+            bg: 'from-blue-950 to-slate-950',
+            border: 'border-blue-500/50',
+            iconImg: 'image_4b6fe95a.jpg',
+            price: 150,
+            requiredWins: 0,
+            requiredXp: 0,
+            isStarter: true,
+            spriteAnim: 'Guard / Shield Slam'
+          },
+          {
+            id: 'nyx',
+            name: 'NYX',
+            role: 'Shadow Assassin',
+            rarity: 'STARTER (Basic)',
+            stats: { hp: 2400, atk: 2600, def: 1000, spd: 180 },
+            skills: [
+              { name: 'Shadow Strike', type: 'dark', desc: 'Strikes from the shadows with critical backstab damage.' },
+              { name: 'Stealth Cloak', type: 'buff', desc: 'Enters absolute stealth to evade next incoming attack.' },
+              { name: 'Execution Blade', type: 'ultimate', desc: 'Deals massive damage amplified against low-HP targets.' }
+            ],
+            desc: 'Deadly operative with stealth and shadow-strike bursts.',
+            bg: 'from-purple-950 to-slate-950',
+            border: 'border-purple-500/50',
+            iconImg: 'image_a9978665.jpg',
+            price: 150,
+            requiredWins: 0,
+            requiredXp: 0,
+            isStarter: true,
+            spriteAnim: 'Stealth / X-Slash'
+          },
+          {
+            id: 'storm-knight',
+            name: 'STORM KNIGHT',
+            role: 'Electric Knight',
+            rarity: 'RANKED (Silver I)',
+            stats: { hp: 3400, atk: 2200, def: 2400, spd: 120 },
+            skills: [
+              { name: 'Lightning Slash', type: 'electric', desc: 'Strikes enemy with electrified blade causing paralysis.' },
+              { name: 'Static Shield', type: 'buff', desc: 'Charges armor with static electricity shocking attackers.' },
+              { name: 'Thunder Wrath', type: 'ultimate', desc: 'Calls down a colossal lightning bolt on the arena.' }
+            ],
+            desc: 'Electric armored duelist wielding lightning strikes.',
+            bg: 'from-amber-950 to-slate-950',
+            border: 'border-amber-500/50',
+            iconImg: 'image_d3c262a5.jpg',
+            price: 150,
+            requiredWins: 2,
+            requiredXp: 150,
+            isStarter: false,
+            spriteAnim: 'Channeled / Lightning Surge'
+          },
+          {
+            id: 'ironclad-titan',
+            name: 'IRONCLAD TITAN',
+            role: 'Earth Titan',
+            rarity: 'RANKED (Silver II)',
+            stats: { hp: 4800, atk: 1600, def: 3200, spd: 80 },
+            skills: [
+              { name: 'Earthquake Slam', type: 'earth', desc: 'Slams ground shaking the arena and fracturing armor.' },
+              { name: 'Tectonic Armor', type: 'buff', desc: 'Hardens stone skin to absorb massive physical blows.' },
+              { name: 'Mountain Crush', type: 'ultimate', desc: 'Summons boulder fragments crashing onto opponent.' }
+            ],
+            desc: 'Colossal earth juggernaut with earth-shattering slams.',
+            bg: 'from-stone-950 to-slate-950',
+            border: 'border-stone-500/50',
+            iconImg: 'image_e1196f4d.jpg',
+            price: 150,
+            requiredWins: 4,
+            requiredXp: 350,
+            isStarter: false,
+            spriteAnim: 'Heavy Slam / Earth Fracture'
+          },
+          {
+            id: 'chrono-warden',
+            name: 'CHRONO WARDEN',
+            role: 'Time Mage',
+            rarity: 'RANKED (Gold I)',
+            stats: { hp: 3000, atk: 2300, def: 1800, spd: 160 },
+            skills: [
+              { name: 'Time Warp Strike', type: 'time', desc: 'Strikes distortion across time-space continuum.' },
+              { name: 'Temporal Stasis', type: 'control', desc: 'Freezes enemy action for one turn.' },
+              { name: 'Hourglass Reversal', type: 'ultimate', desc: 'Rewinds own HP and status back to previous peak.' }
+            ],
+            desc: 'Time controller manipulating action queues and hourglass power.',
+            bg: 'from-yellow-950 to-slate-950',
+            border: 'border-yellow-500/50',
+            iconImg: 'image_a4f1655c.jpg',
+            price: 150,
+            requiredWins: 7,
+            requiredXp: 600,
+            isStarter: false,
+            spriteAnim: 'Stasis / Quantum Rewind'
+          },
+          {
+            id: 'sky-valkyrie',
+            name: 'SKY VALKYRIE',
+            role: 'Light Warrior',
+            rarity: 'RANKED (Gold II)',
+            stats: { hp: 3200, atk: 2500, def: 2000, spd: 170 },
+            skills: [
+              { name: 'Celestial Spear', type: 'light', desc: 'Hurls a spear of pure holy light.' },
+              { name: 'Valkyrie Wings', type: 'buff', desc: 'Soars into the air gaining speed and radiant glow.' },
+              { name: 'Divine Judgment', type: 'ultimate', desc: 'Calls down heavens judgment upon wicked foes.' }
+            ],
+            desc: 'Aerial divine warrior with celestial flight capabilities.',
+            bg: 'from-orange-950 to-slate-950',
+            border: 'border-orange-500/50',
+            iconImg: 'image_9b984ce7.jpg',
+            price: 150,
+            requiredWins: 10,
+            requiredXp: 950,
+            isStarter: false,
+            spriteAnim: 'Dive / Skyward Smite'
+          },
+          {
+            id: 'void-necromancer',
+            name: 'VOID NECROMANCER',
+            role: 'Void Sorcerer',
+            rarity: 'RANKED (Platinum I)',
+            stats: { hp: 2500, atk: 2700, def: 1100, spd: 130 },
+            skills: [
+              { name: 'Soul Drain', type: 'void', desc: 'Siphons life force directly from target.' },
+              { name: 'Specter Summon', type: 'summon', desc: 'Summons spectral minion to fight alongside.' },
+              { name: 'Abyssal Cataclysm', type: 'ultimate', desc: 'Opens a rift to the void swallowing opponent stats.' }
+            ],
+            desc: 'Dark sorcerer capable of summoning spectral minions.',
+            bg: 'from-violet-950 to-slate-950',
+            border: 'border-violet-500/50',
+            iconImg: 'image_42205d6.jpg',
+            price: 150,
+            requiredWins: 15,
+            requiredXp: 1400,
+            isStarter: false,
+            spriteAnim: 'Siphon / Necrotic Abyss'
+          },
+          {
+            id: 'blood-berserker',
+            name: 'BLOOD BERSERKER',
+            role: 'Blood Brawler',
+            rarity: 'ADVANCED (Elite)',
+            stats: { hp: 3600, atk: 2800, def: 1400, spd: 135 },
+            skills: [
+              { name: 'Blood Cleave', type: 'physical', desc: 'Savage axe swing scaling with missing HP.' },
+              { name: 'Bloodlust Frenzy', type: 'buff', desc: 'Sacrifices health for massive attack power boost.' },
+              { name: 'Executioner Rampage', type: 'ultimate', desc: 'Unleashes unstoppable flurry of blood-soaked strikes.' }
+            ],
+            desc: 'Furious warrior scaling attack power as health drops.',
+            bg: 'from-rose-950 to-slate-950',
+            border: 'border-rose-500/50',
+            iconImg: 'image_2e90c1d9.jpg',
+            price: 300,
+            requiredWins: 25,
+            requiredXp: 2500,
+            isStarter: false,
+            spriteAnim: 'Frenzy / Savage Cleave'
+          },
+          {
+            id: 'astral-archmage',
+            name: 'ASTRAL ARCHMAGE',
+            role: 'Cosmic Sorcerer',
+            rarity: 'ADVANCED (Elite)',
+            stats: { hp: 2900, atk: 2650, def: 1600, spd: 150 },
+            skills: [
+              { name: 'Astral Bolt', type: 'cosmic', desc: 'Fires concentrated stellar energy beam.' },
+              { name: 'Orbit Shield', type: 'buff', desc: 'Surrounds self with orbiting cosmic debris.' },
+              { name: 'Supernova Collapse', type: 'ultimate', desc: 'Triggers a stellar explosion obliterating targets.' }
+            ],
+            desc: 'Cosmic spellcaster manipulating planetary layout orbits.',
+            bg: 'from-indigo-950 to-slate-950',
+            border: 'border-indigo-500/50',
+            iconImg: 'image_1d431b92.jpg',
+            price: 300,
+            requiredWins: 30,
+            requiredXp: 3200,
+            isStarter: false,
+            spriteAnim: 'Supernova / Gravity Collapse'
+          }
+        ];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const ownerHash = await hashPassword('owner123');
+            const playerHash = await hashPassword('player123');
+
+            registeredAccounts.push({
+                name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
+                email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: ownerHash,
+                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin'
+            });
+
+            registeredAccounts.push({
+                name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
+                email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
+            });
+        });
 
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
-            input.type = input.type === 'password' ? 'text' : 'password';
-            btn.innerText = input.type === 'password' ? 'SHOW' : 'HIDE';
+            if (input.type === 'password') { input.type = 'text'; btn.innerText = 'HIDE'; }
+            else { input.type = 'password'; btn.innerText = 'SHOW'; }
         }
 
         function showAuthMode(mode) {
@@ -447,32 +804,99 @@
             if(mode === 'forgot') document.getElementById('auth-forgot-box').classList.remove('hidden');
         }
 
-        function quickLoginPlayer() {
-            currentUser = registeredAccounts[1];
+        async function handleRegister() {
+            const name = document.getElementById('reg-name').value;
+            const nickname = document.getElementById('reg-nickname').value;
+            const phone = document.getElementById('reg-phone').value;
+            const email = document.getElementById('reg-email').value;
+            const bday = document.getElementById('reg-bday').value;
+            const pass = document.getElementById('reg-pass').value;
+
+            if(!name || !nickname || !phone || !email || !bday || !pass) { alert('Please fill in all registration fields.'); return; }
+            if(registeredAccounts.some(acc => acc.email === email)) { alert('An account with this email already exists.'); return; }
+
+            const passHash = await hashPassword(pass);
+
+            const newAcc = {
+                name, nickname, phone, email, bday, passHash,
+                role: 'player', balance: 0.00,
+                unlockedHeroes: [],
+                activeHero: '',
+                wins: 0,
+                xp: 0,
+                rank: 'Bronze I'
+            };
+            registeredAccounts.push(newAcc);
+            currentUser = newAcc;
+
+            alert('Account registered successfully! Registration fee of ₱50.00 processed. Please select your 1 free starter champion.');
+            
             document.getElementById('view-auth').classList.add('hidden');
+            renderStarterPickOptions();
+            document.getElementById('view-starter-pick').classList.remove('hidden');
+        }
+
+        function renderStarterPickOptions() {
+            const starterHeroes = heroes.filter(h => h.isStarter);
+            document.getElementById('starter-options-container').innerHTML = starterHeroes.map(h => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 card-hover">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
+                            <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
+                        </div>
+                        <div>
+                            <h3 class="font-cinzel font-bold text-white text-base">${h.name} (${h.role})</h3>
+                            <span class="text-[10px] bg-emerald-600/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">Free Starter Choice</span>
+                            <p class="text-xs text-slate-400 mt-1">${h.desc}</p>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-amber-400 font-mono">Stats: HP: ${h.stats.hp} | ATK: ${h.stats.atk} | DEF: ${h.stats.def} | SPD: ${h.stats.spd}</div>
+                    <button onclick="pickStarterHero('${h.id}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Choose Free Starter</button>
+                </div>
+            `).join('');
+        }
+
+        function pickStarterHero(id) {
+            currentUser.unlockedHeroes = [id];
+            currentUser.activeHero = id;
+            document.getElementById('view-starter-pick').classList.add('hidden');
+            
             document.getElementById('nav-wallet-container').classList.remove('hidden');
             document.getElementById('nav-menu').classList.remove('hidden');
             document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
+            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
             updateWalletDisplay();
-            setActiveHeroUI(currentUser.activeHero || 'pyra');
+            setActiveHeroUI(currentUser.activeHero);
             switchTab('hub');
+            alert('Starter champion bound permanently to your account! Welcome to Aetheris Arena.');
         }
 
-        function handleLogin() {
+        async function handleLogin() {
             const email = document.getElementById('login-email').value;
-            const user = registeredAccounts.find(acc => acc.email === email);
-            if(!user) { alert('Invalid email. Try quick login.'); return; }
+            const pass = document.getElementById('login-pass').value;
+            const inputHash = await hashPassword(pass);
+
+            const user = registeredAccounts.find(acc => acc.email === email && acc.passHash === inputHash);
+            if(!user) { alert('Invalid email or password.'); return; }
+
             currentUser = user;
             document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('nav-wallet-container').classList.remove('hidden');
             document.getElementById('nav-menu').classList.remove('hidden');
             document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
+            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
             updateWalletDisplay();
-            setActiveHeroUI(currentUser.activeHero || 'pyra');
+            setActiveHeroUI(currentUser.activeHero);
+
             if(currentUser.role === 'owner') {
+                document.getElementById('btn-hub').classList.add('hidden');
+                document.getElementById('btn-roster').classList.add('hidden');
                 document.getElementById('btn-owner').classList.remove('hidden');
                 switchTab('owner');
             } else {
+                document.getElementById('btn-owner').classList.add('hidden');
+                document.getElementById('btn-hub').classList.remove('hidden');
+                document.getElementById('btn-roster').classList.remove('hidden');
                 switchTab('hub');
             }
         }
@@ -484,86 +908,273 @@
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-owner').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-starter-pick').classList.add('hidden');
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('view-force-reset').classList.add('hidden');
             document.getElementById('view-auth').classList.remove('hidden');
             showAuthMode('login');
         }
 
+        function submitResetRequest() {
+            const email = document.getElementById('forgot-email').value;
+            const bday = document.getElementById('forgot-bday').value;
+            const user = registeredAccounts.find(acc => acc.email === email && acc.bday === bday);
+            if(!user) { alert('No matching account found with that email and birthday.'); return; }
+            if(pendingResets.some(r => r.email === email)) { alert('A password reset request is already pending.'); return; }
+
+            pendingResets.push({ id: Date.now(), email: email, name: user.name });
+            alert('Password reset request submitted to the owner successfully.');
+            showAuthMode('login');
+        }
+
+        async function executeForceReset() {
+            const email = document.getElementById('force-email').value;
+            const bday = document.getElementById('force-bday').value;
+            const newpass = document.getElementById('force-newpass').value;
+            const user = registeredAccounts.find(acc => acc.email === email && acc.bday === bday);
+            if(!user || !newpass) { alert('Invalid verification or missing password.'); return; }
+
+            user.passHash = await hashPassword(newpass);
+            alert('Password updated securely with SHA-256! Please log in.');
+            document.getElementById('view-force-reset').classList.add('hidden');
+            document.getElementById('view-auth').classList.remove('hidden');
+            showAuthMode('login');
+        }
+
+        function evaluateRankAndUnlocks() {
+            if (currentUser.xp >= 5000) currentUser.rank = 'Legendary';
+            else if (currentUser.xp >= 3500) currentUser.rank = 'Grandmaster';
+            else if (currentUser.xp >= 2500) currentUser.rank = 'Diamond';
+            else if (currentUser.xp >= 1900) currentUser.rank = 'Platinum II';
+            else if (currentUser.xp >= 1400) currentUser.rank = 'Platinum I';
+            else if (currentUser.xp >= 950) currentUser.rank = 'Gold II';
+            else if (currentUser.xp >= 600) currentUser.rank = 'Gold I';
+            else if (currentUser.xp >= 350) currentUser.rank = 'Silver II';
+            else if (currentUser.xp >= 150) currentUser.rank = 'Silver I';
+            else currentUser.rank = 'Bronze I';
+
+            heroes.forEach(h => {
+                if (!h.isStarter && !currentUser.unlockedHeroes.includes(h.id)) {
+                    if (currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp) {
+                        currentUser.unlockedHeroes.push(h.id);
+                    }
+                }
+            });
+        }
+
         function renderHeroes() {
+            evaluateRankAndUnlocks();
+
             document.getElementById('player-rank-badge').innerText = currentUser.rank;
             document.getElementById('hub-rank-badge').innerText = currentUser.rank;
             document.getElementById('player-wins-badge').innerText = currentUser.wins;
-            document.getElementById('player-xp-badge').innerText = `${currentUser.xp} / 150 XP`;
-            document.getElementById('player-xp-bar').style.width = `${Math.min(100, (currentUser.xp / 150) * 100)}%`;
+            
+            let maxXpForTier = 150;
+            if (currentUser.xp >= 3500) maxXpForTier = 5000;
+            else if (currentUser.xp >= 2500) maxXpForTier = 3500;
+            else if (currentUser.xp >= 1900) maxXpForTier = 2500;
+            else if (currentUser.xp >= 1400) maxXpForTier = 1900;
+            else if (currentUser.xp >= 950) maxXpForTier = 1400;
+            else if (currentUser.xp >= 600) maxXpForTier = 950;
+            else if (currentUser.xp >= 350) maxXpForTier = 600;
+            else if (currentUser.xp >= 150) maxXpForTier = 350;
+
+            document.getElementById('player-xp-badge').innerText = `${currentUser.xp} / ${maxXpForTier} XP`;
+            const xpPercent = Math.min(100, Math.round((currentUser.xp / maxXpForTier) * 100));
+            document.getElementById('player-xp-bar').style.width = `${xpPercent}%`;
 
             document.getElementById('hero-cards-container').innerHTML = heroes.map(h => {
-                const isUnlocked = currentUser.unlockedHeroes.includes(h.id);
-                const isActive = currentUser.activeHero === h.id;
-                let btn = isActive ? '<span class="text-xs text-emerald-400 font-bold">Active</span>' :
-                          isUnlocked ? `<button onclick="switchActiveHero('${h.id}')" class="px-4 py-2 bg-blue-600 text-white text-xs rounded-xl">Equip</button>` :
-                          `<button onclick="buyHero('${h.id}', ${h.price})" class="px-4 py-2 bg-amber-600 text-white text-xs rounded-xl">Buy ₱${h.price}</button>`;
-                return `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex justify-between items-center">
-                    <div><h3 class="font-bold text-white text-sm">${h.name}</h3><p class="text-xs text-slate-400">${h.role}</p></div>
-                    <div>${btn}</div>
-                </div>`;
+                const isUnlocked = currentUser && currentUser.unlockedHeroes.includes(h.id);
+                const isActive = currentUser && currentUser.activeHero === h.id;
+                const meetsReqs = currentUser && currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp;
+
+                let actionBtn = '';
+                if (isActive) {
+                    actionBtn = `<span class="px-6 py-2.5 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/40">Active Champion</span>`;
+                } else if (isUnlocked) {
+                    actionBtn = `<button onclick="switchActiveHero('${h.id}')" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Equip Champion</button>`;
+                } else if (h.isStarter) {
+                    actionBtn = `<button onclick="buyBasicHero('${h.id}', ${h.price})" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Acquire for ₱${h.price}</button>`;
+                } else if (meetsReqs) {
+                    actionBtn = `<button onclick="claimRankedHero('${h.id}')" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Claim Unlock</button>`;
+                } else {
+                    actionBtn = `<span class="text-xs text-amber-400 font-mono text-right block">Requires ${h.requiredWins} Wins & ${h.requiredXp} XP<br><span class="text-[10px] text-slate-500">(Your Stats: ${currentUser.wins} Wins, ${currentUser.xp} XP)</span></span>`;
+                }
+
+                const skillsListHtml = h.skills.map(s => `<span class="inline-block bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-md mr-1 mt-1 font-mono" title="${s.desc}">${s.name} (${s.type})</span>`).join('');
+
+                return `
+                    <div class="bg-[#0e1322] border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between card-hover">
+                        <div class="flex items-center space-x-5">
+                            <div class="w-20 h-20 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-xl">
+                                <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-3 mb-1">
+                                    <h3 class="font-cinzel font-bold text-white text-base tracking-wide">${h.name} (${h.role})</h3>
+                                    <span class="text-[10px] bg-blue-600/20 text-blue-400 px-2.5 py-0.5 rounded-full border border-blue-500/30 font-medium">${h.rarity}</span>
+                                </div>
+                                <p class="text-xs text-slate-400 max-w-md">${h.desc}</p>
+                                <div class="text-[11px] text-amber-400 font-mono mt-1">Stats: HP: ${h.stats.hp} | ATK: ${h.stats.atk} | DEF: ${h.stats.def} | SPD: ${h.stats.spd}</div>
+                                <div class="mt-1 flex flex-wrap">
+                                    <span class="text-[10px] text-slate-400 font-bold mr-1 mt-1">Skills:</span>
+                                    ${skillsListHtml}
+                                </div>
+                                <div class="text-[10px] text-indigo-300 mt-1">Battle Animation: ${h.spriteAnim}</div>
+                                ${h.isStarter && !isUnlocked ? `<span class="text-xs font-bold text-amber-400 mt-1 block">Acquisition Price: ₱${h.price}</span>` : ''}
+                            </div>
+                        </div>
+                        <div>${actionBtn}</div>
+                    </div>
+                `;
             }).join('');
         }
 
         function switchActiveHero(id) {
+            if (!currentUser) return;
             currentUser.activeHero = id;
             setActiveHeroUI(id);
             renderHeroes();
+            alert('Active champion successfully switched!');
             switchTab('hub');
         }
 
-        function buyHero(id, price) {
-            if(currentUser.balance < price) { alert('Insufficient balance!'); return; }
+        function buyBasicHero(id, price) {
+            if (!currentUser) return;
+            if (currentUser.balance < price) {
+                alert('Insufficient wallet balance to purchase this basic hero! Please top up.');
+                return;
+            }
             currentUser.balance -= price;
             currentUser.unlockedHeroes.push(id);
             currentUser.activeHero = id;
             updateWalletDisplay();
             setActiveHeroUI(id);
             renderHeroes();
+            alert('Basic hero purchased and unlocked successfully! Set as active champion.');
+            switchTab('hub');
+        }
+
+        function claimRankedHero(id) {
+            if (!currentUser) return;
+            const h = heroes.find(item => item.id === id);
+            if (!h || currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) {
+                alert('Rank requirements not met yet!');
+                return;
+            }
+            if (!currentUser.unlockedHeroes.includes(id)) currentUser.unlockedHeroes.push(id);
+            currentUser.activeHero = id;
+            setActiveHeroUI(id);
+            renderHeroes();
+            alert(`Congratulations! You have unlocked ${h.name} through ranked progression and set it as your active champion.`);
             switchTab('hub');
         }
 
         function setActiveHeroUI(id) {
-            const h = heroes.find(item => item.id === id) || heroes[0];
-            document.getElementById('active-hero-name').innerText = h.name;
+            const h = heroes.find(item => item.id === id);
+            if (!h) return;
+            document.getElementById('active-hero-name').innerText = `${h.name} (${h.role})`;
+            document.getElementById('hub-rank-badge').innerText = currentUser.rank;
+            
+            const avatar = document.getElementById('active-hero-avatar');
+            avatar.className = `w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
             document.getElementById('active-hero-img-el').src = h.iconImg;
-            document.getElementById('fs-player-sprite-name').innerText = h.name;
-            document.getElementById('fs-player-img-el').src = h.iconImg;
+
+            const fsPlayerSprite = document.getElementById('fs-player-sprite');
+            fsPlayerSprite.className = `w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)] p-2`;
+            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-20 h-20 object-cover rounded-xl shadow-lg mb-1"><span class="font-cinzel text-xs font-bold text-amber-300">${h.name}</span><span class="text-[9px] text-slate-300">[${h.spriteAnim}]</span>`;
         }
 
         function switchTab(tab) {
+            if (currentUser && currentUser.role === 'owner' && tab !== 'owner') {
+                alert('Security Notice: Owner accounts are strictly restricted to the Admin Portal.');
+                switchTab('owner');
+                return;
+            }
+            if (currentUser && currentUser.role === 'player' && tab === 'owner') {
+                alert('Security Notice: Access denied. Insufficient clearance for Admin Portal.');
+                switchTab('hub');
+                return;
+            }
+
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
             document.getElementById('view-owner').classList.add('hidden');
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
-            if(tab === 'hub') document.getElementById('view-hub').classList.remove('hidden');
-            else if(tab === 'select') { renderHeroes(); document.getElementById('view-select').classList.remove('hidden'); }
-            else if(tab === 'owner') document.getElementById('view-owner').classList.remove('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+
+            document.getElementById('btn-hub').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('btn-roster').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('btn-owner').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('btn-hub').classList.add('text-slate-400');
+            document.getElementById('btn-roster').classList.add('text-slate-400');
+            document.getElementById('btn-owner').classList.add('text-slate-400');
+
+            if(tab === 'hub') {
+                document.getElementById('view-hub').classList.remove('hidden');
+                document.getElementById('btn-hub').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('btn-hub').classList.remove('text-slate-400');
+            } else if(tab === 'select') {
+                renderHeroes();
+                document.getElementById('view-select').classList.remove('hidden');
+                document.getElementById('btn-roster').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('btn-roster').classList.remove('text-slate-400');
+            } else if(tab === 'owner') {
+                document.getElementById('view-owner').classList.remove('hidden');
+                document.getElementById('btn-owner').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('btn-owner').classList.remove('text-slate-400');
+                renderOwnerQueues();
+            }
         }
 
         function openBettingModal() {
-            if(!currentUser) { alert('Sign in first.'); return; }
-            const backdrop = document.getElementById('modal-backdrop');
-            backdrop.classList.remove('hidden');
-            backdrop.style.display = 'flex';
+            document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-bet').classList.remove('hidden');
         }
 
+        function shuffleAndDrawHand() {
+            let deckCopy = [...masterSkillDeck];
+            for (let i = deckCopy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deckCopy[i], deckCopy[j]] = [deckCopy[j], deckCopy[i]];
+            }
+            currentHand = deckCopy.slice(0, 4);
+            renderHandCards();
+        }
+
+        function renderHandCards() {
+            const container = document.getElementById('shuffled-hand-container');
+            container.innerHTML = currentHand.map((card, idx) => `
+                <div onclick="playCard(${idx})" class="bg-slate-900 border border-slate-700 hover:border-${card.color}-500 rounded-xl p-3 cursor-pointer card-hover space-y-1">
+                    <div class="flex justify-between text-[10px] text-${card.color}-400 font-bold">
+                        <span>${card.name}</span><span>${card.ap} AP</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400">${card.desc}</p>
+                </div>
+            `).join('');
+        }
+
         function startDuelWithBet(amount) {
-            if(currentUser.balance < amount) { alert('Insufficient balance.'); return; }
+            if (!currentUser) return;
+            if (currentUser.balance < amount) {
+                alert('Insufficient wallet balance for this bet stake!');
+                closeModal();
+                return;
+            }
+
             currentUser.balance -= amount;
             currentDuelBet = amount;
             updateWalletDisplay();
             closeModal();
 
-            duelState = { playerHp: 2800, playerMaxHp: 2800, playerArmor: 0, enemyHp: 3000, enemyMaxHp: 3000, enemyArmor: 0 };
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
-            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            duelState = { playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' };
+            
+            shuffleAndDrawHand();
+            document.getElementById('fs-battle-log').innerText = `[Arena]: Ranked match started with ₱${amount} wager! Deck shuffled. Your turn.`;
+            
+            updateDuelUI();
 
             document.getElementById('main-header').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
@@ -577,61 +1188,311 @@
             switchTab('hub');
         }
 
-        function executeCombatAction(action) {
-            let pDmg = 0, pArmor = 0;
-            if(action === 'attack') pDmg = 250;
-            else if(action === 'heavy') pDmg = 450;
-            else if(action === 'shield') pArmor = 300;
-            else if(action === 'ultimate') pDmg = 800;
+        function updateDuelUI() {
+            document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
+            document.getElementById('fs-player-hp-bar').style.width = `${(duelState.playerHp / duelState.playerMaxHp) * 100}%`;
+            document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
+            document.getElementById('fs-player-ap').innerText = duelState.playerAp;
 
-            duelState.enemyHp = Math.max(0, duelState.enemyHp - pDmg);
-            document.getElementById('fs-battle-log').innerText = `[Action]: You used ${action}! Dealt ${pDmg} damage.`;
+            document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
+            document.getElementById('fs-enemy-hp-bar').style.width = `${(duelState.enemyHp / duelState.enemyMaxHp) * 100}%`;
+            document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
+            document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
+            document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
+        }
 
-            if(duelState.enemyHp <= 0) {
-                const prize = currentDuelBet * 2;
-                currentUser.balance += prize;
-                currentUser.wins += 1;
-                currentUser.xp += 50;
-                updateWalletDisplay();
-                alert(`Victory! Won ₱${prize} and +50 XP.`);
-                surrenderDuel();
+        function logDuel(msg) {
+            document.getElementById('fs-battle-log').innerText = msg;
+        }
+
+        function playCard(index) {
+            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
+            const card = currentHand[index];
+            if (!card) return;
+
+            if (duelState.playerAp < card.ap) {
+                logDuel(`[System]: Not enough AP for ${card.name} (Requires ${card.ap} AP)!`);
                 return;
             }
 
-            setTimeout(() => {
-                let eDmg = 300;
-                duelState.playerHp = Math.max(0, duelState.playerHp - eDmg);
-                document.getElementById('fs-battle-log').innerText = `[Enemy]: Boss counterattacks for ${eDmg} damage!`;
-                
-                document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
-                document.getElementById('fs-player-hp-bar').style.width = `${(duelState.playerHp / duelState.playerMaxHp) * 100}%`;
-                document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
-                document.getElementById('fs-enemy-hp-bar').style.width = `${(duelState.enemyHp / duelState.enemyMaxHp) * 100}%`;
+            duelState.playerAp -= card.ap;
 
-                if(duelState.playerHp <= 0) {
-                    alert('Defeat! You lost your wager.');
+            if (card.type === 'strike') {
+                let dmg = 15;
+                if (duelState.enemyDebuff === 'Armor-Break') dmg = Math.round(dmg * 1.5);
+                if (duelState.enemyArmor > 0) {
+                    if (duelState.enemyArmor >= dmg) { duelState.enemyArmor -= dmg; dmg = 0; }
+                    else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
+                }
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
+                logDuel(`[You]: Played Strike! Dealt ${dmg} damage.`);
+            } else if (card.type === 'defend') {
+                duelState.playerArmor += 12;
+                logDuel(`[You]: Played Defend! Gained 12 Armor block.`);
+            } else if (card.type === 'poison') {
+                duelState.enemyPoison += 8;
+                logDuel(`[You]: Played Venom Strike! Applied 8 Poison stacks.`);
+            } else if (card.type === 'debuff') {
+                duelState.enemyPoison += 5;
+                duelState.enemyDebuff = 'Armor-Break';
+                logDuel(`[You]: Played Plague Burst! Applied Poison & inflicted Armor-Break debuff!`);
+            } else if (card.type === 'heal') {
+                duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + 15);
+                logDuel(`[You]: Played Meditate! Restored 15 HP.`);
+            }
+
+            currentHand.splice(index, 1);
+            renderHandCards();
+            updateDuelUI();
+
+            if (duelState.enemyHp <= 0) {
+                const reward = currentDuelBet * 2;
+                const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
+                
+                currentUser.balance += reward;
+                currentUser.wins += 1;
+                currentUser.xp += earnedXp;
+
+                evaluateRankAndUnlocks();
+                updateWalletDisplay();
+
+                logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
+                alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})! Check Roster for unlocked champions.`);
+                surrenderDuel();
+            }
+        }
+
+        function endDuelTurn() {
+            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
+
+            logDuel(`[System]: Ending turn & shuffling skill deck... Enemy counterattacking...`);
+            
+            if (duelState.enemyPoison > 0) {
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
+                logDuel(`[Effect]: Enemy took ${duelState.enemyPoison} poison damage.`);
+            }
+
+            setTimeout(() => {
+                if (duelState.enemyHp > 0) {
+                    let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 10 : 14;
+                    duelState.playerArmor = 0;
+                    duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
+                    logDuel(`[Opponent]: Boss attacks for ${enemyDmg} damage!`);
+                }
+                
+                duelState.playerAp = 3;
+                shuffleAndDrawHand();
+                updateDuelUI();
+
+                if (duelState.playerHp <= 0) {
+                    const consolationXp = 15;
+                    currentUser.xp += consolationXp;
+                    evaluateRankAndUnlocks();
+
+                    logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
+                    alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP.`);
                     surrenderDuel();
                 }
-            }, 600);
+            }, 800);
+        }
+
+        function handleQRUpload(event, type) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if(type === 'gcash') uploadedGcashQR = e.target.result;
+                    if(type === 'maya') uploadedMayaQR = e.target.result;
+                    alert(type.toUpperCase() + ' QR Code uploaded successfully! Click "Save" to apply.');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveOwnerDetails() {
+            const gNum = document.getElementById('input-gcash-num').value;
+            const gName = document.getElementById('input-gcash-name').value;
+            const mNum = document.getElementById('input-maya-num').value;
+            const mName = document.getElementById('input-maya-name').value;
+
+            document.getElementById('display-gcash-num').innerText = gNum;
+            document.getElementById('display-gcash-name').innerText = gName;
+            document.getElementById('display-maya-num').innerText = mNum;
+            document.getElementById('display-maya-name').innerText = mName;
+
+            if(uploadedGcashQR) document.getElementById('player-gcash-qr').innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            if(uploadedMayaQR) document.getElementById('player-maya-qr').innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+
+            alert('Owner merchant e-wallet credentials and QR codes updated successfully!');
         }
 
         function openModal(type) {
-            const backdrop = document.getElementById('modal-backdrop');
-            backdrop.classList.remove('hidden');
-            backdrop.style.display = 'flex';
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
             if(type === 'topup') document.getElementById('modal-topup').classList.remove('hidden');
             if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
         }
 
-        function closeModal() {
-            document.getElementById('modal-backdrop').classList.add('hidden');
+        function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
+
+        function viewReceipt(receiptDataUrl) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-topup').classList.add('hidden');
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.remove('hidden');
+            document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-72 rounded object-contain">`;
+        }
+
+        function submitTopUp() {
+            const amt = parseFloat(document.getElementById('topup-amount').value);
+            const ref = document.getElementById('topup-ref').value;
+            const receiptFile = document.getElementById('topup-receipt').files[0];
+
+            if(!amt || !ref || !receiptFile) { alert('Please fill in all top-up details and upload your payment receipt screenshot.'); return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dateStr = new Date().toISOString().split('T')[0];
+                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
+                alert('Top-up request and receipt submitted successfully! Awaiting owner approval.');
+                closeModal();
+            };
+            reader.readAsDataURL(receiptFile);
+        }
+
+        function submitWithdrawal() {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value);
+            const method = document.getElementById('withdraw-method').value;
+            const acc = document.getElementById('withdraw-account').value;
+            const name = document.getElementById('withdraw-name').value;
+            if(!amt || !acc || !name) { alert('Please fill out all withdrawal form fields.'); return; }
+            if(amt > currentUser.balance) { alert('Insufficient wallet balance!'); return; }
+            
+            currentUser.balance -= amt;
+            updateWalletDisplay();
+            const dateStr = new Date().toISOString().split('T')[0];
+            pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: method, account: acc, name: name, date: dateStr });
+            alert('Withdrawal request submitted successfully! Awaiting owner approval.');
+            closeModal();
         }
 
         function updateWalletDisplay() {
-            document.getElementById('nav-wallet').innerText = '₱' + currentUser.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+            if(currentUser) document.getElementById('nav-wallet').innerText = '₱' + currentUser.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function renderOwnerQueues() {
+            const filterDate = document.getElementById('filter-date').value;
+
+            const resetContainer = document.getElementById('owner-reset-list');
+            if(pendingResets.length === 0) {
+                resetContainer.innerHTML = '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
+            } else {
+                resetContainer.innerHTML = pendingResets.map(r => `
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-amber-400">Reset Request: ${r.name}</span><div class="text-slate-400">Email: ${r.email}</div></div>
+                        <div class="space-x-2">
+                            <button onclick="approveReset(${r.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
+                            <button onclick="rejectReset(${r.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const filteredDeposits = filterDate ? pendingDeposits.filter(d => d.date === filterDate) : pendingDeposits;
+            const depContainer = document.getElementById('owner-deposit-list');
+            if(filteredDeposits.length === 0) {
+                depContainer.innerHTML = '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>';
+            } else {
+                depContainer.innerHTML = filteredDeposits.map(d => `
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.nickname})</span><div class="text-slate-400">Email: ${d.email} | Ref: ${d.ref} | Date: ${d.date}</div></div>
+                        <div class="space-x-2 flex items-center">
+                            <button onclick="viewReceipt('${d.receipt}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg">View Receipt</button>
+                            <button onclick="approveDeposit(${d.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
+                            <button onclick="rejectDeposit(${d.id})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const filteredWithdrawals = filterDate ? pendingWithdrawals.filter(w => w.date === filterDate) : pendingWithdrawals;
+            const witContainer = document.getElementById('owner-withdraw-list');
+            if(filteredWithdrawals.length === 0) {
+                witContainer.innerHTML = '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>';
+            } else {
+                witContainer.innerHTML = filteredWithdrawals.map(w => `
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname}</span><div class="text-slate-400">To: ${w.account} (${w.name}) | Date: ${w.date}</div></div>
+                        <div class="space-x-2">
+                            <button onclick="approveWithdrawal(${w.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">Approve</button>
+                            <button onclick="rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const totalDep = (filterDate ? approvedDepositsLog.filter(d => d.date === filterDate) : approvedDepositsLog).reduce((sum, item) => sum + item.amount, 0);
+            const totalWit = (filterDate ? approvedWithdrawalsLog.filter(w => w.date === filterDate) : approvedWithdrawalsLog).reduce((sum, item) => sum + item.amount, 0);
+
+            document.getElementById('metric-total-deposits').innerText = '₱' + totalDep.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('metric-total-withdrawals').innerText = '₱' + totalWit.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function approveReset(id) {
+            pendingResets = pendingResets.filter(r => r.id !== id);
+            alert('Password reset request approved!');
+            document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('view-force-reset').classList.remove('hidden');
+        }
+
+        function rejectReset(id) {
+            pendingResets = pendingResets.filter(r => r.id !== id);
+            renderOwnerQueues();
+            alert('Password reset request rejected.');
+        }
+
+        function approveDeposit(id) {
+            const idx = pendingDeposits.findIndex(d => d.id === id);
+            if(idx > -1) {
+                const item = pendingDeposits[idx];
+                const targetUser = registeredAccounts.find(acc => acc.email === item.email);
+                if(targetUser) targetUser.balance += item.amount;
+                if(currentUser && currentUser.email === item.email) updateWalletDisplay();
+                approvedDepositsLog.push(item);
+                pendingDeposits.splice(idx, 1);
+                renderOwnerQueues();
+                alert('Deposit approved and credited!');
+            }
+        }
+
+        function rejectDeposit(id) {
+            pendingDeposits = pendingDeposits.filter(d => d.id !== id);
+            renderOwnerQueues();
+            alert('Deposit rejected.');
+        }
+
+        function approveWithdrawal(id) {
+            const idx = pendingWithdrawals.findIndex(w => w.id === id);
+            if(idx > -1) {
+                approvedWithdrawalsLog.push(pendingWithdrawals[idx]);
+                pendingWithdrawals.splice(idx, 1);
+                renderOwnerQueues();
+                alert('Withdrawal approved!');
+            }
+        }
+
+        function rejectWithdrawal(id, email, amt) {
+            const targetUser = registeredAccounts.find(acc => acc.email === email);
+            if(targetUser) targetUser.balance += amt;
+            if(currentUser && currentUser.email === email) updateWalletDialog();
+            pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
+            renderOwnerQueues();
+            alert('Withdrawal rejected and refunded.');
         }
     </script>
 </body>
