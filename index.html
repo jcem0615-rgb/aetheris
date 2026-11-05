@@ -233,10 +233,11 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div onclick="openBettingModal()" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-5 cursor-pointer card-hover">
+                <!-- INSTANT BATTLELAUNCHER (Direct trigger to start battle instantly) -->
+                <div onclick="startDuelWithBet(50)" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-5 cursor-pointer card-hover">
                     <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-3">⚔</div>
-                    <h3 class="font-cinzel font-bold text-white text-base">RANKED PVP DUEL</h3>
-                    <p class="text-xs text-slate-400 mt-1">Select bet stake (₱50-₱1000) and win matches to gain Rank XP and unlock advanced heroes.</p>
+                    <h3 class="font-cinzel font-bold text-white text-base">RANKED PVP DUEL (₱50 Bet)</h3>
+                    <p class="text-xs text-slate-400 mt-1">Click to immediately enter battlefield arena and win match rewards & Rank XP!</p>
                 </div>
                 <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 cursor-pointer card-hover">
                     <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-3">🛡</div>
@@ -407,7 +408,7 @@
     </div>
 
     <!-- Modals -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div id="modal-backdrop" style="display: none;" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <!-- Top-up Modal -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden">
             <h3 class="font-cinzel text-lg font-bold text-amber-400">Submit Top-Up Request</h3>
@@ -443,20 +444,6 @@
                 <button onclick="submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl">Submit Withdrawal</button>
                 <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
             </div>
-        </div>
-
-        <!-- PVP Bet Selection Modal -->
-        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
-            <h3 class="font-cinzel text-lg font-bold text-amber-400">SELECT RANKED PVP WAGER</h3>
-            <p class="text-xs text-slate-400">Choose your match stake. Winner takes double the bet and earns Rank XP!</p>
-            <div class="grid grid-cols-3 gap-2 pt-2">
-                <button type="button" class="bet-btn py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer" data-amount="50">₱50</button>
-                <button type="button" class="bet-btn py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer" data-amount="100">₱100</button>
-                <button type="button" class="bet-btn py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer" data-amount="200">₱200</button>
-                <button type="button" class="bet-btn py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer" data-amount="500">₱500</button>
-                <button type="button" class="bet-btn py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2 cursor-pointer" data-amount="1000">₱1,000</button>
-            </div>
-            <button type="button" onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2 cursor-pointer">Cancel</button>
         </div>
 
         <!-- Receipt Preview Modal -->
@@ -776,14 +763,6 @@
                 name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
                 role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
-            });
-
-            // Bind bet button listeners dynamically to prevent any click-propagation / modal blocking bugs
-            document.querySelectorAll('.bet-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const amt = parseInt(e.currentTarget.getAttribute('data-amount'), 10);
-                    startDuelWithBet(amt);
-                });
             });
         });
 
@@ -1130,16 +1109,6 @@
             }
         }
 
-        function openBettingModal() {
-            const backdrop = document.getElementById('modal-backdrop');
-            backdrop.classList.remove('hidden');
-            backdrop.style.display = 'flex';
-            document.getElementById('modal-topup').classList.add('hidden');
-            document.getElementById('modal-withdraw').classList.add('hidden');
-            document.getElementById('modal-receipt').classList.add('hidden');
-            document.getElementById('modal-bet').classList.remove('hidden');
-        }
-
         function renderActiveHeroSkills() {
             const activeHeroObj = heroes.find(h => h.id === (currentUser ? currentUser.activeHero : 'pyra')) || heroes[0];
             const container = document.getElementById('shuffled-hand-container');
@@ -1160,11 +1129,8 @@
                 return;
             }
 
-            // FORCE CLOSE modal backdrop explicitly using both class addition and inline style override
-            const backdrop = document.getElementById('modal-backdrop');
-            backdrop.classList.add('hidden');
-            backdrop.style.display = 'none';
-            document.getElementById('modal-bet').classList.add('hidden');
+            // Ensure any modals are completely closed and hidden
+            closeModal();
 
             // Deduct wager safely once
             currentUser.balance -= amount;
@@ -1206,17 +1172,21 @@
             updateDuelUI();
 
             // Force visibility shift: hide main layout views and display battlefield with highest z-index
-            document.getElementById('main-header').classList.add('hidden');
-            document.getElementById('view-hub').classList.add('hidden');
-            document.getElementById('view-select').classList.add('hidden');
-            document.getElementById('view-owner').classList.add('hidden');
-            document.getElementById('view-auth').classList.add('hidden');
-            document.getElementById('view-duel-fullscreen').classList.remove('hidden');
+            document.getElementById('main-header').style.display = 'none';
+            document.getElementById('app-main').style.display = 'none';
+            
+            const duelScreen = document.getElementById('view-duel-fullscreen');
+            duelScreen.classList.remove('hidden');
+            duelScreen.style.display = 'flex';
         }
 
         function surrenderDuel() {
-            document.getElementById('view-duel-fullscreen').classList.add('hidden');
-            document.getElementById('main-header').classList.remove('hidden');
+            const duelScreen = document.getElementById('view-duel-fullscreen');
+            duelScreen.classList.add('hidden');
+            duelScreen.style.display = 'none';
+            
+            document.getElementById('main-header').style.display = 'flex';
+            document.getElementById('app-main').style.display = 'block';
             switchTab('hub');
         }
 
@@ -1350,21 +1320,17 @@
 
         function openModal(type) {
             const backdrop = document.getElementById('modal-backdrop');
-            backdrop.classList.remove('hidden');
             backdrop.style.display = 'flex';
             document.getElementById('modal-topup').classList.add('hidden');
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-receipt').classList.add('hidden');
-            document.getElementById('modal-bet').classList.add('hidden');
             if(type === 'topup') document.getElementById('modal-topup').classList.remove('hidden');
             if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
         }
 
         function closeModal() { 
             const backdrop = document.getElementById('modal-backdrop');
-            backdrop.classList.add('hidden');
             backdrop.style.display = 'none';
-            document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-topup').classList.add('hidden');
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-receipt').classList.add('hidden');
@@ -1372,11 +1338,9 @@
 
         function viewReceipt(receiptDataUrl) {
             const backdrop = document.getElementById('modal-backdrop');
-            backdrop.classList.remove('hidden');
             backdrop.style.display = 'flex';
             document.getElementById('modal-topup').classList.add('hidden');
             document.getElementById('modal-withdraw').classList.add('hidden');
-            document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-receipt').classList.remove('hidden');
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-72 rounded object-contain">`;
         }
