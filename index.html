@@ -39,8 +39,8 @@
         </div>
 
         <div class="flex items-center space-x-3">
-            <!-- PWA Install Button (Always visible on login / header so users can install immediately) -->
-            <button id="btn-install-pwa" onclick="installPWA()" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg transition">
+            <!-- PWA Install Button -->
+            <button id="btn-install-pwa" onclick="installPWA()" class="hidden items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <span>Install App</span>
             </button>
@@ -361,7 +361,7 @@
                     </div>
                 </div>
                 <div id="fs-enemy-sprite" class="w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.2)] p-2">
-                    <img id="fs-enemy-img-el" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231e1b4b'/><circle cx='50' cy='50' r='30' fill='%23eab308' opacity='0.3'/><text x='50' y='55' font-size='14' fill='%23eab308' font-weight='bold' text-anchor='middle'>CHRONO</text></svg>" alt="Chrono Warden" class="w-20 h-20 object-cover rounded-xl shadow-lg">
+                    <img id="fs-enemy-img-el" src="image_a4f1655c.jpg" alt="Chrono Warden" class="w-20 h-20 object-cover rounded-xl shadow-lg">
                     <span class="font-cinzel text-xs font-bold text-amber-300 mt-1">CHRONO</span>
                 </div>
             </div>
@@ -374,7 +374,7 @@
             <!-- Player Stage Area (Bottom) -->
             <div class="flex flex-col items-center space-y-2 z-10">
                 <div id="fs-player-sprite" class="w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)] p-2">
-                    <img id="fs-player-img-el" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23450a0a'/><circle cx='50' cy='50' r='30' fill='%23ef4444' opacity='0.3'/><text x='50' y='55' font-size='14' fill='%23ef4444' font-weight='bold' text-anchor='middle'>PYRA</text></svg>" alt="Pyra" class="w-20 h-20 object-cover rounded-xl shadow-lg">
+                    <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-20 h-20 object-cover rounded-xl shadow-lg">
                     <span class="font-cinzel text-xs font-bold text-amber-300 mt-1">PYRA</span>
                 </div>
                 <div class="w-48 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
@@ -537,14 +537,19 @@
 
         let currentHand = [];
 
-        // Master Realigned 11-Character Data Matrix - Case Sensitive & Filename Corrected
+        // Master Realigned 11-Character Data Matrix with real numerical stats and specific skills
         const heroes = [
           {
             id: 'pyra',
             name: 'PYRA',
             role: 'Fire Mage',
             rarity: 'STARTER (Basic)',
-            stats: 'HP: 2,800 | ATK: 2,400 | DEF: 1,200 | SPD: 140',
+            stats: { hp: 2800, atk: 2400, def: 1200, spd: 140 },
+            skills: [
+              { name: 'Flame Burst', type: 'fire', desc: 'Deals 350 fire magic damage to target.' },
+              { name: 'Ignition Aura', type: 'buff', desc: 'Increases attack power by 25% for 2 turns.' },
+              { name: 'Meteor Call', type: 'ultimate', desc: 'Summons a meteor dealing heavy AoE burn damage.' }
+            ],
             desc: 'Fire-elemental spellcaster with explosive burn damage.',
             bg: 'from-red-950 to-slate-950',
             border: 'border-red-500/50',
@@ -560,7 +565,12 @@
             name: 'SYLPH',
             role: 'Wind Ranger',
             rarity: 'STARTER (Basic)',
-            stats: 'HP: 2,600 | ATK: 2,200 | DEF: 1,300 | SPD: 190',
+            stats: { hp: 2600, atk: 2200, def: 1300, spd: 190 },
+            skills: [
+              { name: 'Gale Shot', type: 'wind', desc: 'Fires a piercing wind arrow with high crit rate.' },
+              { name: 'Wind Step', type: 'buff', desc: 'Boosts evasion and speed by 30%.' },
+              { name: 'Hurricane Storm', type: 'ultimate', desc: 'Unleashes a tempest tearing through enemy defenses.' }
+            ],
             desc: 'Agile archer with high movement and gale evasion.',
             bg: 'from-emerald-950 to-slate-950',
             border: 'border-emerald-500/50',
@@ -576,7 +586,12 @@
             name: 'VALEN',
             role: 'Iron Guardian',
             rarity: 'STARTER (Basic)',
-            stats: 'HP: 4,200 | ATK: 1,500 | DEF: 2,600 | SPD: 90',
+            stats: { hp: 4200, atk: 1500, def: 2600, spd: 90 },
+            skills: [
+              { name: 'Shield Slam', type: 'physical', desc: 'Bashes enemy with heavy shield dealing physical damage.' },
+              { name: 'Holy Barrier', type: 'buff', desc: 'Erects an unbreakable barrier blocking incoming attacks.' },
+              { name: 'Bastion Wrath', type: 'ultimate', desc: 'Unleashes stored defense power as a retaliatory shockwave.' }
+            ],
             desc: 'Holy tank with impenetrable defense and holy barrier.',
             bg: 'from-blue-950 to-slate-950',
             border: 'border-blue-500/50',
@@ -592,7 +607,12 @@
             name: 'NYX',
             role: 'Shadow Assassin',
             rarity: 'STARTER (Basic)',
-            stats: 'HP: 2,400 | ATK: 2,600 | DEF: 1,000 | SPD: 180',
+            stats: { hp: 2400, atk: 2600, def: 1000, spd: 180 },
+            skills: [
+              { name: 'Shadow Strike', type: 'dark', desc: 'Strikes from the shadows with critical backstab damage.' },
+              { name: 'Stealth Cloak', type: 'buff', desc: 'Enters absolute stealth to evade next incoming attack.' },
+              { name: 'Execution Blade', type: 'ultimate', desc: 'Deals massive damage amplified against low-HP targets.' }
+            ],
             desc: 'Deadly operative with stealth and shadow-strike bursts.',
             bg: 'from-purple-950 to-slate-950',
             border: 'border-purple-500/50',
@@ -608,7 +628,12 @@
             name: 'STORM KNIGHT',
             role: 'Electric Knight',
             rarity: 'RANKED (Silver I)',
-            stats: 'HP: 3,400 | ATK: 2,200 | DEF: 2,400 | SPD: 120',
+            stats: { hp: 3400, atk: 2200, def: 2400, spd: 120 },
+            skills: [
+              { name: 'Lightning Slash', type: 'electric', desc: 'Strikes enemy with electrified blade causing paralysis.' },
+              { name: 'Static Shield', type: 'buff', desc: 'Charges armor with static electricity shocking attackers.' },
+              { name: 'Thunder Wrath', type: 'ultimate', desc: 'Calls down a colossal lightning bolt on the arena.' }
+            ],
             desc: 'Electric armored duelist wielding lightning strikes.',
             bg: 'from-amber-950 to-slate-950',
             border: 'border-amber-500/50',
@@ -624,7 +649,12 @@
             name: 'IRONCLAD TITAN',
             role: 'Earth Titan',
             rarity: 'RANKED (Silver II)',
-            stats: 'HP: 4,800 | ATK: 1,600 | DEF: 3,200 | SPD: 80',
+            stats: { hp: 4800, atk: 1600, def: 3200, spd: 80 },
+            skills: [
+              { name: 'Earthquake Slam', type: 'earth', desc: 'Slams ground shaking the arena and fracturing armor.' },
+              { name: 'Tectonic Armor', type: 'buff', desc: 'Hardens stone skin to absorb massive physical blows.' },
+              { name: 'Mountain Crush', type: 'ultimate', desc: 'Summons boulder fragments crashing onto opponent.' }
+            ],
             desc: 'Colossal earth juggernaut with earth-shattering slams.',
             bg: 'from-stone-950 to-slate-950',
             border: 'border-stone-500/50',
@@ -640,7 +670,12 @@
             name: 'CHRONO WARDEN',
             role: 'Time Mage',
             rarity: 'RANKED (Gold I)',
-            stats: 'HP: 3,000 | ATK: 2,300 | DEF: 1,800 | SPD: 160',
+            stats: { hp: 3000, atk: 2300, def: 1800, spd: 160 },
+            skills: [
+              { name: 'Time Warp Strike', type: 'time', desc: 'Strikes distortion across time-space continuum.' },
+              { name: 'Temporal Stasis', type: 'control', desc: 'Freezes enemy action for one turn.' },
+              { name: 'Hourglass Reversal', type: 'ultimate', desc: 'Rewinds own HP and status back to previous peak.' }
+            ],
             desc: 'Time controller manipulating action queues and hourglass power.',
             bg: 'from-yellow-950 to-slate-950',
             border: 'border-yellow-500/50',
@@ -656,7 +691,12 @@
             name: 'SKY VALKYRIE',
             role: 'Light Warrior',
             rarity: 'RANKED (Gold II)',
-            stats: 'HP: 3,200 | ATK: 2,500 | DEF: 2,000 | SPD: 170',
+            stats: { hp: 3200, atk: 2500, def: 2000, spd: 170 },
+            skills: [
+              { name: 'Celestial Spear', type: 'light', desc: 'Hurls a spear of pure holy light.' },
+              { name: 'Valkyrie Wings', type: 'buff', desc: 'Soars into the air gaining speed and radiant glow.' },
+              { name: 'Divine Judgment', type: 'ultimate', desc: 'Calls down heavens judgment upon wicked foes.' }
+            ],
             desc: 'Aerial divine warrior with celestial flight capabilities.',
             bg: 'from-orange-950 to-slate-950',
             border: 'border-orange-500/50',
@@ -672,7 +712,12 @@
             name: 'VOID NECROMANCER',
             role: 'Void Sorcerer',
             rarity: 'RANKED (Platinum I)',
-            stats: 'HP: 2,500 | ATK: 2,700 | DEF: 1,100 | SPD: 130',
+            stats: { hp: 2500, atk: 2700, def: 1100, spd: 130 },
+            skills: [
+              { name: 'Soul Drain', type: 'void', desc: 'Siphons life force directly from target.' },
+              { name: 'Specter Summon', type: 'summon', desc: 'Summons spectral minion to fight alongside.' },
+              { name: 'Abyssal Cataclysm', type: 'ultimate', desc: 'Opens a rift to the void swallowing opponent stats.' }
+            ],
             desc: 'Dark sorcerer capable of summoning spectral minions.',
             bg: 'from-violet-950 to-slate-950',
             border: 'border-violet-500/50',
@@ -688,7 +733,12 @@
             name: 'BLOOD BERSERKER',
             role: 'Blood Brawler',
             rarity: 'ADVANCED (Elite)',
-            stats: 'HP: 3,600 | ATK: 2,800 | DEF: 1,400 | SPD: 135',
+            stats: { hp: 3600, atk: 2800, def: 1400, spd: 135 },
+            skills: [
+              { name: 'Blood Cleave', type: 'physical', desc: 'Savage axe swing scaling with missing HP.' },
+              { name: 'Bloodlust Frenzy', type: 'buff', desc: 'Sacrifices health for massive attack power boost.' },
+              { name: 'Executioner Rampage', type: 'ultimate', desc: 'Unleashes unstoppable flurry of blood-soaked strikes.' }
+            ],
             desc: 'Furious warrior scaling attack power as health drops.',
             bg: 'from-rose-950 to-slate-950',
             border: 'border-rose-500/50',
@@ -704,7 +754,12 @@
             name: 'ASTRAL ARCHMAGE',
             role: 'Cosmic Sorcerer',
             rarity: 'ADVANCED (Elite)',
-            stats: 'HP: 2,900 | ATK: 2,650 | DEF: 1,600 | SPD: 150',
+            stats: { hp: 2900, atk: 2650, def: 1600, spd: 150 },
+            skills: [
+              { name: 'Astral Bolt', type: 'cosmic', desc: 'Fires concentrated stellar energy beam.' },
+              { name: 'Orbit Shield', type: 'buff', desc: 'Surrounds self with orbiting cosmic debris.' },
+              { name: 'Supernova Collapse', type: 'ultimate', desc: 'Triggers a stellar explosion obliterating targets.' }
+            ],
             desc: 'Cosmic spellcaster manipulating planetary layout orbits.',
             bg: 'from-indigo-950 to-slate-950',
             border: 'border-indigo-500/50',
@@ -795,7 +850,7 @@
                             <p class="text-xs text-slate-400 mt-1">${h.desc}</p>
                         </div>
                     </div>
-                    <div class="text-[11px] text-amber-400 font-mono">Stats: ${h.stats}</div>
+                    <div class="text-[11px] text-amber-400 font-mono">Stats: HP: ${h.stats.hp} | ATK: ${h.stats.atk} | DEF: ${h.stats.def} | SPD: ${h.stats.spd}</div>
                     <button onclick="pickStarterHero('${h.id}')" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Choose Free Starter</button>
                 </div>
             `).join('');
@@ -947,6 +1002,8 @@
                     actionBtn = `<span class="text-xs text-amber-400 font-mono text-right block">Requires ${h.requiredWins} Wins & ${h.requiredXp} XP<br><span class="text-[10px] text-slate-500">(Your Stats: ${currentUser.wins} Wins, ${currentUser.xp} XP)</span></span>`;
                 }
 
+                const skillsListHtml = h.skills.map(s => `<span class="inline-block bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-md mr-1 mt-1 font-mono" title="${s.desc}">${s.name} (${s.type})</span>`).join('');
+
                 return `
                     <div class="bg-[#0e1322] border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between card-hover">
                         <div class="flex items-center space-x-5">
@@ -959,8 +1016,12 @@
                                     <span class="text-[10px] bg-blue-600/20 text-blue-400 px-2.5 py-0.5 rounded-full border border-blue-500/30 font-medium">${h.rarity}</span>
                                 </div>
                                 <p class="text-xs text-slate-400 max-w-md">${h.desc}</p>
-                                <div class="text-[11px] text-amber-400 font-mono mt-1">Stats: ${h.stats}</div>
-                                <div class="text-[10px] text-indigo-300 mt-0.5">Battle Animation: ${h.spriteAnim}</div>
+                                <div class="text-[11px] text-amber-400 font-mono mt-1">Stats: HP: ${h.stats.hp} | ATK: ${h.stats.atk} | DEF: ${h.stats.def} | SPD: ${h.stats.spd}</div>
+                                <div class="mt-1 flex flex-wrap">
+                                    <span class="text-[10px] text-slate-400 font-bold mr-1 mt-1">Skills:</span>
+                                    ${skillsListHtml}
+                                </div>
+                                <div class="text-[10px] text-indigo-300 mt-1">Battle Animation: ${h.spriteAnim}</div>
                                 ${h.isStarter && !isUnlocked ? `<span class="text-xs font-bold text-amber-400 mt-1 block">Acquisition Price: ₱${h.price}</span>` : ''}
                             </div>
                         </div>
