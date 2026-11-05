@@ -1144,9 +1144,12 @@
                 return;
             }
 
+            // Deduct wager safely
             currentUser.balance -= amount;
             currentDuelBet = amount;
             updateWalletDisplay();
+            
+            // Close modal immediately
             closeModal();
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
@@ -1155,7 +1158,7 @@
             const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero) || heroes[0];
             const pMaxHp = activeHeroObj.stats.hp;
             
-            // Pick a boss/opponent based on progression (e.g. Chrono Warden or random boss)
+            // Pick an opponent boss
             const enemyObj = heroes.find(h => h.id === 'chrono-warden') || heroes[6];
             const eMaxHp = enemyObj.stats.hp;
 
@@ -1178,9 +1181,12 @@
             
             updateDuelUI();
 
+            // Force visibility shift to display battlefield
             document.getElementById('main-header').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('view-duel-fullscreen').classList.remove('hidden');
         }
 
@@ -1431,7 +1437,7 @@
             const totalWit = (filterDate ? approvedWithdrawalsLog.filter(w => w.date === filterDate) : approvedWithdrawalsLog).reduce((sum, item) => sum + item.amount, 0);
 
             document.getElementById('metric-total-deposits').innerText = '₱' + totalDep.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('metric-total-withdrawals').innerText = '₱' + totalWit.toLocaleString('en-US', {minimumFractionDicts: 2});
+            document.getElementById('metric-total-withdrawals').innerText = '₱' + totalWit.toLocaleString('en-US', {minimumFractionDigits: 2});
         }
 
         function approveReset(id) {
@@ -1481,7 +1487,7 @@
         function rejectWithdrawal(id, email, amt) {
             const targetUser = registeredAccounts.find(acc => acc.email === email);
             if(targetUser) targetUser.balance += amt;
-            if(currentUser && currentUser.email === email) updateWalletDialog();
+            if(currentUser && currentUser.email === email) updateWalletDisplay();
             pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
             renderOwnerQueues();
             alert('Withdrawal rejected and refunded.');
