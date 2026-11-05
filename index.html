@@ -138,9 +138,7 @@
                 <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-amber-400 glow-gold">CHOOSE YOUR STARTER CHAMPION</h2>
                 <p class="text-xs text-slate-400">Select <strong class="text-amber-400">only 1</strong> of the 4 basic foundational heroes below for free. Other basic heroes can be acquired later via payment.</p>
             </div>
-            <div id="starter-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- Populated dynamically -->
-            </div>
+            <div id="starter-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         </div>
 
         <!-- Force Change Password View -->
@@ -348,8 +346,8 @@
             <div class="flex flex-col items-center space-y-2 z-10">
                 <div class="w-48 bg-slate-950/90 border border-red-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
                     <div class="flex justify-between text-[11px] font-bold">
-                        <span class="text-red-400">CHRONO WARDEN</span>
-                        <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
+                        <span id="fs-enemy-title" class="text-red-400">CHRONO WARDEN</span>
+                        <span id="fs-enemy-hp-text" class="text-emerald-400">3000/3000</span>
                     </div>
                     <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
                         <div id="fs-enemy-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
@@ -362,25 +360,25 @@
                 </div>
                 <div id="fs-enemy-sprite" class="w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.2)] p-2">
                     <img id="fs-enemy-img-el" src="image_a4f1655c.jpg" alt="Chrono Warden" class="w-20 h-20 object-cover rounded-xl shadow-lg">
-                    <span class="font-cinzel text-xs font-bold text-amber-300 mt-1">CHRONO</span>
+                    <span id="fs-enemy-name-tag" class="font-cinzel text-xs font-bold text-amber-300 mt-1">CHRONO</span>
                 </div>
             </div>
 
             <!-- Central Battle Log Floating Pill -->
             <div class="self-center z-20 max-w-lg w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-4 py-2 text-center text-xs text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
-                [Arena]: Deck shuffled! Combat engaged. Choose your drawn tactical skills below.
+                [Arena]: Active hero stats & 13-Kit ability matrix loaded! Choose your tactical skill cards below.
             </div>
 
             <!-- Player Stage Area (Bottom) -->
             <div class="flex flex-col items-center space-y-2 z-10">
                 <div id="fs-player-sprite" class="w-32 h-32 md:w-40 md:h-40 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)] p-2">
                     <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-20 h-20 object-cover rounded-xl shadow-lg">
-                    <span class="font-cinzel text-xs font-bold text-amber-300 mt-1">PYRA</span>
+                    <span id="fs-player-sprite-name" class="font-cinzel text-xs font-bold text-amber-300 mt-1">PYRA</span>
                 </div>
                 <div class="w-48 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
                     <div class="flex justify-between text-[11px] font-bold">
                         <span id="fs-player-name" class="text-blue-400">PLAYER</span>
-                        <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
+                        <span id="fs-player-hp-text" class="text-emerald-400">2800/2800</span>
                     </div>
                     <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
                         <div id="fs-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
@@ -393,16 +391,14 @@
             </div>
         </div>
 
-        <!-- Bottom Shuffled Action Cards Deck -->
+        <!-- Bottom Custom Active Hero Skills Deck -->
         <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 space-y-3 backdrop-blur">
             <div class="flex justify-between items-center px-1">
-                <span class="font-cinzel text-xs font-bold text-amber-400">SHUFFLED SKILL DECK (Drawn 4 / Turn)</span>
-                <button onclick="endDuelTurn()" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">End Turn & Shuffle</button>
+                <span class="font-cinzel text-xs font-bold text-amber-400">ACTIVE CHAMPION SKILLS (3 AP Cost System)</span>
+                <button onclick="endDuelTurn()" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">End Turn & Reset AP</button>
             </div>
-            <!-- Dynamically Rendered Shuffled Hand Cards -->
-            <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <!-- Populated dynamically via JS shuffle -->
-            </div>
+            <!-- Dynamically Rendered Active Hero Skills Matrix -->
+            <div id="shuffled-hand-container" class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto"></div>
         </div>
     </div>
 
@@ -483,24 +479,13 @@
 
         async function installPWA() {
             if (!deferredPrompt) {
-                alert('PWA installation prompt is ready! If the button does not trigger a popup, you can also install this app directly from your browser menu (Tap menu -> "Install App" or "Add to Home Screen").');
+                alert('PWA installation prompt is ready! If the button does not trigger a popup, you can install this app directly from your browser menu.');
                 return;
             }
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-            } else {
-                console.log('User dismissed the install prompt');
-            }
             deferredPrompt = null;
         }
-
-        window.addEventListener('appinstalled', (evt) => {
-            console.log('Aetheris Duel Arena was successfully installed');
-            const installBtn = document.getElementById('btn-install-pwa');
-            if (installBtn) installBtn.classList.add('hidden');
-        });
 
         // SHA-256 Hashing Utility
         async function hashPassword(password) {
@@ -523,252 +508,213 @@
         let uploadedMayaQR = null;
 
         let duelState = { 
-            playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, 
-            enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' 
+            playerHp: 2800, playerMaxHp: 2800, playerAtk: 2400, playerArmor: 0, playerAp: 3, 
+            enemyHp: 3000, enemyMaxHp: 3000, enemyAtk: 2300, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' 
         };
 
-        const masterSkillDeck = [
-            { type: 'strike', name: 'STRIKE', ap: 1, color: 'blue', desc: 'Deal 15 physical damage.' },
-            { type: 'defend', name: 'DEFEND', ap: 1, color: 'blue', desc: 'Gain 12 Armor block.' },
-            { type: 'poison', name: 'VENOM STRIKE', ap: 2, color: 'purple', desc: 'Apply 8 Poison stacks.' },
-            { type: 'debuff', name: 'PLAGUE BURST', ap: 2, color: 'emerald', desc: 'Apply Poison & inflict Armor-Break (-50% enemy defense).' },
-            { type: 'heal', name: 'MEDITATE', ap: 2, color: 'emerald', desc: 'Restore 15 HP instantly.' }
-        ];
+        // Complete Upgraded 13-Kit Ability Data Layer Matrix
+        const heroSkillsDatabase = {
+            pyra: [
+                { name: "Flame Burst", cost: 1, type: "Offensive", damage: 180, effect: "burn", duration: 3, desc: "Wave of fire dealing 180 base damage and applying a stacking Burn debuff." },
+                { name: "Ignition Shield", cost: 1, type: "Defensive", damage: 0, effect: "reflect_melee", duration: 2, desc: "Blazing barrier that absorbs incoming attacks and scorches melee attackers." },
+                { name: "Magma Surge", cost: 2, type: "Offensive", damage: 320, effect: "armor_shatter", duration: 1, desc: "Erupts molten earth beneath target dealing 320 AoE damage and breaking low-tier armor." },
+                { name: "Scorching Touch", cost: 1, type: "Offensive", damage: 120, effect: "fire_vulnerability", duration: 1, desc: "Quick melee strike dealing 120 damage that increases fire vulnerability." },
+                { name: "Flame Dash", cost: 1, type: "Utility", damage: 0, effect: "evasion_up", duration: 1, desc: "Teleports forward in embers, increasing evasion and repositioning away from danger." },
+                { name: "Combustion Catalyst", cost: 2, type: "Offensive", damage: 450, effect: "consume_burn", duration: 0, desc: "Detonates active Burn stacks instantly for a 450 massive burst of explosive fire." },
+                { name: "Infernal Barrier", cost: 2, type: "Defensive", damage: 0, effect: "spell_reflect", duration: 2, desc: "Generates heavy defensive shield that reflects minor spell damage." },
+                { name: "Solar Flare", cost: 2, type: "Utility", damage: 50, effect: "blind", duration: 1, desc: "Blinds opponent with light, reducing accuracy and critical hit chance." },
+                { name: "Astral Meteor", cost: 3, type: "Ultimate", damage: 680, effect: "armor_shatter", duration: 2, desc: "Summons a star, obliterating armor and dealing 680 devastating burst damage." }
+            ],
+            sylph: [
+                { name: "Gale Arrow", cost: 1, type: "Offensive", damage: 210, effect: "armor_pierce", duration: 0, desc: "Fires wind-infused arrow dealing 210 damage, bypassing defense blocks." },
+                { name: "Zephyr Evasion", cost: 1, type: "Defensive", damage: 0, effect: "complete_dodge", duration: 1, desc: "Wraps in gales, sharply increasing evasion to completely dodge upcoming cards." },
+                { name: "Cyclone Trap", cost: 2, type: "Utility", damage: 80, effect: "action_delay", duration: 1, desc: "Sets wind snare trapping opponent, delaying next action queue slot." },
+                { name: "Wind Slash", cost: 1, type: "Offensive", damage: 140, effect: "bleed", duration: 3, desc: "Pressurized air strike inflicting 140 damage and minor bleed over 3 turns." },
+                { name: "Tailwind Sprint", cost: 1, type: "Utility", damage: 0, effect: "gain_ap", duration: 1, desc: "Grants 1 immediate bonus action point and speeds up card draw cycling." },
+                { name: "Aero Shield", cost: 2, type: "Defensive", damage: 0, effect: "projectile_deflect", duration: 2, desc: "Deflects incoming ranged projectiles using dense walls of spinning air currents." },
+                { name: "Piercing Gale", cost: 2, type: "Offensive", damage: 340, effect: "barrier_break", duration: 0, desc: "High-velocity wind beam dealing 340 damage that penetrates defensive barriers." },
+                { name: "Zephyr Blessing", cost: 2, type: "Utility", damage: 0, effect: "cleanse_heal", duration: 0, desc: "Purifies negative status debuffs while restoring 250 health." },
+                { name: "Tempest Storm", cost: 3, type: "Ultimate", damage: 620, effect: "multi_hit", duration: 0, desc: "Devastating hurricane bombarding opponent with 620 multi-hit wind blades." }
+            ],
+            valen: [
+                { name: "Shield Slam", cost: 1, type: "Offensive", damage: 160, effect: "stagger", duration: 1, desc: "Smashes enemy with steel shield for 160 damage, disrupting their attack sequence." },
+                { name: "Bastion Wall", cost: 1, type: "Defensive", damage: 0, effect: "gain_armor", duration: 2, desc: "Fortifies stance to generate 400 heavy Armor block value." },
+                { name: "Taunt Command", cost: 1, type: "Utility", damage: 0, effect: "taunt", duration: 2, desc: "Forces enemy to target Valen, reducing incoming damage output." },
+                { name: "Iron Strike", cost: 1, type: "Offensive", damage: 200, effect: "def_scaling", duration: 0, desc: "Steel sword thrust dealing 200 physical damage scaling with total defense stats." },
+                { name: "Bulwark Stance", cost: 2, type: "Defensive", damage: 0, effect: "double_armor", duration: 1, desc: "Hardens posture, doubling current armor block value for the round." },
+                { name: "Earthshaker Bash", cost: 2, type: "Utility", damage: 180, effect: "slow", duration: 2, desc: "Slams shield creating a localized shockwave dealing 180 damage and slowing opponent." },
+                { name: "Guardian Oath", cost: 2, type: "Defensive", damage: 0, effect: "magic_res", duration: 3, desc: "Buffs defensive resistance against elemental and magical damage types." },
+                { name: "Vengeful Retort", cost: 2, type: "Offensive", damage: 220, effect: "counter_stance", duration: 1, desc: "Prepares counter stance dealing 220 damage whenever attacks are blocked." },
+                { name: "Divine Fortress", cost: 3, type: "Ultimate", damage: 0, effect: "reflect_heal", duration: 2, desc: "Immovable holy bastion reflecting 50% damage while healing a portion of HP." }
+            ],
+            nyx: [
+                { name: "Shadow Strike", cost: 1, type: "Offensive", damage: 240, effect: "ambush", duration: 0, desc: "Delivers silent 240 damage strike from behind catching enemies off guard." },
+                { name: "Veil of Darkness", cost: 1, type: "Defensive", damage: 0, effect: "stealth", duration: 1, desc: "Vanishes into pure stealth rendering herself untargetable for a turn." },
+                { name: "Venom Blade", cost: 1, type: "Offensive", damage: 110, effect: "poison", duration: 3, desc: "Coats dagger, inflicting 110 physical damage and lingering poison over 3 turns." },
+                { name: "Backstab", cost: 2, type: "Offensive", damage: 420, effect: "shield_exploit", duration: 0, desc: "Precision strike dealing 420 double damage if target shield value is down." },
+                { name: "Smoke Bomb", cost: 1, type: "Utility", damage: 0, effect: "accuracy_down", duration: 2, desc: "Blinds opponent with thick smoke, lowering hit chance and resetting threat." },
+                { name: "Shadow Step", cost: 1, type: "Utility", damage: 0, effect: "bypass_guard", duration: 0, desc: "Instantly teleports behind target, bypassing active defensive front-guards." },
+                { name: "Dagger Flurry", cost: 2, type: "Offensive", damage: 320, effect: "multi_hit", duration: 0, desc: "Unleashes rapid 4-hit flurry of quick slashes totaling 320 damage." },
+                { name: "Siphoning Shadows", cost: 2, type: "Utility", damage: 90, effect: "steal_ap", duration: 1, desc: "Steals portion of opponent action energy to fuel own deck cycle." },
+                { name: "X-Slash Execution", cost: 3, type: "Ultimate", damage: 720, effect: "execute", duration: 0, desc: "Blinding cross-blade combo cutting through enemy defenses with 720 lethal damage." }
+            ],
+            "storm-knight": [
+                { name: "Lightning Surge", cost: 1, type: "Offensive", damage: 170, effect: "shock", duration: 2, desc: "Channels electricity to shock target for 170 damage and lower efficiency." },
+                { name: "Static Field", cost: 1, type: "Defensive", damage: 80, effect: "static_zap", duration: 2, desc: "Generates field around self zapping attackers for 80 damage when struck." },
+                { name: "Volt Dash", cost: 1, type: "Utility", damage: 120, effect: "reposition", duration: 0, desc: "Rushes forward wrapped in lightning closing distance with 120 shock damage." },
+                { name: "Thunder Strike", cost: 2, type: "Offensive", damage: 350, effect: "none", duration: 0, desc: "Heavy vertical blade slash infused with concentrated thunderbolts for 350 damage." },
+                { name: "Overload Shield", cost: 2, type: "Defensive", damage: 0, effect: "atk_buff_on_hit", duration: 2, desc: "Plasma barrier converting absorbed damage values into increased attack power." },
+                { name: "Magnetic Pull", cost: 1, type: "Utility", damage: 90, effect: "pull_position", duration: 0, desc: "Pulls opponent closer, disrupting ranged ability positioning layouts." },
+                { name: "Chain Spark", cost: 2, type: "Offensive", damage: 280, effect: "chain_arc", duration: 0, desc: "Fires bouncing electrical arc hitting multiple nodes for 280 damage." },
+                { name: "Supercharge", cost: 2, type: "Utility", damage: 0, effect: "draw_speed_up", duration: 2, desc: "Temporarily boosts attack speed and card draw efficiency at cost of minor self damage." },
+                { name: "Thunder Wrath", cost: 3, type: "Ultimate", damage: 660, effect: "paralyze", duration: 1, desc: "Calls thunderstorm striking battlefield with chained lightning arcs for 660 damage." }
+            ],
+            "ironclad-titan": [
+                { name: "Earth Slam", cost: 1, type: "Offensive", damage: 190, effect: "fracture", duration: 2, desc: "Pounds ground fracturing enemy armor blocks and dealing 190 physical damage." },
+                { name: "Tectonic Armor", cost: 1, type: "Defensive", damage: 0, effect: "status_immunity", duration: 2, desc: "Encases body in stone layers granting 500 armor and debuff resistance." },
+                { name: "Boulder Toss", cost: 2, type: "Offensive", damage: 380, effect: "stun", duration: 1, desc: "Hurls massive chunk of earth dealing 380 heavy blunt impact damage." },
+                { name: "Quake Stomp", cost: 1, type: "Utility", damage: 100, effect: "interrupt", duration: 0, desc: "Stomps arena floor, interrupting enemy spell channeling and cast animations." },
+                { name: "Stone Skin", cost: 2, type: "Defensive", damage: 0, effect: "flat_reduction", duration: 5, desc: "Hardens outer skin to reduce incoming physical damage parameters permanently." },
+                { name: "Seismic Wave", cost: 2, type: "Utility", damage: 240, effect: "knockback", duration: 0, desc: "Sends tremor forward knocking back opponent and reducing speed values." },
+                { name: "Granite Wall", cost: 2, type: "Defensive", damage: 0, effect: "projectile_block", duration: 2, desc: "Summons temporary stone barricade block to stop high-damage projectiles." },
+                { name: "Titan's Grip", cost: 1, type: "Utility", damage: 130, effect: "root", duration: 1, desc: "Grabs and immobilizes opponent for 1 turn, preventing movement mechanics." },
+                { name: "Continental Shatter", cost: 3, type: "Ultimate", damage: 710, effect: "armor_destruction", duration: 0, desc: "Cracks open floor beneath opponent dealing 710 catastrophic crush damage." }
+            ],
+            "chrono-warden": [
+                { name: "Time Warp", cost: 1, type: "Utility", damage: 0, effect: "rewind_health", duration: 0, desc: "Manipulates temporal flow to rewind minor damage and reset draw sequences." },
+                { name: "Chrono Stasis", cost: 1, type: "Utility", damage: 0, effect: "freeze_turn", duration: 1, desc: "Locks enemy in bubble freezing their movement and ability card counters." },
+                { name: "Temporal Shift", cost: 1, type: "Utility", damage: 0, effect: "redraw_deck", duration: 0, desc: "Instantly shuffles and redraws two new card elements from skill deck." },
+                { name: "Haste", cost: 2, type: "Utility", damage: 0, effect: "extra_turn", duration: 1, desc: "Accelerates personal timeline granting two consecutive action turns." },
+                { name: "Slow Time", cost: 2, type: "Utility", damage: 0, effect: "ap_regen_down", duration: 2, desc: "Decelerates opponent field, halving their action point recovery next turn." },
+                { name: "Chronicle Shield", cost: 1, type: "Defensive", damage: 0, effect: "damage_undo", duration: 1, desc: "Projects temporal field that completely rewinds last instance of damage taken." },
+                { name: "Future Sight", cost: 2, type: "Utility", damage: 0, effect: "reveal_cards", duration: 3, desc: "Previews opponent next 3 hidden deck cards tracking tactical counter strategies." },
+                { name: "Aging Curse", cost: 2, type: "Offensive", damage: 120, effect: "decay", duration: 4, desc: "Ages target, draining stamina and inflicting 120 decay damage over time." },
+                { name: "Hourglass Collapse", cost: 3, type: "Ultimate", damage: 500, effect: "turn_scaling", duration: 0, desc: "Shatters timeline causing 500 damage scaled higher per elapsed turn." }
+            ],
+            "sky-valkyrie": [
+                { name: "Divine Spear", cost: 1, type: "Offensive", damage: 220, effect: "pierce", duration: 0, desc: "Thrusts radiant lance of pure celestial light straight through defenses for 220 damage." },
+                { name: "Heavenly Flight", cost: 1, type: "Utility", damage: 0, effect: "flight_mode", duration: 2, desc: "Takes to the skies gaining superior aerial positioning and high evasion states." },
+                { name: "Solar Ray", cost: 2, type: "Offensive", damage: 310, effect: "dispel_magic", duration: 0, desc: "Fires beam of solar energy dealing 310 damage incinerating magical guards." },
+                { name: "Valkyrie Blessing", cost: 1, type: "Utility", damage: 0, effect: "cleanse", duration: 0, desc: "Heals minor wounds for 200 HP and cleanses all active status debuffs." },
+                { name: "Aegis of Light", cost: 2, type: "Defensive", damage: 0, effect: "percent_mitigation", duration: 2, desc: "Summons holy barrier of pure radiance reducing all incoming damage by 40%." },
+                { name: "Celestial Strike", cost: 2, type: "Offensive", damage: 360, effect: "aerial_bonus", duration: 0, desc: "Diving aerial lance strike dealing 360 damage with bonus outputs if flying." },
+                { name: "Holy Smite", cost: 1, type: "Offensive", damage: 190, effect: "purge_buffs", duration: 0, desc: "Strikes enemy with divine judgment for 190 damage, purging positive buff states." },
+                { name: "Wings of Dawn", cost: 2, type: "Utility", damage: 0, effect: "spd_ap_buff", duration: 2, desc: "Increases movement speed value parameters and action point regeneration rules." },
+                { name: "Judgment of the Heavens", cost: 3, type: "Ultimate", damage: 690, effect: "holy_purge", duration: 0, desc: "Rains holy lances from above dealing 690 damage while purging targets completely." }
+            ],
+            "void-necromancer": [
+                { name: "Soul Drain", cost: 1, type: "Offensive", damage: 150, effect: "lifesteal", duration: 0, desc: "Draws life force out of opponent healing caster for 150 while weakening target." },
+                { name: "Spectral Summon", cost: 1, type: "Utility", damage: 0, effect: "minion_spawn", duration: 3, desc: "Summons restless shadows from void to absorb incoming enemy attacks." },
+                { name: "Death Bolt", cost: 2, type: "Offensive", damage: 290, effect: "necro_rot", duration: 2, desc: "Fires projectile of dark necrotic energy dealing 290 damage rotting armor files." },
+                { name: "Life Siphon", cost: 2, type: "Offensive", damage: 100, effect: "hp_drain", duration: 3, desc: "Drains 100 continuous health from target over 3 turns to replenish caster HP." },
+                { name: "Bone Shield", cost: 1, type: "Defensive", damage: 0, effect: "flat_block", duration: 2, desc: "Surrounds caster with swirling skeletal remains acting as 350 armor block." },
+                { name: "Curse of Weakness", cost: 1, type: "Utility", damage: 0, effect: "atk_down", duration: 3, desc: "Inflicts dark hex reducing target output attack power properties significantly." },
+                { name: "Shadow Mend", cost: 2, type: "Utility", damage: 0, effect: "sacrifice_heal", duration: 0, desc: "Sacrifices minor minion health values to restore 500 of Necromancer HP." },
+                { name: "Grave Chill", cost: 2, type: "Utility", damage: 140, effect: "action_slow", duration: 2, desc: "Freezes target blood with frost dealing 140 damage slowing queue updates." },
+                { name: "Abyss Eclipse", cost: 3, type: "Ultimate", damage: 580, effect: "stamina_drain", duration: 3, desc: "Immerses battlefield in void darkness sapping energy with 580 curse damage." }
+            ],
+            "blood-berserker": [
+                { name: "Blood Axe Frenzy", cost: 1, type: "Offensive", damage: 200, effect: "low_hp_scaling", duration: 0, desc: "Swings axe scaling higher output power parameters as own health decreases." },
+                { name: "Bloodlust Roar", cost: 1, type: "Utility", damage: 0, effect: "vamp_buff", duration: 2, desc: "Primal scream boosting attack stats converting 30% dealt damage into HP." },
+                { name: "Hemotherapy", cost: 2, type: "Utility", damage: 0, effect: "self_harm_ap", duration: 0, desc: "Sacrifices 10% current HP to instantly gain 3 extra combo action points." },
+                { name: "Savage Slice", cost: 1, type: "Offensive", damage: 180, effect: "deep_bleed", duration: 3, desc: "Brutal cleave dealing 180 physical damage inducing deep bleeding wounds." },
+                { name: "Adrenaline Rush", cost: 2, type: "Utility", damage: 0, effect: "cc_immunity", duration: 2, desc: "Heightened state ignoring movement slow penalties and crowd control locks." },
+                { name: "Pain Eater", cost: 1, type: "Defensive", damage: 0, effect: "damage_to_rage", duration: 2, desc: "Absorbs incoming damage values converting them into bonus attack stacks." },
+                { name: "Frenzied Charge", cost: 2, type: "Offensive", damage: 380, effect: "reckless", duration: 1, desc: "Charges recklessly trading defensive armor layout rules for 380 attack damage." },
+                { name: "Blood Puddle", cost: 2, type: "Utility", damage: 70, effect: "trap_mobility", duration: 2, desc: "Traps enemy in pool of gore dealing 70 damage reducing evasion and mobility." },
+                { name: "Executioner's Wrath", cost: 3, type: "Ultimate", damage: 750, effect: "missing_hp_scale", duration: 0, desc: "Finishing slash dealing 750 damage scaling higher based on missing health." }
+            ],
+            "astral-archmage": [
+                { name: "Starfall Missile", cost: 1, type: "Offensive", damage: 190, effect: "shield_burn", duration: 0, desc: "Hurls condensed stellar projectiles dealing 190 damage burning magic barriers." },
+                { name: "Cosmic Shield", cost: 1, type: "Defensive", damage: 0, effect: "ring_deflect", duration: 2, desc: "Orbiting planetary rings deflecting incoming spells and projectile objects." },
+                { name: "Gravity Well", cost: 2, type: "Utility", damage: 150, effect: "suppress_cards", duration: 1, desc: "Creates black hole pulling opponent inward suppressing action card plays." },
+                { name: "Meteorite Shard", cost: 1, type: "Offensive", damage: 160, effect: "hybrid_damage", duration: 0, desc: "Space rock bombardment dealing 160 physical-cosmic hybrid damage." },
+                { name: "Astral Projection", cost: 2, type: "Defensive", damage: 0, effect: "mirror_image", duration: 1, desc: "Splits into stellar illusion causing next target attack function to miss." },
+                { name: "Constellation Beam", cost: 2, type: "Offensive", damage: 330, effect: "melt_defense", duration: 0, desc: "Channels starlight into continuous laser beam melting 330 defense points." },
+                { name: "Cosmic Insight", cost: 1, type: "Utility", damage: 0, effect: "draw_crit_buff", duration: 2, desc: "Instantly draws 2 extra skill cards expanding critical strike odds." },
+                { name: "Nebula Cloud", cost: 2, type: "Utility", damage: 0, effect: "obscure_field", duration: 2, desc: "Blankets arena in cosmic dust hiding active status effects lowering precision." },
+                { name: "Astral Supernova", cost: 3, type: "Ultimate", damage: 700, effect: "magic_wipe", duration: 0, desc: "Localized cosmic explosion bathing arena in 700 magic damage." }
+            ]
+        };
 
-        let currentHand = [];
-
-        // Master Realigned 11-Character Data Matrix with real numerical stats and specific skills
+        // Master Realigned 11-Character Hero Roster Matrix
         const heroes = [
           {
-            id: 'pyra',
-            name: 'PYRA',
-            role: 'Fire Mage',
-            rarity: 'STARTER (Basic)',
+            id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER (Basic)',
             stats: { hp: 2800, atk: 2400, def: 1200, spd: 140 },
-            skills: [
-              { name: 'Flame Burst', type: 'fire', desc: 'Deals 350 fire magic damage to target.' },
-              { name: 'Ignition Aura', type: 'buff', desc: 'Increases attack power by 25% for 2 turns.' },
-              { name: 'Meteor Call', type: 'ultimate', desc: 'Summons a meteor dealing heavy AoE burn damage.' }
-            ],
             desc: 'Fire-elemental spellcaster with explosive burn damage.',
-            bg: 'from-red-950 to-slate-950',
-            border: 'border-red-500/50',
-            iconImg: 'image_b2781538.jpg',
-            price: 150,
-            requiredWins: 0,
-            requiredXp: 0,
-            isStarter: true,
-            spriteAnim: 'Casting / Flame Burst'
+            bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', iconImg: 'image_b2781538.jpg',
+            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true, spriteAnim: 'Casting / Flame Burst'
           },
           {
-            id: 'sylph',
-            name: 'SYLPH',
-            role: 'Wind Ranger',
-            rarity: 'STARTER (Basic)',
+            id: 'sylph', name: 'SYLPH', role: 'Wind Ranger', rarity: 'STARTER (Basic)',
             stats: { hp: 2600, atk: 2200, def: 1300, spd: 190 },
-            skills: [
-              { name: 'Gale Shot', type: 'wind', desc: 'Fires a piercing wind arrow with high crit rate.' },
-              { name: 'Wind Step', type: 'buff', desc: 'Boosts evasion and speed by 30%.' },
-              { name: 'Hurricane Storm', type: 'ultimate', desc: 'Unleashes a tempest tearing through enemy defenses.' }
-            ],
             desc: 'Agile archer with high movement and gale evasion.',
-            bg: 'from-emerald-950 to-slate-950',
-            border: 'border-emerald-500/50',
-            iconImg: 'image_e51741b7.jpg',
-            price: 150,
-            requiredWins: 0,
-            requiredXp: 0,
-            isStarter: true,
-            spriteAnim: 'Evasion / Triple Gale Shot'
+            bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', iconImg: 'image_e51741b7.jpg',
+            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true, spriteAnim: 'Evasion / Triple Gale Shot'
           },
           {
-            id: 'valen',
-            name: 'VALEN',
-            role: 'Iron Guardian',
-            rarity: 'STARTER (Basic)',
+            id: 'valen', name: 'VALEN', role: 'Iron Guardian', rarity: 'STARTER (Basic)',
             stats: { hp: 4200, atk: 1500, def: 2600, spd: 90 },
-            skills: [
-              { name: 'Shield Slam', type: 'physical', desc: 'Bashes enemy with heavy shield dealing physical damage.' },
-              { name: 'Holy Barrier', type: 'buff', desc: 'Erects an unbreakable barrier blocking incoming attacks.' },
-              { name: 'Bastion Wrath', type: 'ultimate', desc: 'Unleashes stored defense power as a retaliatory shockwave.' }
-            ],
             desc: 'Holy tank with impenetrable defense and holy barrier.',
-            bg: 'from-blue-950 to-slate-950',
-            border: 'border-blue-500/50',
-            iconImg: 'image_4b6fe95a.jpg',
-            price: 150,
-            requiredWins: 0,
-            requiredXp: 0,
-            isStarter: true,
-            spriteAnim: 'Guard / Shield Slam'
+            bg: 'from-blue-950 to-slate-950', border: 'border-blue-500/50', iconImg: 'image_4b6fe95a.jpg',
+            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true, spriteAnim: 'Guard / Shield Slam'
           },
           {
-            id: 'nyx',
-            name: 'NYX',
-            role: 'Shadow Assassin',
-            rarity: 'STARTER (Basic)',
+            id: 'nyx', name: 'NYX', role: 'Shadow Assassin', rarity: 'STARTER (Basic)',
             stats: { hp: 2400, atk: 2600, def: 1000, spd: 180 },
-            skills: [
-              { name: 'Shadow Strike', type: 'dark', desc: 'Strikes from the shadows with critical backstab damage.' },
-              { name: 'Stealth Cloak', type: 'buff', desc: 'Enters absolute stealth to evade next incoming attack.' },
-              { name: 'Execution Blade', type: 'ultimate', desc: 'Deals massive damage amplified against low-HP targets.' }
-            ],
             desc: 'Deadly operative with stealth and shadow-strike bursts.',
-            bg: 'from-purple-950 to-slate-950',
-            border: 'border-purple-500/50',
-            iconImg: 'image_a9978665.jpg',
-            price: 150,
-            requiredWins: 0,
-            requiredXp: 0,
-            isStarter: true,
-            spriteAnim: 'Stealth / X-Slash'
+            bg: 'from-purple-950 to-slate-950', border: 'border-purple-500/50', iconImg: 'image_a9978665.jpg',
+            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true, spriteAnim: 'Stealth / X-Slash'
           },
           {
-            id: 'storm-knight',
-            name: 'STORM KNIGHT',
-            role: 'Electric Knight',
-            rarity: 'RANKED (Silver I)',
+            id: 'storm-knight', name: 'STORM KNIGHT', role: 'Electric Knight', rarity: 'RANKED (Silver I)',
             stats: { hp: 3400, atk: 2200, def: 2400, spd: 120 },
-            skills: [
-              { name: 'Lightning Slash', type: 'electric', desc: 'Strikes enemy with electrified blade causing paralysis.' },
-              { name: 'Static Shield', type: 'buff', desc: 'Charges armor with static electricity shocking attackers.' },
-              { name: 'Thunder Wrath', type: 'ultimate', desc: 'Calls down a colossal lightning bolt on the arena.' }
-            ],
             desc: 'Electric armored duelist wielding lightning strikes.',
-            bg: 'from-amber-950 to-slate-950',
-            border: 'border-amber-500/50',
-            iconImg: 'image_d3c262a5.jpg',
-            price: 150,
-            requiredWins: 2,
-            requiredXp: 150,
-            isStarter: false,
-            spriteAnim: 'Channeled / Lightning Surge'
+            bg: 'from-amber-950 to-slate-950', border: 'border-amber-500/50', iconImg: 'image_d3c262a5.jpg',
+            price: 150, requiredWins: 2, requiredXp: 150, isStarter: false, spriteAnim: 'Channeled / Lightning Surge'
           },
           {
-            id: 'ironclad-titan',
-            name: 'IRONCLAD TITAN',
-            role: 'Earth Titan',
-            rarity: 'RANKED (Silver II)',
+            id: 'ironclad-titan', name: 'IRONCLAD TITAN', role: 'Earth Titan', rarity: 'RANKED (Silver II)',
             stats: { hp: 4800, atk: 1600, def: 3200, spd: 80 },
-            skills: [
-              { name: 'Earthquake Slam', type: 'earth', desc: 'Slams ground shaking the arena and fracturing armor.' },
-              { name: 'Tectonic Armor', type: 'buff', desc: 'Hardens stone skin to absorb massive physical blows.' },
-              { name: 'Mountain Crush', type: 'ultimate', desc: 'Summons boulder fragments crashing onto opponent.' }
-            ],
             desc: 'Colossal earth juggernaut with earth-shattering slams.',
-            bg: 'from-stone-950 to-slate-950',
-            border: 'border-stone-500/50',
-            iconImg: 'image_e1196f4d.jpg',
-            price: 150,
-            requiredWins: 4,
-            requiredXp: 350,
-            isStarter: false,
-            spriteAnim: 'Heavy Slam / Earth Fracture'
+            bg: 'from-stone-950 to-slate-950', border: 'border-stone-500/50', iconImg: 'image_e1196f4d.jpg',
+            price: 150, requiredWins: 4, requiredXp: 350, isStarter: false, spriteAnim: 'Heavy Slam / Earth Fracture'
           },
           {
-            id: 'chrono-warden',
-            name: 'CHRONO WARDEN',
-            role: 'Time Mage',
-            rarity: 'RANKED (Gold I)',
+            id: 'chrono-warden', name: 'CHRONO WARDEN', role: 'Time Mage', rarity: 'RANKED (Gold I)',
             stats: { hp: 3000, atk: 2300, def: 1800, spd: 160 },
-            skills: [
-              { name: 'Time Warp Strike', type: 'time', desc: 'Strikes distortion across time-space continuum.' },
-              { name: 'Temporal Stasis', type: 'control', desc: 'Freezes enemy action for one turn.' },
-              { name: 'Hourglass Reversal', type: 'ultimate', desc: 'Rewinds own HP and status back to previous peak.' }
-            ],
             desc: 'Time controller manipulating action queues and hourglass power.',
-            bg: 'from-yellow-950 to-slate-950',
-            border: 'border-yellow-500/50',
-            iconImg: 'image_a4f1655c.jpg',
-            price: 150,
-            requiredWins: 7,
-            requiredXp: 600,
-            isStarter: false,
-            spriteAnim: 'Stasis / Quantum Rewind'
+            bg: 'from-yellow-950 to-slate-950', border: 'border-yellow-500/50', iconImg: 'image_a4f1655c.jpg',
+            price: 150, requiredWins: 7, requiredXp: 600, isStarter: false, spriteAnim: 'Stasis / Quantum Rewind'
           },
           {
-            id: 'sky-valkyrie',
-            name: 'SKY VALKYRIE',
-            role: 'Light Warrior',
-            rarity: 'RANKED (Gold II)',
+            id: 'sky-valkyrie', name: 'SKY VALKYRIE', role: 'Light Warrior', rarity: 'RANKED (Gold II)',
             stats: { hp: 3200, atk: 2500, def: 2000, spd: 170 },
-            skills: [
-              { name: 'Celestial Spear', type: 'light', desc: 'Hurls a spear of pure holy light.' },
-              { name: 'Valkyrie Wings', type: 'buff', desc: 'Soars into the air gaining speed and radiant glow.' },
-              { name: 'Divine Judgment', type: 'ultimate', desc: 'Calls down heavens judgment upon wicked foes.' }
-            ],
             desc: 'Aerial divine warrior with celestial flight capabilities.',
-            bg: 'from-orange-950 to-slate-950',
-            border: 'border-orange-500/50',
-            iconImg: 'image_9b984ce7.jpg',
-            price: 150,
-            requiredWins: 10,
-            requiredXp: 950,
-            isStarter: false,
-            spriteAnim: 'Dive / Skyward Smite'
+            bg: 'from-orange-950 to-slate-950', border: 'border-orange-500/50', iconImg: 'image_9b984ce7.jpg',
+            price: 150, requiredWins: 10, requiredXp: 950, isStarter: false, spriteAnim: 'Dive / Skyward Smite'
           },
           {
-            id: 'void-necromancer',
-            name: 'VOID NECROMANCER',
-            role: 'Void Sorcerer',
-            rarity: 'RANKED (Platinum I)',
+            id: 'void-necromancer', name: 'VOID NECROMANCER', role: 'Void Sorcerer', rarity: 'RANKED (Platinum I)',
             stats: { hp: 2500, atk: 2700, def: 1100, spd: 130 },
-            skills: [
-              { name: 'Soul Drain', type: 'void', desc: 'Siphons life force directly from target.' },
-              { name: 'Specter Summon', type: 'summon', desc: 'Summons spectral minion to fight alongside.' },
-              { name: 'Abyssal Cataclysm', type: 'ultimate', desc: 'Opens a rift to the void swallowing opponent stats.' }
-            ],
             desc: 'Dark sorcerer capable of summoning spectral minions.',
-            bg: 'from-violet-950 to-slate-950',
-            border: 'border-violet-500/50',
-            iconImg: 'image_42205d6.jpg',
-            price: 150,
-            requiredWins: 15,
-            requiredXp: 1400,
-            isStarter: false,
-            spriteAnim: 'Siphon / Necrotic Abyss'
+            bg: 'from-violet-950 to-slate-950', border: 'border-violet-500/50', iconImg: 'image_42205d6.jpg',
+            price: 150, requiredWins: 15, requiredXp: 1400, isStarter: false, spriteAnim: 'Siphon / Necrotic Abyss'
           },
           {
-            id: 'blood-berserker',
-            name: 'BLOOD BERSERKER',
-            role: 'Blood Brawler',
-            rarity: 'ADVANCED (Elite)',
+            id: 'blood-berserker', name: 'BLOOD BERSERKER', role: 'Blood Brawler', rarity: 'ADVANCED (Elite)',
             stats: { hp: 3600, atk: 2800, def: 1400, spd: 135 },
-            skills: [
-              { name: 'Blood Cleave', type: 'physical', desc: 'Savage axe swing scaling with missing HP.' },
-              { name: 'Bloodlust Frenzy', type: 'buff', desc: 'Sacrifices health for massive attack power boost.' },
-              { name: 'Executioner Rampage', type: 'ultimate', desc: 'Unleashes unstoppable flurry of blood-soaked strikes.' }
-            ],
             desc: 'Furious warrior scaling attack power as health drops.',
-            bg: 'from-rose-950 to-slate-950',
-            border: 'border-rose-500/50',
-            iconImg: 'image_2e90c1d9.jpg',
-            price: 300,
-            requiredWins: 25,
-            requiredXp: 2500,
-            isStarter: false,
-            spriteAnim: 'Frenzy / Savage Cleave'
+            bg: 'from-rose-950 to-slate-950', border: 'border-rose-500/50', iconImg: 'image_2e90c1d9.jpg',
+            price: 300, requiredWins: 25, requiredXp: 2500, isStarter: false, spriteAnim: 'Frenzy / Savage Cleave'
           },
           {
-            id: 'astral-archmage',
-            name: 'ASTRAL ARCHMAGE',
-            role: 'Cosmic Sorcerer',
-            rarity: 'ADVANCED (Elite)',
+            id: 'astral-archmage', name: 'ASTRAL ARCHMAGE', role: 'Cosmic Sorcerer', rarity: 'ADVANCED (Elite)',
             stats: { hp: 2900, atk: 2650, def: 1600, spd: 150 },
-            skills: [
-              { name: 'Astral Bolt', type: 'cosmic', desc: 'Fires concentrated stellar energy beam.' },
-              { name: 'Orbit Shield', type: 'buff', desc: 'Surrounds self with orbiting cosmic debris.' },
-              { name: 'Supernova Collapse', type: 'ultimate', desc: 'Triggers a stellar explosion obliterating targets.' }
-            ],
             desc: 'Cosmic spellcaster manipulating planetary layout orbits.',
-            bg: 'from-indigo-950 to-slate-950',
-            border: 'border-indigo-500/50',
-            iconImg: 'image_1d431b92.jpg',
-            price: 300,
-            requiredWins: 30,
-            requiredXp: 3200,
-            isStarter: false,
-            spriteAnim: 'Supernova / Gravity Collapse'
+            bg: 'from-indigo-950 to-slate-950', border: 'border-indigo-500/50', iconImg: 'image_1d431b92.jpg',
+            price: 300, requiredWins: 30, requiredXp: 3200, isStarter: false, spriteAnim: 'Supernova / Gravity Collapse'
           }
         ];
 
@@ -819,12 +765,7 @@
 
             const newAcc = {
                 name, nickname, phone, email, bday, passHash,
-                role: 'player', balance: 0.00,
-                unlockedHeroes: [],
-                activeHero: '',
-                wins: 0,
-                xp: 0,
-                rank: 'Bronze I'
+                role: 'player', balance: 0.00, unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I'
             };
             registeredAccounts.push(newAcc);
             currentUser = newAcc;
@@ -880,13 +821,17 @@
             if(!user) { alert('Invalid email or password.'); return; }
 
             currentUser = user;
+            if (!currentUser.activeHero && currentUser.unlockedHeroes.length > 0) {
+                currentUser.activeHero = currentUser.unlockedHeroes[0];
+            }
+
             document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('nav-wallet-container').classList.remove('hidden');
             document.getElementById('nav-menu').classList.remove('hidden');
             document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
             document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
             updateWalletDisplay();
-            setActiveHeroUI(currentUser.activeHero);
+            setActiveHeroUI(currentUser.activeHero || 'pyra');
 
             if(currentUser.role === 'owner') {
                 document.getElementById('btn-hub').classList.add('hidden');
@@ -988,6 +933,7 @@
                 const isUnlocked = currentUser && currentUser.unlockedHeroes.includes(h.id);
                 const isActive = currentUser && currentUser.activeHero === h.id;
                 const meetsReqs = currentUser && currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp;
+                const hSkills = heroSkillsDatabase[h.id] || [];
 
                 let actionBtn = '';
                 if (isActive) {
@@ -1002,7 +948,7 @@
                     actionBtn = `<span class="text-xs text-amber-400 font-mono text-right block">Requires ${h.requiredWins} Wins & ${h.requiredXp} XP<br><span class="text-[10px] text-slate-500">(Your Stats: ${currentUser.wins} Wins, ${currentUser.xp} XP)</span></span>`;
                 }
 
-                const skillsListHtml = h.skills.map(s => `<span class="inline-block bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-md mr-1 mt-1 font-mono" title="${s.desc}">${s.name} (${s.type})</span>`).join('');
+                const skillsListHtml = hSkills.map(s => `<span class="inline-block bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-md mr-1 mt-1 font-mono" title="${s.desc}">${s.name} (${s.cost} AP)</span>`).join('');
 
                 return `
                     <div class="bg-[#0e1322] border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between card-hover">
@@ -1018,7 +964,7 @@
                                 <p class="text-xs text-slate-400 max-w-md">${h.desc}</p>
                                 <div class="text-[11px] text-amber-400 font-mono mt-1">Stats: HP: ${h.stats.hp} | ATK: ${h.stats.atk} | DEF: ${h.stats.def} | SPD: ${h.stats.spd}</div>
                                 <div class="mt-1 flex flex-wrap">
-                                    <span class="text-[10px] text-slate-400 font-bold mr-1 mt-1">Skills:</span>
+                                    <span class="text-[10px] text-slate-400 font-bold mr-1 mt-1">13-Kit Skills:</span>
                                     ${skillsListHtml}
                                 </div>
                                 <div class="text-[10px] text-indigo-300 mt-1">Battle Animation: ${h.spriteAnim}</div>
@@ -1133,24 +1079,18 @@
             document.getElementById('modal-bet').classList.remove('hidden');
         }
 
-        function shuffleAndDrawHand() {
-            let deckCopy = [...masterSkillDeck];
-            for (let i = deckCopy.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [deckCopy[i], deckCopy[j]] = [deckCopy[j], deckCopy[i]];
-            }
-            currentHand = deckCopy.slice(0, 4);
-            renderHandCards();
-        }
-
-        function renderHandCards() {
+        function renderActiveHeroSkills() {
+            const activeHeroId = currentUser ? (currentUser.activeHero || 'pyra') : 'pyra';
+            const skillsList = heroSkillsDatabase[activeHeroId] || heroSkillsDatabase['pyra'];
             const container = document.getElementById('shuffled-hand-container');
-            container.innerHTML = currentHand.map((card, idx) => `
-                <div onclick="playCard(${idx})" class="bg-slate-900 border border-slate-700 hover:border-${card.color}-500 rounded-xl p-3 cursor-pointer card-hover space-y-1">
-                    <div class="flex justify-between text-[10px] text-${card.color}-400 font-bold">
-                        <span>${card.name}</span><span>${card.ap} AP</span>
+            
+            container.innerHTML = skillsList.map((skill, idx) => `
+                <div onclick="useHeroSkill(${idx})" class="bg-slate-900 border border-slate-700 hover:border-amber-500 rounded-xl p-3 cursor-pointer card-hover space-y-1">
+                    <div class="flex justify-between text-[11px] text-amber-400 font-bold">
+                        <span>${skill.name}</span><span>${skill.cost} AP</span>
                     </div>
-                    <p class="text-[11px] text-slate-400">${card.desc}</p>
+                    <div class="text-[9px] text-blue-400 font-mono">${skill.type} • Dmg: ${skill.damage}</div>
+                    <p class="text-[10px] text-slate-400 leading-tight">${skill.desc}</p>
                 </div>
             `).join('');
         }
@@ -1166,19 +1106,40 @@
             currentUser.balance -= amount;
             currentDuelBet = amount;
             updateWalletDisplay();
+            
             closeModal();
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
-            duelState = { playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' };
+
+            const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero) || heroes[0];
+            const pMaxHp = activeHeroObj.stats.hp;
             
-            shuffleAndDrawHand();
-            document.getElementById('fs-battle-log').innerText = `[Arena]: Ranked match started with ₱${amount} wager! Deck shuffled. Your turn.`;
+            const enemyObj = heroes.find(h => h.id === 'chrono-warden') || heroes[6];
+            const eMaxHp = enemyObj.stats.hp;
+
+            duelState = { 
+                playerHp: pMaxHp, playerMaxHp: pMaxHp, playerAtk: activeHeroObj.stats.atk, playerArmor: 0, playerAp: 3, 
+                enemyHp: eMaxHp, enemyMaxHp: eMaxHp, enemyAtk: enemyObj.stats.atk, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' 
+            };
+
+            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            document.getElementById('fs-player-sprite-name').innerText = activeHeroObj.name;
+            document.getElementById('fs-player-img-el').src = activeHeroObj.iconImg;
+
+            document.getElementById('fs-enemy-title').innerText = enemyObj.name;
+            document.getElementById('fs-enemy-name-tag').innerText = enemyObj.name;
+            document.getElementById('fs-enemy-img-el').src = enemyObj.iconImg;
+
+            renderActiveHeroSkills();
+            logDuel(`[Arena]: Duel started with ${activeHeroObj.name} vs ${enemyObj.name}! Select your 13-kit skill cards.`);
             
             updateDuelUI();
 
             document.getElementById('main-header').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('view-duel-fullscreen').classList.remove('hidden');
         }
 
@@ -1190,12 +1151,12 @@
 
         function updateDuelUI() {
             document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
-            document.getElementById('fs-player-hp-bar').style.width = `${(duelState.playerHp / duelState.playerMaxHp) * 100}%`;
+            document.getElementById('fs-player-hp-bar').style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
             document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
             document.getElementById('fs-player-ap').innerText = duelState.playerAp;
 
             document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
-            document.getElementById('fs-enemy-hp-bar').style.width = `${(duelState.enemyHp / duelState.enemyMaxHp) * 100}%`;
+            document.getElementById('fs-enemy-hp-bar').style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
             document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
             document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
             document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
@@ -1205,45 +1166,35 @@
             document.getElementById('fs-battle-log').innerText = msg;
         }
 
-        function playCard(index) {
+        function useHeroSkill(index) {
             if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
-            const card = currentHand[index];
-            if (!card) return;
+            const activeHeroId = currentUser ? (currentUser.activeHero || 'pyra') : 'pyra';
+            const skillsList = heroSkillsDatabase[activeHeroId] || heroSkillsDatabase['pyra'];
+            const skill = skillsList[index];
+            if (!skill) return;
 
-            if (duelState.playerAp < card.ap) {
-                logDuel(`[System]: Not enough AP for ${card.name} (Requires ${card.ap} AP)!`);
+            if (duelState.playerAp < skill.cost) {
+                logDuel(`[System]: Not enough AP for ${skill.name} (Requires ${skill.cost} AP)!`);
                 return;
             }
 
-            duelState.playerAp -= card.ap;
+            duelState.playerAp -= skill.cost;
 
-            if (card.type === 'strike') {
-                let dmg = 15;
-                if (duelState.enemyDebuff === 'Armor-Break') dmg = Math.round(dmg * 1.5);
-                if (duelState.enemyArmor > 0) {
-                    if (duelState.enemyArmor >= dmg) { duelState.enemyArmor -= dmg; dmg = 0; }
-                    else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
-                }
-                duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
-                logDuel(`[You]: Played Strike! Dealt ${dmg} damage.`);
-            } else if (card.type === 'defend') {
-                duelState.playerArmor += 12;
-                logDuel(`[You]: Played Defend! Gained 12 Armor block.`);
-            } else if (card.type === 'poison') {
-                duelState.enemyPoison += 8;
-                logDuel(`[You]: Played Venom Strike! Applied 8 Poison stacks.`);
-            } else if (card.type === 'debuff') {
-                duelState.enemyPoison += 5;
-                duelState.enemyDebuff = 'Armor-Break';
-                logDuel(`[You]: Played Plague Burst! Applied Poison & inflicted Armor-Break debuff!`);
-            } else if (card.type === 'heal') {
-                duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + 15);
-                logDuel(`[You]: Played Meditate! Restored 15 HP.`);
+            let finalDmg = skill.damage;
+            if (skill.type === 'Offensive') {
+                finalDmg = Math.round(skill.damage * (duelState.playerAtk / 2000));
             }
 
-            currentHand.splice(index, 1);
-            renderHandCards();
+            if (duelState.enemyArmor > 0) {
+                if (duelState.enemyArmor >= finalDmg) { duelState.enemyArmor -= finalDmg; finalDmg = 0; }
+                else { finalDmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
+            }
+
+            duelState.enemyHp = Math.max(0, duelState.enemyHp - finalDmg);
+            logDuel(`[You]: Used ${skill.name} (${skill.effect})! Dealt ${finalDmg} damage to enemy.`);
+
             updateDuelUI();
+            renderActiveHeroSkills();
 
             if (duelState.enemyHp <= 0) {
                 const reward = currentDuelBet * 2;
@@ -1257,7 +1208,7 @@
                 updateWalletDisplay();
 
                 logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
-                alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})! Check Roster for unlocked champions.`);
+                alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
                 surrenderDuel();
             }
         }
@@ -1265,7 +1216,7 @@
         function endDuelTurn() {
             if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
 
-            logDuel(`[System]: Ending turn & shuffling skill deck... Enemy counterattacking...`);
+            logDuel(`[System]: Ending turn... Enemy counterattacking...`);
             
             if (duelState.enemyPoison > 0) {
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
@@ -1274,15 +1225,15 @@
 
             setTimeout(() => {
                 if (duelState.enemyHp > 0) {
-                    let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 10 : 14;
+                    let enemyDmg = 350;
                     duelState.playerArmor = 0;
                     duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
-                    logDuel(`[Opponent]: Boss attacks for ${enemyDmg} damage!`);
+                    logDuel(`[Opponent]: Boss counterattacks for ${enemyDmg} damage!`);
                 }
                 
                 duelState.playerAp = 3;
-                shuffleAndDrawHand();
                 updateDuelUI();
+                renderActiveHeroSkills();
 
                 if (duelState.playerHp <= 0) {
                     const consolationXp = 15;
@@ -1489,7 +1440,7 @@
         function rejectWithdrawal(id, email, amt) {
             const targetUser = registeredAccounts.find(acc => acc.email === email);
             if(targetUser) targetUser.balance += amt;
-            if(currentUser && currentUser.email === email) updateWalletDialog();
+            if(currentUser && currentUser.email === email) updateWalletDisplay();
             pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
             renderOwnerQueues();
             alert('Withdrawal rejected and refunded.');
