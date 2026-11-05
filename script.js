@@ -11,7 +11,7 @@ function setHeroIcon(heroClass, iconId, element) {
         iconImage.src = 'image_e51741b7.jpg';
         break;
       case 'valen':
-        iconImage.src = 'image_2e90c1d9.jpg';
+        iconImage.src = 'image_4b6fe95a.jpg';
         break;
       case 'nyx':
         iconImage.src = 'image_42205d6.jpg';
@@ -32,7 +32,7 @@ function setHeroIcon(heroClass, iconId, element) {
         iconImage.src = 'image_b2781538.jpg';
         break;
       case 'blood-berserker':
-        iconImage.src = 'image_d3c262a5.jpg';
+        iconImage.src = 'image_2e90c1d9.jpg';
         break;
       case 'astral-archmage':
         iconImage.src = 'image_e1196f4d.jpg';
