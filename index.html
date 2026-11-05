@@ -1143,17 +1143,17 @@
             if (!currentUser) return;
             if (currentUser.balance < amount) {
                 alert('Insufficient wallet balance for this bet stake!');
-                closeModal();
                 return;
             }
 
-            // Deduct wager safely
+            // Deduct wager safely once
             currentUser.balance -= amount;
             currentDuelBet = amount;
             updateWalletDisplay();
 
-            // Hide the modal backdrop immediately and reveal battlefield view
+            // Hide all modal views & backdrop explicitly
             document.getElementById('modal-backdrop').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
 
@@ -1184,7 +1184,7 @@
             
             updateDuelUI();
 
-            // Force visibility shift to display battlefield
+            // Force visibility shift to display battlefield and hide main app views
             document.getElementById('main-header').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
