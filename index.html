@@ -495,7 +495,7 @@
 
         let currentHand = [];
 
-// Corrected 13-Character Data Matrix with realigned image paths
+// Master Realigned 11-Character Data Matrix - Case Sensitive & Filename Corrected
 const heroes = [
   {
     id: 'pyra',
@@ -506,7 +506,7 @@ const heroes = [
     desc: 'Fire-elemental spellcaster with explosive burn damage.',
     bg: 'from-red-950 to-slate-950',
     border: 'border-red-500/50',
-    iconImg: 'image_1d431b92.jpg', // Pyra
+    iconImg: 'image_b2781538.jpg', // Corrected to Pyra artwork
     price: 150,
     requiredWins: 0,
     requiredXp: 0,
@@ -522,7 +522,7 @@ const heroes = [
     desc: 'Agile archer with high movement and gale evasion.',
     bg: 'from-emerald-950 to-slate-950',
     border: 'border-emerald-500/50',
-    iconImg: 'image_2e90c1d9.jpg', // Sylph
+    iconImg: 'image_e51741b7.jpg', // Corrected to Sylph artwork
     price: 150,
     requiredWins: 0,
     requiredXp: 0,
@@ -538,7 +538,7 @@ const heroes = [
     desc: 'Holy tank with impenetrable defense and holy barrier.',
     bg: 'from-blue-950 to-slate-950',
     border: 'border-blue-500/50',
-    iconImg: 'image_42205d6.jpg', // Valen
+    iconImg: 'image_4b6fbf95a.jpg', // Corrected to Valen artwork
     price: 150,
     requiredWins: 0,
     requiredXp: 0,
@@ -554,7 +554,7 @@ const heroes = [
     desc: 'Deadly operative with stealth and shadow-strike bursts.',
     bg: 'from-purple-950 to-slate-950',
     border: 'border-purple-500/50',
-    iconImg: 'image_4b6fbf95.jpg', // Fixed the broken filename link
+    iconImg: 'image_a9978665.jpg', // Corrected to Nyx artwork
     price: 150,
     requiredWins: 0,
     requiredXp: 0,
@@ -570,7 +570,7 @@ const heroes = [
     desc: 'Electric armored duelist wielding lightning strikes.',
     bg: 'from-amber-950 to-slate-950',
     border: 'border-amber-500/50',
-    iconImg: 'image_9b984ce7.jpg', // Storm Knight
+    iconImg: 'image_d3c262a5.jpg', // Corrected to Storm Knight artwork
     price: 150,
     requiredWins: 2,
     requiredXp: 150,
@@ -586,7 +586,7 @@ const heroes = [
     desc: 'Colossal earth juggernaut with earth-shattering slams.',
     bg: 'from-stone-950 to-slate-950',
     border: 'border-stone-500/50',
-    iconImg: 'image_a4f1655c.jpg', // Ironclad Titan
+    iconImg: 'image_e1196f4d.jpg', // Corrected to Ironclad Titan artwork
     price: 150,
     requiredWins: 4,
     requiredXp: 350,
@@ -602,7 +602,7 @@ const heroes = [
     desc: 'Time controller manipulating action queues and hourglass power.',
     bg: 'from-yellow-950 to-slate-950',
     border: 'border-yellow-500/50',
-    iconImg: 'image_a9978665.jpg', // Chrono Warden
+    iconImg: 'image_a4f1655c.jpg', // Corrected to Chrono Warden artwork
     price: 150,
     requiredWins: 7,
     requiredXp: 600,
@@ -618,7 +618,7 @@ const heroes = [
     desc: 'Aerial divine warrior with celestial flight capabilities.',
     bg: 'from-orange-950 to-slate-950',
     border: 'border-orange-500/50',
-    iconImg: 'image_b2781538.jpg', // Sky Valkyrie
+    iconImg: 'image_9b984ce7.jpg', // Corrected to Sky Valkyrie artwork
     price: 150,
     requiredWins: 10,
     requiredXp: 950,
@@ -634,7 +634,7 @@ const heroes = [
     desc: 'Dark sorcerer capable of summoning spectral minions.',
     bg: 'from-violet-950 to-slate-950',
     border: 'border-violet-500/50',
-    iconImg: 'image_d3c262a5.jpg', // Void Necromancer
+    iconImg: 'image_42205d6.jpg', // Corrected to Void Necromancer artwork
     price: 150,
     requiredWins: 15,
     requiredXp: 1400,
@@ -650,7 +650,7 @@ const heroes = [
     desc: 'Furious warrior scaling attack power as health drops.',
     bg: 'from-rose-950 to-slate-950',
     border: 'border-rose-500/50',
-    iconImg: 'image_e1196f4d.jpg', // Blood Berserker
+    iconImg: 'image_2e90c1d9.jpg', // Corrected to Blood Berserker artwork
     price: 300,
     requiredWins: 25,
     requiredXp: 2500,
@@ -666,7 +666,7 @@ const heroes = [
     desc: 'Cosmic spellcaster manipulating planetary layout orbits.',
     bg: 'from-indigo-950 to-slate-950',
     border: 'border-indigo-500/50',
-    iconImg: 'image_e51741b7.jpg', // Astral Archmage
+    iconImg: 'image_1d431b92.jpg', // Corrected to Astral Archmage artwork
     price: 300,
     requiredWins: 30,
     requiredXp: 3200,
@@ -674,7 +674,6 @@ const heroes = [
     spriteAnim: 'Supernova / Gravity Collapse'
   }
 ];
-
         window.addEventListener('DOMContentLoaded', async () => {
             const ownerHash = await hashPassword('owner123');
             const playerHash = await hashPassword('player123');
