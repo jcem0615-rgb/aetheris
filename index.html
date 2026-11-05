@@ -442,17 +442,17 @@
         </div>
 
         <!-- PVP Bet Selection Modal -->
-        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
+        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center z-50">
             <h3 class="font-cinzel text-lg font-bold text-amber-400">SELECT RANKED PVP WAGER</h3>
             <p class="text-xs text-slate-400">Choose your match stake. Winner takes double the bet and earns Rank XP!</p>
             <div class="grid grid-cols-3 gap-2 pt-2">
-                <button onclick="startDuelWithBet(50)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱50</button>
-                <button onclick="startDuelWithBet(100)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱100</button>
-                <button onclick="startDuelWithBet(200)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱200</button>
-                <button onclick="startDuelWithBet(500)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm">₱500</button>
-                <button onclick="startDuelWithBet(1000)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2">₱1,000</button>
+                <button type="button" onclick="startDuelWithBet(50)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱50</button>
+                <button type="button" onclick="startDuelWithBet(100)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱100</button>
+                <button type="button" onclick="startDuelWithBet(200)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱200</button>
+                <button type="button" onclick="startDuelWithBet(500)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm cursor-pointer">₱500</button>
+                <button type="button" onclick="startDuelWithBet(1000)" class="py-3 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-sm col-span-2 cursor-pointer">₱1,000</button>
             </div>
-            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2">Cancel</button>
+            <button type="button" onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-2 cursor-pointer">Cancel</button>
         </div>
 
         <!-- Receipt Preview Modal -->
@@ -1076,6 +1076,9 @@
 
         function openBettingModal() {
             document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.remove('hidden');
         }
 
@@ -1096,17 +1099,23 @@
         }
 
         function startDuelWithBet(amount) {
-            if (!currentUser) return;
+            if (!currentUser) {
+                alert('Please sign in first.');
+                return;
+            }
+
             if (currentUser.balance < amount) {
-                alert('Insufficient wallet balance for this bet stake!');
+                alert('Insufficient wallet balance for this bet stake! Please top up.');
                 closeModal();
                 return;
             }
 
+            // Auto-deduct from wallet balance immediately
             currentUser.balance -= amount;
             currentDuelBet = amount;
             updateWalletDisplay();
             
+            // Close modal backdrop completely
             closeModal();
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
@@ -1131,10 +1140,11 @@
             document.getElementById('fs-enemy-img-el').src = enemyObj.iconImg;
 
             renderActiveHeroSkills();
-            logDuel(`[Arena]: Duel started with ${activeHeroObj.name} vs ${enemyObj.name}! Select your 13-kit skill cards.`);
+            logDuel(`[Arena]: Duel started with ${activeHeroObj.name} vs ${enemyObj.name}! Wager of ₱${amount} deducted. Select your skill cards.`);
             
             updateDuelUI();
 
+            // Force hide all standard views and header, then force display fullscreen arena
             document.getElementById('main-header').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
