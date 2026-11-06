@@ -48,6 +48,9 @@
             <nav id="nav-menu" class="hidden space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
                 <button onclick="switchTab('hub')" id="btn-hub" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-600 text-white transition">Home</button>
                 <button onclick="switchTab('select')" id="btn-roster" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition">Roster</button>
+                <button onclick="switchTab('shop')" id="btn-shop" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition">Skill Shop</button>
+                <button onclick="openPlayerProfileModal()" id="btn-profile" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-amber-400 hover:bg-amber-500/10 transition">Profile</button>
+                <button onclick="openLeaderboardModal()" id="btn-leaderboard" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 transition">Leaderboard</button>
                 <button onclick="switchTab('owner')" id="btn-owner" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition hidden">Owner Portal</button>
                 <button onclick="logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-red-400 hover:bg-red-500/10 transition">Logout</button>
             </nav>
@@ -83,14 +86,20 @@
             <!-- Register Box -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
-                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced.</p>
+                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies[cite: 7]. Unique email & phone enforced[cite: 7]. Registered phone & name will be locked for withdrawals[cite: 7]. Starting balance is ₱0.00[cite: 7].</p>
                 <div class="space-y-2.5">
-                    <input type="text" id="reg-name" placeholder="Full Legal Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-name" placeholder="Full Legal Name (Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="text" id="reg-phone" placeholder="Phone Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="email" id="reg-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-phone" placeholder="Phone Number (Unique & Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="email" id="reg-email" placeholder="Email Address (Unique)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 block">Birthday:</label>
+                        <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
+                        <button type="button" onclick="togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
                     <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 </div>
                 <div class="flex items-center justify-between text-xs pt-1">
@@ -100,27 +109,225 @@
             </div>
         </div>
 
+        <!-- Hero Roster & Rank Unlocks View -->
+        <div id="view-select" class="hidden space-y-3 py-2">
+            <div class="text-center max-w-lg mx-auto mb-2">
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
+                <p class="text-slate-400 text-xs">Inspect all 11 champions across tiers. Advance your rank and wins to unlock advanced fighters!</p>
+                <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-xs space-y-1.5 w-full">
+                    <div class="flex items-center justify-between space-x-4">
+                        <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
+                        <span>EXP Level: <strong id="player-explevel-badge" class="text-emerald-400">Lv. 1 (0 XP)</strong></span>
+                        <span>Wins: <strong id="player-wins-badge" class="text-blue-400">0</strong></span>
+                    </div>
+                </div>
+            </div>
+            <div id="hero-cards-container" class="space-y-2.5 pb-6"></div>
+        </div>
+
+        <!-- Skill Shop View -->
+        <div id="view-shop" class="hidden space-y-3 py-2">
+            <div class="text-center max-w-lg mx-auto mb-2">
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO SKILL MARKETPLACE</h2>
+                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills (₱150-₱350) and Tier-3 Ultimate Super Skills (₱500) that cost exactly 3 AP to unleash!</p>
+            </div>
+            <div id="shop-skills-container" class="space-y-2.5 pb-6"></div>
+        </div>
+
         <!-- Player Hub View -->
         <div id="view-hub" class="hidden space-y-3 py-2">
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between glow-box">
-                <div>
-                    <span id="player-nickname-badge" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Player</span>
-                    <h2 id="active-hero-name" class="font-cinzel text-base sm:text-lg font-bold text-white">PYRA</h2>
+                <div class="flex items-center space-x-3">
+                    <div id="active-hero-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
+                        <img id="active-hero-img-el" src="" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span id="player-nickname-badge" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Player</span>
+                            <span id="hub-rank-badge" class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
+                            <span id="hub-explevel-badge" class="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Lv. 1</span>
+                        </div>
+                        <h2 id="active-hero-name" class="font-cinzel text-base sm:text-lg font-bold text-white">PYRA</h2>
+                        <p class="text-[11px] text-slate-400">Active Champion • Ready for P2P Matchmaking</p>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
+                    <button onclick="openModal('topup')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow">+ Top-Up</button>
+                    <button onclick="openModal('withdraw')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow">Withdraw (Zero Fee)</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2">
+                <div onclick="openModal('bet')" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1.5 text-xs">⚔</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">P2P RANKED DUEL</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Select stake & queue for live player battles.</p>
+                </div>
+                <div onclick="switchTab('shop')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1.5 text-xs">📜</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">SKILL SHOP (Tier 2 & 3)</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Buy elite & ₱500 super skills for your champions.</p>
+                </div>
+                <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold mb-1.5 text-xs">🛡</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">ROSTER (11)</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Inspect champions & manage loadouts.</p>
                 </div>
             </div>
         </div>
 
         <!-- Owner Admin Portal View -->
-        <div id="view-owner" class="hidden space-y-3 py-2">
+        <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                     <h2 class="font-cinzel text-base sm:text-lg font-bold text-amber-400">EXCLUSIVE OWNER ADMIN PORTAL</h2>
-                    <span class="text-[11px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/30">Verified Owner</span>
+                    <span class="text-[11px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
                 </div>
-                <p class="text-xs text-slate-400">Welcome back, Boss! You have exclusive control over this game instance.</p>
+
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+                        <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
+                        <button onclick="loadOwnerAdminData()" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg">Refresh Admin Data</button>
+                    </div>
+                </div>
+
+                <!-- PLAYER ACCOUNTS DIRECTORY & DELETE/FREEZE MANAGEMENT -->
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory & Account Deletion[cite: 7]</h3>
+                    <div id="owner-players-list" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Loading players directory...</div>
+                    </div>
+                </div>
+
+                <!-- SYSTEM ACTIVITY & AUDIT LOG -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">System Activity & Audit Log (Timestamped)</h3>
+                        <span class="text-[10px] text-slate-400">Records platform events</span>
+                    </div>
+                    <div id="owner-system-audit-log" class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No system activity logged yet.</div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
+
+    <!-- FULL-SCREEN P2P PVP BATTLE ARENA VIEW -->
+    <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-3 sm:p-6 hidden overflow-hidden">
+        <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-2 backdrop-blur shrink-0">
+            <div class="flex items-center space-x-2">
+                <h2 class="font-cinzel font-bold text-sm sm:text-base text-amber-400 glow-gold">P2P DUEL ARENA</h2>
+                <span id="fullscreen-bet-badge" class="text-[11px] bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="surrenderDuel()" class="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-xl transition">Surrender</button>
+            </div>
+        </div>
+
+        <div class="flex-1 my-2 bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-950 border border-slate-800/80 rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
+
+            <div class="flex flex-col items-center space-y-1.5 z-10">
+                <div class="w-64 bg-slate-950/90 border border-red-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <span id="fs-enemy-title" class="text-red-400">OPPONENT (BRONZE I)</span>
+                        <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                        <div id="fs-enemy-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                </div>
+                <div id="fs-enemy-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center p-1.5">
+                    <span id="fs-enemy-name-label" class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">APEXPREDATOR</span>
+                </div>
+            </div>
+
+            <div class="self-center z-20 max-w-md w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-center text-[11px] text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
+                [Arena]: Match connected! Choose tactical skills within 30s.
+            </div>
+
+            <div class="flex flex-col items-center space-y-1.5 z-10">
+                <div class="w-64 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <span id="fs-player-name" class="text-blue-400 uppercase">PLAYER</span>
+                        <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                        <div id="fs-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1 text-[10px] text-slate-300">
+                        <span>Armor: <strong id="fs-player-armor" class="text-blue-400">0</strong></span>
+                        <span>AP: <strong id="fs-player-ap" class="text-amber-400">3</strong>/3</span>
+                        <span>Turn Timer: <strong id="fs-turn-timer" class="text-amber-400 font-bold">30s</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2 backdrop-blur shrink-0">
+            <div class="flex justify-between items-center px-1">
+                <span class="font-cinzel text-[11px] font-bold text-amber-400">UNIQUE HERO SKILL DECK</span>
+                <button onclick="endDuelTurn()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] rounded-xl shadow-lg transition">End Turn & Attack</button>
+            </div>
+            <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
+        <!-- P2P Ranked Matchmaking Wager Modal -->
+        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">P2P RANKED WAGER & MATCHMAKING</h3>
+            <p class="text-xs text-slate-400">Choose your match stake. Winner takes prize pool minus 5% platform fee!</p>
+            <div class="grid grid-cols-3 gap-2 pt-1">
+                <button onclick="startRankedMatchmaking(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
+                <button onclick="startRankedMatchmaking(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
+                <button onclick="startRankedMatchmaking(200)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱200</button>
+                <button onclick="startRankedMatchmaking(500)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱500</button>
+            </div>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-1">Cancel</button>
+        </div>
+
+        <!-- P2P Matchmaking Loading Modal -->
+        <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING P2P NETWORK</h3>
+            <div class="py-4 space-y-3">
+                <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching online lobby for peer player match...</p>
+            </div>
+            <button onclick="cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Stake</button>
+        </div>
+
+        <!-- Transparent Coin Toss Modal -->
+        <div id="modal-cointoss" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">TRANSPARENT COIN TOSS INITIATIVE</h3>
+            <p class="text-xs text-slate-400">Choose Heads or Tails to determine who moves first!</p>
+            <div class="grid grid-cols-2 gap-3 py-3">
+                <button onclick="executeCoinToss('Heads')" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm rounded-xl shadow-lg">🪙 HEADS</button>
+                <button onclick="executeCoinToss('Tails')" class="py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl shadow-lg">🪙 TAILS</button>
+            </div>
+        </div>
+
+        <!-- Player Profile Modal -->
+        <div id="modal-player-profile" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">PLAYER PROFILE & BATTLE HISTORY</h3>
+                <span id="profile-modal-rank" class="text-xs bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
+            </div>
+            <div id="player-profile-content" class="space-y-2.5 text-xs text-slate-300 max-h-80 overflow-y-auto pr-1"></div>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Profile</button>
+        </div>
+
+        <!-- Leaderboard Modal -->
+        <div id="modal-leaderboard" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">🏆 TOP 10 RANKED LEADERBOARD</h3>
+            </div>
+            <div id="leaderboard-list-content" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Leaderboard</button>
+        </div>
+    </div>
 
     <script>
         // ================= SUPABASE CONFIGURATION =================
@@ -128,10 +335,19 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_MzwC0zj5QfPLNvTkcphyww_5pObb4cM';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // EXCLUSIVE OWNER EMAIL LOCK
         const EXCLUSIVE_OWNER_EMAIL = 'jcem0615@gmail.com';
-
         let currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
+        let currentDuelBet = 50;
+        let duelState = { playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: false };
+        let currentHand = [];
+        let matchmakingTimeout = null;
+
+        const heroes = [
+          { id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER', desc: 'Fire spellcaster.', bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', iconImg: 'image_b2781538.jpg', price: 150, requiredWins: 0, requiredXp: 0, isStarter: true, baseSkills: [{ id: 'pyra-1', type: 'strike', name: 'FLAME DART', ap: 1, color: 'red', desc: 'Deal 15 Fire damage.' }, { id: 'pyra-2', type: 'defend', name: 'FIRE SHIELD', ap: 1, color: 'red', desc: 'Gain 10 Armor.' }] },
+          { id: 'sylph', name: 'SYLPH', role: 'Wind Ranger', rarity: 'STARTER', desc: 'Agile archer.', bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', iconImg: 'image_e51741b7.jpg', price: 150, requiredWins: 0, requiredXp: 0, isStarter: true, baseSkills: [{ id: 'sylph-1', type: 'strike', name: 'GALE SLASH', ap: 1, color: 'emerald', desc: 'Deal 16 Wind damage.' }, { id: 'sylph-2', type: 'defend', name: 'WIND STEP', ap: 1, color: 'emerald', desc: 'Gain 12 Armor.' }] },
+          { id: 'valen', name: 'VALEN', role: 'Iron Guardian', rarity: 'STARTER', desc: 'Holy tank.', bg: 'from-blue-950 to-slate-950', border: 'border-blue-500/50', iconImg: 'image_4b6fe95a.jpg', price: 150, requiredWins: 0, requiredXp: 0, isStarter: true, baseSkills: [{ id: 'valen-1', type: 'strike', name: 'SHIELD BASH', ap: 1, color: 'blue', desc: 'Deal 12 Physical damage.' }, { id: 'valen-2', type: 'defend', name: 'IRON BASTION', ap: 1, color: 'blue', desc: 'Gain 15 Armor.' }] },
+          { id: 'nyx', name: 'NYX', role: 'Shadow Assassin', rarity: 'STARTER', desc: 'Stealth operative.', bg: 'from-purple-950 to-slate-950', border: 'border-purple-500/50', iconImg: 'image_a9978665.jpg', price: 150, requiredWins: 0, requiredXp: 0, isStarter: true, baseSkills: [{ id: 'nyx-1', type: 'strike', name: 'SHADOW STAB', ap: 1, color: 'purple', desc: 'Deal 17 Dark damage.' }, { id: 'nyx-2', type: 'defend', name: 'SMOKE CLOAK', ap: 1, color: 'purple', desc: 'Gain 10 Armor.' }] }
+        ];
 
         window.addEventListener('DOMContentLoaded', async () => {
             if (currentUser && currentUser.email) {
@@ -193,7 +409,7 @@
             const { error } = await supabaseClient.from('profiles').insert([{
                 email, pass_hash: passHash, name, nickname, phone, bday,
                 role: 'player', balance: 0.00, unlocked_heroes: ['pyra'], active_hero: 'pyra',
-                approved: true
+                approved: true, frozen: false, wins: 0, xp: 0, rank: 'Bronze I'
             }]);
 
             if (error) {
@@ -233,7 +449,6 @@
                 return;
             }
 
-            // Enforce exclusive owner role check
             if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                 user.role = 'owner';
             } else {
@@ -251,14 +466,83 @@
             document.getElementById('nav-menu').classList.remove('hidden');
             document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
             document.getElementById('nav-wallet').innerText = '₱' + (currentUser.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+            setActiveHeroUI(currentUser.active_hero || 'pyra');
 
             if (currentUser.role === 'owner') {
                 document.getElementById('btn-owner').classList.remove('hidden');
                 switchTab('owner');
+                loadOwnerAdminData();
             } else {
                 document.getElementById('btn-owner').classList.add('hidden');
                 switchTab('hub');
             }
+        }
+
+        function setActiveHeroUI(id) {
+            const h = heroes.find(item => item.id === id) || heroes[0];
+            document.getElementById('active-hero-name').innerText = `${h.name} (${h.role})`;
+            document.getElementById('active-hero-avatar').className = `w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
+            document.getElementById('active-hero-img-el').src = h.iconImg;
+        }
+
+        async function loadOwnerAdminData() {
+            const container = document.getElementById('owner-players-list');
+            container.innerHTML = `<p class="text-xs text-slate-400">Loading players directory...</p>`;
+
+            const { data: players, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<p class="text-xs text-red-400">Error loading players: ${error.message}</p>`;
+                return;
+            }
+
+            if (!players || players.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500">No registered players found.</p>`;
+                return;
+            }
+
+            let html = '';
+            players.forEach(p => {
+                const statusBadge = p.frozen 
+                    ? `<span class="bg-red-500/20 text-red-400 px-2 py-0.5 rounded text-[10px] font-bold">FROZEN</span>` 
+                    : `<span class="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-bold">ACTIVE</span>`;
+
+                html += `
+                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-bold text-white">${p.nickname}</span>
+                                <span class="text-[10px] text-slate-400">(${p.name})</span>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-[11px] text-slate-400">Email: ${p.email} | Phone: ${p.phone}</p>
+                            <p class="text-[10px] text-emerald-400">Balance: ₱${(p.balance || 0).toFixed(2)} | Wins: ${p.wins || 0}</p>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            ${p.frozen 
+                                ? `<button onclick="toggleFreezePlayer('${p.email}', false)" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-semibold rounded">Unfreeze</button>` 
+                                : `<button onclick="toggleFreezePlayer('${p.email}', true)" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-semibold rounded">Freeze[cite: 7]</button>`
+                            }
+                            <button onclick="deletePlayer('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-[10px] font-semibold rounded">Delete[cite: 7]</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function toggleFreezePlayer(email, freezeStatus) {
+            await supabaseClient.from('profiles').update({ frozen: freezeStatus }).eq('email', email);
+            loadOwnerAdminData();
+        }
+
+        async function deletePlayer(email) {
+            if (!confirm(`Permanently delete account ${email}?`)) return;
+            await supabaseClient.from('profiles').delete().eq('email', email);
+            loadOwnerAdminData();
         }
 
         function logoutPlayer() {
@@ -269,10 +553,25 @@
 
         function switchTab(tab) {
             document.getElementById('view-hub').classList.add('hidden');
+            document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-shop').classList.add('hidden');
             document.getElementById('view-owner').classList.add('hidden');
             if(tab === 'hub') document.getElementById('view-hub').classList.remove('hidden');
-            if(tab === 'owner') document.getElementById('view-owner').classList.remove('hidden');
+            if(tab === 'select') document.getElementById('view-select').classList.remove('hidden');
+            if(tab === 'shop') document.getElementById('view-shop').classList.remove('hidden');
+            if(tab === 'owner') {
+                document.getElementById('view-owner').classList.remove('hidden');
+                loadOwnerAdminData();
+            }
         }
+
+        function openModal(type) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
+            if(type === 'bet') document.getElementById('modal-bet').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
     </script>
 </body>
 </html>
