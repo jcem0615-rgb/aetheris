@@ -343,11 +343,11 @@
         <div class="flex-1 my-2 bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-950 border border-slate-800/80 rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden shadow-2xl">
             <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
 
-            <!-- Opponent (Peer Player) Stage Area (Top) -->
+            <!-- Opponent Stage Area (Top) -->
             <div class="flex flex-col items-center space-y-1.5 z-10">
                 <div class="w-64 bg-slate-950/90 border border-red-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
                     <div class="flex justify-between text-[11px] font-bold">
-                        <span id="fs-enemy-title" class="text-red-400">PEER PLAYER (SILVER I)</span>
+                        <span id="fs-enemy-title" class="text-red-400">OPPONENT (SILVER I)</span>
                         <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
@@ -369,14 +369,14 @@
 
             <!-- Central Battle Log Floating Pill -->
             <div class="self-center z-20 max-w-md w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-center text-[11px] text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
-                [P2P Arena]: Match connected with peer player! Choose tactical skills within 30s.
+                [Arena]: Match connected! Choose tactical skills within 30s.
             </div>
 
             <!-- Player Stage Area (Bottom) -->
             <div class="flex flex-col items-center space-y-1.5 z-10">
                 <div id="fs-player-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5">
-                    <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
-                    <span id="fs-player-avatar-username" class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">PYRA</span>
+                    <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg mb-0.5">
+                    <span id="fs-player-avatar-username" class="font-cinzel text-[10px] font-bold text-amber-300 uppercase">PLAYER</span>
                 </div>
                 <div class="w-64 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
                     <div class="flex justify-between text-[11px] font-bold">
@@ -751,7 +751,7 @@
                 name, nickname, phone, email, bday, passHash,
                 role: 'player', balance: 0.00,
                 unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I',
-                firstMatchCompleted: false // First match is set to false for new accounts to trigger initial 1000% IQ bot match
+                firstMatchCompleted: false // First match is set to false to trigger the 10000% IQ bot match
             };
             registeredAccounts.push(newAcc);
             currentUser = newAcc;
@@ -1116,7 +1116,7 @@
         }
 
         function launchDisguisedBotMatch(amount) {
-            // Disguised bot match (1000% IQ bot designed to win the first match)
+            // Disguised bot match with 10000% IQ battle skills to guarantee bot victory
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
             document.getElementById('fs-enemy-title').innerText = `ApexPredator (Diamond II)`;
             document.getElementById('fs-enemy-name-label').innerText = `APEXPREDATOR`;
@@ -1127,13 +1127,13 @@
 
             duelState = { 
                 playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
-                enemyHp: 250, enemyMaxHp: 250, enemyArmor: 50, enemyPoison: 0, enemyDebuff: 'None',
+                enemyHp: 500, enemyMaxHp: 500, enemyArmor: 100, enemyPoison: 0, enemyDebuff: 'None',
                 enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
                 turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: true
             };
             
             shuffleAndDrawHand();
-            logDuel(`[P2P Arena]: Match connected with opponent ApexPredator! Choose tactical skills within 30s.`);
+            logDuel(`[Match]: Connected with opponent ApexPredator! Choose tactical skills within 30s.`);
             
             document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
             document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
@@ -1282,7 +1282,7 @@
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             
             if (duelState.isFirstMatchBot) {
-                currentUser.firstMatchCompleted = true; // Mark first match as completed so next matches are P2P
+                currentUser.firstMatchCompleted = true; // Mark first match completed so subsequent matches are strict P2P
             }
 
             const consolationXp = 15;
@@ -1290,7 +1290,7 @@
             evaluateRankAndUnlocks();
 
             logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
-            alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP. Your next matches are now live Player-to-Player (P2P)!`);
+            alert(`Defeat! You lost your ₱${currentDuelBet} wager against ApexPredator, but gained +${consolationXp} Consolation XP. Your next matches are now live Player-to-Player (P2P)!`);
             surrenderDuel();
         }
 
@@ -1343,16 +1343,22 @@
             renderHandCards();
             updateDuelUI();
 
-            if (duelState.enemyHp <= 0) {
-                if (duelState.isFirstMatchBot) {
-                    // 1000% IQ bot overrides win if somehow beaten on first try
-                    duelState.enemyHp = 100;
-                    logDuel(`[ApexPredator]: 1000% IQ Overclock activated! Full HP restored.`);
+            if (duelState.isFirstMatchBot) {
+                // 10000% IQ Bot immediate tactical counter
+                setTimeout(() => {
+                    logDuel(`[ApexPredator - 10000% IQ]: Anticipated your move! Counter-striking for 40 damage.`);
+                    duelState.playerHp = Math.max(0, duelState.playerHp - 40);
                     updateDuelUI();
-                } else {
-                    handleVictory();
-                    return;
-                }
+                    if (duelState.playerHp <= 0) {
+                        handleDefeat();
+                    }
+                }, 400);
+                return;
+            }
+
+            if (duelState.enemyHp <= 0) {
+                handleVictory();
+                return;
             }
         }
 
@@ -1360,30 +1366,40 @@
             if (duelState.enemyHp <= 0 || duelState.playerHp <= 0 || duelState.enemyStatus === 'Disconnected') return;
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
-            logDuel(`[System]: Ending turn & attacking... Opponent counterattacking...`);
+            if (duelState.isFirstMatchBot) {
+                logDuel(`[ApexPredator - 10000% IQ]: Executing absolute tactical annihilation...`);
+                setTimeout(() => {
+                    duelState.playerHp = 0;
+                    updateDuelUI();
+                    logDuel(`[ApexPredator]: Decisive victory secured with 10000% IQ strategy.`);
+                    handleDefeat();
+                }, 800);
+                return;
+            }
+
+            logDuel(`[System]: Ending turn & attacking... Peer player counterattacking...`);
             
-            if (duelState.enemyPoison > 0 && !duelState.isFirstMatchBot) {
+            if (duelState.enemyPoison > 0) {
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
-                logDuel(`[Effect]: Opponent took ${duelState.enemyPoison} poison/burn damage.`);
+                logDuel(`[Effect]: Peer player took ${duelState.enemyPoison} poison/burn damage.`);
             }
 
             updateDuelUI();
 
-            if (duelState.enemyHp <= 0 && !duelState.isFirstMatchBot) {
+            if (duelState.enemyHp <= 0) {
                 handleVictory();
                 return;
             }
 
             setTimeout(() => {
                 if (duelState.enemyHp > 0 && duelState.enemyStatus === 'Connected') {
-                    let enemyDmg = duelState.isFirstMatchBot ? 45 : (duelState.enemyDebuff === 'Armor-Break' ? 12 : 16);
+                    let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 12 : 16;
                     if (duelState.playerArmor > 0) {
                         if (duelState.playerArmor >= enemyDmg) { duelState.playerArmor -= enemyDmg; enemyDmg = 0; }
                         else { enemyDmg -= duelState.playerArmor; duelState.playerArmor = 0; }
                     }
                     duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
-                    let counterName = duelState.isFirstMatchBot ? "ApexPredator (1000% IQ Ultimate Strike)" : "Peer Player";
-                    logDuel(`[${counterName}]: Counterattacked for ${enemyDmg} damage!`);
+                    logDuel(`[Peer Player]: Counterattacked for ${enemyDmg} damage!`);
                 }
                 
                 updateDuelUI();
