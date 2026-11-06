@@ -98,7 +98,8 @@
             <!-- Register Box -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
-                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies to new account activation.</p>
+                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies. Please upload your payment receipt below. Push notifications must be allowed to receive your approval alert.</p>
+                
                 <div class="space-y-2.5">
                     <input type="text" id="reg-name" placeholder="Full Legal Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
@@ -112,11 +113,15 @@
                         <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
                         <button type="button" onclick="togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-amber-400 block font-bold">Upload ₱50 Registration Fee Receipt:</label>
+                        <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
+                    </div>
                 </div>
                 <div class="flex items-center justify-between text-xs pt-1">
                     <button onclick="showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
                 </div>
-                <button onclick="handleRegister()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Register & Pay ₱50 Fee</button>
+                <button onclick="handleRegister()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Allow Notifications & Register</button>
             </div>
 
             <!-- Forgot Password Box -->
@@ -298,6 +303,13 @@
                             <input type="file" id="input-maya-qr" accept="image/*" onchange="handleQRUpload(event, 'maya')" class="w-full text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
                             <button onclick="saveOwnerDetails()" class="w-full py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg">Save Maya</button>
                         </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Registration Approvals (₱50 Fee Receipt)</h3>
+                    <div id="owner-registration-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>
                     </div>
                 </div>
 
@@ -539,6 +551,7 @@
         }
 
         let registeredAccounts = [];
+        let pendingRegistrations = [];
         let currentUser = null;
         let currentDuelBet = 50;
 
@@ -709,13 +722,13 @@
             registeredAccounts.push({
                 name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
                 email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: ownerHash,
-                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin', firstMatchCompleted: true
+                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin', firstMatchCompleted: true, approved: true
             });
 
             registeredAccounts.push({
                 name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false, approved: true
             });
         });
 
@@ -741,25 +754,44 @@
             const email = document.getElementById('reg-email').value;
             const bday = document.getElementById('reg-bday').value;
             const pass = document.getElementById('reg-pass').value;
+            const receiptFile = document.getElementById('reg-receipt').files[0];
 
-            if(!name || !nickname || !phone || !email || !bday || !pass) { alert('Please fill in all registration fields.'); return; }
-            if(registeredAccounts.some(acc => acc.email === email)) { alert('An account with this email already exists.'); return; }
+            if(!name || !nickname || !phone || !email || !bday || !pass || !receiptFile) { 
+                alert('Please fill in all registration fields and upload your ₱50 registration receipt.'); 
+                return; 
+            }
+            if(registeredAccounts.some(acc => acc.email === email) || pendingRegistrations.some(r => r.email === email)) { 
+                alert('An account or pending request with this email already exists.'); 
+                return; 
+            }
+
+            // Request Notification Permission before registration
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    alert('You must allow notifications to proceed with account creation and receive your approval alert.');
+                    return;
+                }
+            } else {
+                alert('Browser notifications are not supported on this device.');
+                return;
+            }
 
             const passHash = await hashPassword(pass);
+            const dateStr = new Date().toISOString().split('T')[0];
 
-            const newAcc = {
-                name, nickname, phone, email, bday, passHash,
-                role: 'player', balance: 0.00,
-                unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I',
-                firstMatchCompleted: false
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const pendingReg = {
+                    id: Date.now(), name, nickname, phone, email, bday, passHash,
+                    role: 'player', balance: 0.00, unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I',
+                    firstMatchCompleted: false, approved: false, receipt: e.target.result, date: dateStr
+                };
+                pendingRegistrations.push(pendingReg);
+                alert('Registration submitted successfully with your ₱50 receipt! Awaiting owner approval. You will receive a device notification once approved.');
+                showAuthMode('login');
             };
-            registeredAccounts.push(newAcc);
-            currentUser = newAcc;
-
-            alert('Account registered successfully! Username ('+nickname+') saved. Registration fee of ₱50.00 processed. Please select your 1 free starter champion.');
-            document.getElementById('view-auth').classList.add('hidden');
-            renderStarterPickOptions();
-            document.getElementById('view-starter-pick').classList.remove('hidden');
+            reader.readAsDataURL(receiptFile);
         }
 
         function renderStarterPickOptions() {
@@ -802,8 +834,14 @@
             const pass = document.getElementById('login-pass').value;
             const inputHash = await hashPassword(pass);
 
+            const pendingCheck = pendingRegistrations.find(r => r.email === email);
+            if(pendingCheck) {
+                alert('Your registration request is still pending owner review and fee verification. Please wait for notification approval.');
+                return;
+            }
+
             const user = registeredAccounts.find(acc => acc.email === email && acc.passHash === inputHash);
-            if(!user) { alert('Invalid email or password.'); return; }
+            if(!user) { alert('Invalid email or password, or account not approved yet.'); return; }
 
             currentUser = user;
             document.getElementById('view-auth').classList.add('hidden');
@@ -1576,6 +1614,24 @@
         function renderOwnerQueues() {
             const filterDate = document.getElementById('filter-date').value;
 
+            // Registration Approvals Queue
+            const regContainer = document.getElementById('owner-registration-list');
+            const filteredRegs = filterDate ? pendingRegistrations.filter(r => r.date === filterDate) : pendingRegistrations;
+            if(filteredRegs.length === 0) {
+                regContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>';
+            } else {
+                regContainer.innerHTML = filteredRegs.map(r => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-amber-400">Registration: ${r.name} (${r.nickname})</span><div class="text-[10px] text-slate-400">Email: ${r.email} | Date: ${r.date}</div></div>
+                        <div class="space-x-1 flex items-center">
+                            <button onclick="viewReceipt('${r.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
+                            <button onclick="approveRegistration(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
+                            <button onclick="rejectRegistration(${r.id})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
             const resetContainer = document.getElementById('owner-reset-list');
             if(pendingResets.length === 0) {
                 resetContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
@@ -1629,6 +1685,33 @@
 
             document.getElementById('metric-total-deposits').innerText = '₱' + totalDep.toLocaleString('en-US', {minimumFractionDigits: 2});
             document.getElementById('metric-total-withdrawals').innerText = '₱' + totalWit.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function approveRegistration(id) {
+            const idx = pendingRegistrations.findIndex(r => r.id === id);
+            if(idx > -1) {
+                const reg = pendingRegistrations[idx];
+                reg.approved = true;
+                registeredAccounts.push(reg);
+                pendingRegistrations.splice(idx, 1);
+                renderOwnerQueues();
+
+                // Trigger Device Push Notification
+                if (Notification.permission === 'granted') {
+                    new Notification("Aetheris Duel Arena", {
+                        body: `Hello ${reg.nickname}! Your registration fee receipt has been approved. You can now log in and select your starter champion!`,
+                        icon: "https://cdn-icons-png.flaticon.com/512/2921/2921222.png"
+                    });
+                }
+
+                alert(`Registration for ${reg.nickname} approved successfully! Device push notification sent.`);
+            }
+        }
+
+        function rejectRegistration(id) {
+            pendingRegistrations = pendingRegistrations.filter(r => r.id !== id);
+            renderOwnerQueues();
+            alert('Registration request rejected.');
         }
 
         function approveReset(id) {
