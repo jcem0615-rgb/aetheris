@@ -93,11 +93,6 @@
                     <button onclick="showAuthMode('forgot')" class="text-amber-400 hover:underline">Forgot Password?</button>
                 </div>
                 <button onclick="handleLogin()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Sign In</button>
-                <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                    <div class="font-bold text-amber-400">Demo Accounts:</div>
-                    <div>👑 Owner: jcem0615@gmail.com / owner123</div>
-                    <div>⚔️ Player: player@logicgrid.com / player123</div>
-                </div>
             </div>
 
             <!-- Register Box -->
@@ -2269,7 +2264,6 @@
             }
 
             const regContainer = document.getElementById('owner-registration-list');
-            const filteredRegs = filterDate ? [] : []; // Handled via profiles approval in DB if needed
             regContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>';
 
             const resetContainer = document.getElementById('owner-reset-list');
