@@ -645,7 +645,16 @@
         function persistData() {
             localStorage.setItem('aetheris_accounts', JSON.stringify(registeredAccounts));
             localStorage.setItem('aetheris_pending_regs', JSON.stringify(pendingRegistrations));
-            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            if (currentUser) {
+                // Sync current user state back into registeredAccounts array
+                const index = registeredAccounts.findIndex(acc => acc.email.toLowerCase() === currentUser.email.toLowerCase());
+                if (index > -1) {
+                    registeredAccounts[index] = currentUser;
+                }
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            } else {
+                localStorage.removeItem('aetheris_current_user');
+            }
             localStorage.setItem('aetheris_pending_deposits', JSON.stringify(pendingDeposits));
             localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(pendingWithdrawals));
             localStorage.setItem('aetheris_approved_deposits', JSON.stringify(approvedDepositsLog));
@@ -874,8 +883,8 @@
                 persistData();
             }
 
-            // Restore active session if user was already logged in
-            if (currentUser) {
+            // Restore active session reliably by matching email from registeredAccounts storage
+            if (currentUser && currentUser.email) {
                 const freshUser = registeredAccounts.find(acc => acc.email.toLowerCase() === currentUser.email.toLowerCase());
                 if (freshUser && !freshUser.frozen) {
                     currentUser = freshUser;
@@ -973,7 +982,7 @@
             reader.onload = function(e) {
                 const pendingReg = {
                     id: Date.now(), name, nickname, phone, email, bday, passHash,
-                    role: 'player', balance: 0.00, unlockedHeroes: [], activeHero: '', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Bronze I',
+                    role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Bronze I',
                     firstMatchCompleted: false, approved: false, frozen: false, receipt: e.target.result, date: dateStr
                 };
                 pendingRegistrations.push(pendingReg);
@@ -1386,6 +1395,7 @@
             currentUser.balance -= amount;
             currentDuelBet = amount;
             persistData();
+            updateWalletDisplay();
             closeModal();
 
             document.getElementById('modal-backdrop').classList.remove('hidden');
@@ -1472,7 +1482,7 @@
                 duelState.turnTimeRemaining--;
                 if (timerEl) timerEl.innerText = `${duelState.turnTimeRemaining}s`;
 
-                if (timerState.turnTimeRemaining <= 0) {
+                if (duelState.turnTimeRemaining <= 0) {
                     clearInterval(duelState.turnTimerInterval);
                     logDuel(`[System]: 30s turn timer expired! Forcing turn end & attack phase.`);
                     endDuelTurn();
@@ -1525,7 +1535,6 @@
                 currentUser.firstMatchCompleted = true;
             }
 
-            // Total wager pool = currentDuelBet * 2. 5% deducted from total wager pool as platform fee. Winner takes net prize pool.
             const totalPool = currentDuelBet * 2;
             const platformFee = totalPool * 0.05;
             const netReward = totalPool - platformFee;
@@ -1569,6 +1578,7 @@
             const consolationXp = 15;
             currentUser.xp += consolationXp;
             evaluateRankAndUnlocks();
+            updateWalletDisplay();
             persistData();
 
             const dateStr = new Date().toISOString().split('T')[0];
@@ -1584,7 +1594,7 @@
             persistData();
 
             logDuel(`[Defeat]: Lost duel and ₱${currentDuelBet} wager (+15 Consolation XP).`);
-            alert(`Defeat! Your ₱${currentDuelBet} wager was deducted from your wallet. Gained +${consolationXp} Consolation XP.`);
+            alert(`Defeat! Your ₱${currentDuelBet} wager has been permanently deducted from your wallet. Gained +${consolationXp} Consolation XP.`);
             
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
