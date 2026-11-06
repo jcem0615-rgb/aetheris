@@ -396,7 +396,7 @@
         <!-- Bottom Shuffled Action Cards Deck -->
         <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 space-y-3 backdrop-blur">
             <div class="flex justify-between items-center px-1">
-                <span class="font-cinzel text-xs font-bold text-amber-400">SHUFFLED SKILL DECK (Drawn 4 / Turn)</span>
+                <span class="font-cinzel text-xs font-bold text-amber-400">UNIQUE HERO SKILL DECK (Drawn 4 / Turn)</span>
                 <button onclick="endDuelTurn()" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">End Turn & Shuffle</button>
             </div>
             <!-- Dynamically Rendered Shuffled Hand Cards -->
@@ -527,29 +527,15 @@
             enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' 
         };
 
-        const masterSkillDeck = [
-            { type: 'strike', name: 'STRIKE', ap: 1, color: 'blue', desc: 'Deal 15 physical damage.' },
-            { type: 'defend', name: 'DEFEND', ap: 1, color: 'blue', desc: 'Gain 12 Armor block.' },
-            { type: 'poison', name: 'VENOM STRIKE', ap: 2, color: 'purple', desc: 'Apply 8 Poison stacks.' },
-            { type: 'debuff', name: 'PLAGUE BURST', ap: 2, color: 'emerald', desc: 'Apply Poison & inflict Armor-Break (-50% enemy defense).' },
-            { type: 'heal', name: 'MEDITATE', ap: 2, color: 'emerald', desc: 'Restore 15 HP instantly.' }
-        ];
-
         let currentHand = [];
 
-        // Master Realigned Character Data Matrix
+        // Master Realigned Character Data Matrix with UNIQUE Skill Decks (Scaled with Rarity/Rank)
         const heroes = [
           {
             id: 'pyra',
             name: 'PYRA',
             role: 'Fire Mage',
             rarity: 'STARTER (Basic)',
-            stats: { hp: 2800, atk: 2400, def: 1200, spd: 140 },
-            skills: [
-              { name: 'Flame Burst', type: 'fire', desc: 'Deals 350 fire magic damage to target.' },
-              { name: 'Ignition Aura', type: 'buff', desc: 'Increases attack power by 25% for 2 turns.' },
-              { name: 'Meteor Call', type: 'ultimate', desc: 'Summons a meteor dealing heavy AoE burn damage.' }
-            ],
             desc: 'Fire-elemental spellcaster with explosive burn damage.',
             bg: 'from-red-950 to-slate-950',
             border: 'border-red-500/50',
@@ -558,19 +544,18 @@
             requiredWins: 0,
             requiredXp: 0,
             isStarter: true,
-            spriteAnim: 'Casting / Flame Burst'
+            skillDeck: [
+              { type: 'strike', name: 'FLAME DART', ap: 1, color: 'red', desc: 'Deal 15 Fire damage.' },
+              { type: 'defend', name: 'FIRE SHIELD', ap: 1, color: 'red', desc: 'Gain 10 Armor block.' },
+              { type: 'poison', name: 'SCORCH', ap: 2, color: 'orange', desc: 'Deal 22 damage & apply 6 Burn stacks.' },
+              { type: 'heal', name: 'BLAZING HEAL', ap: 2, color: 'emerald', desc: 'Restore 15 HP.' }
+            ]
           },
           {
             id: 'sylph',
             name: 'SYLPH',
             role: 'Wind Ranger',
             rarity: 'STARTER (Basic)',
-            stats: { hp: 2600, atk: 2200, def: 1300, spd: 190 },
-            skills: [
-              { name: 'Gale Shot', type: 'wind', desc: 'Fires a piercing wind arrow with high crit rate.' },
-              { name: 'Wind Step', type: 'buff', desc: 'Boosts evasion and speed by 30%.' },
-              { name: 'Hurricane Storm', type: 'ultimate', desc: 'Unleashes a tempest tearing through enemy defenses.' }
-            ],
             desc: 'Agile archer with high movement and gale evasion.',
             bg: 'from-emerald-950 to-slate-950',
             border: 'border-emerald-500/50',
@@ -579,19 +564,18 @@
             requiredWins: 0,
             requiredXp: 0,
             isStarter: true,
-            spriteAnim: 'Evasion / Triple Gale Shot'
+            skillDeck: [
+              { type: 'strike', name: 'GALE SLASH', ap: 1, color: 'emerald', desc: 'Deal 16 Wind damage.' },
+              { type: 'defend', name: 'WIND STEP', ap: 1, color: 'emerald', desc: 'Gain 12 Armor block.' },
+              { type: 'poison', name: 'GALE ARROW', ap: 2, color: 'teal', desc: 'Deal 20 damage & apply 7 Poison.' },
+              { type: 'heal', name: 'WIND MEND', ap: 2, color: 'emerald', desc: 'Restore 14 HP.' }
+            ]
           },
           {
             id: 'valen',
             name: 'VALEN',
             role: 'Iron Guardian',
             rarity: 'STARTER (Basic)',
-            stats: { hp: 4200, atk: 1500, def: 2600, spd: 90 },
-            skills: [
-              { name: 'Shield Slam', type: 'physical', desc: 'Bashes enemy with heavy shield dealing physical damage.' },
-              { name: 'Holy Barrier', type: 'buff', desc: 'Erects an unbreakable barrier blocking incoming attacks.' },
-              { name: 'Bastion Wrath', type: 'ultimate', desc: 'Unleashes stored defense power as a retaliatory shockwave.' }
-            ],
             desc: 'Holy tank with impenetrable defense and holy barrier.',
             bg: 'from-blue-950 to-slate-950',
             border: 'border-blue-500/50',
@@ -600,19 +584,18 @@
             requiredWins: 0,
             requiredXp: 0,
             isStarter: true,
-            spriteAnim: 'Guard / Shield Slam'
+            skillDeck: [
+              { type: 'strike', name: 'SHIELD BASH', ap: 1, color: 'blue', desc: 'Deal 12 Physical damage.' },
+              { type: 'defend', name: 'IRON BASTION', ap: 1, color: 'blue', desc: 'Gain 15 Armor block.' },
+              { type: 'debuff', name: 'HEAVY SLAM', ap: 2, color: 'indigo', desc: 'Deal 24 damage & break armor.' },
+              { type: 'heal', name: 'FORTIFY', ap: 2, color: 'emerald', desc: 'Gain 10 Armor & restore 12 HP.' }
+            ]
           },
           {
             id: 'nyx',
             name: 'NYX',
             role: 'Shadow Assassin',
             rarity: 'STARTER (Basic)',
-            stats: { hp: 2400, atk: 2600, def: 1000, spd: 180 },
-            skills: [
-              { name: 'Shadow Strike', type: 'dark', desc: 'Strikes from the shadows with critical backstab damage.' },
-              { name: 'Stealth Cloak', type: 'buff', desc: 'Enters absolute stealth to evade next incoming attack.' },
-              { name: 'Execution Blade', type: 'ultimate', desc: 'Deals massive damage amplified against low-HP targets.' }
-            ],
             desc: 'Deadly operative with stealth and shadow-strike bursts.',
             bg: 'from-purple-950 to-slate-950',
             border: 'border-purple-500/50',
@@ -621,19 +604,18 @@
             requiredWins: 0,
             requiredXp: 0,
             isStarter: true,
-            spriteAnim: 'Stealth / X-Slash'
+            skillDeck: [
+              { type: 'strike', name: 'SHADOW STAB', ap: 1, color: 'purple', desc: 'Deal 17 Dark damage.' },
+              { type: 'defend', name: 'SMOKE CLOAK', ap: 1, color: 'purple', desc: 'Gain 10 Armor block.' },
+              { type: 'poison', name: 'VENOM BLADE', ap: 2, color: 'purple', desc: 'Deal 22 damage & apply 8 Poison.' },
+              { type: 'heal', name: 'LIFE SIPHON', ap: 2, color: 'emerald', desc: 'Deal 12 damage & restore 12 HP.' }
+            ]
           },
           {
             id: 'storm-knight',
             name: 'STORM KNIGHT',
             role: 'Electric Knight',
             rarity: 'RANKED (Silver I)',
-            stats: { hp: 3400, atk: 2200, def: 2400, spd: 120 },
-            skills: [
-              { name: 'Lightning Slash', type: 'electric', desc: 'Strikes enemy with electrified blade causing paralysis.' },
-              { name: 'Static Shield', type: 'buff', desc: 'Charges armor with static electricity shocking attackers.' },
-              { name: 'Thunder Wrath', type: 'ultimate', desc: 'Calls down a colossal lightning bolt on the arena.' }
-            ],
             desc: 'Electric armored duelist wielding lightning strikes.',
             bg: 'from-amber-950 to-slate-950',
             border: 'border-amber-500/50',
@@ -642,19 +624,18 @@
             requiredWins: 2,
             requiredXp: 150,
             isStarter: false,
-            spriteAnim: 'Channeled / Lightning Surge'
+            skillDeck: [
+              { type: 'strike', name: 'SPARK STRIKE', ap: 1, color: 'amber', desc: 'Deal 20 Electric damage.' },
+              { type: 'defend', name: 'STATIC GUARD', ap: 1, color: 'amber', desc: 'Gain 14 Armor block.' },
+              { type: 'debuff', name: 'LIGHTNING BOLT', ap: 2, color: 'yellow', desc: 'Deal 32 damage & shock target.' },
+              { type: 'heal', name: 'ELECTRO MEND', ap: 2, color: 'emerald', desc: 'Restore 18 HP.' }
+            ]
           },
           {
             id: 'ironclad-titan',
             name: 'IRONCLAD TITAN',
             role: 'Earth Titan',
             rarity: 'RANKED (Silver II)',
-            stats: { hp: 4800, atk: 1600, def: 3200, spd: 80 },
-            skills: [
-              { name: 'Earthquake Slam', type: 'earth', desc: 'Slams ground shaking the arena and fracturing armor.' },
-              { name: 'Tectonic Armor', type: 'buff', desc: 'Hardens stone skin to absorb massive physical blows.' },
-              { name: 'Mountain Crush', type: 'ultimate', desc: 'Summons boulder fragments crashing onto opponent.' }
-            ],
             desc: 'Colossal earth juggernaut with earth-shattering slams.',
             bg: 'from-stone-950 to-slate-950',
             border: 'border-stone-500/50',
@@ -663,19 +644,18 @@
             requiredWins: 4,
             requiredXp: 350,
             isStarter: false,
-            spriteAnim: 'Heavy Slam / Earth Fracture'
+            skillDeck: [
+              { type: 'strike', name: 'STONE SMASH', ap: 1, color: 'stone', desc: 'Deal 18 Earth damage.' },
+              { type: 'defend', name: 'TECTONIC BLOCK', ap: 1, color: 'stone', desc: 'Gain 18 Armor block.' },
+              { type: 'debuff', name: 'EARTHQUAKE', ap: 2, color: 'stone', desc: 'Deal 35 damage & shatter defenses.' },
+              { type: 'heal', name: 'TITAN MEND', ap: 2, color: 'emerald', desc: 'Restore 20 HP & 10 Armor.' }
+            ]
           },
           {
             id: 'chrono-warden',
             name: 'CHRONO WARDEN',
             role: 'Time Mage',
             rarity: 'RANKED (Gold I)',
-            stats: { hp: 3000, atk: 2300, def: 1800, spd: 160 },
-            skills: [
-              { name: 'Time Warp Strike', type: 'time', desc: 'Strikes distortion across time-space continuum.' },
-              { name: 'Temporal Stasis', type: 'control', desc: 'Freezes enemy action for one turn.' },
-              { name: 'Hourglass Reversal', type: 'ultimate', desc: 'Rewinds own HP and status back to previous peak.' }
-            ],
             desc: 'Time controller manipulating action queues and hourglass power.',
             bg: 'from-yellow-950 to-slate-950',
             border: 'border-yellow-500/50',
@@ -684,19 +664,18 @@
             requiredWins: 7,
             requiredXp: 600,
             isStarter: false,
-            spriteAnim: 'Stasis / Quantum Rewind'
+            skillDeck: [
+              { type: 'strike', name: 'TIME SLASH', ap: 1, color: 'yellow', desc: 'Deal 22 Temporal damage.' },
+              { type: 'defend', name: 'TEMPORAL WARD', ap: 1, color: 'yellow', desc: 'Gain 15 Armor block.' },
+              { type: 'debuff', name: 'TIME WARP', ap: 2, color: 'amber', desc: 'Deal 38 damage & inflict Armor-Break.' },
+              { type: 'heal', name: 'HOURGLASS HEAL', ap: 2, color: 'emerald', desc: 'Restore 22 HP.' }
+            ]
           },
           {
             id: 'sky-valkyrie',
             name: 'SKY VALKYRIE',
             role: 'Light Warrior',
             rarity: 'RANKED (Gold II)',
-            stats: { hp: 3200, atk: 2500, def: 2000, spd: 170 },
-            skills: [
-              { name: 'Celestial Spear', type: 'light', desc: 'Hurls a spear of pure holy light.' },
-              { name: 'Valkyrie Wings', type: 'buff', desc: 'Soars into the air gaining speed and radiant glow.' },
-              { name: 'Divine Judgment', type: 'ultimate', desc: 'Calls down heavens judgment upon wicked foes.' }
-            ],
             desc: 'Aerial divine warrior with celestial flight capabilities.',
             bg: 'from-orange-950 to-slate-950',
             border: 'border-orange-500/50',
@@ -705,19 +684,18 @@
             requiredWins: 10,
             requiredXp: 950,
             isStarter: false,
-            spriteAnim: 'Dive / Skyward Smite'
+            skillDeck: [
+              { type: 'strike', name: 'HOLY SPEAR', ap: 1, color: 'orange', desc: 'Deal 24 Light damage.' },
+              { type: 'defend', name: 'RADIANT SHIELD', ap: 1, color: 'orange', desc: 'Gain 16 Armor block.' },
+              { type: 'debuff', name: 'CELESTIAL STRIKE', ap: 2, color: 'amber', desc: 'Deal 42 holy judgment damage.' },
+              { type: 'heal', name: 'DIVINE MEND', ap: 2, color: 'emerald', desc: 'Restore 25 HP.' }
+            ]
           },
           {
             id: 'void-necromancer',
             name: 'VOID NECROMANCER',
             role: 'Void Sorcerer',
             rarity: 'RANKED (Platinum I)',
-            stats: { hp: 2500, atk: 2700, def: 1100, spd: 130 },
-            skills: [
-              { name: 'Soul Drain', type: 'void', desc: 'Siphons life force directly from target.' },
-              { name: 'Specter Summon', type: 'summon', desc: 'Summons spectral minion to fight alongside.' },
-              { name: 'Abyssal Cataclysm', type: 'ultimate', desc: 'Opens a rift to the void swallowing opponent stats.' }
-            ],
             desc: 'Dark sorcerer capable of summoning spectral minions.',
             bg: 'from-violet-950 to-slate-950',
             border: 'border-violet-500/50',
@@ -726,19 +704,18 @@
             requiredWins: 15,
             requiredXp: 1400,
             isStarter: false,
-            spriteAnim: 'Siphon / Necrotic Abyss'
+            skillDeck: [
+              { type: 'strike', name: 'DARK BOLT', ap: 1, color: 'violet', desc: 'Deal 26 Void damage.' },
+              { type: 'defend', name: 'SOUL BARRIER', ap: 1, color: 'violet', desc: 'Gain 15 Armor block.' },
+              { type: 'poison', name: 'PLAGUE WAVE', ap: 2, color: 'purple', desc: 'Deal 25 damage & apply 12 Poison.' },
+              { type: 'heal', name: 'ABYSSAL DRAIN', ap: 2, color: 'emerald', desc: 'Deal 35 damage & restore 18 HP.' }
+            ]
           },
           {
             id: 'blood-berserker',
             name: 'BLOOD BERSERKER',
             role: 'Blood Brawler',
             rarity: 'ADVANCED (Elite)',
-            stats: { hp: 3600, atk: 2800, def: 1400, spd: 135 },
-            skills: [
-              { name: 'Blood Cleave', type: 'physical', desc: 'Savage axe swing scaling with missing HP.' },
-              { name: 'Bloodlust Frenzy', type: 'buff', desc: 'Sacrifices health for massive attack power boost.' },
-              { name: 'Executioner Rampage', type: 'ultimate', desc: 'Unleashes unstoppable flurry of blood-soaked strikes.' }
-            ],
             desc: 'Furious warrior scaling attack power as health drops.',
             bg: 'from-rose-950 to-slate-950',
             border: 'border-rose-500/50',
@@ -747,19 +724,18 @@
             requiredWins: 25,
             requiredXp: 2500,
             isStarter: false,
-            spriteAnim: 'Frenzy / Savage Cleave'
+            skillDeck: [
+              { type: 'strike', name: 'BLOOD AXE', ap: 1, color: 'rose', desc: 'Deal 30 Physical damage.' },
+              { type: 'defend', name: 'FRENZIED BLOCK', ap: 1, color: 'rose', desc: 'Gain 12 Armor block.' },
+              { type: 'debuff', name: 'BLOODY RAMPAGE', ap: 2, color: 'red', desc: 'Deal 48 brutal damage.' },
+              { type: 'heal', name: 'BLOOD FEAST', ap: 2, color: 'emerald', desc: 'Deal 20 damage & restore 25 HP.' }
+            ]
           },
           {
             id: 'astral-archmage',
             name: 'ASTRAL ARCHMAGE',
             role: 'Cosmic Sorcerer',
             rarity: 'ADVANCED (Elite)',
-            stats: { hp: 2900, atk: 2650, def: 1600, spd: 150 },
-            skills: [
-              { name: 'Astral Bolt', type: 'cosmic', desc: 'Fires concentrated stellar energy beam.' },
-              { name: 'Orbit Shield', type: 'buff', desc: 'Surrounds self with orbiting cosmic debris.' },
-              { name: 'Supernova Collapse', type: 'ultimate', desc: 'Triggers a stellar explosion obliterating targets.' }
-            ],
             desc: 'Cosmic spellcaster manipulating planetary layout orbits.',
             bg: 'from-indigo-950 to-slate-950',
             border: 'border-indigo-500/50',
@@ -768,7 +744,12 @@
             requiredWins: 30,
             requiredXp: 3200,
             isStarter: false,
-            spriteAnim: 'Supernova / Gravity Collapse'
+            skillDeck: [
+              { type: 'strike', name: 'STELLAR RAY', ap: 1, color: 'indigo', desc: 'Deal 32 Cosmic damage.' },
+              { type: 'defend', name: 'COSMIC BARRIER', ap: 1, color: 'indigo', desc: 'Gain 20 Armor block.' },
+              { type: 'debuff', name: 'SUPERNOVA', ap: 2, color: 'blue', desc: 'Deal 55 cosmic cataclysm damage.' },
+              { type: 'heal', name: 'ASTRAL MEND', ap: 2, color: 'emerald', desc: 'Restore 30 HP.' }
+            ]
           }
         ];
 
@@ -1124,8 +1105,13 @@
             document.getElementById('modal-bet').classList.remove('hidden');
         }
 
+        function getActiveHeroDeck() {
+            const h = heroes.find(item => item.id === currentUser.activeHero);
+            return h ? h.skillDeck : heroes[0].skillDeck;
+        }
+
         function shuffleAndDrawHand() {
-            let deckCopy = [...masterSkillDeck];
+            let deckCopy = [...getActiveHeroDeck()];
             for (let i = deckCopy.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [deckCopy[i], deckCopy[j]] = [deckCopy[j], deckCopy[i]];
@@ -1163,7 +1149,7 @@
             duelState = { playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' };
             
             shuffleAndDrawHand();
-            document.getElementById('fs-battle-log').innerText = `[Arena]: Ranked match started with ₱${amount} wager! Deck shuffled. Your turn.`;
+            document.getElementById('fs-battle-log').innerText = `[Arena]: Ranked match started with ₱${amount} wager! Unique skill deck shuffled. Your turn.`;
             
             updateDuelUI();
 
@@ -1234,28 +1220,38 @@
 
             duelState.playerAp -= card.ap;
 
+            // Extract base power or scaling from active hero
+            const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero);
+            const baseAtkMultiplier = activeHeroObj ? (activeHeroObj.stats?.atk || 2000) / 2000 : 1;
+
             if (card.type === 'strike') {
-                let dmg = 15;
+                let dmg = Math.round(18 * baseAtkMultiplier);
                 if (duelState.enemyDebuff === 'Armor-Break') dmg = Math.round(dmg * 1.5);
                 if (duelState.enemyArmor > 0) {
                     if (duelState.enemyArmor >= dmg) { duelState.enemyArmor -= dmg; dmg = 0; }
                     else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
                 }
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
-                logDuel(`[You]: Played Strike! Dealt ${dmg} damage.`);
+                logDuel(`[You]: Played ${card.name}! Dealt ${dmg} damage.`);
             } else if (card.type === 'defend') {
-                duelState.playerArmor += 12;
-                logDuel(`[You]: Played Defend! Gained 12 Armor block.`);
+                const blockVal = card.name.includes('COSMIC') ? 20 : 12;
+                duelState.playerArmor += blockVal;
+                logDuel(`[You]: Played ${card.name}! Gained ${blockVal} Armor block.`);
             } else if (card.type === 'poison') {
-                duelState.enemyPoison += 8;
-                logDuel(`[You]: Played Venom Strike! Applied 8 Poison stacks.`);
+                duelState.enemyPoison += 9;
+                let poisonDmg = Math.round(15 * baseAtkMultiplier);
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - poisonDmg);
+                logDuel(`[You]: Played ${card.name}! Dealt ${poisonDmg} damage & applied status stacks.`);
             } else if (card.type === 'debuff') {
-                duelState.enemyPoison += 5;
+                let heavyDmg = Math.round(30 * baseAtkMultiplier);
                 duelState.enemyDebuff = 'Armor-Break';
-                logDuel(`[You]: Played Plague Burst! Applied Poison & inflicted Armor-Break debuff!`);
+                if (duelState.enemyArmor > 0) duelState.enemyArmor = 0;
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - heavyDmg);
+                logDuel(`[You]: Played ${card.name}! Dealt ${heavyDmg} damage & inflicted Armor-Break!`);
             } else if (card.type === 'heal') {
-                duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + 15);
-                logDuel(`[You]: Played Meditate! Restored 15 HP.`);
+                const healVal = card.name.includes('ASTRAL') || card.name.includes('BLOOD') ? 25 : 15;
+                duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + healVal);
+                logDuel(`[You]: Played ${card.name}! Restored ${healVal} HP.`);
             }
 
             currentHand.splice(index, 1);
@@ -1272,7 +1268,7 @@
         function endDuelTurn() {
             if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
 
-            logDuel(`[System]: Ending turn & shuffling skill deck... Enemy counterattacking...`);
+            logDuel(`[System]: Ending turn & shuffling unique skill deck... Enemy counterattacking...`);
             
             if (duelState.enemyPoison > 0) {
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
@@ -1289,7 +1285,7 @@
 
             setTimeout(() => {
                 if (duelState.enemyHp > 0) {
-                    let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 10 : 14;
+                    let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 12 : 16;
                     duelState.playerArmor = 0;
                     duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
                     logDuel(`[Opponent]: Boss attacks for ${enemyDmg} damage!`);
