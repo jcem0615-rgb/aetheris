@@ -347,7 +347,7 @@
             <div class="flex flex-col items-center space-y-1.5 z-10">
                 <div class="w-64 bg-slate-950/90 border border-red-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
                     <div class="flex justify-between text-[11px] font-bold">
-                        <span id="fs-enemy-title" class="text-red-400">OPPONENT (SILVER I)</span>
+                        <span id="fs-enemy-title" class="text-red-400">OPPONENT (BRONZE I)</span>
                         <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
@@ -363,7 +363,7 @@
                 </div>
                 <div id="fs-enemy-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] p-1.5">
                     <img id="fs-enemy-img-el" src="image_a4f1655c.jpg" alt="Opponent Champion" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
-                    <span id="fs-enemy-name-label" class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">CHRONO</span>
+                    <span id="fs-enemy-name-label" class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">APEXPREDATOR</span>
                 </div>
             </div>
 
@@ -1116,7 +1116,7 @@
 
         function launchDisguisedBotMatch(amount) {
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
-            document.getElementById('fs-enemy-title').innerText = `ApexPredator (Diamond II)`;
+            document.getElementById('fs-enemy-title').innerText = `ApexPredator (${currentUser.rank})`;
             document.getElementById('fs-enemy-name-label').innerText = `APEXPREDATOR`;
             document.getElementById('fs-enemy-img-el').src = "image_1d431b92.jpg";
 
@@ -1293,39 +1293,37 @@
             evaluateRankAndUnlocks();
 
             logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
-            alert(`Defeat! ApexPredator outsmarted you with 10000% IQ tactical superiority. You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP. Your next matches are now live Player-to-Player (P2P)!`);
+            alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP. Your next matches are now live Player-to-Player (P2P)!`);
             surrenderDuel();
         }
 
-        // --- BOT SUB-60HP COMBAT AI ROUTINE ---
+        // --- BOT COMBAT AI ROUTINE (POISON + ATTACK DAMAGE & SUB-60HP HEAL/ARMOR) ---
         function executeBotCombatTurn() {
             if (!duelState.isFirstMatchBot) return;
 
             let logMsg = "";
+            let botDgm = 16;
+            let poisonApp = 6;
+
             if (duelState.enemyHp < 60) {
-                // Sub-60HP protocol: Heal, +20 Armor, Debuff player, and Attack
                 const healVal = 20;
                 duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healVal);
                 duelState.enemyArmor += 20;
-                duelState.enemyDebuff = 'Armor-Break Inflicted';
-                
-                let botDgm = 24;
-                if (duelState.playerArmor > 0) {
-                    if (duelState.playerArmor >= botDgm) { duelState.playerArmor -= botDgm; botDgm = 0; }
-                    else { botDgm -= duelState.playerArmor; duelState.playerArmor = 0; }
-                }
-                duelState.playerHp = Math.max(0, duelState.playerHp - botDgm);
-                logMsg = `[ApexPredator - 10000% IQ]: HP < 60! Healed +${healVal} HP, added +20 Armor, applied Debuff, and struck for ${botDgm} dmg!`;
+                duelState.enemyDebuff = 'Poisoned';
+                logMsg = `[ApexPredator]: HP < 60! Healed +${healVal} HP, added +20 Armor, `;
             } else {
-                let botDgm = 16;
-                if (duelState.playerArmor > 0) {
-                    if (duelState.playerArmor >= botDgm) { duelState.playerArmor -= botDgm; botDgm = 0; }
-                    else { botDgm -= duelState.playerArmor; duelState.playerArmor = 0; }
-                }
-                duelState.playerHp = Math.max(0, duelState.playerHp - botDgm);
-                logMsg = `[ApexPredator]: Counterattacked for ${botDgm} damage.`;
+                logMsg = `[ApexPredator]: `;
             }
 
+            duelState.playerPoison += poisonApp;
+
+            if (duelState.playerArmor > 0) {
+                if (duelState.playerArmor >= botDgm) { duelState.playerArmor -= botDgm; botDgm = 0; }
+                else { botDgm -= duelState.playerArmor; duelState.playerArmor = 0; }
+            }
+            duelState.playerHp = Math.max(0, duelState.playerHp - botDgm);
+
+            logMsg += `struck for ${botDgm} damage & applied +${poisonApp} poison!`;
             logDuel(logMsg);
             updateDuelUI();
 
