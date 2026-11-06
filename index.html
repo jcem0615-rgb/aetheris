@@ -208,7 +208,7 @@
         <div id="view-shop" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO SKILL MARKETPLACE</h2>
-                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills to empower your owned champions in battle. Skills are role-gated to your roster!</p>
+                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills (₱150-₱350) and Tier-3 Ultimate Super Skills (₱500) to empower your owned champions!</p>
             </div>
             <div id="shop-skills-container" class="space-y-2.5 pb-6"></div>
         </div>
@@ -269,8 +269,8 @@
                 </div>
                 <div onclick="switchTab('shop')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1.5 text-xs">📜</div>
-                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">SKILL SHOP</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Buy elite Tier-2 skills for your owned champions.</p>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">SKILL SHOP (Tier 2 & 3)</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Buy elite & ₱500 super skills for your champions.</p>
                 </div>
                 <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold mb-1.5 text-xs">🛡</div>
@@ -448,7 +448,7 @@
         <!-- Bottom Shuffled Action Cards Deck -->
         <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2 backdrop-blur shrink-0">
             <div class="flex justify-between items-center px-1">
-                <span class="font-cinzel text-[11px] font-bold text-amber-400">UNIQUE HERO SKILL DECK (Tier 1 & Tier 2)</span>
+                <span class="font-cinzel text-[11px] font-bold text-amber-400">UNIQUE HERO SKILL DECK (Tier 1, 2 & Super)</span>
                 <button onclick="endDuelTurn()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] rounded-xl shadow-lg transition">End Turn & Attack</button>
             </div>
             <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
@@ -775,19 +775,52 @@
           }
         ];
 
-        // Elite Tier-2 Shop Skills (Role-Gated & Fair Gameplay Balanced)
+        // Elite Tier-2 & Tier-3 Ultimate Super Skills (Role-Gated & Fair Gameplay Balanced)
         const shopSkillsMap = {
-            'pyra': { id: 'shop-pyra', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 3, color: 'red', cost: 150, desc: 'Tier-2 Elite: Deal 40 Fire damage & apply 15 Burn stacks. (High AP cost for fair balance).' },
-            'sylph': { id: 'shop-sylph', name: 'HURRICANE BARRAGE', type: 'strike', ap: 3, color: 'emerald', cost: 150, desc: 'Tier-2 Elite: Unleash 4 rapid wind strikes totaling 45 damage.' },
-            'valen': { id: 'shop-valen', name: 'AEGIS FORTRESS', type: 'heal', ap: 3, color: 'blue', cost: 150, desc: 'Tier-2 Elite: Fortify stance with 30 Armor block & restore 20 HP.' },
-            'nyx': { id: 'shop-nyx', name: 'SHADOW ASSASSINATION', type: 'strike', ap: 3, color: 'purple', cost: 150, desc: 'Tier-2 Elite: Strike from the shadows for 50 critical dark damage.' },
-            'storm-knight': { id: 'shop-storm', name: 'THUNDER GODS WRATH', type: 'debuff', ap: 3, color: 'amber', cost: 200, desc: 'Tier-2 Elite: Summon divine lightning for 52 damage & shock armor.' },
-            'ironclad-titan': { id: 'shop-titan', name: 'CONTINENTAL CRUSH', type: 'strike', ap: 3, color: 'stone', cost: 200, desc: 'Tier-2 Elite: Crush target with tectonic force for 55 earth damage.' },
-            'chrono-warden': { id: 'shop-chrono', name: 'TEMPORAL REWIND', type: 'heal', ap: 3, color: 'yellow', cost: 250, desc: 'Tier-2 Elite: Rewind timeline to restore 35 HP & cleanse debuffs.' },
-            'sky-valkyrie': { id: 'shop-valkyrie', name: 'DIVINE JUDGMENT', type: 'debuff', ap: 3, color: 'orange', cost: 250, desc: 'Tier-2 Elite: Bring celestial judgment dealing 60 holy damage.' },
-            'void-necromancer': { id: 'shop-void', name: 'SOUL HARVEST', type: 'poison', ap: 3, color: 'violet', cost: 300, desc: 'Tier-2 Elite: Harvest life force for 45 damage, 18 poison & 20 HP drain.' },
-            'blood-berserker': { id: 'shop-berserk', name: 'APOCALYPSE FRENZY', type: 'strike', ap: 3, color: 'rose', cost: 300, desc: 'Tier-2 Elite: Berserk rampage dealing 65 brutal physical damage.' },
-            'astral-archmage': { id: 'shop-astral', name: 'GALAXY COLLAPSE', type: 'debuff', ap: 3, color: 'indigo', cost: 350, desc: 'Tier-2 Elite: Collapse cosmic orbits for 70 cosmic cataclysm damage.' }
+            'pyra': [
+                { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 3, color: 'red', cost: 150, desc: 'Tier-2 Elite: Deal 40 Fire damage & apply 15 Burn stacks.' },
+                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 4, color: 'red', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Obliterate target with 80 solar fire damage & 25 burn stacks! (Requires 4 AP).' }
+            ],
+            'sylph': [
+                { id: 'shop-sylph-2', name: 'HURRICANE BARRAGE', type: 'strike', ap: 3, color: 'emerald', cost: 150, desc: 'Tier-2 Elite: Unleash rapid wind strikes totaling 45 damage.' },
+                { id: 'shop-sylph-3', name: 'HURRICANE APOCALYPSE', type: 'strike', ap: 4, color: 'emerald', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Unleash a devastating gale for 75 wind damage & full evasion block! (Requires 4 AP).' }
+            ],
+            'valen': [
+                { id: 'shop-valen-2', name: 'AEGIS FORTRESS', type: 'heal', ap: 3, color: 'blue', cost: 150, desc: 'Tier-2 Elite: Fortify stance with 30 Armor block & restore 20 HP.' },
+                { id: 'shop-valen-3', name: 'DIVINE INVINCIBILITY', type: 'heal', ap: 4, color: 'blue', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Grant impenetrable holy shield of 50 Armor block & restore 40 HP! (Requires 4 AP).' }
+            ],
+            'nyx': [
+                { id: 'shop-nyx-2', name: 'SHADOW ASSASSINATION', type: 'strike', ap: 3, color: 'purple', cost: 150, desc: 'Tier-2 Elite: Strike from the shadows for 50 critical dark damage.' },
+                { id: 'shop-nyx-3', name: 'ABSOLUTE SHADOW ECLIPSE', type: 'poison', ap: 4, color: 'purple', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Plunge arena into total darkness for 85 lethal shadow damage! (Requires 4 AP).' }
+            ],
+            'storm-knight': [
+                { id: 'shop-storm-2', name: 'THUNDER GODS WRATH', type: 'debuff', ap: 3, color: 'amber', cost: 200, desc: 'Tier-2 Elite: Summon divine lightning for 52 damage & shock armor.' },
+                { id: 'shop-storm-3', name: 'ZEUS THUNDERSTORM', type: 'debuff', ap: 4, color: 'amber', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Summon roaring heavens for 85 electrical catastrophe damage! (Requires 4 AP).' }
+            ],
+            'ironclad-titan': [
+                { id: 'shop-titan-2', name: 'CONTINENTAL CRUSH', type: 'strike', ap: 3, color: 'stone', cost: 200, desc: 'Tier-2 Elite: Crush target with tectonic force for 55 earth damage.' },
+                { id: 'shop-titan-3', name: 'WORLD SHATTERING METEOR', type: 'strike', ap: 4, color: 'stone', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Bring down a colossal meteor for 90 earth damage! (Requires 4 AP).' }
+            ],
+            'chrono-warden': [
+                { id: 'shop-chrono-2', name: 'TEMPORAL REWIND', type: 'heal', ap: 3, color: 'yellow', cost: 250, desc: 'Tier-2 Elite: Rewind timeline to restore 35 HP & cleanse debuffs.' },
+                { id: 'shop-chrono-3', name: 'ETERNAL TIME COLLAPSE', type: 'heal', ap: 4, color: 'yellow', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Bend spacetime to restore 60 HP & inflict temporal stun! (Requires 4 AP).' }
+            ],
+            'sky-valkyrie': [
+                { id: 'shop-valkyrie-2', name: 'DIVINE JUDGMENT', type: 'debuff', ap: 3, color: 'orange', cost: 250, desc: 'Tier-2 Elite: Bring celestial judgment dealing 60 holy damage.' },
+                { id: 'shop-valkyrie-3', name: 'HEAVENLY RAGNAROK', type: 'debuff', ap: 4, color: 'orange', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Unleash divine ragnarok for 85 holy destruction damage! (Requires 4 AP).' }
+            ],
+            'void-necromancer': [
+                { id: 'shop-void-2', name: 'SOUL HARVEST', type: 'poison', ap: 3, color: 'violet', cost: 300, desc: 'Tier-2 Elite: Harvest life force for 45 damage, 18 poison & 20 HP drain.' },
+                { id: 'shop-void-3', name: 'VOID REALM ANNIHILATION', type: 'poison', ap: 4, color: 'violet', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Tear open the void rift for 88 dark void damage & massive drain! (Requires 4 AP).' }
+            ],
+            'blood-berserker': [
+                { id: 'shop-berserk-2', name: 'APOCALYPSE FRENZY', type: 'strike', ap: 3, color: 'rose', cost: 300, desc: 'Tier-2 Elite: Berserk rampage dealing 65 brutal physical damage.' },
+                { id: 'shop-berserk-3', name: 'RAGING BLOOD GOD RAMPAGE', type: 'strike', ap: 4, color: 'rose', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Enter uncontrollable blood god fury for 90 crushing damage! (Requires 4 AP).' }
+            ],
+            'astral-archmage': [
+                { id: 'shop-astral-2', name: 'GALAXY COLLAPSE', type: 'debuff', ap: 3, color: 'indigo', cost: 350, desc: 'Tier-2 Elite: Collapse cosmic orbits for 70 cosmic cataclysm damage.' },
+                { id: 'shop-astral-3', name: 'BIG BANG UNIVERSE STRIKE', type: 'debuff', ap: 4, color: 'indigo', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Unleash the raw energy of the Big Bang for 95 cosmic damage! (Requires 4 AP).' }
+            ]
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -1058,65 +1091,72 @@
             }).join('');
         }
 
-        // --- SKILL SHOP RENDERING & PURCHASE LOGIC ---
+        // --- SKILL SHOP RENDERING (Tier 2 & Tier-3 ₱500 Super Skills) ---
         function renderSkillShop() {
             if (!currentUser) return;
             const container = document.getElementById('shop-skills-container');
 
-            container.innerHTML = heroes.map(h => {
+            let shopHtml = '';
+            heroes.forEach(h => {
                 const ownsHero = currentUser.unlockedHeroes.includes(h.id);
-                const skill = shopSkillsMap[h.id];
-                if (!skill) return '';
+                const roleSkills = shopSkillsMap[h.id] || [];
 
-                const alreadyOwned = currentUser.unlockedSkills[h.id] === true;
+                roleSkills.forEach(skill => {
+                    const alreadyOwned = currentUser.unlockedSkills && currentUser.unlockedSkills[skill.id] === true;
 
-                let actionBtn = '';
-                if (!ownsHero) {
-                    actionBtn = `<span class="text-[10px] text-red-400 font-bold bg-red-950/40 px-2.5 py-1 rounded-lg border border-red-500/30">Locked (Require Hero Ownership)</span>`;
-                } else if (alreadyOwned) {
-                    actionBtn = `<span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-500/30">Owned & Active in Deck</span>`;
-                } else {
-                    actionBtn = `<button onclick="buyHeroSkill('${h.id}', ${skill.cost})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow transition">Buy Skill (₱${skill.cost})</button>`;
-                }
+                    let actionBtn = '';
+                    if (!ownsHero) {
+                        actionBtn = `<span class="text-[10px] text-red-400 font-bold bg-red-950/40 px-2.5 py-1 rounded-lg border border-red-500/30">Locked (Require Hero Ownership)</span>`;
+                    } else if (alreadyOwned) {
+                        actionBtn = `<span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-500/30">Owned & Active</span>`;
+                    } else {
+                        const isSuper = skill.cost === 500;
+                        actionBtn = `<button onclick="buyHeroSkill('${h.id}', '${skill.id}', ${skill.cost})" class="px-3 py-1.5 ${isSuper ? 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 shadow-amber-500/20' : 'bg-amber-600 hover:bg-amber-500'} text-white font-bold text-xs rounded-xl shadow transition">Buy Skill (₱${skill.cost})</button>`;
+                    }
 
-                return `
-                    <div class="bg-[#0e1322] border ${ownsHero ? 'border-amber-500/40' : 'border-slate-800'} rounded-2xl p-3.5 flex items-center justify-between card-hover">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-12 h-12 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
-                                <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
-                            </div>
-                            <div>
-                                <div class="flex items-center space-x-2 mb-0.5">
-                                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">${skill.name}</h3>
-                                    <span class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.2 rounded-full border border-amber-500/30">Tier-2 (${h.name} Role)</span>
+                    const isSuperCard = skill.cost === 500;
+
+                    shopHtml += `
+                        <div class="bg-[#0e1322] border ${isSuperCard ? 'border-amber-500/80 shadow-[0_0_15px_rgba(234,179,8,0.15)]' : (ownsHero ? 'border-amber-500/40' : 'border-slate-800')} rounded-2xl p-3.5 flex items-center justify-between card-hover">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
+                                    <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
                                 </div>
-                                <p class="text-[11px] text-slate-400 max-w-sm sm:max-w-lg">${skill.desc}</p>
+                                <div>
+                                    <div class="flex items-center space-x-2 mb-0.5">
+                                        <h3 class="font-cinzel font-bold ${isSuperCard ? 'text-amber-400 glow-gold' : 'text-white'} text-xs sm:text-sm">${skill.name}</h3>
+                                        <span class="text-[9px] ${isSuperCard ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-blue-600/20 text-blue-400 border-blue-500/30'} px-2 py-0.2 rounded-full border">${isSuperCard ? '⭐ Tier-3 SUPER (₱500)' : 'Tier-2 Elite'} (${h.name})</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 max-w-sm sm:max-w-lg">${skill.desc}</p>
+                                </div>
                             </div>
+                            <div>${actionBtn}</div>
                         </div>
-                        <div>${actionBtn}</div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                });
+            });
+
+            container.innerHTML = shopHtml;
         }
 
-        function buyHeroSkill(heroId, cost) {
+        function buyHeroSkill(heroId, skillId, cost) {
             if (!currentUser) return;
             if (!currentUser.unlockedHeroes.includes(heroId)) {
-                alert('Role restriction: You must own this hero before purchasing its elite skill!');
+                alert('Role restriction: You must own this hero before purchasing its skill!');
                 return;
             }
             if (currentUser.balance < cost) {
-                alert('Insufficient wallet balance to purchase this elite skill! Please top up.');
+                alert('Insufficient wallet balance to purchase this skill! Please top up.');
                 return;
             }
 
             currentUser.balance -= cost;
             if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
-            currentUser.unlockedSkills[heroId] = true;
+            currentUser.unlockedSkills[skillId] = true;
 
             updateWalletDisplay();
             renderSkillShop();
-            alert('Elite skill purchased successfully! It has been permanently added to this hero’s shuffle combat deck.');
+            alert(`Skill purchased successfully for ₱${cost}! It has been permanently added to this champion’s shuffle combat deck.`);
         }
 
         function switchActiveHero(id) {
@@ -1228,11 +1268,12 @@
             const h = heroes.find(item => item.id === currentUser.activeHero);
             let deck = h ? [...h.baseSkills] : [...heroes[0].baseSkills];
 
-            // If player bought the elite shop skill for this active hero, add it to their deck
-            if (currentUser.unlockedSkills && currentUser.unlockedSkills[currentUser.activeHero]) {
-                const eliteSkill = shopSkillsMap[currentUser.activeHero];
-                if (eliteSkill) deck.push(eliteSkill);
-            }
+            const availableShopSkills = shopSkillsMap[currentUser.activeHero] || [];
+            availableShopSkills.forEach(skill => {
+                if (currentUser.unlockedSkills && currentUser.unlockedSkills[skill.id]) {
+                    deck.push(skill);
+                }
+            });
 
             return deck;
         }
@@ -1251,7 +1292,7 @@
         function renderHandCards() {
             const container = document.getElementById('shuffled-hand-container');
             container.innerHTML = currentHand.map((card, idx) => `
-                <div onclick="playCard(${idx})" class="bg-slate-900 border border-slate-700 hover:border-${card.color}-500 rounded-xl p-2.5 cursor-pointer card-hover space-y-0.5">
+                <div onclick="playCard(${idx})" class="bg-slate-900 border ${card.cost === 500 ? 'border-amber-500 shadow-amber-500/20' : 'border-slate-700'} hover:border-${card.color}-500 rounded-xl p-2.5 cursor-pointer card-hover space-y-0.5">
                     <div class="flex justify-between text-[10px] text-${card.color}-400 font-bold">
                         <span>${card.name}</span><span>${card.ap} AP</span>
                     </div>
@@ -1503,18 +1544,29 @@
                 let heal = 0;
                 let armorGain = 0;
 
-                // Dynamic damage/effect calculation based on card type & Tier-2 shop skills
+                // Dynamic damage and effects for Tier-2 & Tier-3 Super Skills
                 if (card.name === 'INFERNAL HELLFIRE') dmg = 40;
+                else if (card.name === 'SOLAR SUPERNOVA') dmg = 80;
                 else if (card.name === 'HURRICANE BARRAGE') dmg = 45;
+                else if (card.name === 'HURRICANE APOCALYPSE') dmg = 75;
                 else if (card.name === 'AEGIS FORTRESS') { armorGain = 30; heal = 20; }
+                else if (card.name === 'DIVINE INVINCIBILITY') { armorGain = 50; heal = 40; }
                 else if (card.name === 'SHADOW ASSASSINATION') dmg = 50;
+                else if (card.name === 'ABSOLUTE SHADOW ECLIPSE') dmg = 85;
                 else if (card.name === 'THUNDER GODS WRATH') dmg = 52;
+                else if (card.name === 'ZEUS THUNDERSTORM') dmg = 85;
                 else if (card.name === 'CONTINENTAL CRUSH') dmg = 55;
+                else if (card.name === 'WORLD SHATTERING METEOR') dmg = 90;
                 else if (card.name === 'TEMPORAL REWIND') heal = 35;
+                else if (card.name === 'ETERNAL TIME COLLAPSE') heal = 60;
                 else if (card.name === 'DIVINE JUDGMENT') dmg = 60;
+                else if (card.name === 'HEAVENLY RAGNAROK') dmg = 85;
                 else if (card.name === 'SOUL HARVEST') { dmg = 45; heal = 20; }
+                else if (card.name === 'VOID REALM ANNIHILATION') dmg = 88;
                 else if (card.name === 'APOCALYPSE FRENZY') dmg = 65;
+                else if (card.name === 'RAGING BLOOD GOD RAMPAGE') dmg = 90;
                 else if (card.name === 'GALAXY COLLAPSE') dmg = 70;
+                else if (card.name === 'BIG BANG UNIVERSE STRIKE') dmg = 95;
                 else if (card.type === 'strike') dmg = 22;
                 else if (card.type === 'defend') armorGain = 15;
                 else if (card.type === 'heal') heal = 18;
