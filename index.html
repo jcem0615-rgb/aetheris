@@ -715,7 +715,7 @@
             registeredAccounts.push({
                 name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false // Set to false so first match triggers 10000% IQ bot defeat
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false
             });
         });
 
@@ -751,7 +751,7 @@
                 name, nickname, phone, email, bday, passHash,
                 role: 'player', balance: 0.00,
                 unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I',
-                firstMatchCompleted: false // Ensures first match is forced bot defeat
+                firstMatchCompleted: false
             };
             registeredAccounts.push(newAcc);
             currentUser = newAcc;
@@ -1099,7 +1099,6 @@
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-matchmaking').classList.remove('hidden');
 
-            // Check if this is the user's very first fight
             if (!currentUser.firstMatchCompleted) {
                 document.getElementById('matchmaking-status').innerText = `Finding opponent in ranked lobby (Wager: ₱${amount})...`;
                 setTimeout(() => {
@@ -1116,7 +1115,6 @@
         }
 
         function launchDisguisedBotMatch(amount) {
-            // Immortal 10000% IQ Bot match
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
             document.getElementById('fs-enemy-title').innerText = `ApexPredator (Diamond II)`;
             document.getElementById('fs-enemy-name-label').innerText = `APEXPREDATOR`;
@@ -1127,7 +1125,7 @@
 
             duelState = { 
                 playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
-                enemyHp: 9999, enemyMaxHp: 9999, enemyArmor: 9999, enemyPoison: 0, enemyDebuff: 'None',
+                enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
                 enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
                 turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: true
             };
@@ -1248,9 +1246,9 @@
             document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
             document.getElementById('fs-player-poison').innerText = duelState.playerPoison;
 
-            document.getElementById('fs-enemy-hp-text').innerText = duelState.isFirstMatchBot ? `9999/9999` : `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
-            document.getElementById('fs-enemy-hp-bar').style.width = duelState.isFirstMatchBot ? `100%` : `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
-            document.getElementById('fs-enemy-armor').innerText = duelState.isFirstMatchBot ? `9999` : duelState.enemyArmor;
+            document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
+            document.getElementById('fs-enemy-hp-bar').style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
+            document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
             document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
             document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
         }
@@ -1262,6 +1260,11 @@
         function handleVictory() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
+            
+            if (duelState.isFirstMatchBot) {
+                currentUser.firstMatchCompleted = true;
+            }
+
             const reward = currentDuelBet * 2;
             const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
             
@@ -1273,7 +1276,7 @@
             updateWalletDisplay();
 
             logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
-            alert(`Victory! You defeated the peer player in P2P combat, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
+            alert(`Victory! You defeated the opponent in combat, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
             surrenderDuel();
         }
 
@@ -1282,7 +1285,7 @@
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             
             if (duelState.isFirstMatchBot) {
-                currentUser.firstMatchCompleted = true; // Mark first match completed so subsequent matches are strict P2P
+                currentUser.firstMatchCompleted = true;
             }
 
             const consolationXp = 15;
@@ -1292,6 +1295,45 @@
             logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
             alert(`Defeat! ApexPredator outsmarted you with 10000% IQ tactical superiority. You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP. Your next matches are now live Player-to-Player (P2P)!`);
             surrenderDuel();
+        }
+
+        // --- BOT SUB-60HP COMBAT AI ROUTINE ---
+        function executeBotCombatTurn() {
+            if (!duelState.isFirstMatchBot) return;
+
+            let logMsg = "";
+            if (duelState.enemyHp < 60) {
+                // Sub-60HP protocol: Heal, +20 Armor, Debuff player, and Attack
+                const healVal = 20;
+                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healVal);
+                duelState.enemyArmor += 20;
+                duelState.enemyDebuff = 'Armor-Break Inflicted';
+                
+                let botDgm = 24;
+                if (duelState.playerArmor > 0) {
+                    if (duelState.playerArmor >= botDgm) { duelState.playerArmor -= botDgm; botDgm = 0; }
+                    else { botDgm -= duelState.playerArmor; duelState.playerArmor = 0; }
+                }
+                duelState.playerHp = Math.max(0, duelState.playerHp - botDgm);
+                logMsg = `[ApexPredator - 10000% IQ]: HP < 60! Healed +${healVal} HP, added +20 Armor, applied Debuff, and struck for ${botDgm} dmg!`;
+            } else {
+                let botDgm = 16;
+                if (duelState.playerArmor > 0) {
+                    if (duelState.playerArmor >= botDgm) { duelState.playerArmor -= botDgm; botDgm = 0; }
+                    else { botDgm -= duelState.playerArmor; duelState.playerArmor = 0; }
+                }
+                duelState.playerHp = Math.max(0, duelState.playerHp - botDgm);
+                logMsg = `[ApexPredator]: Counterattacked for ${botDgm} damage.`;
+            }
+
+            logDuel(logMsg);
+            updateDuelUI();
+
+            if (duelState.playerHp <= 0) {
+                handleDefeat();
+            } else if (duelState.enemyHp <= 0) {
+                handleVictory();
+            }
         }
 
         function playCard(index) {
@@ -1307,12 +1349,26 @@
             duelState.playerAp -= card.ap;
 
             if (duelState.isFirstMatchBot) {
-                logDuel(`[ApexPredator - 10000% IQ]: Perfectly calculated your attack. Executing absolute counter-annihilation!`);
+                let dmg = 18;
+                if (duelState.enemyArmor > 0) {
+                    if (duelState.enemyArmor >= dmg) { duelState.enemyArmor -= dmg; dmg = 0; }
+                    else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
+                }
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
+                logDuel(`[You]: Played ${card.name}! Dealt ${dmg} damage to ApexPredator.`);
+                updateDuelUI();
+
+                if (duelState.enemyHp <= 0) {
+                    handleVictory();
+                    return;
+                }
+
                 setTimeout(() => {
-                    duelState.playerHp = 0;
-                    updateDuelUI();
-                    handleDefeat();
+                    executeBotCombatTurn();
                 }, 500);
+
+                currentHand.splice(index, 1);
+                renderHandCards();
                 return;
             }
 
@@ -1364,11 +1420,12 @@
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
             if (duelState.isFirstMatchBot) {
-                logDuel(`[ApexPredator - 10000% IQ]: Turn ended. Executing flawless tactical checkmate.`);
+                logDuel(`[System]: Ending turn... ApexPredator reacts!`);
                 setTimeout(() => {
-                    duelState.playerHp = 0;
+                    executeBotCombatTurn();
+                    duelState.playerAp = 3;
+                    shuffleAndDrawHand();
                     updateDuelUI();
-                    handleDefeat();
                 }, 600);
                 return;
             }
