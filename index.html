@@ -715,7 +715,7 @@
             registeredAccounts.push({
                 name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I', firstMatchCompleted: true
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false // Set to false so first match triggers 10000% IQ bot defeat
             });
         });
 
@@ -751,7 +751,7 @@
                 name, nickname, phone, email, bday, passHash,
                 role: 'player', balance: 0.00,
                 unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I',
-                firstMatchCompleted: false // First match is set to false to trigger the 10000% IQ bot match
+                firstMatchCompleted: false // Ensures first match is forced bot defeat
             };
             registeredAccounts.push(newAcc);
             currentUser = newAcc;
@@ -1116,7 +1116,7 @@
         }
 
         function launchDisguisedBotMatch(amount) {
-            // Disguised bot match with 10000% IQ battle skills to guarantee bot victory
+            // Immortal 10000% IQ Bot match
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
             document.getElementById('fs-enemy-title').innerText = `ApexPredator (Diamond II)`;
             document.getElementById('fs-enemy-name-label').innerText = `APEXPREDATOR`;
@@ -1127,7 +1127,7 @@
 
             duelState = { 
                 playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
-                enemyHp: 500, enemyMaxHp: 500, enemyArmor: 100, enemyPoison: 0, enemyDebuff: 'None',
+                enemyHp: 9999, enemyMaxHp: 9999, enemyArmor: 9999, enemyPoison: 0, enemyDebuff: 'None',
                 enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
                 turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: true
             };
@@ -1248,9 +1248,9 @@
             document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
             document.getElementById('fs-player-poison').innerText = duelState.playerPoison;
 
-            document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
-            document.getElementById('fs-enemy-hp-bar').style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
-            document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
+            document.getElementById('fs-enemy-hp-text').innerText = duelState.isFirstMatchBot ? `9999/9999` : `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
+            document.getElementById('fs-enemy-hp-bar').style.width = duelState.isFirstMatchBot ? `100%` : `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
+            document.getElementById('fs-enemy-armor').innerText = duelState.isFirstMatchBot ? `9999` : duelState.enemyArmor;
             document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
             document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
         }
@@ -1290,7 +1290,7 @@
             evaluateRankAndUnlocks();
 
             logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
-            alert(`Defeat! You lost your ₱${currentDuelBet} wager against ApexPredator, but gained +${consolationXp} Consolation XP. Your next matches are now live Player-to-Player (P2P)!`);
+            alert(`Defeat! ApexPredator outsmarted you with 10000% IQ tactical superiority. You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP. Your next matches are now live Player-to-Player (P2P)!`);
             surrenderDuel();
         }
 
@@ -1305,6 +1305,16 @@
             }
 
             duelState.playerAp -= card.ap;
+
+            if (duelState.isFirstMatchBot) {
+                logDuel(`[ApexPredator - 10000% IQ]: Perfectly calculated your attack. Executing absolute counter-annihilation!`);
+                setTimeout(() => {
+                    duelState.playerHp = 0;
+                    updateDuelUI();
+                    handleDefeat();
+                }, 500);
+                return;
+            }
 
             const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero);
             const baseAtkMultiplier = activeHeroObj ? 1.1 : 1;
@@ -1343,19 +1353,6 @@
             renderHandCards();
             updateDuelUI();
 
-            if (duelState.isFirstMatchBot) {
-                // 10000% IQ Bot immediate tactical counter
-                setTimeout(() => {
-                    logDuel(`[ApexPredator - 10000% IQ]: Anticipated your move! Counter-striking for 40 damage.`);
-                    duelState.playerHp = Math.max(0, duelState.playerHp - 40);
-                    updateDuelUI();
-                    if (duelState.playerHp <= 0) {
-                        handleDefeat();
-                    }
-                }, 400);
-                return;
-            }
-
             if (duelState.enemyHp <= 0) {
                 handleVictory();
                 return;
@@ -1367,13 +1364,12 @@
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
             if (duelState.isFirstMatchBot) {
-                logDuel(`[ApexPredator - 10000% IQ]: Executing absolute tactical annihilation...`);
+                logDuel(`[ApexPredator - 10000% IQ]: Turn ended. Executing flawless tactical checkmate.`);
                 setTimeout(() => {
                     duelState.playerHp = 0;
                     updateDuelUI();
-                    logDuel(`[ApexPredator]: Decisive victory secured with 10000% IQ strategy.`);
                     handleDefeat();
-                }, 800);
+                }, 600);
                 return;
             }
 
