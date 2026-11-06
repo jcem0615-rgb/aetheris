@@ -32,7 +32,7 @@
 <body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
 
     <!-- Top Navigation Bar -->
-    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50 sticky top-0">
+    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50 sticky top-0 hidden">
         <div class="flex items-center space-x-2 sm:space-x-3">
             <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl overflow-hidden shadow-lg shadow-blue-500/30 border border-blue-500/50 flex-shrink-0">
                 <img src="image_114c6025.jpg" alt="Aetheris Emblem" class="w-full h-full object-cover">
@@ -189,6 +189,15 @@
                 </div>
                 <button onclick="window.executeForceReset()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Update Password & Login</button>
             </div>
+        </div>
+
+        <!-- STARTER HERO SELECTION VIEW (Mandatory First Login Step) -->
+        <div id="view-starter-select" class="max-w-xl mx-auto py-4 space-y-4 hidden">
+            <div class="text-center space-y-1.5">
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">CHOOSE YOUR STARTER CHAMPION</h2>
+                <p class="text-xs text-slate-400">Select one of the 4 basic starter heroes to begin your journey in the Aetheris Arena!</p>
+            </div>
+            <div id="starter-heroes-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
         </div>
 
         <!-- Hero Roster & Rank Unlocks View -->
@@ -941,18 +950,11 @@
 
         function restoreUserSession() {
             document.getElementById('view-auth').classList.add('hidden');
-            document.getElementById('nav-wallet-container').classList.remove('hidden');
-            document.getElementById('nav-menu').classList.remove('hidden');
-            document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
-            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
-            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
-            updateWalletDisplay();
-            setActiveHeroUI(currentUser.active_hero || currentUser.activeHero || 'pyra');
-
-            const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
-            document.getElementById('hub-explevel-badge').innerText = `Lv. ${expLevel}`;
-
-            if(currentUser.role === 'owner') {
+            
+            if (currentUser.role === 'owner') {
+                document.getElementById('main-header').classList.remove('hidden');
+                document.getElementById('nav-wallet-container').classList.remove('hidden');
+                document.getElementById('nav-menu').classList.remove('hidden');
                 document.getElementById('btn-hub').classList.add('hidden');
                 document.getElementById('btn-roster').classList.add('hidden');
                 document.getElementById('btn-shop').classList.add('hidden');
@@ -960,16 +962,79 @@
                 document.getElementById('btn-leaderboard').classList.add('hidden');
                 document.getElementById('btn-owner').classList.remove('hidden');
                 switchTab('owner');
-            } else {
-                document.getElementById('btn-owner').classList.add('hidden');
-                document.getElementById('btn-hub').classList.remove('hidden');
-                document.getElementById('btn-roster').classList.remove('hidden');
-                document.getElementById('btn-shop').classList.remove('hidden');
-                document.getElementById('btn-profile').classList.remove('hidden');
-                document.getElementById('btn-leaderboard').classList.remove('hidden');
-                switchTab('hub');
+                return;
             }
+
+            // Check if player has chosen a starter hero yet
+            const activeHero = currentUser.active_hero || currentUser.activeHero;
+            if (!activeHero) {
+                // Force starter hero selection
+                document.getElementById('main-header').classList.add('hidden');
+                document.getElementById('view-starter-select').classList.remove('hidden');
+                renderStarterHeroesSelection();
+                return;
+            }
+
+            document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('nav-wallet-container').classList.remove('hidden');
+            document.getElementById('nav-menu').classList.remove('hidden');
+            document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
+            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
+            updateWalletDisplay();
+            setActiveHeroUI(activeHero);
+
+            const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
+            document.getElementById('hub-explevel-badge').innerText = `Lv. ${expLevel}`;
+
+            document.getElementById('btn-owner').classList.add('hidden');
+            document.getElementById('btn-hub').classList.remove('hidden');
+            document.getElementById('btn-roster').classList.remove('hidden');
+            document.getElementById('btn-shop').classList.remove('hidden');
+            document.getElementById('btn-profile').classList.remove('hidden');
+            document.getElementById('btn-leaderboard').classList.remove('hidden');
+            switchTab('hub');
         }
+
+        function renderStarterHeroesSelection() {
+            const starterHeroes = heroes.filter(h => h.isStarter);
+            const container = document.getElementById('starter-heroes-container');
+            container.innerHTML = starterHeroes.map(h => `
+                <div onclick="window.chooseStarterHero('${h.id}')" class="bg-slate-900 border border-slate-800 hover:border-amber-500 rounded-2xl p-4 cursor-pointer card-hover flex items-center space-x-3.5">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-xl">
+                        <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
+                    </div>
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-2">
+                            <h3 class="font-cinzel font-bold text-white text-sm">${h.name}</h3>
+                            <span class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">${h.role}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-tight">${h.desc}</p>
+                        <span class="text-[10px] text-emerald-400 font-bold block pt-1">▶ Click to Select Starter Champion</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function chooseStarterHero(heroId) {
+            if (!currentUser) return;
+            currentUser.active_hero = heroId;
+            currentUser.activeHero = heroId;
+            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = ['pyra', 'sylph', 'valen', 'nyx'];
+
+            await supabaseClient.from('profiles').update({
+                active_hero: heroId,
+                unlocked_heroes: currentUser.unlocked_heroes
+            }).eq('email', currentUser.email);
+
+            logSystemActivity('Starter Hero Chosen', `${currentUser.nickname} chose ${heroId} as starter champion.`);
+            persistLocalStorage();
+
+            document.getElementById('view-starter-select').classList.add('hidden');
+            restoreUserSession();
+            alert(`Champion selected successfully! Welcome to the Aetheris Arena dashboard.`);
+        }
+        window.chooseStarterHero = chooseStarterHero;
 
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
@@ -1021,7 +1086,7 @@
             reader.onload = async function(e) {
                 const { error } = await supabaseClient.from('profiles').insert([{
                     email, pass_hash: passHash, name, nickname, phone, bday,
-                    role: 'player', balance: 0.00, unlocked_heroes: ['pyra', 'sylph', 'storm-knight'], active_hero: 'pyra',
+                    role: 'player', balance: 0.00, unlocked_heroes: ['pyra', 'sylph', 'valen', 'nyx'], active_hero: null,
                     unlocked_skills: {}, wins: 0, xp: 0, rank: 'Bronze I', first_match_completed: false,
                     approved: true, frozen: false, receipt: e.target.result, ref: refNum, date: dateStr
                 }]);
@@ -1075,7 +1140,7 @@
 
             currentUser = user;
             if(!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
-            if(!currentUser.activeHero) currentUser.activeHero = currentUser.active_hero || 'pyra';
+            if(!currentUser.activeHero) currentUser.activeHero = currentUser.active_hero || null;
             
             logSystemActivity('User Login', `User ${currentUser.nickname} (${currentUser.email}) signed in.`);
             localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
@@ -1098,8 +1163,9 @@
             document.getElementById('view-shop').classList.add('hidden');
             document.getElementById('view-owner').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-starter-select').classList.add('hidden');
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
-            document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('main-header').classList.add('hidden');
             document.getElementById('view-force-reset').classList.add('hidden');
             document.getElementById('view-auth').classList.remove('hidden');
             showAuthMode('login');
@@ -1436,6 +1502,7 @@
             document.getElementById('view-select').classList.add('hidden');
             document.getElementById('view-shop').classList.add('hidden');
             document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-starter-select').classList.add('hidden');
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
 
@@ -1606,6 +1673,7 @@
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-shop').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-starter-select').classList.add('hidden');
             document.getElementById('view-duel-fullscreen').classList.remove('hidden');
         }
 
