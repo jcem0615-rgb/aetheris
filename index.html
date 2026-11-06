@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-screen overflow-hidden">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #07090e; color: #f3f4f6; height: 100vh; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #07090e; color: #f3f4f6; min-height: 100vh; overflow-x: hidden; }
         .font-cinzel { font-family: 'Cinzel', serif; }
         .glow-gold { text-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
         .glow-box { box-shadow: 0 0 25px rgba(59, 130, 246, 0.15); }
@@ -29,10 +29,10 @@
         .animate-float { animation: float 3s ease-in-out infinite; }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex flex-col selection:bg-amber-500 selection:text-black">
+<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
 
     <!-- Top Navigation Bar -->
-    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50">
+    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50 sticky top-0">
         <div class="flex items-center space-x-2 sm:space-x-3">
             <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl overflow-hidden shadow-lg shadow-blue-500/30 border border-blue-500/50 flex-shrink-0">
                 <img src="image_114c6025.jpg" alt="Aetheris Emblem" class="w-full h-full object-cover">
@@ -66,15 +66,15 @@
     </header>
 
     <!-- Main Content Container -->
-    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 overflow-y-auto flex flex-col pb-12">
+    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 flex flex-col justify-center my-auto">
 
         <!-- AUTH VIEW -->
-        <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-2 my-auto">
-            <div class="text-center space-y-2">
-                <div class="w-20 h-20 mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/40 border-2 border-amber-500/60 bg-slate-950 flex items-center justify-center">
+        <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4">
+            <div class="text-center space-y-1.5">
+                <div class="w-16 h-16 mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/40 border-2 border-amber-500/60 bg-slate-950 flex items-center justify-center">
                     <img src="image_114c6025.jpg" alt="Aetheris Logo" class="w-full h-full object-cover">
                 </div>
-                <h2 class="font-cinzel text-2xl sm:text-3xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
                 <p class="text-xs text-slate-400">Peer-to-Peer Tactical Card & Combat Arena</p>
             </div>
 
@@ -102,47 +102,47 @@
             </div>
 
             <!-- Register Box -->
-            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
+            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-2.5 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
-                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced. Registered phone & name will be locked for withdrawals. Starting balance is ₱0.00.</p>
+                <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced. Registered phone & name will be locked for withdrawals.</p>
                 
-                <div class="space-y-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px]">
-                    <p class="text-[10px] text-amber-400 font-bold mb-1">Official Payment Channels for ₱50 Fee:</p>
+                <div class="space-y-1 bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px]">
+                    <p class="text-[10px] text-amber-400 font-bold">Official Payment Channels for ₱50 Fee:</p>
                     <div class="grid grid-cols-2 gap-2">
-                        <div class="p-1.5 border-r border-slate-800 flex flex-col items-center text-center space-y-1">
-                            <div id="reg-gcash-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                        <div class="p-1 border-r border-slate-800 flex flex-col items-center text-center space-y-0.5">
+                            <div id="reg-gcash-qr" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                             <div>
-                                <span class="font-bold text-blue-400 block">GCash</span>
-                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-[10px]">0992-***-6789</span>
-                                <span class="text-slate-400 text-[9px]">J*** C**** M.</span>
+                                <span class="font-bold text-blue-400 block text-[10px]">GCash</span>
+                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-[9px]">0992-***-6789</span>
+                                <span class="text-slate-400 text-[8px]">J*** C**** M.</span>
                             </div>
                         </div>
-                        <div class="p-1.5 flex flex-col items-center text-center space-y-1">
-                            <div id="reg-maya-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                        <div class="p-1 flex flex-col items-center text-center space-y-0.5">
+                            <div id="reg-maya-qr" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                             <div>
-                                <span class="font-bold text-teal-400 block">Maya</span>
-                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-[10px]">0918-***-6543</span>
-                                <span class="text-slate-400 text-[9px]">L****** Hub</span>
+                                <span class="font-bold text-teal-400 block text-[10px]">Maya</span>
+                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-[9px]">0918-***-6543</span>
+                                <span class="text-slate-400 text-[8px]">L****** Hub</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-2.5">
+                <div class="space-y-2">
                     <input type="text" id="reg-name" placeholder="Full Legal Name (Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-phone" placeholder="Phone Number (Unique & Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="email" id="reg-email" placeholder="Email Address (Unique)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <div class="space-y-1">
+                    <div class="space-y-0.5">
                         <label class="text-[10px] text-slate-400 block">Birthday:</label>
-                        <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
                     </div>
                     <div class="relative">
                         <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
                         <button type="button" onclick="window.togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
                     <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <div class="space-y-1">
+                    <div class="space-y-0.5">
                         <label class="text-[10px] text-amber-400 block font-bold">Upload ₱50 Registration Fee Receipt:</label>
                         <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
                     </div>
