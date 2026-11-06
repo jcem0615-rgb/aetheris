@@ -1587,7 +1587,19 @@
 
                 if (armorGain > 0) duelState.playerArmor += armorGain;
                 if (heal > 0) duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + heal);
-                if (poisonApply > 0) duelState.enemyPoison += poisonApply;
+                
+                // Add new poison/burn stacks from card
+                if (poisonApply > 0) {
+                    duelState.enemyPoison += poisonApply;
+                }
+
+                // Process enemy poison DOT damage immediately when card is played
+                if (duelState.enemyPoison > 0) {
+                    const enemyDot = duelState.enemyPoison;
+                    duelState.enemyHp = Math.max(0, duelState.enemyHp - enemyDot);
+                    // Decay stacks gradually instead of wiping to 0
+                    duelState.enemyPoison = Math.max(0, duelState.enemyPoison - Math.max(4, Math.floor(duelState.enemyPoison * 0.4))); 
+                }
 
                 if (dmg > 0) {
                     if (duelState.enemyArmor > 0) {
@@ -1595,13 +1607,6 @@
                         else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
                     }
                     duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
-                }
-
-                // Process enemy poison damage when player attacks or casts
-                if (duelState.enemyPoison > 0) {
-                    const enemyDot = duelState.enemyPoison;
-                    duelState.enemyHp = Math.max(0, duelState.enemyHp - enemyDot);
-                    duelState.enemyPoison = Math.max(0, duelState.enemyPoison - 5); // Decay stacks
                 }
 
                 logDuel(`[You]: Played ${card.name}! Dealt ${dmg} damage & applied poison DOT.`);
