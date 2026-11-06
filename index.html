@@ -604,10 +604,21 @@
         });
 
         async function hashPassword(password) {
-            const msgBuffer = new TextEncoder().encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            try {
+                const msgBuffer = new TextEncoder().encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            } catch (err) {
+                // Fallback for strict file:// restrictions if crypto.subtle is blocked
+                console.warn('Crypto subtle unavailable, using fallback string hash:', err);
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    hash = ((hash << 5) - hash) + password.charCodeAt(i);
+                    hash |= 0;
+                }
+                return 'fallback_' + Math.abs(hash);
+            }
         }
 
         let registeredAccounts = [];
@@ -922,18 +933,27 @@
         }
 
         async function handleLogin() {
-            const email = document.getElementById('login-email').value;
+            const email = document.getElementById('login-email').value.trim();
             const pass = document.getElementById('login-pass').value;
+            
+            if(!email || !pass) {
+                alert('Please enter both email and password.');
+                return;
+            }
+
             const inputHash = await hashPassword(pass);
 
-            const pendingCheck = pendingRegistrations.find(r => r.email === email);
+            const pendingCheck = pendingRegistrations.find(r => r.email.toLowerCase() === email.toLowerCase());
             if(pendingCheck) {
                 alert('Your registration request is still pending owner review and fee verification. Please wait for notification approval.');
                 return;
             }
 
-            const user = registeredAccounts.find(acc => acc.email === email && acc.passHash === inputHash);
-            if(!user) { alert('Invalid email or password, or account not approved yet.'); return; }
+            const user = registeredAccounts.find(acc => acc.email.toLowerCase() === email.toLowerCase() && acc.passHash === inputHash);
+            if(!user) { 
+                alert('Invalid email or password, or account not approved yet.'); 
+                return; 
+            }
 
             if (user.frozen) {
                 alert('Security Alert: This player account has been frozen by the owner due to security review or policy violation.');
@@ -1015,7 +1035,7 @@
             if(!user || !newpass) { alert('Invalid verification or missing password.'); return; }
 
             user.passHash = await hashPassword(newpass);
-            alert('Password updated securely with SHA-256! Please log in.');
+            alert('Password updated securely! Please log in.');
             document.getElementById('view-force-reset').classList.add('hidden');
             document.getElementById('view-auth').classList.remove('hidden');
             showAuthMode('login');
@@ -1438,7 +1458,7 @@
 
         function updateDuelUI() {
             document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
-            document.getElementById('fs-player-hp-bar'].style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
+            document.getElementById('fs-player-hp-bar').style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
             document.getElementById('fs-player-ap').innerText = duelState.playerAp;
             document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
             document.getElementById('fs-player-poison').innerText = duelState.playerPoison;
@@ -1540,7 +1560,7 @@
                 return;
             }
 
-            // Updated: ApexPredator heals 30 HP when dropping below 60 HP
+            // ApexPredator heals 30 HP when dropping below 60 HP
             if (duelState.enemyHp < 60) {
                 const healVal = 30;
                 duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healVal);
@@ -1551,7 +1571,7 @@
                 logMsg += `[ApexPredator]: `;
             }
 
-            // Fixed: Accumulate stacks properly instead of overwriting
+            // Accumulate poison stacks properly
             duelState.playerPoison = (duelState.playerPoison || 0) + poisonApp;
 
             if (duelState.playerArmor > 0) {
@@ -1619,7 +1639,7 @@
                 if (armorGain > 0) duelState.playerArmor += armorGain;
                 if (heal > 0) duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + heal);
                 
-                // Fixed: Accumulate enemy poison stacks properly instead of overwriting
+                // Accumulate enemy poison stacks properly
                 if (poisonApply > 0) {
                     duelState.enemyPoison = (duelState.enemyPoison || 0) + poisonApply;
                 }
@@ -1628,7 +1648,7 @@
                 if (duelState.enemyPoison > 0) {
                     const enemyDot = duelState.enemyPoison;
                     duelState.enemyHp = Math.max(0, duelState.enemyHp - enemyDot);
-                    // Decay stacks gradually instead of wiping to 0
+                    // Decay stacks gradually
                     duelState.enemyPoison = Math.max(0, duelState.enemyPoison - Math.max(4, Math.floor(duelState.enemyPoison * 0.4))); 
                 }
 
