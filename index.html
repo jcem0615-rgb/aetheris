@@ -261,7 +261,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pb-2">
                 <div onclick="openModal('bet')" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1.5 text-xs">⚔</div>
                     <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">P2P RANKED MATCHMAKING</h3>
@@ -271,11 +271,6 @@
                     <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1.5 text-xs">🛡</div>
                     <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">HERO ROSTER (11)</h3>
                     <p class="text-[11px] text-slate-400 mt-0.5">Inspect all 11 champions, unlock requirements, and manage loadouts.</p>
-                </div>
-                <div onclick="alert('P2P Room Code created! Share code with peer player.')" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
-                    <div class="w-7 h-7 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-1.5 text-xs">🗝</div>
-                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">P2P ROOM DUEL</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Create private room codes to duel real players directly.</p>
                 </div>
             </div>
         </div>
@@ -867,41 +862,6 @@
             reader.readAsDataURL(receiptFile);
         }
 
-        function renderStarterPickOptions() {
-            const starterHeroes = heroes.filter(h => h.isStarter);
-            document.getElementById('starter-options-container').innerHTML = starterHeroes.map(h => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex flex-col justify-between space-y-2.5 card-hover">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
-                            <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
-                        </div>
-                        <div>
-                            <h3 class="font-cinzel font-bold text-white text-sm sm:text-base">${h.name} (${h.role})</h3>
-                            <span class="text-[10px] bg-emerald-600/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">Free Starter Choice</span>
-                            <p class="text-[11px] text-slate-400 mt-0.5">${h.desc}</p>
-                        </div>
-                    </div>
-                    <button onclick="pickStarterHero('${h.id}')" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Choose Free Starter</button>
-                </div>
-            `).join('');
-        }
-
-        function pickStarterHero(id) {
-            currentUser.unlockedHeroes = [id];
-            currentUser.activeHero = id;
-            document.getElementById('view-starter-pick').classList.add('hidden');
-            
-            document.getElementById('nav-wallet-container').classList.remove('hidden');
-            document.getElementById('nav-menu').classList.remove('hidden');
-            document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
-            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
-            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
-            updateWalletDisplay();
-            setActiveHeroUI(currentUser.activeHero);
-            switchTab('hub');
-            alert('Starter champion bound permanently to your account! Welcome to Aetheris Arena.');
-        }
-
         async function handleLogin() {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
@@ -1364,7 +1324,6 @@
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             
-            // Log battle history as Defeat on surrender
             const dateStr = new Date().toISOString().split('T')[0];
             battleHistoryLog.unshift({
                 id: Date.now(),
@@ -1467,7 +1426,6 @@
             switchTab('hub');
         }
 
-        // --- BOT COMBAT AI ROUTINE ---
         function executeBotCombatTurn() {
             if (!duelState.isFirstMatchBot) return;
 
@@ -1928,7 +1886,6 @@
                 pendingRegistrations.splice(idx, 1);
                 renderOwnerQueues();
 
-                // Trigger Device Push Notification
                 if (Notification.permission === 'granted') {
                     new Notification("Aetheris Duel Arena", {
                         body: `Hello ${reg.nickname}! Your registration fee receipt has been approved. You can now log in and select your starter champion!`,
@@ -1951,7 +1908,6 @@
             pendingResets = pendingResets.filter(r => r.id !== id);
             renderOwnerQueues();
 
-            // Trigger Device Push Notification for Password Reset Approval
             if (Notification.permission === 'granted') {
                 new Notification("Aetheris Duel Arena", {
                     body: `Password Reset Approved! Your reset request has been verified by the owner. Please enter your new password now.`,
