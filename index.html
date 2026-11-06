@@ -1498,14 +1498,27 @@
             let botDgm = 16;
             let poisonApp = 6;
 
+            // Apply active player poison DOT to player at start of bot/end turn phase
+            if (duelState.playerPoison > 0) {
+                const dotDmg = duelState.playerPoison;
+                duelState.playerHp = Math.max(0, duelState.playerHp - dotDmg);
+                logMsg += `[Poison/Burn]: You took ${dotDmg} DOT damage! `;
+                duelState.playerPoison = Math.max(0, duelState.playerPoison - 10); // Decay stacks
+            }
+
+            if (duelState.playerHp <= 0) {
+                handleDefeat();
+                return;
+            }
+
             if (duelState.enemyHp < 60) {
                 const healVal = 20;
                 duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healVal);
                 duelState.enemyArmor += 20;
                 duelState.enemyDebuff = 'Poisoned';
-                logMsg = `[ApexPredator]: Healed +${healVal} HP, added +20 Armor, `;
+                logMsg += `[ApexPredator]: Healed +${healVal} HP, added +20 Armor, `;
             } else {
-                logMsg = `[ApexPredator]: `;
+                logMsg += `[ApexPredator]: `;
             }
 
             duelState.playerPoison += poisonApp;
@@ -1543,15 +1556,16 @@
                 let dmg = 18;
                 let heal = 0;
                 let armorGain = 0;
+                let poisonApply = 0;
 
-                if (card.name === 'INFERNAL HELLFIRE') dmg = 35;
-                else if (card.name === 'SOLAR SUPERNOVA') dmg = 75;
+                if (card.name === 'INFERNAL HELLFIRE') { dmg = 35; poisonApply = 12; }
+                else if (card.name === 'SOLAR SUPERNOVA') { dmg = 75; poisonApply = 20; }
                 else if (card.name === 'HURRICANE BARRAGE') dmg = 38;
                 else if (card.name === 'HURRICANE APOCALYPSE') dmg = 70;
                 else if (card.name === 'AEGIS FORTRESS') { armorGain = 25; heal = 15; }
                 else if (card.name === 'DIVINE INVINCIBILITY') { armorGain = 45; heal = 35; }
                 else if (card.name === 'SHADOW ASSASSINATION') dmg = 42;
-                else if (card.name === 'ABSOLUTE SHADOW ECLIPSE') dmg = 75;
+                else if (card.name === 'ABSOLUTE SHADOW ECLIPSE') { dmg = 75; poisonApply = 15; }
                 else if (card.name === 'THUNDER GODS WRATH') dmg = 45;
                 else if (card.name === 'ZEUS THUNDERSTORM') dmg = 78;
                 else if (card.name === 'CONTINENTAL CRUSH') dmg = 45;
@@ -1560,8 +1574,8 @@
                 else if (card.name === 'ETERNAL TIME COLLAPSE') { heal = 55; armorGain = 25; }
                 else if (card.name === 'DIVINE JUDGMENT') dmg = 50;
                 else if (card.name === 'HEAVENLY RAGNAROK') dmg = 78;
-                else if (card.name === 'SOUL HARVEST') { dmg = 40; heal = 15; }
-                else if (card.name === 'VOID REALM ANNIHILATION') dmg = 80;
+                else if (card.name === 'SOUL HARVEST') { dmg = 40; heal = 15; poisonApply = 10; }
+                else if (card.name === 'VOID REALM ANNIHILATION') { dmg = 80; poisonApply = 18; }
                 else if (card.name === 'APOCALYPSE FRENZY') dmg = 55;
                 else if (card.name === 'RAGING BLOOD GOD RAMPAGE') dmg = 85;
                 else if (card.name === 'GALAXY COLLAPSE') dmg = 60;
@@ -1569,10 +1583,11 @@
                 else if (card.type === 'strike') dmg = 22;
                 else if (card.type === 'defend') armorGain = 15;
                 else if (card.type === 'heal') heal = 18;
-                else if (card.type === 'poison') dmg = 25;
+                else if (card.type === 'poison') { dmg = 25; poisonApply = 8; }
 
                 if (armorGain > 0) duelState.playerArmor += armorGain;
                 if (heal > 0) duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + heal);
+                if (poisonApply > 0) duelState.enemyPoison += poisonApply;
 
                 if (dmg > 0) {
                     if (duelState.enemyArmor > 0) {
@@ -1582,7 +1597,14 @@
                     duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
                 }
 
-                logDuel(`[You]: Played ${card.name}! Dealt ${dmg} damage.`);
+                // Process enemy poison damage when player attacks or casts
+                if (duelState.enemyPoison > 0) {
+                    const enemyDot = duelState.enemyPoison;
+                    duelState.enemyHp = Math.max(0, duelState.enemyHp - enemyDot);
+                    duelState.enemyPoison = Math.max(0, duelState.enemyPoison - 5); // Decay stacks
+                }
+
+                logDuel(`[You]: Played ${card.name}! Dealt ${dmg} damage & applied poison DOT.`);
                 updateDuelUI();
 
                 if (duelState.enemyHp <= 0) {
