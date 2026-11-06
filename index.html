@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" class="h-screen overflow-hidden">
+<html lang="en" class="min-h-screen">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Aetheris Duel Arena</title>
     <!-- PWA Manifest Link -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #07090e; color: #f3f4f6; height: 100vh; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #07090e; color: #f3f4f6; min-height: 100vh; display: flex; flex-direction: column; }
         .font-cinzel { font-family: 'Cinzel', serif; }
         .glow-gold { text-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
         .glow-box { box-shadow: 0 0 25px rgba(59, 130, 246, 0.15); }
@@ -24,10 +24,10 @@
         .animate-float { animation: float 3s ease-in-out infinite; }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex flex-col selection:bg-amber-500 selection:text-black">
+<body class="selection:bg-amber-500 selection:text-black">
 
     <!-- Top Navigation Bar -->
-    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50">
+    <header id="main-header" class="sticky top-0 border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50">
         <div class="flex items-center space-x-2 sm:space-x-3">
             <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -58,11 +58,11 @@
         </div>
     </header>
 
-    <!-- Main Content Container (Full Screen / Non-Scrollable Layout) -->
-    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 overflow-y-auto flex flex-col">
+    <!-- Main Content Container -->
+    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 flex flex-col">
 
         <!-- AUTH VIEW -->
-        <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-2 my-auto">
+        <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4 my-auto">
             <div class="text-center space-y-1">
                 <h2 class="font-cinzel text-2xl sm:text-3xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
                 <p class="text-xs text-slate-400">Secured with SHA-256 Hashing & Role Isolation</p>
@@ -194,7 +194,7 @@
         <div id="view-hub" class="hidden space-y-3 py-2">
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between glow-box">
                 <div class="flex items-center space-x-3">
-                    <!-- Active Hero Canva Icon Badge -->
+                    <!-- Active Hero Avatar Badge -->
                     <div id="active-hero-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
                         <img id="active-hero-img-el" src="" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
                     </div>
@@ -418,16 +418,35 @@
         <!-- Top-up Modal -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Submit Top-Up Request</h3>
-            <p class="text-xs text-slate-400">Send payment to owner's official e-wallet, enter reference, and upload payment receipt screenshot.</p>
-            <div class="space-y-2.5">
-                <input type="number" id="topup-amount" placeholder="Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            <p class="text-xs text-slate-400">Select payment method, send funds to owner's official e-wallet, enter reference, and upload payment receipt screenshot.</p>
+            
+            <div class="space-y-3">
+                <!-- Payment Method Selection -->
                 <div class="space-y-1">
-                    <label class="text-[10px] text-slate-400 block">Upload Payment Receipt:</label>
+                    <label class="text-[10px] font-bold text-slate-400 block uppercase">Select Payment Method:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="selectTopupMethod('GCash')" id="btn-method-gcash" class="p-2.5 bg-blue-600/20 border-2 border-blue-500 rounded-xl text-xs font-bold text-blue-400 text-center transition">GCash Payment</button>
+                        <button type="button" onclick="selectTopupMethod('Maya')" id="btn-method-maya" class="p-2.5 bg-slate-950 border-2 border-slate-800 rounded-xl text-xs font-bold text-slate-400 text-center transition">Maya Payment</button>
+                    </div>
+                </div>
+
+                <!-- Selected Channel Info Display -->
+                <div id="topup-channel-display" class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
+                    <div class="font-bold text-blue-400" id="topup-channel-title">GCash Official Account</div>
+                    <div class="text-white font-mono font-bold text-sm" id="topup-channel-number">0912-345-6789</div>
+                    <div class="text-slate-400 text-[10px]" id="topup-channel-name">Account Name: John Carlo M.</div>
+                </div>
+
+                <input type="number" id="topup-amount" placeholder="Top-Up Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-400 block">Upload Payment Receipt Screenshot:</label>
                     <input type="file" id="topup-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-600 file:text-white">
                 </div>
             </div>
-            <div class="flex space-x-2 pt-1">
+
+            <div class="flex space-x-2 pt-2">
                 <button onclick="submitTopUp()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl">Submit Request</button>
                 <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
             </div>
@@ -525,6 +544,7 @@
         let registeredAccounts = [];
         let currentUser = null;
         let currentDuelBet = 50;
+        let selectedTopupMethodType = 'GCash';
 
         let pendingDeposits = [];
         let pendingWithdrawals = [];
@@ -780,6 +800,34 @@
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
                 role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
             });
+
+            // Check session persistence
+            const savedEmail = localStorage.getItem('aetheris_logged_email');
+            if (savedEmail) {
+                const foundUser = registeredAccounts.find(acc => acc.email === savedEmail);
+                if (foundUser) {
+                    currentUser = foundUser;
+                    document.getElementById('view-auth').classList.add('hidden');
+                    document.getElementById('nav-wallet-container').classList.remove('hidden');
+                    document.getElementById('nav-menu').classList.remove('hidden');
+                    document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
+                    document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+                    updateWalletDisplay();
+                    setActiveHeroUI(currentUser.activeHero);
+
+                    if(currentUser.role === 'owner') {
+                        document.getElementById('btn-hub').classList.add('hidden');
+                        document.getElementById('btn-roster').classList.add('hidden');
+                        document.getElementById('btn-owner').classList.remove('hidden');
+                        switchTab('owner');
+                    } else {
+                        document.getElementById('btn-owner').classList.add('hidden');
+                        document.getElementById('btn-hub').classList.remove('hidden');
+                        document.getElementById('btn-roster').classList.remove('hidden');
+                        switchTab('hub');
+                    }
+                }
+            }
         });
 
         function togglePass(inputId, btn) {
@@ -821,6 +869,7 @@
             };
             registeredAccounts.push(newAcc);
             currentUser = newAcc;
+            localStorage.setItem('aetheris_logged_email', currentUser.email);
 
             alert('Account registered successfully! Registration fee of ₱50.00 processed. Please select your 1 free starter champion.');
             
@@ -851,6 +900,7 @@
         function pickStarterHero(id) {
             currentUser.unlockedHeroes = [id];
             currentUser.activeHero = id;
+            localStorage.setItem('aetheris_logged_email', currentUser.email);
             document.getElementById('view-starter-pick').classList.add('hidden');
             
             document.getElementById('nav-wallet-container').classList.remove('hidden');
@@ -872,6 +922,8 @@
             if(!user) { alert('Invalid email or password.'); return; }
 
             currentUser = user;
+            localStorage.setItem('aetheris_logged_email', currentUser.email);
+
             document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('nav-wallet-container').classList.remove('hidden');
             document.getElementById('nav-menu').classList.remove('hidden');
@@ -895,6 +947,7 @@
 
         function logoutPlayer() {
             currentUser = null;
+            localStorage.removeItem('aetheris_logged_email');
             document.getElementById('nav-wallet-container').classList.add('hidden');
             document.getElementById('nav-menu').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
@@ -1312,6 +1365,31 @@
             }, 800);
         }
 
+        function selectTopupMethod(method) {
+            selectedTopupMethodType = method;
+            const btnGcash = document.getElementById('btn-method-gcash');
+            const btnMaya = document.getElementById('btn-method-maya');
+            const titleEl = document.getElementById('topup-channel-title');
+            const numEl = document.getElementById('topup-channel-number');
+            const nameEl = document.getElementById('topup-channel-name');
+
+            if (method === 'GCash') {
+                btnGcash.className = "p-2.5 bg-blue-600/20 border-2 border-blue-500 rounded-xl text-xs font-bold text-blue-400 text-center transition";
+                btnMaya.className = "p-2.5 bg-slate-950 border-2 border-slate-800 rounded-xl text-xs font-bold text-slate-400 text-center transition";
+                titleEl.className = "font-bold text-blue-400";
+                titleEl.innerText = "GCash Official Account";
+                numEl.innerText = document.getElementById('display-gcash-num').innerText;
+                nameEl.innerText = "Account Name: " + document.getElementById('display-gcash-name').innerText;
+            } else {
+                btnMaya.className = "p-2.5 bg-teal-600/20 border-2 border-teal-500 rounded-xl text-xs font-bold text-teal-400 text-center transition";
+                btnGcash.className = "p-2.5 bg-slate-950 border-2 border-slate-800 rounded-xl text-xs font-bold text-slate-400 text-center transition";
+                titleEl.className = "font-bold text-teal-400";
+                titleEl.innerText = "Maya Official Account";
+                numEl.innerText = document.getElementById('display-maya-num').innerText;
+                nameEl.innerText = "Account Name: " + document.getElementById('display-maya-name').innerText;
+            }
+        }
+
         function handleQRUpload(event, type) {
             const file = event.target.files[0];
             if(file) {
@@ -1348,7 +1426,10 @@
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
-            if(type === 'topup') document.getElementById('modal-topup').classList.remove('hidden');
+            if(type === 'topup') {
+                selectTopupMethod('GCash');
+                document.getElementById('modal-topup').classList.remove('hidden');
+            }
             if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
         }
 
@@ -1373,8 +1454,8 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const dateStr = new Date().toISOString().split('T')[0];
-                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
-                alert('Top-up request and receipt submitted successfully! Awaiting owner approval.');
+                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, method: selectedTopupMethodType, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
+                alert('Top-up request via ' + selectedTopupMethodType + ' and receipt submitted successfully! Awaiting owner approval.');
                 closeModal();
             };
             reader.readAsDataURL(receiptFile);
@@ -1425,7 +1506,7 @@
             } else {
                 depContainer.innerHTML = filteredDeposits.map(d => `
                     <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.nickname})</span><div class="text-[10px] text-slate-400">Ref: ${d.ref} | Date: ${d.date}</div></div>
+                        <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.method} - ${d.nickname})</span><div class="text-[10px] text-slate-400">Ref: ${d.ref} | Date: ${d.date}</div></div>
                         <div class="space-x-1 flex items-center">
                             <button onclick="viewReceipt('${d.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
                             <button onclick="approveDeposit(${d.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
