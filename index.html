@@ -100,7 +100,6 @@
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
                 <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced. Registered phone & name will be locked for withdrawals.</p>
                 
-                <!-- Payment Channels Shown in Register Form -->
                 <div class="space-y-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px]">
                     <p class="text-[10px] text-amber-400 font-bold mb-1">Official Payment Channels for ₱50 Fee:</p>
                     <div class="grid grid-cols-2 gap-2">
@@ -535,13 +534,14 @@
             <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-1">Cancel</button>
         </div>
 
-        <!-- P2P Matchmaking Loading Modal -->
+        <!-- P2P Matchmaking Loading Modal (Stays in Queue for Demo Player) -->
         <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING P2P NETWORK</h3>
             <div class="py-4 space-y-3">
                 <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p id="matchmaking-status" class="text-xs text-slate-300">Connecting to online P2P lobby for peer player match...</p>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching online lobby for peer player match (No opponent found)...</p>
             </div>
+            <button onclick="cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Stake</button>
         </div>
 
         <!-- Receipt Preview Modal -->
@@ -619,6 +619,7 @@
         };
 
         let currentHand = [];
+        let matchmakingTimeout = null;
 
         function maskName(name) {
             if (!name) return '';
@@ -818,7 +819,6 @@
                 return; 
             }
 
-            // Anti-Duplicate Validation for Email and Phone Number
             const emailExistsInAccounts = registeredAccounts.some(acc => acc.email.toLowerCase() === email.toLowerCase());
             const emailExistsInPending = pendingRegistrations.some(r => r.email.toLowerCase() === email.toLowerCase());
             const phoneExistsInAccounts = registeredAccounts.some(acc => acc.phone === phone);
@@ -833,7 +833,6 @@
                 return;
             }
 
-            // Request Notification Permission before registration
             if ('Notification' in window) {
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') {
@@ -907,6 +906,7 @@
         function logoutPlayer() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
+            if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
             currentUser = null;
             document.getElementById('nav-wallet-container').classList.add('hidden');
             document.getElementById('nav-menu').classList.add('hidden');
@@ -928,7 +928,6 @@
             if(!user) { alert('No matching account found with that email and birthday.'); return; }
             if(pendingResets.some(r => r.email === email)) { alert('A password reset request is already pending.'); return; }
 
-            // Request Notification Permission for Password Reset Alert
             if ('Notification' in window) {
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') {
@@ -1164,14 +1163,7 @@
             `).join('');
         }
 
-        // --- MATCHMAKING & PVP DUEL LOGIC ---
-        const availablePeerOpponents = [
-            { name: "VortexMage", rank: "Silver I", img: "image_e51741b7.jpg" },
-            { name: "ShadowStalker", rank: "Bronze I", img: "image_a9978665.jpg" },
-            { name: "IronPaladin", rank: "Silver II", img: "image_4b6fe95a.jpg" },
-            { name: "StormBringer", rank: "Gold I", img: "image_d3c262a5.jpg" }
-        ];
-
+        // --- REALISTIC P2P MATCHMAKING & PVP DUEL LOGIC ---
         function startRankedMatchmaking(amount) {
             if (!currentUser) return;
             if (currentUser.frozen) {
@@ -1193,18 +1185,26 @@
             document.getElementById('modal-matchmaking').classList.remove('hidden');
 
             if (!currentUser.firstMatchCompleted) {
+                // 1st match: Onboarding bot opponent
                 document.getElementById('matchmaking-status').innerText = `Finding opponent in ranked lobby (Wager: ₱${amount})...`;
-                setTimeout(() => {
+                matchmakingTimeout = setTimeout(() => {
                     closeModal();
                     launchDisguisedBotMatch(amount);
                 }, 2000);
             } else {
-                document.getElementById('matchmaking-status').innerText = `Connecting to online P2P lobby for peer player match (Rank: ${currentUser.rank}, Wager: ₱${amount})...`;
-                setTimeout(() => {
-                    closeModal();
-                    launchMatchedPvPDuel(amount);
-                }, 2000);
+                // 2nd+ match: Stays in queue indefinitely because there are no other active players online
+                document.getElementById('matchmaking-status').innerText = `Searching P2P lobby (Rank: ${currentUser.rank}, Wager: ₱${amount})...\n⏳ Waiting for peer player match (No opponent found online)...`;
             }
+        }
+
+        function cancelMatchmakingQueue() {
+            if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
+            if (currentUser) {
+                currentUser.balance += currentDuelBet; // Refund stake
+                updateWalletDisplay();
+            }
+            closeModal();
+            alert('Matchmaking cancelled. Your ₱' + currentDuelBet + ' stake has been refunded to your wallet.');
         }
 
         function launchDisguisedBotMatch(amount) {
@@ -1223,35 +1223,6 @@
             
             shuffleAndDrawHand();
             logDuel(`[Match]: Connected with opponent ApexPredator! Choose tactical skills within 30s.`);
-            
-            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
-            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
-            updateDuelUI();
-
-            document.getElementById('main-header').classList.add('hidden');
-            document.getElementById('view-hub').classList.add('hidden');
-            document.getElementById('view-select').classList.add('hidden');
-            document.getElementById('view-duel-fullscreen').classList.remove('hidden');
-        }
-
-        function launchMatchedPvPDuel(amount) {
-            const matchedOpponent = availablePeerOpponents[Math.floor(Math.random() * availablePeerOpponents.length)];
-            duelState.currentOpponentName = matchedOpponent.name;
-
-            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
-            document.getElementById('fs-enemy-title').innerText = `${matchedOpponent.name.toUpperCase()} (${matchedOpponent.rank})`;
-            document.getElementById('fs-enemy-name-label').innerText = matchedOpponent.name.toUpperCase();
-            document.getElementById('fs-enemy-img-el').src = matchedOpponent.img;
-
-            if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
-            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-
-            duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
-            duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
-            duelState.enemyStatus = 'Connected'; duelState.enemyDisconnectTimer = 120; duelState.isFirstMatchBot = false;
-            
-            shuffleAndDrawHand();
-            logDuel(`[P2P Network]: Connected with peer ${matchedOpponent.name}! Your turn (30s timer started).`);
             
             document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
             document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
@@ -1285,38 +1256,6 @@
             if (duelState.isFirstMatchBot) {
                 alert('Connection is stable in this match.');
                 return;
-            }
-            if (duelState.enemyStatus === 'Connected') {
-                duelState.enemyStatus = 'Disconnected';
-                duelState.enemyDisconnectTimer = 120;
-                logDuel(`[Connection]: Peer player disconnected! Waiting 2 minutes for reconnection...`);
-                document.getElementById('fs-enemy-status').innerHTML = `<span class="text-red-400">🔴 Disconnected (120s)</span>`;
-                
-                if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
-                duelState.disconnectInterval = setInterval(() => {
-                    duelState.enemyDisconnectTimer--;
-                    const mins = Math.floor(duelState.enemyDisconnectTimer / 60);
-                    const secs = duelState.enemyDisconnectTimer % 60;
-                    const timeStr = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-
-                    if (duelState.enemyStatus === 'Disconnected') {
-                        document.getElementById('fs-enemy-status').innerHTML = `<span class="text-red-400">🔴 DC (${timeStr})</span>`;
-                        logDuel(`[Connection]: Peer disconnected. Auto-win in ${timeStr}...`);
-                    }
-
-                    if (duelState.enemyDisconnectTimer <= 0) {
-                        clearInterval(duelState.disconnectInterval);
-                        if (duelState.enemyStatus === 'Disconnected') {
-                            alert('Peer player failed to reconnect within the 2-minute limit. You win by default!');
-                            handleVictory();
-                        }
-                    }
-                }, 1000);
-            } else {
-                duelState.enemyStatus = 'Connected';
-                if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
-                document.getElementById('fs-enemy-status').innerHTML = `<span class="text-emerald-400">🟢 Connected</span>`;
-                logDuel(`[Connection]: Peer player reconnected successfully! Match resumed.`);
             }
         }
 
@@ -1463,7 +1402,7 @@
         }
 
         function playCard(index) {
-            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0 || duelState.enemyStatus === 'Disconnected') return;
+            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
             const card = currentHand[index];
             if (!card) return;
 
@@ -1493,52 +1432,10 @@
                 renderHandCards();
                 return;
             }
-
-            const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero);
-            const baseAtkMultiplier = activeHeroObj ? 1.1 : 1;
-
-            if (card.type === 'strike') {
-                let dmg = Math.round(18 * baseAtkMultiplier);
-                if (duelState.enemyDebuff === 'Armor-Break') dmg = Math.round(dmg * 1.5);
-                if (duelState.enemyArmor > 0) {
-                    if (duelState.enemyArmor >= dmg) { duelState.enemyArmor -= dmg; dmg = 0; }
-                    else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
-                }
-                duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
-                logDuel(`[You]: Played ${card.name}! Dealt ${dmg} damage.`);
-            } else if (card.type === 'defend') {
-                const blockVal = card.name.includes('COSMIC') ? 20 : 12;
-                duelState.playerArmor += blockVal;
-                logDuel(`[You]: Played ${card.name}! Gained ${blockVal} Armor block.`);
-            } else if (card.type === 'poison') {
-                duelState.enemyPoison += 9;
-                let poisonDmg = Math.round(15 * baseAtkMultiplier);
-                duelState.enemyHp = Math.max(0, duelState.enemyHp - poisonDmg);
-                logDuel(`[You]: Played ${card.name}! Dealt ${poisonDmg} damage & applied status.`);
-            } else if (card.type === 'debuff') {
-                let heavyDmg = Math.round(30 * baseAtkMultiplier);
-                duelState.enemyDebuff = 'Armor-Break';
-                if (duelState.enemyArmor > 0) duelState.enemyArmor = 0;
-                duelState.enemyHp = Math.max(0, duelState.enemyHp - heavyDmg);
-                logDuel(`[You]: Played ${card.name}! Dealt ${heavyDmg} damage & inflicted Armor-Break!`);
-            } else if (card.type === 'heal') {
-                const healVal = card.name.includes('ASTRAL') || card.name.includes('BLOOD') ? 25 : 15;
-                duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + healVal);
-                logDuel(`[You]: Played ${card.name}! Restored ${healVal} HP.`);
-            }
-
-            currentHand.splice(index, 1);
-            renderHandCards();
-            updateDuelUI();
-
-            if (duelState.enemyHp <= 0) {
-                handleVictory();
-                return;
-            }
         }
 
         function endDuelTurn() {
-            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0 || duelState.enemyStatus === 'Disconnected') return;
+            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
             if (duelState.isFirstMatchBot) {
@@ -1553,43 +1450,6 @@
                 }, 600);
                 return;
             }
-
-            logDuel(`[System]: Ending turn & attacking... Peer player counterattacking...`);
-            
-            if (duelState.enemyPoison > 0) {
-                duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
-                logDuel(`[Effect]: Peer player took ${duelState.enemyPoison} poison/burn damage.`);
-            }
-
-            updateDuelUI();
-
-            if (duelState.enemyHp <= 0) {
-                handleVictory();
-                return;
-            }
-
-            setTimeout(() => {
-                if (duelState.enemyHp > 0 && duelState.enemyStatus === 'Connected') {
-                    let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 12 : 16;
-                    if (duelState.playerArmor > 0) {
-                        if (duelState.playerArmor >= enemyDmg) { duelState.playerArmor -= enemyDmg; enemyDmg = 0; }
-                        else { enemyDmg -= duelState.playerArmor; duelState.playerArmor = 0; }
-                    }
-                    duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
-                    logDuel(`[Peer Player]: Counterattacked for ${enemyDmg} damage!`);
-                }
-                
-                updateDuelUI();
-
-                if (duelState.playerHp <= 0) {
-                    handleDefeat();
-                    return;
-                }
-
-                duelState.playerAp = 3;
-                shuffleAndDrawHand();
-                updateDuelUI();
-            }, 800);
         }
 
         function handleQRUpload(event, type) {
@@ -1768,7 +1628,6 @@
         function renderOwnerQueues() {
             const filterDate = document.getElementById('filter-date').value;
 
-            // Player Directory & Freeze Management
             const playersContainer = document.getElementById('owner-players-list');
             const filteredPlayers = registeredAccounts.filter(acc => acc.role === 'player');
             if (filteredPlayers.length === 0) {
@@ -1788,7 +1647,6 @@
                 `).join('');
             }
 
-            // Battle History Monitoring
             const battleContainer = document.getElementById('owner-battle-history-list');
             const filteredBattles = filterDate ? battleHistoryLog.filter(h => h.date === filterDate) : battleHistoryLog;
             if (filteredBattles.length === 0) {
@@ -1804,7 +1662,6 @@
                 `).join('');
             }
 
-            // Registration Approvals Queue
             const regContainer = document.getElementById('owner-registration-list');
             const filteredRegs = filterDate ? pendingRegistrations.filter(r => r.date === filterDate) : pendingRegistrations;
             if(filteredRegs.length === 0) {
