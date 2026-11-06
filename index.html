@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Aetheris Duel Arena - P2P Ranked Matchmaking</title>
+    <title>Aetheris Duel Arena - Wager & Matchmaking</title>
     <!-- PWA Manifest Link -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,13 +34,13 @@
             </div>
             <div>
                 <h1 class="font-cinzel font-bold text-sm sm:text-lg tracking-wider text-amber-400">AETHERIS DUEL</h1>
-                <p class="text-[10px] text-slate-400">P2P Ranked Matchmaking Arena</p>
+                <p class="text-[10px] text-slate-400">Ranked Matchmaking Arena</p>
             </div>
         </div>
 
         <div class="flex items-center space-x-2">
             <!-- PWA Install Button -->
-            <button id="btn-install-pwa" onclick="installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-xl text-[11px] font-bold shadow-lg transition">
+            <button id="btn-install-pwa" onclick="installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-xl text-[11px] font-bold shadow-lg transition">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <span>Install</span>
             </button>
@@ -65,13 +65,13 @@
         <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4 my-auto">
             <div class="text-center space-y-1">
                 <h2 class="font-cinzel text-2xl sm:text-3xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
-                <p class="text-xs text-slate-400">100% Human vs Human • Mandatory Wager Queue</p>
+                <p class="text-xs text-slate-400">Select Wager First • Ranked PvP Matchmaking</p>
             </div>
 
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box">
                 <div class="flex items-center justify-between">
                     <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
-                    <button id="auth-install-btn" onclick="installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition">
+                    <button id="auth-install-btn" onclick="installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         <span>Install App</span>
                     </button>
@@ -168,8 +168,8 @@
         <!-- Hero Roster & Rank Unlocks View -->
         <div id="view-select" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
-                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">11-HERO ROSTER & RANKS</h2>
-                <p class="text-slate-400 text-xs">Acquire additional champions or advance your rank through wager matchmaking duels!</p>
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
+                <p class="text-slate-400 text-xs">Acquire additional basic heroes or advance your rank through automated wager matchmaking!</p>
                 <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-xs space-y-1.5 w-full">
                     <div class="flex items-center justify-between space-x-4">
                         <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
@@ -188,8 +188,8 @@
         <div id="view-hub" class="hidden space-y-3 py-2">
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between glow-box">
                 <div class="flex items-center space-x-3">
-                    <div id="active-hero-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center shadow-lg">
-                        <span id="active-hero-icon" class="text-2xl sm:text-3xl">🔥</span>
+                    <div id="active-hero-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
+                        <img id="active-hero-img-el" src="" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
                     </div>
                     <div>
                         <div class="flex items-center space-x-2">
@@ -238,14 +238,14 @@
                     <div class="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-sm">⚔</div>
                     <div>
                         <h3 class="font-cinzel font-bold text-white text-sm sm:text-base">RANKED PVP MATCHMAKING</h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Select your wager stake first, then enter the live matchmaking queue to battle an available human opponent.</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Select your stake wager first, then enter the live matchmaking queue to find an available human player.</p>
                     </div>
                     <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Select Wager & Queue →</span>
                 </div>
                 <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-4 cursor-pointer card-hover flex flex-col justify-between space-y-2">
                     <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">🛡</div>
                     <div>
-                        <h3 class="font-cinzel font-bold text-white text-sm sm:text-base">11-HERO ROSTER</h3>
+                        <h3 class="font-cinzel font-bold text-white text-sm sm:text-base">HERO ROSTER</h3>
                         <p class="text-[11px] text-slate-400 mt-0.5">Acquire basic heroes or inspect rank unlock requirements for advanced champions.</p>
                     </div>
                     <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Inspect Roster →</span>
@@ -356,8 +356,8 @@
                     </div>
                 </div>
                 <div id="fs-enemy-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] p-1.5">
-                    <span id="fs-enemy-icon" class="text-3xl sm:text-4xl">⏳</span>
-                    <span id="fs-enemy-hero-name" class="font-cinzel text-[10px] font-bold text-amber-300 mt-1">CHRONO</span>
+                    <img id="fs-enemy-img-el" src="image_a4f1655c.jpg" alt="Opponent" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
+                    <span id="fs-enemy-hero-name" class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">CHRONO</span>
                 </div>
             </div>
 
@@ -369,8 +369,8 @@
             <!-- Player Stage Area (Bottom) -->
             <div class="flex flex-col items-center space-y-1.5 z-10">
                 <div id="fs-player-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5">
-                    <span id="fs-player-icon" class="text-3xl sm:text-4xl">🔥</span>
-                    <span id="fs-player-hero-title" class="font-cinzel text-[10px] font-bold text-amber-300 mt-1">PYRA</span>
+                    <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
+                    <span id="fs-player-hero-title" class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">PYRA</span>
                 </div>
                 <div class="w-48 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2 space-y-1 shadow-lg">
                     <div class="flex justify-between text-[10px] font-bold">
@@ -450,7 +450,7 @@
             </div>
         </div>
 
-        <!-- STEP 1: SELECT WAGER STAKE FIRST -->
+        <!-- STEP 1: SELECT WAGER STAKE FIRST (Required before queue) -->
         <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">STEP 1: SELECT YOUR WAGER STAKE</h3>
             <p class="text-xs text-slate-400">You must choose your match wager stake first before entering the automated matchmaking queue.</p>
@@ -481,21 +481,21 @@
     </div>
 
     <script>
-        // PWA Install Prompt Handler & Fallback Instructions
+        // PWA Install Prompt Handler
         let deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            const installBtn = document.getElementById('btn-install-pwa');
+            const authInstallBtn = document.getElementById('auth-install-btn');
+            if (installBtn) { installBtn.classList.remove('hidden'); installBtn.classList.add('flex'); }
+            if (authInstallBtn) { authInstallBtn.classList.remove('hidden'); authInstallBtn.classList.add('flex'); }
         });
 
         async function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-            } else {
-                alert('📱 How to install Aetheris Arena:\n\n• Google Chrome / Edge (Desktop): Look for the install icon on the right side of your address bar.\n• Android (Chrome): Tap the browser menu (three dots at the top right) and select "Install app" or "Add to Home screen".\n• iOS (Safari): Tap the Share button at the bottom and select "Add to Home Screen".');
-            }
+            if (!deferredPrompt) { alert('PWA installation prompt ready! Install directly from browser menu if needed.'); return; }
+            deferredPrompt.prompt();
+            deferredPrompt = null;
         }
 
         async function hashPassword(password) {
@@ -521,12 +521,11 @@
         let uploadedGcashQR = null;
         let uploadedMayaQR = null;
 
-        // ALL 11 PLAYABLE HEROES WITH ROBUST EMOJI ICONS
         const heroes = [
           {
             id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER (Basic)',
             desc: 'Fire-elemental spellcaster with explosive burn damage.',
-            bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', icon: '🔥',
+            bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', iconImg: 'image_b2781538.jpg',
             price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
             skillDeck: [
               { type: 'strike', name: 'FLAME DART', ap: 1, color: 'red', desc: 'Deal 18 Fire damage.' },
@@ -538,7 +537,7 @@
           {
             id: 'sylph', name: 'SYLPH', role: 'Wind Ranger', rarity: 'STARTER (Basic)',
             desc: 'Agile archer with high movement and gale evasion.',
-            bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', icon: '🏹',
+            bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', iconImg: 'image_e51741b7.jpg',
             price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
             skillDeck: [
               { type: 'strike', name: 'GALE SLASH', ap: 1, color: 'emerald', desc: 'Deal 18 Wind damage.' },
@@ -550,7 +549,7 @@
           {
             id: 'valen', name: 'VALEN', role: 'Iron Guardian', rarity: 'STARTER (Basic)',
             desc: 'Holy tank with impenetrable defense and holy barrier.',
-            bg: 'from-blue-950 to-slate-950', border: 'border-blue-500/50', icon: '🛡️',
+            bg: 'from-blue-950 to-slate-950', border: 'border-blue-500/50', iconImg: 'image_4b6fe95a.jpg',
             price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
             skillDeck: [
               { type: 'strike', name: 'SHIELD BASH', ap: 1, color: 'blue', desc: 'Deal 15 Physical damage.' },
@@ -562,7 +561,7 @@
           {
             id: 'nyx', name: 'NYX', role: 'Shadow Assassin', rarity: 'STARTER (Basic)',
             desc: 'Deadly operative with stealth and shadow-strike bursts.',
-            bg: 'from-purple-950 to-slate-950', border: 'border-purple-500/50', icon: '🗡️',
+            bg: 'from-purple-950 to-slate-950', border: 'border-purple-500/50', iconImg: 'image_a9978665.jpg',
             price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
             skillDeck: [
               { type: 'strike', name: 'SHADOW STAB', ap: 1, color: 'purple', desc: 'Deal 20 Dark damage.' },
@@ -574,7 +573,7 @@
           {
             id: 'storm-knight', name: 'STORM KNIGHT', role: 'Electric Knight', rarity: 'RANKED (Silver I)',
             desc: 'Electric armored duelist wielding lightning strikes.',
-            bg: 'from-amber-950 to-slate-950', border: 'border-amber-500/50', icon: '⚡',
+            bg: 'from-amber-950 to-slate-950', border: 'border-amber-500/50', iconImg: 'image_d3c262a5.jpg',
             price: 150, requiredWins: 2, requiredXp: 150, isStarter: false,
             skillDeck: [
               { type: 'strike', name: 'SPARK STRIKE', ap: 1, color: 'amber', desc: 'Deal 22 Electric damage.' },
@@ -586,73 +585,13 @@
           {
             id: 'chrono-warden', name: 'CHRONO WARDEN', role: 'Time Mage', rarity: 'RANKED (Gold I)',
             desc: 'Time controller manipulating action queues and hourglass power.',
-            bg: 'from-yellow-950 to-slate-950', border: 'border-yellow-500/50', icon: '⏳',
+            bg: 'from-yellow-950 to-slate-950', border: 'border-yellow-500/50', iconImg: 'image_a4f1655c.jpg',
             price: 150, requiredWins: 7, requiredXp: 600, isStarter: false,
             skillDeck: [
               { type: 'strike', name: 'TIME SLASH', ap: 1, color: 'yellow', desc: 'Deal 24 Temporal damage.' },
               { type: 'defend', name: 'TEMPORAL WARD', ap: 1, color: 'yellow', desc: 'Gain 18 Armor block.' },
               { type: 'debuff', name: 'TIME WARP', ap: 2, color: 'amber', desc: 'Deal 40 damage & break defenses.' },
               { type: 'heal', name: 'HOURGLASS HEAL', ap: 2, color: 'emerald', desc: 'Restore 25 HP.' }
-            ]
-          },
-          {
-            id: 'ignis', name: 'IGNIS', role: 'Magma Berserker', rarity: 'BASIC (Unlockable)',
-            desc: 'Fearsome warrior harnessing molten earth and lava fury.',
-            bg: 'from-orange-950 to-slate-950', border: 'border-orange-500/50', icon: '🌋',
-            price: 150, requiredWins: 0, requiredXp: 0, isStarter: false,
-            skillDeck: [
-              { type: 'strike', name: 'LAVA STRIKE', ap: 1, color: 'orange', desc: 'Deal 22 Magma damage.' },
-              { type: 'defend', name: 'MAGMA PLATE', ap: 1, color: 'orange', desc: 'Gain 16 Armor block.' },
-              { type: 'poison', name: 'ERUPTION', ap: 2, color: 'red', desc: 'Deal 30 damage & burn.' },
-              { type: 'heal', name: 'MOLTEN REGEX', ap: 2, color: 'emerald', desc: 'Restore 20 HP.' }
-            ]
-          },
-          {
-            id: 'zephyr', name: 'ZEPHYR', role: 'Storm Sorceress', rarity: 'BASIC (Unlockable)',
-            desc: 'Master of tempests summoning roaring hurricanes.',
-            bg: 'from-teal-950 to-slate-950', border: 'border-teal-500/50', icon: '🌪️',
-            price: 150, requiredWins: 0, requiredXp: 0, isStarter: false,
-            skillDeck: [
-              { type: 'strike', name: 'HURRICANE', ap: 1, color: 'teal', desc: 'Deal 20 Storm damage.' },
-              { type: 'defend', name: 'CYCLONE WARD', ap: 1, color: 'teal', desc: 'Gain 15 Armor block.' },
-              { type: 'debuff', name: 'THUNDER BLAST', ap: 2, color: 'amber', desc: 'Deal 32 shock damage.' },
-              { type: 'heal', name: 'GALE RESTORE', ap: 2, color: 'emerald', desc: 'Restore 18 HP.' }
-            ]
-          },
-          {
-            id: 'dreadnought', name: 'DREADNOUGHT', role: 'Void Juggernaut', rarity: 'RANKED (Platinum I)',
-            desc: 'Colossal armored juggernaut infused with void energy.',
-            bg: 'from-indigo-950 to-slate-950', border: 'border-indigo-500/50', icon: '🦾',
-            price: 150, requiredWins: 12, requiredXp: 1400, isStarter: false,
-            skillDeck: [
-              { type: 'strike', name: 'VOID SMASH', ap: 1, color: 'indigo', desc: 'Deal 25 Void damage.' },
-              { type: 'defend', name: 'VOID BARRIER', ap: 1, color: 'indigo', desc: 'Gain 22 Armor block.' },
-              { type: 'debuff', name: 'CRUSHING BLOW', ap: 2, color: 'purple', desc: 'Deal 38 damage & shatter armor.' },
-              { type: 'heal', name: 'ABSORB LIFE', ap: 2, color: 'emerald', desc: 'Restore 24 HP.' }
-            ]
-          },
-          {
-            id: 'aelia', name: 'AELIA', role: 'Celestial Paladin', rarity: 'RANKED (Diamond)',
-            desc: 'Divine crusader wielding holy light and celestial grace.',
-            bg: 'from-sky-950 to-slate-950', border: 'border-sky-500/50', icon: '✨',
-            price: 150, requiredWins: 18, requiredXp: 2500, isStarter: false,
-            skillDeck: [
-              { type: 'strike', name: 'HOLY STRIKE', ap: 1, color: 'sky', desc: 'Deal 26 Divine damage.' },
-              { type: 'defend', name: 'DIVINE SHIELD', ap: 1, color: 'sky', desc: 'Gain 20 Armor block.' },
-              { type: 'debuff', name: 'JUDGMENT', ap: 2, color: 'blue', desc: 'Deal 35 light damage & stun.' },
-              { type: 'heal', name: 'DIVINE BLESSING', ap: 2, color: 'emerald', desc: 'Restore 30 HP.' }
-            ]
-          },
-          {
-            id: 'vexa', name: 'VEXA', role: 'Phantom Warlock', rarity: 'RANKED (Grandmaster)',
-            desc: 'Dark sorceress manipulating curses and soul phantoms.',
-            bg: 'from-rose-950 to-slate-950', border: 'border-rose-500/50', icon: '🔮',
-            price: 150, requiredWins: 25, requiredXp: 3500, isStarter: false,
-            skillDeck: [
-              { type: 'strike', name: 'SOUL BOLT', ap: 1, color: 'rose', desc: 'Deal 28 Spirit damage.' },
-              { type: 'defend', name: 'SHADOW VEIL', ap: 1, color: 'rose', desc: 'Gain 16 Armor block.' },
-              { type: 'poison', name: 'CURSE OF VOID', ap: 2, color: 'purple', desc: 'Deal 42 necrotic damage.' },
-              { type: 'heal', name: 'SOUL DRAIN', ap: 2, color: 'emerald', desc: 'Restore 28 HP.' }
             ]
           }
         ];
@@ -671,13 +610,13 @@
             registeredAccounts.push({
                 name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: player1Hash,
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight', 'ignis'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
             });
 
             registeredAccounts.push({
                 name: 'Blaze Vanguard', nickname: 'BlazeVanguard', phone: '09189876543',
                 email: 'player2@logicgrid.com', bday: '2001-03-20', passHash: player2Hash,
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'valen', 'chrono-warden', 'zephyr'], activeHero: 'valen', wins: 5, xp: 400, rank: 'Silver II'
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'valen', 'chrono-warden'], activeHero: 'valen', wins: 5, xp: 400, rank: 'Silver II'
             });
 
             const savedEmail = localStorage.getItem('aetheris_logged_email');
@@ -755,7 +694,7 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex flex-col justify-between space-y-2.5 card-hover">
                     <div class="flex items-center space-x-3">
                         <div class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
-                            <span class="text-3xl">${h.icon}</span>
+                            <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
                         </div>
                         <div>
                             <h3 class="font-cinzel font-bold text-white text-sm sm:text-base">${h.name} (${h.role})</h3>
@@ -763,7 +702,7 @@
                             <p class="text-[11px] text-slate-400 mt-0.5">${h.desc}</p>
                         </div>
                     </div>
-                    <button onclick="pickStarterHero('${h.id}')" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer">Choose Free Starter</button>
+                    <button onclick="pickStarterHero('${h.id}')" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Choose Free Starter</button>
                 </div>
             `).join('');
         }
@@ -870,8 +809,8 @@
             else currentUser.rank = 'Bronze I';
 
             heroes.forEach(h => {
-                if (!currentUser.unlockedHeroes.includes(h.id)) {
-                    if (currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp && h.requiredWins > 0) {
+                if (!h.isStarter && !currentUser.unlockedHeroes.includes(h.id)) {
+                    if (currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp) {
                         currentUser.unlockedHeroes.push(h.id);
                     }
                 }
@@ -905,22 +844,22 @@
 
                 let actionBtn = '';
                 if (isActive) {
-                    actionBtn = `<span class="px-4 py-2 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/40 inline-block text-center">Active</span>`;
+                    actionBtn = `<span class="px-4 py-2 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/40">Active</span>`;
                 } else if (isUnlocked) {
-                    actionBtn = `<button onclick="switchActiveHero('${h.id}')" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer">Equip</button>`;
-                } else if (h.price > 0 && h.requiredWins === 0 && h.requiredXp === 0) {
-                    actionBtn = `<button onclick="buyBasicHero('${h.id}', ${h.price})" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer">₱${h.price}</button>`;
+                    actionBtn = `<button onclick="switchActiveHero('${h.id}')" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Equip</button>`;
+                } else if (h.isStarter) {
+                    actionBtn = `<button onclick="buyBasicHero('${h.id}', ${h.price})" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow transition">₱${h.price}</button>`;
                 } else if (meetsReqs) {
-                    actionBtn = `<button onclick="claimRankedHero('${h.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer">Unlock</button>`;
+                    actionBtn = `<button onclick="claimRankedHero('${h.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition">Unlock</button>`;
                 } else {
-                    actionBtn = `<div class="text-[10px] text-amber-400 font-mono text-right">Req: ${h.requiredWins}W / ${h.requiredXp}XP</div>`;
+                    actionBtn = `<span class="text-[10px] text-amber-400 font-mono text-right block">Req: ${h.requiredWins}W / ${h.requiredXp}XP</span>`;
                 }
 
                 return `
                     <div class="bg-[#0e1322] border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between card-hover">
                         <div class="flex items-center space-x-3">
-                            <div class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center shadow-xl">
-                                <span class="text-3xl">${h.icon}</span>
+                            <div class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-xl">
+                                <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
                             </div>
                             <div>
                                 <div class="flex items-center space-x-2 mb-0.5">
@@ -947,32 +886,22 @@
 
         function buyBasicHero(id, price) {
             if (!currentUser) return;
-            if (currentUser.balance < price) { 
-                alert('Insufficient wallet balance to purchase this hero!'); 
-                return; 
-            }
+            if (currentUser.balance < price) { alert('Insufficient wallet balance to purchase this basic hero!'); return; }
             currentUser.balance -= price;
-            if (!currentUser.unlockedHeroes.includes(id)) {
-                currentUser.unlockedHeroes.push(id);
-            }
+            currentUser.unlockedHeroes.push(id);
             currentUser.activeHero = id;
             updateWalletDisplay();
             setActiveHeroUI(id);
             renderHeroes();
-            alert('Hero purchased and unlocked successfully! Set as active champion.');
+            alert('Basic hero purchased and unlocked successfully! Set as active champion.');
             switchTab('hub');
         }
 
         function claimRankedHero(id) {
             if (!currentUser) return;
             const h = heroes.find(item => item.id === id);
-            if (!h || currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) { 
-                alert('Rank requirements not met yet!'); 
-                return; 
-            }
-            if (!currentUser.unlockedHeroes.includes(id)) {
-                currentUser.unlockedHeroes.push(id);
-            }
+            if (!h || currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) { alert('Rank requirements not met yet!'); return; }
+            if (!currentUser.unlockedHeroes.includes(id)) currentUser.unlockedHeroes.push(id);
             currentUser.activeHero = id;
             setActiveHeroUI(id);
             renderHeroes();
@@ -987,12 +916,12 @@
             document.getElementById('hub-rank-badge').innerText = currentUser.rank;
             
             const avatar = document.getElementById('active-hero-avatar');
-            avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center shadow-lg`;
-            document.getElementById('active-hero-icon').innerText = h.icon;
+            avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
+            document.getElementById('active-hero-img-el').src = h.iconImg;
 
             const fsPlayerSprite = document.getElementById('fs-player-sprite');
             fsPlayerSprite.className = `w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5`;
-            fsPlayerSprite.innerHTML = `<span class="text-4xl sm:text-5xl">${h.icon}</span><span class="font-cinzel text-[10px] font-bold text-amber-300 mt-1">${h.name}</span>`;
+            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg shadow-lg mb-0.5"><span class="font-cinzel text-[10px] font-bold text-amber-300">${h.name}</span>`;
             document.getElementById('fs-player-hero-title').innerText = h.name;
         }
 
@@ -1035,6 +964,7 @@
             }
         }
 
+        // STEP 1: OPEN WAGER MODAL FIRST
         function openMatchmakingModal() {
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-bet').classList.remove('hidden');
@@ -1068,14 +998,17 @@
             `).join('');
         }
 
+        // STEP 2: ENTER QUEUE ONLY AFTER WAGER IS SELECTED
         function enterMatchmakingQueue(betAmount) {
             if (!currentUser) return;
             if (currentUser.balance < betAmount) { alert('Insufficient wallet balance for this wager!'); closeModal(); return; }
 
+            // Deduct bet immediately upon queuing
             currentUser.balance -= betAmount;
             activeBetAmount = betAmount;
             updateWalletDisplay();
 
+            // Transition from Wager Selection Modal to Queue Searching Modal
             document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-queue-search').classList.remove('hidden');
             document.getElementById('queue-status-text').innerText = `Searching for an available opponent in the ₱${betAmount} ranked tier...`;
@@ -1086,7 +1019,7 @@
                 nickname: currentUser.nickname,
                 bet: betAmount,
                 heroName: heroObj.name,
-                heroIcon: heroObj.icon,
+                heroImg: heroObj.iconImg,
                 timestamp: Date.now()
             };
 
@@ -1110,14 +1043,14 @@
                         email: currentUser.email,
                         nickname: currentUser.nickname,
                         heroName: heroObj.name,
-                        heroIcon: heroObj.icon,
+                        heroImg: heroObj.iconImg,
                         hp: 100, maxHp: 100, armor: 0, ap: 3
                     },
                     guest: {
                         email: opponent.email,
                         nickname: opponent.nickname,
                         heroName: opponent.heroName,
-                        heroIcon: opponent.heroIcon,
+                        heroImg: opponent.heroImg,
                         hp: 100, maxHp: 100, armor: 0, ap: 3
                     }
                 };
@@ -1199,7 +1132,7 @@
                 document.getElementById('fs-enemy-hp-text').innerText = `${opp.hp}/${opp.maxHp}`;
                 document.getElementById('fs-enemy-hp-bar').style.width = `${(opp.hp / opp.maxHp) * 100}%`;
                 document.getElementById('fs-enemy-armor').innerText = opp.armor;
-                document.getElementById('fs-enemy-icon').innerText = opp.heroIcon;
+                document.getElementById('fs-enemy-img-el').src = opp.heroImg;
                 document.getElementById('fs-enemy-hero-name').innerText = opp.heroName;
 
                 document.getElementById('fs-battle-log').innerText = match.log;
