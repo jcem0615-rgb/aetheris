@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Aetheris Duel Arena - Wager & Matchmaking</title>
+    <title>Aetheris Duel Arena - P2P Multiplayer</title>
     <!-- PWA Manifest Link -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +34,7 @@
             </div>
             <div>
                 <h1 class="font-cinzel font-bold text-sm sm:text-lg tracking-wider text-amber-400">AETHERIS DUEL</h1>
-                <p class="text-[10px] text-slate-400">Ranked Matchmaking Arena</p>
+                <p class="text-[10px] text-slate-400">P2P Human Multiplayer Arena</p>
             </div>
         </div>
 
@@ -65,9 +65,10 @@
         <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4 my-auto">
             <div class="text-center space-y-1">
                 <h2 class="font-cinzel text-2xl sm:text-3xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
-                <p class="text-xs text-slate-400">Select Wager First • Ranked PvP Matchmaking</p>
+                <p class="text-xs text-slate-400">100% Human vs Human P2P Combat</p>
             </div>
 
+            <!-- Login Box -->
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box">
                 <div class="flex items-center justify-between">
                     <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
@@ -96,6 +97,7 @@
                 </div>
             </div>
 
+            <!-- Register Box -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
                 <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies to new account activation.</p>
@@ -119,6 +121,7 @@
                 <button onclick="handleRegister()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Register & Pay ₱50 Fee</button>
             </div>
 
+            <!-- Forgot Password Box -->
             <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Request Password Reset</h3>
                 <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request to the owner.</p>
@@ -169,7 +172,7 @@
         <div id="view-select" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
-                <p class="text-slate-400 text-xs">Acquire additional basic heroes or advance your rank through automated wager matchmaking!</p>
+                <p class="text-slate-400 text-xs">Acquire additional basic heroes or advance your rank through human duels to unlock advanced champions!</p>
                 <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-xs space-y-1.5 w-full">
                     <div class="flex items-center justify-between space-x-4">
                         <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
@@ -197,7 +200,7 @@
                             <span id="hub-rank-badge" class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
                         </div>
                         <h2 id="active-hero-name" class="font-cinzel text-base sm:text-lg font-bold text-white">PYRA</h2>
-                        <p class="text-[11px] text-slate-400">Active Champion • Ready for Wager Queue</p>
+                        <p class="text-[11px] text-slate-400">Active Champion • Ready for Human P2P</p>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
@@ -232,23 +235,23 @@
                 </div>
             </div>
 
-            <!-- Ranked Matchmaking & Roster Hub Cards -->
+            <!-- P2P Human Matchmaking Hub -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2">
-                <div onclick="openMatchmakingModal()" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-4 cursor-pointer card-hover flex flex-col justify-between space-y-2">
-                    <div class="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-sm">⚔</div>
+                <div onclick="openBettingModal('host')" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-4 cursor-pointer card-hover flex flex-col justify-between space-y-2">
+                    <div class="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-sm">🗝</div>
                     <div>
-                        <h3 class="font-cinzel font-bold text-white text-sm sm:text-base">RANKED PVP MATCHMAKING</h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Select your stake wager first, then enter the live matchmaking queue to find an available human player.</p>
+                        <h3 class="font-cinzel font-bold text-white text-sm sm:text-base">CREATE P2P ROOM</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Generate a unique Room Code to host a human vs human duel and share it with another player.</p>
                     </div>
-                    <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Select Wager & Queue →</span>
+                    <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Host Match →</span>
                 </div>
-                <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-4 cursor-pointer card-hover flex flex-col justify-between space-y-2">
-                    <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">🛡</div>
+                <div onclick="openJoinRoomModal()" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-4 cursor-pointer card-hover flex flex-col justify-between space-y-2">
+                    <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">⚔</div>
                     <div>
-                        <h3 class="font-cinzel font-bold text-white text-sm sm:text-base">HERO ROSTER</h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Acquire basic heroes or inspect rank unlock requirements for advanced champions.</p>
+                        <h3 class="font-cinzel font-bold text-white text-sm sm:text-base">JOIN P2P ROOM</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Enter a friend's Room Code to join their lobby and battle live in 100% human multiplayer.</p>
                     </div>
-                    <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Inspect Roster →</span>
+                    <span class="text-[10px] text-purple-400 font-bold uppercase tracking-wider">Join Match →</span>
                 </div>
             </div>
         </div>
@@ -326,17 +329,19 @@
         </div>
     </main>
 
-    <!-- FULL-SCREEN RANKED PVP BATTLE ARENA VIEW -->
+    <!-- FULL-SCREEN P2P HUMAN MULTIPLAYER BATTLE ARENA VIEW -->
     <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-3 sm:p-6 hidden overflow-hidden">
+        <!-- Top Battle Bar -->
         <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-2 backdrop-blur shrink-0">
             <div class="flex items-center space-x-2">
-                <h2 class="font-cinzel font-bold text-sm sm:text-base text-amber-400 glow-gold">RANKED PVP ARENA</h2>
+                <h2 class="font-cinzel font-bold text-sm sm:text-base text-amber-400 glow-gold">P2P HUMAN ARENA</h2>
                 <span id="fullscreen-bet-badge" class="text-[11px] bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
-                <span id="room-code-badge" class="text-[11px] bg-blue-500/20 text-blue-400 px-2.5 py-0.5 rounded-full border border-blue-500/30 font-mono font-bold">Match ID: ----</span>
+                <span id="room-code-badge" class="text-[11px] bg-blue-500/20 text-blue-400 px-2.5 py-0.5 rounded-full border border-blue-500/30 font-mono font-bold">Room: ----</span>
             </div>
             <button onclick="surrenderDuel()" class="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-xl transition">Surrender / Leave</button>
         </div>
 
+        <!-- Main Combat Stage -->
         <div class="flex-1 my-2 bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-950 border border-slate-800/80 rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden shadow-2xl">
             <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
 
@@ -363,7 +368,7 @@
 
             <!-- Central Battle Log Floating Pill -->
             <div class="self-center z-20 max-w-md w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-center text-[11px] text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
-                [Arena]: Combat engaged. Choose your drawn tactical skills below.
+                [P2P Lobby]: Waiting for opponent connection...
             </div>
 
             <!-- Player Stage Area (Bottom) -->
@@ -445,31 +450,34 @@
                 <input type="text" id="withdraw-name" placeholder="Account Holder Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
             </div>
             <div class="flex space-x-2 pt-1">
-                <button onclick="submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl">Submit Withdrawal</button>
+                <button onclick="submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl">Submit Withdrawal</button>
                 <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
             </div>
         </div>
 
-        <!-- STEP 1: SELECT WAGER STAKE FIRST (Required before queue) -->
+        <!-- P2P Wager & Host Modal -->
         <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">STEP 1: SELECT YOUR WAGER STAKE</h3>
-            <p class="text-xs text-slate-400">You must choose your match wager stake first before entering the automated matchmaking queue.</p>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">SELECT P2P MATCH WAGER</h3>
+            <p class="text-xs text-slate-400">Choose match stake. Winner takes double the bet from the loser's wallet and earns Rank XP!</p>
             <div class="grid grid-cols-3 gap-2 pt-1">
-                <button onclick="enterMatchmakingQueue(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
-                <button onclick="enterMatchmakingQueue(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
-                <button onclick="enterMatchmakingQueue(200)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱200</button>
-                <button onclick="enterMatchmakingQueue(500)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱500</button>
-                <button onclick="enterMatchmakingQueue(1000)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs col-span-2">₱1,000</button>
+                <button onclick="hostP2PRoom(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
+                <button onclick="hostP2PRoom(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
+                <button onclick="hostP2PRoom(200)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱200</button>
+                <button onclick="hostP2PRoom(500)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱500</button>
+                <button onclick="hostP2PRoom(1000)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs col-span-2">₱1,000</button>
             </div>
             <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-1">Cancel</button>
         </div>
 
-        <!-- STEP 2: STEP INTO QUEUE SEARCHING -->
-        <div id="modal-queue-search" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
-            <h3 class="font-cinzel text-lg font-bold text-amber-400 animate-pulse">STEP 2: FINDING MATCH...</h3>
-            <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p id="queue-status-text" class="text-xs text-slate-400">Searching for an available player in your wager queue...</p>
-            <button onclick="cancelMatchmakingQueue()" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl shadow transition">Cancel Queue & Refund Stake</button>
+        <!-- Join P2P Room Code Modal -->
+        <div id="modal-join-room" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">JOIN P2P ROOM</h3>
+            <p class="text-xs text-slate-400">Enter the 4-digit Room Code provided by your human opponent.</p>
+            <input type="text" id="input-join-code" placeholder="e.g. 4829" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center font-mono font-bold text-lg text-amber-400">
+            <div class="flex space-x-2 pt-1">
+                <button onclick="joinP2PRoom()" class="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl">Connect to Room</button>
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
+            </div>
         </div>
 
         <!-- Receipt Preview Modal -->
@@ -495,6 +503,7 @@
         async function installPWA() {
             if (!deferredPrompt) { alert('PWA installation prompt ready! Install directly from browser menu if needed.'); return; }
             deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
             deferredPrompt = null;
         }
 
@@ -506,12 +515,10 @@
 
         let registeredAccounts = [];
         let currentUser = null;
-        let activeMatchId = null;
+        let activeRoomCode = null;
         let isHost = false;
         let currentHand = [];
-        let queuePollingInterval = null;
-        let matchPollingInterval = null;
-        let activeBetAmount = 50;
+        let p2pPollingInterval = null;
 
         let pendingDeposits = [];
         let pendingWithdrawals = [];
@@ -755,8 +762,7 @@
         }
 
         function logoutPlayer() {
-            if(queuePollingInterval) clearInterval(queuePollingInterval);
-            if(matchPollingInterval) clearInterval(matchPollingInterval);
+            if(p2pPollingInterval) clearInterval(p2pPollingInterval);
             currentUser = null;
             localStorage.removeItem('aetheris_logged_email');
             document.getElementById('nav-wallet-container').classList.add('hidden');
@@ -921,7 +927,7 @@
 
             const fsPlayerSprite = document.getElementById('fs-player-sprite');
             fsPlayerSprite.className = `w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5`;
-            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg shadow-lg mb-0.5"><span class="font-cinzel text-[10px] font-bold text-amber-300">${h.name}</span>`;
+            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg mb-0.5"><span class="font-cinzel text-[10px] font-bold text-amber-300">${h.name}</span>`;
             document.getElementById('fs-player-hero-title').innerText = h.name;
         }
 
@@ -964,11 +970,14 @@
             }
         }
 
-        // STEP 1: OPEN WAGER MODAL FIRST
-        function openMatchmakingModal() {
+        function openBettingModal(mode) {
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-bet').classList.remove('hidden');
-            document.getElementById('modal-queue-search').classList.add('hidden');
+        }
+
+        function openJoinRoomModal() {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-join-room').classList.remove('hidden');
         }
 
         function getActiveHeroDeck() {
@@ -998,129 +1007,105 @@
             `).join('');
         }
 
-        // STEP 2: ENTER QUEUE ONLY AFTER WAGER IS SELECTED
-        function enterMatchmakingQueue(betAmount) {
+        // --- P2P ROOM CODE MULTIPLAYER SYNC ---
+        function hostP2PRoom(betAmount) {
             if (!currentUser) return;
             if (currentUser.balance < betAmount) { alert('Insufficient wallet balance for this wager!'); closeModal(); return; }
 
-            // Deduct bet immediately upon queuing
-            currentUser.balance -= betAmount;
-            activeBetAmount = betAmount;
-            updateWalletDisplay();
-
-            // Transition from Wager Selection Modal to Queue Searching Modal
-            document.getElementById('modal-bet').classList.add('hidden');
-            document.getElementById('modal-queue-search').classList.remove('hidden');
-            document.getElementById('queue-status-text').innerText = `Searching for an available opponent in the ₱${betAmount} ranked tier...`;
+            activeRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
+            isHost = true;
+            closeModal();
 
             const heroObj = heroes.find(h => h.id === currentUser.activeHero) || heroes[0];
-            const myQueueTicket = {
-                email: currentUser.email,
-                nickname: currentUser.nickname,
+
+            const roomState = {
+                code: activeRoomCode,
                 bet: betAmount,
-                heroName: heroObj.name,
-                heroImg: heroObj.iconImg,
-                timestamp: Date.now()
+                status: 'waiting', // waiting, battling, finished
+                turn: currentUser.email, // host goes first
+                log: `Room created by ${currentUser.nickname}. Waiting for human opponent to join code ${activeRoomCode}...`,
+                host: {
+                    email: currentUser.email,
+                    nickname: currentUser.nickname,
+                    heroName: heroObj.name,
+                    heroImg: heroObj.iconImg,
+                    hp: 100, maxHp: 100, armor: 0, ap: 3
+                },
+                guest: null
             };
 
-            let queue = JSON.parse(localStorage.getItem('aetheris_ranked_queue') || '[]');
-            const existingOpponentIndex = queue.findIndex(q => q.bet === betAmount && q.email !== currentUser.email);
+            localStorage.setItem('aetheris_p2p_room_' + activeRoomCode, JSON.stringify(roomState));
 
-            if (existingOpponentIndex > -1) {
-                const opponent = queue.splice(existingOpponentIndex, 1)[0];
-                localStorage.setItem('aetheris_ranked_queue', JSON.stringify(queue));
+            document.getElementById('room-code-badge').innerText = `Room: ${activeRoomCode}`;
+            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${betAmount}`;
+            
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('view-hub').classList.add('hidden');
+            document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-duel-fullscreen').classList.remove('hidden');
 
-                activeMatchId = 'MATCH-' + Math.floor(1000 + Math.random() * 9000);
-                isHost = true;
-
-                const matchState = {
-                    matchId: activeMatchId,
-                    bet: betAmount,
-                    status: 'battling',
-                    turn: currentUser.email,
-                    log: `Ranked Match found! ${currentUser.nickname} vs ${opponent.nickname}. Host's turn.`,
-                    host: {
-                        email: currentUser.email,
-                        nickname: currentUser.nickname,
-                        heroName: heroObj.name,
-                        heroImg: heroObj.iconImg,
-                        hp: 100, maxHp: 100, armor: 0, ap: 3
-                    },
-                    guest: {
-                        email: opponent.email,
-                        nickname: opponent.nickname,
-                        heroName: opponent.heroName,
-                        heroImg: opponent.heroImg,
-                        hp: 100, maxHp: 100, armor: 0, ap: 3
-                    }
-                };
-
-                localStorage.setItem('aetheris_match_' + activeMatchId, JSON.stringify(matchState));
-                localStorage.setItem('aetheris_match_invite_' + opponent.email, activeMatchId);
-
-                launchMatchArena();
-            } else {
-                queue.push(myQueueTicket);
-                localStorage.setItem('aetheris_ranked_queue', JSON.stringify(queue));
-                startQueuePolling();
-            }
+            startP2PPolling();
         }
 
-        function startQueuePolling() {
-            if (queuePollingInterval) clearInterval(queuePollingInterval);
-            queuePollingInterval = setInterval(() => {
-                const inviteMatchId = localStorage.getItem('aetheris_match_invite_' + currentUser.email);
-                if (inviteMatchId) {
-                    localStorage.removeItem('aetheris_match_invite_' + currentUser.email);
-                    clearInterval(queuePollingInterval);
-                    activeMatchId = inviteMatchId;
-                    isHost = false;
-                    launchMatchArena();
-                }
-            }, 1000);
-        }
+        function joinP2PRoom() {
+            const code = document.getElementById('input-join-code').value.trim();
+            if(!code) { alert('Please enter a valid room code.'); return; }
 
-        function cancelMatchmakingQueue() {
-            if (queuePollingInterval) clearInterval(queuePollingInterval);
-            let queue = JSON.parse(localStorage.getItem('aetheris_ranked_queue') || '[]');
-            queue = queue.filter(q => q.email !== currentUser.email);
-            localStorage.setItem('aetheris_ranked_queue', JSON.stringify(queue));
+            const raw = localStorage.getItem('aetheris_p2p_room_' + code);
+            if(!raw) { alert('Room code not found or expired.'); return; }
 
-            currentUser.balance += activeBetAmount;
-            updateWalletDisplay();
+            const room = JSON.parse(raw);
+            if(room.status !== 'waiting') { alert('Match already in progress or completed.'); return; }
+            if(currentUser.balance < room.bet) { alert('Insufficient wallet balance to match this room bet!'); return; }
 
+            activeRoomCode = code;
+            isHost = false;
             closeModal();
-            alert('Matchmaking queue cancelled. Your ₱' + activeBetAmount + ' wager has been refunded.');
-        }
 
-        function launchMatchArena() {
-            closeModal();
-            shuffleAndDrawHand();
+            const heroObj = heroes.find(h => h.id === currentUser.activeHero) || heroes[0];
+            room.guest = {
+                email: currentUser.email,
+                nickname: currentUser.nickname,
+                heroName: heroObj.name,
+                heroImg: heroObj.iconImg,
+                hp: 100, maxHp: 100, armor: 0, ap: 3
+            };
+            room.status = 'battling';
+            room.log = `Match started between ${room.host.nickname} and ${room.guest.nickname}! Host's turn.`;
 
-            document.getElementById('room-code-badge').innerText = `Match: ${activeMatchId}`;
-            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${activeBetAmount}`;
+            localStorage.setItem('aetheris_p2p_room_' + activeRoomCode, JSON.stringify(room));
+
+            document.getElementById('room-code-badge').innerText = `Room: ${activeRoomCode}`;
+            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${room.bet}`;
 
             document.getElementById('main-header').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
             document.getElementById('view-select').classList.add('hidden');
             document.getElementById('view-duel-fullscreen').classList.remove('hidden');
 
-            startMatchPolling();
+            shuffleAndDrawHand();
+            startP2PPolling();
         }
 
-        function startMatchPolling() {
-            if (matchPollingInterval) clearInterval(matchPollingInterval);
-            matchPollingInterval = setInterval(() => {
-                if (!activeMatchId) return;
-                const raw = localStorage.getItem('aetheris_match_' + activeMatchId);
+        function startP2PPolling() {
+            if (p2pPollingInterval) clearInterval(p2pPollingInterval);
+            p2pPollingInterval = setInterval(() => {
+                if (!activeRoomCode) return;
+                const raw = localStorage.getItem('aetheris_p2p_room_' + activeRoomCode);
                 if (!raw) return;
-                const match = JSON.parse(raw);
+                const room = JSON.parse(raw);
 
+                if (room.status === 'waiting') {
+                    document.getElementById('fs-battle-log').innerText = room.log;
+                    return;
+                }
+
+                // Update UI based on room state
                 const myRole = isHost ? 'host' : 'guest';
                 const oppRole = isHost ? 'guest' : 'host';
 
-                const me = match[myRole];
-                const opp = match[oppRole];
+                const me = room[myRole];
+                const opp = room[oppRole];
 
                 document.getElementById('fs-player-name').innerText = me.nickname.toUpperCase();
                 document.getElementById('fs-player-hp-text').innerText = `${me.hp}/${me.maxHp}`;
@@ -1135,9 +1120,9 @@
                 document.getElementById('fs-enemy-img-el').src = opp.heroImg;
                 document.getElementById('fs-enemy-hero-name').innerText = opp.heroName;
 
-                document.getElementById('fs-battle-log').innerText = match.log;
+                document.getElementById('fs-battle-log').innerText = room.log;
 
-                const isMyTurn = match.turn === currentUser.email;
+                const isMyTurn = room.turn === currentUser.email;
                 const turnIndicator = document.getElementById('fs-turn-indicator');
                 if (isMyTurn) {
                     turnIndicator.innerText = "YOUR TURN";
@@ -1147,29 +1132,29 @@
                     turnIndicator.className = "text-amber-400";
                 }
 
-                if (match.status === 'finished') {
-                    clearInterval(matchPollingInterval);
-                    alert(match.log);
+                if (room.status === 'finished') {
+                    clearInterval(p2pPollingInterval);
+                    alert(room.log);
                     surrenderDuel();
                 }
             }, 1000);
         }
 
         function playCard(index) {
-            if (!activeMatchId) return;
-            const raw = localStorage.getItem('aetheris_match_' + activeMatchId);
+            if (!activeRoomCode) return;
+            const raw = localStorage.getItem('aetheris_p2p_room_' + activeRoomCode);
             if (!raw) return;
-            const match = JSON.parse(raw);
+            const room = JSON.parse(raw);
 
-            if (match.turn !== currentUser.email) {
-                alert("It is not your turn yet! Wait for your opponent.");
+            if (room.turn !== currentUser.email) {
+                alert("It is not your turn yet! Wait for your human opponent.");
                 return;
             }
 
             const myRole = isHost ? 'host' : 'guest';
             const oppRole = isHost ? 'guest' : 'host';
-            const me = match[myRole];
-            const opp = match[oppRole];
+            const me = room[myRole];
+            const opp = room[oppRole];
 
             const card = currentHand[index];
             if (!card) return;
@@ -1188,59 +1173,61 @@
                     else { dmg -= opp.armor; opp.armor = 0; }
                 }
                 opp.hp = Math.max(0, opp.hp - dmg);
-                match.log = `${me.nickname} played ${card.name}! Dealt ${dmg} damage to ${opp.nickname}.`;
+                room.log = `${me.nickname} played ${card.name}! Dealt ${dmg} damage to ${opp.nickname}.`;
             } else if (card.type === 'defend') {
                 me.armor += 15;
-                match.log = `${me.nickname} played ${card.name}! Gained 15 Armor block.`;
+                room.log = `${me.nickname} played ${card.name}! Gained 15 Armor block.`;
             } else if (card.type === 'poison') {
                 let dmg = 22;
                 opp.hp = Math.max(0, opp.hp - dmg);
-                match.log = `${me.nickname} played ${card.name}! Dealt ${dmg} piercing damage.`;
+                room.log = `${me.nickname} played ${card.name}! Dealt ${dmg} piercing damage.`;
             } else if (card.type === 'heal') {
                 me.hp = Math.min(me.maxHp, me.hp + 18);
-                match.log = `${me.nickname} played ${card.name}! Restored 18 HP.`;
+                room.log = `${me.nickname} played ${card.name}! Restored 18 HP.`;
             }
 
             currentHand.splice(index, 1);
             renderHandCards();
 
+            // Check if opponent defeated
             if (opp.hp <= 0) {
-                match.status = 'finished';
-                const prize = match.bet * 2;
+                room.status = 'finished';
+                const prize = room.bet * 2;
                 currentUser.balance += prize;
                 currentUser.wins += 1;
                 currentUser.xp += 100;
                 evaluateRankAndUnlocks();
                 updateWalletDisplay();
-                match.log = `VICTORY! ${me.nickname} defeated ${opp.nickname} and won ₱${prize} (Double Wager)!`;
+                room.log = `VICTORY! ${me.nickname} defeated ${opp.nickname} and won ₱${prize}!`;
             }
 
-            localStorage.setItem('aetheris_match_' + activeMatchId, JSON.stringify(match));
+            localStorage.setItem('aetheris_p2p_room_' + activeRoomCode, JSON.stringify(room));
         }
 
         function endPlayerTurn() {
-            if (!activeMatchId) return;
-            const raw = localStorage.getItem('aetheris_match_' + activeMatchId);
+            if (!activeRoomCode) return;
+            const raw = localStorage.getItem('aetheris_p2p_room_' + activeRoomCode);
             if (!raw) return;
-            const match = JSON.parse(raw);
+            const room = JSON.parse(raw);
 
-            if (match.turn !== currentUser.email) return;
+            if (room.turn !== currentUser.email) return;
 
-            const oppEmail = isHost ? match.guest.email : match.host.email;
-            match.turn = oppEmail;
+            const oppEmail = isHost ? room.guest.email : room.host.email;
+            room.turn = oppEmail;
 
+            // Reset AP for next turn player
             const myRole = isHost ? 'host' : 'guest';
-            match[myRole].ap = 3;
+            room[myRole].ap = 3;
 
-            match.log = `${currentUser.nickname} ended turn. Opponent is taking action...`;
-            localStorage.setItem('aetheris_match_' + activeMatchId, JSON.stringify(match));
+            room.log = `${currentUser.nickname} ended turn. Hand reshuffled for opponent.`;
+            localStorage.setItem('aetheris_p2p_room_' + activeRoomCode, JSON.stringify(room));
 
             shuffleAndDrawHand();
         }
 
         function surrenderDuel() {
-            if (matchPollingInterval) clearInterval(matchPollingInterval);
-            activeMatchId = null;
+            if (p2pPollingInterval) clearInterval(p2pPollingInterval);
+            activeRoomCode = null;
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
             switchTab('hub');
@@ -1297,7 +1284,7 @@
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
-            document.getElementById('modal-queue-search').classList.add('hidden');
+            document.getElementById('modal-join-room').classList.add('hidden');
             if(type === 'topup') { selectTopupMethod('GCash'); document.getElementById('modal-topup').classList.remove('hidden'); }
             if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
         }
@@ -1309,7 +1296,7 @@
             document.getElementById('modal-topup').classList.add('hidden');
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
-            document.getElementById('modal-queue-search').classList.add('hidden');
+            document.getElementById('modal-join-room').classList.add('hidden');
             document.getElementById('modal-receipt').classList.remove('hidden');
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-60 rounded object-contain">`;
         }
