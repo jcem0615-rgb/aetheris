@@ -150,7 +150,7 @@
             <!-- Forgot Password Box -->
             <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Request Password Reset</h3>
-                <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request to the owner.</p>
+                <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request to the owner. You will receive a notification upon approval.</p>
                 <div class="space-y-2.5">
                     <input type="email" id="forgot-email" placeholder="Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
                     <div class="space-y-1">
@@ -161,7 +161,7 @@
                 <div class="flex items-center justify-between text-xs">
                     <button onclick="showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
                 </div>
-                <button onclick="submitResetRequest()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Submit Reset Request</button>
+                <button onclick="submitResetRequest()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Allow Notifications & Submit Reset</button>
             </div>
         </div>
 
@@ -915,15 +915,27 @@
             showAuthMode('login');
         }
 
-        function submitResetRequest() {
+        async function submitResetRequest() {
             const email = document.getElementById('forgot-email').value;
             const bday = document.getElementById('forgot-bday').value;
             const user = registeredAccounts.find(acc => acc.email === email && acc.bday === bday);
             if(!user) { alert('No matching account found with that email and birthday.'); return; }
             if(pendingResets.some(r => r.email === email)) { alert('A password reset request is already pending.'); return; }
 
+            // Request Notification Permission for Password Reset Alert
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    alert('Please allow notifications to receive your password reset approval alert.');
+                    return;
+                }
+            } else {
+                alert('Browser notifications are not supported on this device.');
+                return;
+            }
+
             pendingResets.push({ id: Date.now(), email: email, name: user.name });
-            alert('Password reset request submitted to the owner successfully.');
+            alert('Password reset request submitted to the owner successfully. You will receive a device notification once approved.');
             showAuthMode('login');
         }
 
@@ -1767,11 +1779,25 @@
         }
 
         function approveReset(id) {
+            const resetItem = pendingResets.find(r => r.id === id);
             pendingResets = pendingResets.filter(r => r.id !== id);
-            alert('Password reset request approved!');
+            renderOwnerQueues();
+
+            // Trigger Device Push Notification for Password Reset Approval
+            if (Notification.permission === 'granted') {
+                new Notification("Aetheris Duel Arena", {
+                    body: `Password Reset Approved! Your reset request has been verified by the owner. Please enter your new password now.`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/2921/2921222.png"
+                });
+            }
+
+            alert('Password reset request approved! Device push notification sent to player.');
             document.getElementById('view-owner').classList.add('hidden');
             document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('view-force-reset').classList.remove('hidden');
+            if (resetItem) {
+                document.getElementById('force-email').value = resetItem.email;
+            }
         }
 
         function rejectReset(id) {
