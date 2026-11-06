@@ -1521,7 +1521,8 @@
                 logMsg += `[ApexPredator]: `;
             }
 
-            duelState.playerPoison += poisonApp;
+            // Fixed: Accumulate stacks properly instead of overwriting
+            duelState.playerPoison = (duelState.playerPoison || 0) + poisonApp;
 
             if (duelState.playerArmor > 0) {
                 if (duelState.playerArmor >= botDgm) { duelState.playerArmor -= botDgm; botDgm = 0; }
@@ -1588,9 +1589,9 @@
                 if (armorGain > 0) duelState.playerArmor += armorGain;
                 if (heal > 0) duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + heal);
                 
-                // Add new poison/burn stacks from card
+                // Fixed: Accumulate enemy poison stacks properly instead of overwriting
                 if (poisonApply > 0) {
-                    duelState.enemyPoison += poisonApply;
+                    duelState.enemyPoison = (duelState.enemyPoison || 0) + poisonApply;
                 }
 
                 // Process enemy poison DOT damage immediately when card is played
