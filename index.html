@@ -1361,10 +1361,6 @@
                     return;
                 }
 
-                setTimeout(() => {
-                    executeBotCombatTurn();
-                }, 500);
-
                 currentHand.splice(index, 1);
                 renderHandCards();
                 return;
@@ -1421,9 +1417,11 @@
                 logDuel(`[System]: Ending turn... ApexPredator reacts!`);
                 setTimeout(() => {
                     executeBotCombatTurn();
-                    duelState.playerAp = 3;
-                    shuffleAndDrawHand();
-                    updateDuelUI();
+                    if (duelState.playerHp > 0 && duelState.enemyHp > 0) {
+                        duelState.playerAp = 3;
+                        shuffleAndDrawHand();
+                        updateDuelUI();
+                    }
                 }, 600);
                 return;
             }
