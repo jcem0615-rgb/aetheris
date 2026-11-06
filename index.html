@@ -98,7 +98,7 @@
             <!-- Register Box -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
-                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies. Send payment to the official channels below and upload your receipt.</p>
+                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced. Registered phone & name will be locked for withdrawals.</p>
                 
                 <!-- Payment Channels Shown in Register Form -->
                 <div class="space-y-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px]">
@@ -124,10 +124,10 @@
                 </div>
 
                 <div class="space-y-2.5">
-                    <input type="text" id="reg-name" placeholder="Full Legal Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-name" placeholder="Full Legal Name (Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="text" id="reg-phone" placeholder="Phone Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="email" id="reg-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-phone" placeholder="Phone Number (Unique & Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="email" id="reg-email" placeholder="Email Address (Unique)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <div class="space-y-1">
                         <label class="text-[10px] text-slate-400 block">Birthday:</label>
                         <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
@@ -309,6 +309,22 @@
                     </div>
                 </div>
 
+                <!-- PLAYER ACCOUNTS DIRECTORY & FREEZE/UNFREEZE MANAGEMENT -->
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory & Anti-Cheat Freeze</h3>
+                    <div id="owner-players-list" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players.</div>
+                    </div>
+                </div>
+
+                <!-- BATTLE MATCH HISTORY MONITORING -->
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-white">P2P Combat & Battle History Monitoring</h3>
+                    <div id="owner-battle-history-list" class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>
+                    </div>
+                </div>
+
                 <div class="space-y-2">
                     <h3 class="font-cinzel text-xs font-bold text-white">Merchant E-Wallet Credentials & QR Codes</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -330,30 +346,30 @@
                 </div>
 
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Registration Approvals (₱50 Fee Receipt)</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Registration Approvals (₱50 Fee Receipt)[cite: 10]</h3>
                     <div id="owner-registration-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests[cite: 10].</div>
                     </div>
                 </div>
 
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Password Reset Requests</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Password Reset Requests[cite: 10]</h3>
                     <div id="owner-reset-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests[cite: 10].</div>
                     </div>
                 </div>
 
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals[cite: 10]</h3>
                     <div id="owner-deposit-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending deposit requests.</div>
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests[cite: 10].</div>
                     </div>
                 </div>
 
                 <div class="space-y-1.5 pb-2">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals[cite: 10]</h3>
                     <div id="owner-withdraw-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawal requests.</div>
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests[cite: 10].</div>
                     </div>
                 </div>
             </div>
@@ -485,18 +501,24 @@
             </div>
         </div>
 
-        <!-- Withdrawal Modal -->
+        <!-- Withdrawal Modal (Locked to Registered Phone & Name) -->
         <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Withdrawal Request Form</h3>
-            <p class="text-xs text-slate-400">Fill out your cash-out destination details below.</p>
+            <p class="text-xs text-slate-400">For security, payouts are locked strictly to your registered account phone number and legal name.</p>
             <div class="space-y-2.5">
                 <input type="number" id="withdraw-amount" placeholder="Withdrawal Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <select id="withdraw-method" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <option value="GCash">GCash</option>
                     <option value="Maya">Maya</option>
                 </select>
-                <input type="text" id="withdraw-account" placeholder="Account Number / Phone" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                <input type="text" id="withdraw-name" placeholder="Account Holder Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-400 block">Locked Account Number (From Registration):</label>
+                    <input type="text" id="withdraw-account" readonly class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 cursor-not-allowed">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-400 block">Locked Account Holder Name (From Registration):</label>
+                    <input type="text" id="withdraw-name" readonly class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 cursor-not-allowed">
+                </div>
             </div>
             <div class="flex space-x-2 pt-1">
                 <button onclick="submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl">Submit Withdrawal</button>
@@ -532,6 +554,13 @@
             <h3 class="font-cinzel text-base font-bold text-amber-400">Payment Receipt Inspection</h3>
             <div id="receipt-preview-container" class="max-h-60 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center p-2"></div>
             <button onclick="closeModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Preview</button>
+        </div>
+
+        <!-- Player Details Modal (For Owner Inspection) -->
+        <div id="modal-player-details" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">Player Account Inspection</h3>
+            <div id="player-inspection-content" class="space-y-2 text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
     </div>
 
@@ -582,6 +611,7 @@
         let pendingWithdrawals = [];
         let approvedDepositsLog = [];
         let approvedWithdrawalsLog = [];
+        let battleHistoryLog = [];
         let pendingResets = [];
         let uploadedGcashQR = null;
         let uploadedMayaQR = null;
@@ -590,7 +620,7 @@
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
             enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
             enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
-            turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: false 
+            turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: false, currentOpponentName: 'ApexPredator'
         };
 
         let currentHand = [];
@@ -754,13 +784,13 @@
             registeredAccounts.push({
                 name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
                 email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: ownerHash,
-                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin', firstMatchCompleted: true, approved: true
+                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin', firstMatchCompleted: true, approved: true, frozen: false
             });
 
             registeredAccounts.push({
                 name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false, approved: true
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false, approved: true, frozen: false
             });
         });
 
@@ -780,10 +810,10 @@
         }
 
         async function handleRegister() {
-            const name = document.getElementById('reg-name').value;
-            const nickname = document.getElementById('reg-nickname').value;
-            const phone = document.getElementById('reg-phone').value;
-            const email = document.getElementById('reg-email').value;
+            const name = document.getElementById('reg-name').value.trim();
+            const nickname = document.getElementById('reg-nickname').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
             const bday = document.getElementById('reg-bday').value;
             const pass = document.getElementById('reg-pass').value;
             const receiptFile = document.getElementById('reg-receipt').files[0];
@@ -792,9 +822,20 @@
                 alert('Please fill in all registration fields and upload your ₱50 registration receipt.'); 
                 return; 
             }
-            if(registeredAccounts.some(acc => acc.email === email) || pendingRegistrations.some(r => r.email === email)) { 
-                alert('An account or pending request with this email already exists.'); 
-                return; 
+
+            // Anti-Duplicate Validation for Email and Phone Number
+            const emailExistsInAccounts = registeredAccounts.some(acc => acc.email.toLowerCase() === email.toLowerCase());
+            const emailExistsInPending = pendingRegistrations.some(r => r.email.toLowerCase() === email.toLowerCase());
+            const phoneExistsInAccounts = registeredAccounts.some(acc => acc.phone === phone);
+            const phoneExistsInPending = pendingRegistrations.some(r => r.phone === phone);
+
+            if (emailExistsInAccounts || emailExistsInPending) {
+                alert('Registration failed: This email address is already registered or has a pending request.');
+                return;
+            }
+            if (phoneExistsInAccounts || phoneExistsInPending) {
+                alert('Registration failed: This phone number is already registered or associated with a pending request.');
+                return;
             }
 
             // Request Notification Permission before registration
@@ -817,7 +858,7 @@
                 const pendingReg = {
                     id: Date.now(), name, nickname, phone, email, bday, passHash,
                     role: 'player', balance: 0.00, unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I',
-                    firstMatchCompleted: false, approved: false, receipt: e.target.result, date: dateStr
+                    firstMatchCompleted: false, approved: false, frozen: false, receipt: e.target.result, date: dateStr
                 };
                 pendingRegistrations.push(pendingReg);
                 alert('Registration submitted successfully with your ₱50 receipt! Awaiting owner approval. You will receive a device notification once approved.');
@@ -874,6 +915,11 @@
 
             const user = registeredAccounts.find(acc => acc.email === email && acc.passHash === inputHash);
             if(!user) { alert('Invalid email or password, or account not approved yet.'); return; }
+
+            if (user.frozen) {
+                alert('Security Alert: This player account has been frozen by the owner due to security review or policy violation.');
+                return;
+            }
 
             currentUser = user;
             document.getElementById('view-auth').classList.add('hidden');
@@ -1168,6 +1214,11 @@
 
         function startRankedMatchmaking(amount) {
             if (!currentUser) return;
+            if (currentUser.frozen) {
+                alert('Your account is frozen. Matchmaking is disabled.');
+                closeModal();
+                return;
+            }
             if (currentUser.balance < amount) {
                 alert('Insufficient wallet balance for this bet stake!');
                 closeModal();
@@ -1197,6 +1248,7 @@
         }
 
         function launchDisguisedBotMatch(amount) {
+            duelState.currentOpponentName = 'ApexPredator';
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
             document.getElementById('fs-enemy-title').innerText = `ApexPredator (${currentUser.rank})`;
             document.getElementById('fs-enemy-name-label').innerText = `APEXPREDATOR`;
@@ -1205,12 +1257,9 @@
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
-            duelState = { 
-                playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
-                enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-                enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
-                turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: true
-            };
+            duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
+            duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
+            duelState.enemyStatus = 'Connected'; duelState.enemyDisconnectTimer = 120; duelState.isFirstMatchBot = true;
             
             shuffleAndDrawHand();
             logDuel(`[Match]: Connected with opponent ApexPredator! Choose tactical skills within 30s.`);
@@ -1227,6 +1276,7 @@
 
         function launchMatchedPvPDuel(amount) {
             const matchedOpponent = availablePeerOpponents[Math.floor(Math.random() * availablePeerOpponents.length)];
+            duelState.currentOpponentName = matchedOpponent.name;
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
             document.getElementById('fs-enemy-title').innerText = `${matchedOpponent.name.toUpperCase()} (${matchedOpponent.rank})`;
@@ -1236,12 +1286,9 @@
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
-            duelState = { 
-                playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
-                enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-                enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
-                turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: false
-            };
+            duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
+            duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
+            duelState.enemyStatus = 'Connected'; duelState.enemyDisconnectTimer = 120; duelState.isFirstMatchBot = false;
             
             shuffleAndDrawHand();
             logDuel(`[P2P Network]: Connected with peer ${matchedOpponent.name}! Your turn (30s timer started).`);
@@ -1316,6 +1363,19 @@
         function surrenderDuel() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
+            
+            // Log battle history as Defeat on surrender
+            const dateStr = new Date().toISOString().split('T')[0];
+            battleHistoryLog.unshift({
+                id: Date.now(),
+                email: currentUser.email,
+                nickname: currentUser.nickname,
+                opponent: duelState.currentOpponentName,
+                bet: currentDuelBet,
+                result: 'Defeat (Surrendered)',
+                date: dateStr
+            });
+
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
             switchTab('hub');
@@ -1357,9 +1417,23 @@
             evaluateRankAndUnlocks();
             updateWalletDisplay();
 
+            const dateStr = new Date().toISOString().split('T')[0];
+            battleHistoryLog.unshift({
+                id: Date.now(),
+                email: currentUser.email,
+                nickname: currentUser.nickname,
+                opponent: duelState.currentOpponentName,
+                bet: currentDuelBet,
+                result: `Victory (+₱${reward})`,
+                date: dateStr
+            });
+
             logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
             alert(`Victory! You defeated the opponent in combat, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
-            surrenderDuel();
+            
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            switchTab('hub');
         }
 
         function handleDefeat() {
@@ -1374,12 +1448,26 @@
             currentUser.xp += consolationXp;
             evaluateRankAndUnlocks();
 
+            const dateStr = new Date().toISOString().split('T')[0];
+            battleHistoryLog.unshift({
+                id: Date.now(),
+                email: currentUser.email,
+                nickname: currentUser.nickname,
+                opponent: duelState.currentOpponentName,
+                bet: currentDuelBet,
+                result: `Defeat (-₱${currentDuelBet})`,
+                date: dateStr
+            });
+
             logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
-            alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP. Your next matches are now live Player-to-Player (P2P)!`);
-            surrenderDuel();
+            alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP.`);
+            
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            switchTab('hub');
         }
 
-        // --- BOT COMBAT AI ROUTINE (POISON + ATTACK DAMAGE & SUB-60HP HEAL/ARMOR) ---
+        // --- BOT COMBAT AI ROUTINE ---
         function executeBotCombatTurn() {
             if (!duelState.isFirstMatchBot) return;
 
@@ -1617,12 +1705,17 @@
             document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-matchmaking').classList.add('hidden');
+            document.getElementById('modal-player-details').classList.add('hidden');
 
             if(type === 'topup') {
                 document.getElementById('modal-topup').classList.remove('hidden');
                 updateTopupModalQRs();
             }
-            if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
+            if(type === 'withdraw') {
+                document.getElementById('withdraw-account').value = currentUser.phone;
+                document.getElementById('withdraw-name').value = currentUser.name;
+                document.getElementById('modal-withdraw').classList.remove('hidden');
+            }
             if(type === 'bet') document.getElementById('modal-bet').classList.remove('hidden');
         }
 
@@ -1634,8 +1727,47 @@
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-matchmaking').classList.add('hidden');
+            document.getElementById('modal-player-details').classList.add('hidden');
             document.getElementById('modal-receipt').classList.remove('hidden');
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-60 rounded object-contain">`;
+        }
+
+        function inspectPlayer(email) {
+            const player = registeredAccounts.find(acc => acc.email === email);
+            if (!player) return;
+
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-matchmaking').classList.add('hidden');
+            document.getElementById('modal-player-details').classList.remove('hidden');
+
+            const pHistory = battleHistoryLog.filter(h => h.email === email);
+            let historyHtml = pHistory.length ? pHistory.map(h => `<div class="border-t border-slate-800 pt-1 text-[11px]">⚔ Vs ${h.opponent} (${h.date}): <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span> (Bet: ₱${h.bet})</div>`).join('') : '<div class="text-slate-500 text-[11px]">No matches played yet.</div>';
+
+            document.getElementById('player-inspection-content').innerHTML = `
+                <div class="space-y-1">
+                    <div><strong>Legal Name:</strong> ${player.name}</div>
+                    <div><strong>Nickname:</strong> ${player.nickname}</div>
+                    <div><strong>Email:</strong> ${player.email}</div>
+                    <div><strong>Phone (Withdrawal Locked):</strong> ${player.phone}</div>
+                    <div><strong>Wallet Balance:</strong> ₱${player.balance.toFixed(2)}</div>
+                    <div><strong>Rank / XP:</strong> ${player.rank} (${player.xp} XP) | Wins: ${player.wins}</div>
+                    <div><strong>Account Status:</strong> <span class="${player.frozen ? 'text-red-400 font-bold' : 'text-emerald-400'}">${player.frozen ? 'FROZEN (Cheating Suspected)' : 'Active'}</span></div>
+                    <div class="pt-2 border-t border-slate-800 font-bold text-amber-400">Player Match History:</div>
+                    <div class="max-h-32 overflow-y-auto space-y-1">${historyHtml}</div>
+                </div>
+            `;
+        }
+
+        function toggleFreezePlayer(email) {
+            const player = registeredAccounts.find(acc => acc.email === email);
+            if (!player) return;
+            player.frozen = !player.frozen;
+            renderOwnerQueues();
+            alert(`Player account ${player.nickname} has been ${player.frozen ? 'FROZEN successfully' : 'UNFROZEN'}.`);
         }
 
         function submitTopUp() {
@@ -1660,14 +1792,14 @@
             const method = document.getElementById('withdraw-method').value;
             const acc = document.getElementById('withdraw-account').value;
             const name = document.getElementById('withdraw-name').value;
-            if(!amt || !acc || !name) { alert('Please fill out all withdrawal form fields.'); return; }
+            if(!amt) { alert('Please enter a valid withdrawal amount.'); return; }
             if(amt > currentUser.balance) { alert('Insufficient wallet balance!'); return; }
             
             currentUser.balance -= amt;
             updateWalletDisplay();
             const dateStr = new Date().toISOString().split('T')[0];
             pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: method, account: acc, name: name, date: dateStr });
-            alert('Withdrawal request submitted successfully! Awaiting owner approval.');
+            alert('Withdrawal request submitted successfully! Locked strictly to registered phone number & name.');
             closeModal();
         }
 
@@ -1678,15 +1810,51 @@
         function renderOwnerQueues() {
             const filterDate = document.getElementById('filter-date').value;
 
+            // Player Directory & Freeze Management
+            const playersContainer = document.getElementById('owner-players-list');
+            const filteredPlayers = registeredAccounts.filter(acc => acc.role === 'player');
+            if (filteredPlayers.length === 0) {
+                playersContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players.</div>';
+            } else {
+                playersContainer.innerHTML = filteredPlayers.map(p => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div>
+                            <span class="font-bold text-amber-400">${p.nickname} (${p.name})</span>
+                            <div class="text-[10px] text-slate-400">Email: ${p.email} | Phone: ${p.phone} | Bal: ₱${p.balance.toFixed(2)}</div>
+                        </div>
+                        <div class="space-x-1 flex items-center">
+                            <button onclick="inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[10px]">Inspect</button>
+                            <button onclick="toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.frozen ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500'} text-white font-bold rounded-lg text-[10px]">${p.frozen ? 'Unfreeze' : 'Freeze'}</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Battle History Monitoring
+            const battleContainer = document.getElementById('owner-battle-history-list');
+            const filteredBattles = filterDate ? battleHistoryLog.filter(h => h.date === filterDate) : battleHistoryLog;
+            if (filteredBattles.length === 0) {
+                battleContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged.</div>';
+            } else {
+                battleContainer.innerHTML = filteredBattles.map(h => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div>
+                            <span class="font-bold text-white">${h.nickname} vs ${h.opponent}</span>
+                            <div class="text-[10px] text-slate-400">Result: <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span> | Stake: ₱${h.bet} | Date: ${h.date}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
             // Registration Approvals Queue
             const regContainer = document.getElementById('owner-registration-list');
             const filteredRegs = filterDate ? pendingRegistrations.filter(r => r.date === filterDate) : pendingRegistrations;
             if(filteredRegs.length === 0) {
-                regContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>';
+                regContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests[cite: 10].</div>';
             } else {
                 regContainer.innerHTML = filteredRegs.map(r => `
                     <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-amber-400">Registration: ${r.name} (${r.nickname})</span><div class="text-[10px] text-slate-400">Email: ${r.email} | Date: ${r.date}</div></div>
+                        <div><span class="font-bold text-amber-400">Registration: ${r.name} (${r.nickname})</span><div class="text-[10px] text-slate-400">Email: ${r.email} | Phone: ${r.phone} | Date: ${r.date}</div></div>
                         <div class="space-x-1 flex items-center">
                             <button onclick="viewReceipt('${r.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
                             <button onclick="approveRegistration(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
@@ -1698,7 +1866,7 @@
 
             const resetContainer = document.getElementById('owner-reset-list');
             if(pendingResets.length === 0) {
-                resetContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
+                resetContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests[cite: 10].</div>';
             } else {
                 resetContainer.innerHTML = pendingResets.map(r => `
                     <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
@@ -1714,7 +1882,7 @@
             const filteredDeposits = filterDate ? pendingDeposits.filter(d => d.date === filterDate) : pendingDeposits;
             const depContainer = document.getElementById('owner-deposit-list');
             if(filteredDeposits.length === 0) {
-                depContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>';
+                depContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests[cite: 10].</div>';
             } else {
                 depContainer.innerHTML = filteredDeposits.map(d => `
                     <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
@@ -1731,11 +1899,11 @@
             const filteredWithdrawals = filterDate ? pendingWithdrawals.filter(w => w.date === filterDate) : pendingWithdrawals;
             const witContainer = document.getElementById('owner-withdraw-list');
             if(filteredWithdrawals.length === 0) {
-                witContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>';
+                witContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests[cite: 10].</div>';
             } else {
                 witContainer.innerHTML = filteredWithdrawals.map(w => `
                     <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname}</span><div class="text-[10px] text-slate-400">To: ${w.account} | Date: ${w.date}</div></div>
+                        <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname}</span><div class="text-[10px] text-slate-400">To: ${w.account} (${w.name}) | Date: ${w.date}</div></div>
                         <div class="space-x-1">
                             <button onclick="approveWithdrawal(${w.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
                             <button onclick="rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
