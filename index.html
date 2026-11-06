@@ -94,14 +94,14 @@
                 <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
                     <div class="font-bold text-amber-400">Demo Accounts:</div>
                     <div>👑 Owner: owner@logicgrid.com / owner123</div>
-                    <div>⚔️ Player: player@logicgrid.com / player123 (₱2,000 Balance)</div>
+                    <div>⚔️ Player: player@logicgrid.com / player123</div>
                 </div>
             </div>
 
             <!-- Register Box -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
-                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced. Registered phone & name will be locked for withdrawals.</p>
+                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies[cite: 7]. Unique email & phone enforced[cite: 7]. Registered phone & name will be locked for withdrawals[cite: 7]. Starting balance is ₱0.00[cite: 7].</p>
                 
                 <div class="space-y-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px]">
                     <p class="text-[10px] text-amber-400 font-bold mb-1">Official Payment Channels for ₱50 Fee:</p>
@@ -138,6 +138,7 @@
                         <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
                         <button type="button" onclick="togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
+                    <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <div class="space-y-1">
                         <label class="text-[10px] text-amber-400 block font-bold">Upload ₱50 Registration Fee Receipt:</label>
                         <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
@@ -312,11 +313,22 @@
                     </div>
                 </div>
 
-                <!-- PLAYER ACCOUNTS DIRECTORY & FREEZE/UNFREEZE MANAGEMENT -->
+                <!-- PLAYER ACCOUNTS DIRECTORY & DELETE/FREEZE MANAGEMENT -->
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory & Anti-Cheat Freeze</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory & Account Deletion</h3>
                     <div id="owner-players-list" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players.</div>
+                    </div>
+                </div>
+
+                <!-- SYSTEM ACTIVITY & AUDIT LOG -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">System Activity & Audit Log (Timestamped)</h3>
+                        <span class="text-[10px] text-slate-400">Records all platform events</span>
+                    </div>
+                    <div id="owner-system-audit-log" class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>
                     </div>
                 </div>
 
@@ -654,6 +666,7 @@
         let approvedWithdrawalsLog = JSON.parse(localStorage.getItem('aetheris_approved_withdrawals')) || [];
         let battleHistoryLog = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
         let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+        let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
         let uploadedGcashQR = localStorage.getItem('aetheris_gcash_qr') || null;
         let uploadedMayaQR = localStorage.getItem('aetheris_maya_qr') || null;
 
@@ -665,6 +678,20 @@
 
         let currentHand = [];
         let matchmakingTimeout = null;
+
+        function logSystemActivity(action, details) {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toLocaleTimeString();
+            systemAuditLogs.unshift({
+                id: Date.now(),
+                timestamp: `${dateStr} ${timeStr}`,
+                date: dateStr,
+                action: action,
+                details: details
+            });
+            persistData();
+        }
 
         function persistData() {
             localStorage.setItem('aetheris_accounts', JSON.stringify(registeredAccounts));
@@ -684,6 +711,7 @@
             localStorage.setItem('aetheris_approved_withdrawals', JSON.stringify(approvedWithdrawalsLog));
             localStorage.setItem('aetheris_battle_history', JSON.stringify(battleHistoryLog));
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
+            localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
             if(uploadedGcashQR) localStorage.setItem('aetheris_gcash_qr', uploadedGcashQR);
             if(uploadedMayaQR) localStorage.setItem('aetheris_maya_qr', uploadedMayaQR);
         }
@@ -901,7 +929,7 @@
                 registeredAccounts.push({
                     name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
                     email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
-                    role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false, approved: true, frozen: false
+                    role: 'player', balance: 0.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false, approved: true, frozen: false
                 });
                 persistData();
             }
@@ -972,10 +1000,11 @@
             const email = document.getElementById('reg-email').value.trim();
             const bday = document.getElementById('reg-bday').value;
             const pass = document.getElementById('reg-pass').value;
+            const refNum = document.getElementById('reg-ref').value.trim();
             const receiptFile = document.getElementById('reg-receipt').files[0];
 
-            if(!name || !nickname || !phone || !email || !bday || !pass || !receiptFile) { 
-                alert('Please fill in all registration fields and upload your ₱50 registration receipt.'); 
+            if(!name || !nickname || !phone || !email || !bday || !pass || !refNum || !receiptFile) { 
+                alert('Please fill in all registration fields, enter the transaction reference number, and upload your ₱50 registration receipt.'); 
                 return; 
             }
 
@@ -1011,12 +1040,13 @@
             reader.onload = function(e) {
                 const pendingReg = {
                     id: Date.now(), name, nickname, phone, email, bday, passHash,
-                    role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Bronze I',
-                    firstMatchCompleted: false, approved: false, frozen: false, receipt: e.target.result, date: dateStr
+                    role: 'player', balance: 0.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Bronze I',
+                    firstMatchCompleted: false, approved: false, frozen: false, receipt: e.target.result, ref: refNum, date: dateStr
                 };
                 pendingRegistrations.push(pendingReg);
+                logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration with Ref: ${refNum}.`);
                 persistData();
-                alert('Registration submitted successfully with your ₱50 receipt! Awaiting owner approval. You will receive a device notification once approved.');
+                alert('Registration submitted successfully with your reference number and receipt! Awaiting owner approval. You will receive a device notification once approved.');
                 showAuthMode('login');
             };
             reader.readAsDataURL(receiptFile);
@@ -1052,11 +1082,15 @@
 
             currentUser = user;
             if(!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
+            logSystemActivity('User Login', `User ${currentUser.nickname} (${currentUser.email}) signed in.`);
             persistData();
             restoreUserSession();
         }
 
         function logoutPlayer() {
+            if (currentUser) {
+                logSystemActivity('User Logout', `User ${currentUser.nickname} signed out.`);
+            }
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
             currentUser = null;
@@ -1094,6 +1128,7 @@
             }
 
             pendingResets.push({ id: Date.now(), email: email, name: user.name });
+            logSystemActivity('Password Reset Requested', `Reset requested for ${user.nickname} (${email}).`);
             persistData();
             alert('Password reset request submitted to the owner successfully. You will receive a device notification once approved.');
             showAuthMode('login');
@@ -1107,6 +1142,7 @@
             if(!user || !newpass) { alert('Invalid verification or missing password.'); return; }
 
             user.passHash = await hashPassword(newpass);
+            logSystemActivity('Password Reset Executed', `Password successfully updated for ${user.nickname} (${email}).`);
             persistData();
             alert('Password updated securely! Please log in.');
             document.getElementById('view-force-reset').classList.add('hidden');
@@ -1259,6 +1295,7 @@
             if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
             currentUser.unlockedSkills[skillId] = true;
 
+            logSystemActivity('Skill Purchased', `${currentUser.nickname} bought skill ${skillId} for ₱${cost}.`);
             persistData();
             updateWalletDisplay();
             renderSkillShop();
@@ -1284,6 +1321,7 @@
             currentUser.balance -= price;
             currentUser.unlockedHeroes.push(id);
             currentUser.activeHero = id;
+            logSystemActivity('Hero Purchased', `${currentUser.nickname} bought basic hero ${id} for ₱${price}.`);
             persistData();
             updateWalletDisplay();
             setActiveHeroUI(id);
@@ -1301,6 +1339,7 @@
             }
             if (!currentUser.unlockedHeroes.includes(id)) currentUser.unlockedHeroes.push(id);
             currentUser.activeHero = id;
+            logSystemActivity('Ranked Hero Unlocked', `${currentUser.nickname} unlocked ranked hero ${h.name}.`);
             persistData();
             setActiveHeroUI(id);
             renderHeroes();
@@ -1418,7 +1457,7 @@
                 return;
             }
             if (currentUser.balance < amount) {
-                alert('Insufficient wallet balance for this bet stake!');
+                alert('Insufficient wallet balance for this bet stake! Please top up your account.');
                 closeModal();
                 return;
             }
@@ -1522,8 +1561,9 @@
         function surrenderDuel() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             
-            const dateStr = new Date().toISOString().split('T')[0];
-            battleHistoryLog.unshift({
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const battleRecord = {
                 id: Date.now(),
                 email: currentUser.email,
                 nickname: currentUser.nickname,
@@ -1531,7 +1571,9 @@
                 bet: currentDuelBet,
                 result: 'Defeat (Surrendered)',
                 date: dateStr
-            });
+            };
+            battleHistoryLog.unshift(battleRecord);
+            logSystemActivity('P2P Match Surrendered', `${currentUser.nickname} surrendered duel vs ${duelState.currentOpponentName} (Stake: ₱${currentDuelBet}).`);
             persistData();
 
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
@@ -1575,9 +1617,9 @@
 
             evaluateRankAndUnlocks();
             updateWalletDisplay();
-            persistData();
 
-            const dateStr = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
             battleHistoryLog.unshift({
                 id: Date.now(),
                 email: currentUser.email,
@@ -1587,6 +1629,7 @@
                 result: `Victory (+₱${netReward.toFixed(2)})`,
                 date: dateStr
             });
+            logSystemActivity('P2P Match Victory', `${currentUser.nickname} won duel vs ${duelState.currentOpponentName}, netting ₱${netReward.toFixed(2)}.`);
             persistData();
 
             logDuel(`[Victory]: Won ₱${netReward.toFixed(2)} net prize (5% fee applied) & +${earnedXp} XP!`);
@@ -1608,9 +1651,9 @@
             currentUser.xp += consolationXp;
             evaluateRankAndUnlocks();
             updateWalletDisplay();
-            persistData();
 
-            const dateStr = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
             battleHistoryLog.unshift({
                 id: Date.now(),
                 email: currentUser.email,
@@ -1620,6 +1663,7 @@
                 result: `Defeat (-₱${currentDuelBet})`,
                 date: dateStr
             });
+            logSystemActivity('P2P Match Defeat', `${currentUser.nickname} lost duel vs ${duelState.currentOpponentName} (Stake: ₱${currentDuelBet}).`);
             persistData();
 
             logDuel(`[Defeat]: Lost duel and ₱${currentDuelBet} wager (+15 Consolation XP).`);
@@ -1783,6 +1827,7 @@
                 reader.onload = function(e) {
                     if(type === 'gcash') uploadedGcashQR = e.target.result;
                     if(type === 'maya') uploadedMayaQR = e.target.result;
+                    logSystemActivity('QR Code Updated', `Owner updated ${type.toUpperCase()} payment QR code.`);
                     persistData();
                     updateTopupModalQRs();
                     alert(type.toUpperCase() + ' QR Code uploaded successfully! Click "Save" to apply.');
@@ -1838,6 +1883,7 @@
                 if(rM) rM.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
             }
 
+            logSystemActivity('Merchant Details Saved', 'Owner updated official e-wallet merchant numbers and names.');
             persistData();
             alert('Owner merchant e-wallet credentials and QR codes updated successfully!');
         }
@@ -1927,7 +1973,6 @@
             document.getElementById('modal-leaderboard').classList.remove('hidden');
 
             const allPlayers = registeredAccounts.filter(acc => acc.role === 'player');
-            // Sort by XP and Wins descending
             allPlayers.sort((a, b) => (b.xp - a.xp) || (b.wins - a.wins));
             const top10 = allPlayers.slice(0, 10);
 
@@ -2014,9 +2059,27 @@
             const player = registeredAccounts.find(acc => acc.email === email);
             if (!player) return;
             player.frozen = !player.frozen;
+            logSystemActivity('Player Freeze Toggle', `Player ${player.nickname} (${email}) has been ${player.frozen ? 'frozen' : 'unfrozen'}.`);
             persistData();
             renderOwnerQueues();
             alert(`Player account ${player.nickname} has been ${player.frozen ? 'FROZEN successfully' : 'UNFROZEN'}.`);
+        }
+
+        function deletePlayerAccount(email) {
+            const player = registeredAccounts.find(acc => acc.email === email);
+            if (!player) return;
+            if (player.role === 'owner') {
+                alert('Cannot delete the owner admin account.');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to permanently delete player account ${player.nickname} (${email})? This action cannot be undone.`)) {
+                registeredAccounts = registeredAccounts.filter(acc => acc.email !== email);
+                logSystemActivity('Player Account Deleted', `Owner permanently deleted player account ${player.nickname} (${email}).`);
+                persistData();
+                renderOwnerQueues();
+                alert(`Player account ${player.nickname} has been successfully deleted.`);
+            }
         }
 
         function submitTopUp() {
@@ -2028,8 +2091,10 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const dateStr = new Date().toISOString().split('T')[0];
+                const now = new Date();
+                const dateStr = now.toISOString().split('T')[0];
                 pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
+                logSystemActivity('Top-Up Requested', `${currentUser.nickname} requested deposit of ₱${amt.toFixed(2)} (Ref: ${ref}).`);
                 persistData();
                 alert('Top-up request and receipt submitted successfully! Awaiting owner approval.');
                 closeModal();
@@ -2048,8 +2113,10 @@
             currentUser.balance -= amt;
             persistData();
             updateWalletDisplay();
-            const dateStr = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
             pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: method, account: acc, name: name, date: dateStr });
+            logSystemActivity('Withdrawal Requested', `${currentUser.nickname} requested withdrawal of ₱${amt.toFixed(2)} via ${method}.`);
             persistData();
             alert('Withdrawal request submitted successfully with Zero Fee! Locked strictly to registered phone number & name.');
             closeModal();
@@ -2075,8 +2142,24 @@
                         </div>
                         <div class="space-x-1 flex items-center">
                             <button onclick="inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[10px]">Inspect</button>
-                            <button onclick="toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.frozen ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500'} text-white font-bold rounded-lg text-[10px]">${p.frozen ? 'Unfreeze' : 'Freeze'}</button>
+                            <button onclick="toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.frozen ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-amber-600 hover:bg-amber-500'} text-white font-bold rounded-lg text-[10px]">${p.frozen ? 'Unfreeze' : 'Freeze'}</button>
+                            <button onclick="deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[10px]">Delete</button>
                         </div>
+                    </div>
+                `).join('');
+            }
+
+            const auditContainer = document.getElementById('owner-system-audit-log');
+            const filteredAudit = filterDate ? systemAuditLogs.filter(a => a.date === filterDate) : systemAuditLogs;
+            if (filteredAudit.length === 0) {
+                auditContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>';
+            } else {
+                auditContainer.innerHTML = filteredAudit.map(a => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-amber-400">[${a.action}]</span> <span class="text-slate-200">${a.details}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-mono whitespace-nowrap ml-2">${a.timestamp}</div>
                     </div>
                 `).join('');
             }
@@ -2103,7 +2186,7 @@
             } else {
                 regContainer.innerHTML = filteredRegs.map(r => `
                     <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-amber-400">Registration: ${r.name} (${r.nickname})</span><div class="text-[10px] text-slate-400">Email: ${r.email} | Phone: ${r.phone} | Date: ${r.date}</div></div>
+                        <div><span class="font-bold text-amber-400">Registration: ${r.name} (${r.nickname})</span><div class="text-[10px] text-slate-400">Email: ${r.email} | Phone: ${r.phone} | Ref: ${r.ref || 'N/A'} | Date: ${r.date}</div></div>
                         <div class="space-x-1 flex items-center">
                             <button onclick="viewReceipt('${r.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
                             <button onclick="approveRegistration(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
@@ -2175,6 +2258,7 @@
                 reg.approved = true;
                 registeredAccounts.push(reg);
                 pendingRegistrations.splice(idx, 1);
+                logSystemActivity('Registration Approved', `Owner approved registration for ${reg.nickname} (${reg.email}).`);
                 persistData();
                 renderOwnerQueues();
 
@@ -2190,6 +2274,10 @@
         }
 
         function rejectRegistration(id) {
+            const reg = pendingRegistrations.find(r => r.id === id);
+            if (reg) {
+                logSystemActivity('Registration Rejected', `Owner rejected registration for ${reg.nickname} (${reg.email}).`);
+            }
             pendingRegistrations = pendingRegistrations.filter(r => r.id !== id);
             persistData();
             renderOwnerQueues();
@@ -2199,6 +2287,7 @@
         function approveReset(id) {
             const resetItem = pendingResets.find(r => r.id === id);
             pendingResets = pendingResets.filter(r => r.id !== id);
+            logSystemActivity('Password Reset Approved', `Owner approved password reset for ${resetItem ? resetItem.email : 'player'}.`);
             persistData();
             renderOwnerQueues();
 
@@ -2220,6 +2309,7 @@
 
         function rejectReset(id) {
             pendingResets = pendingResets.filter(r => r.id !== id);
+            logSystemActivity('Password Reset Rejected', `Owner rejected password reset request.`);
             persistData();
             renderOwnerQueues();
             alert('Password reset request rejected.');
@@ -2229,18 +2319,30 @@
             const idx = pendingDeposits.findIndex(d => d.id === id);
             if(idx > -1) {
                 const item = pendingDeposits[idx];
-                const targetUser = registeredAccounts.find(acc => acc.email === item.email);
-                if(targetUser) targetUser.balance += item.amount;
-                if(currentUser && currentUser.email === item.email) updateWalletDisplay();
+                const targetUser = registeredAccounts.find(acc => acc.email.toLowerCase() === item.email.toLowerCase());
+                
+                if(targetUser) {
+                    targetUser.balance += item.amount;
+                    if(currentUser && currentUser.email.toLowerCase() === item.email.toLowerCase()) {
+                        currentUser = targetUser;
+                        updateWalletDisplay();
+                    }
+                }
+                
                 approvedDepositsLog.push(item);
                 pendingDeposits.splice(idx, 1);
+                logSystemActivity('Deposit Approved', `Owner approved deposit of ₱${item.amount.toFixed(2)} for ${item.nickname}. Credited directly to wallet.`);
                 persistData();
                 renderOwnerQueues();
-                alert('Deposit approved and credited!');
+                alert(`Deposit of ₱${item.amount.toFixed(2)} approved and credited directly to ${item.nickname}'s wallet!`);
             }
         }
 
         function rejectDeposit(id) {
+            const item = pendingDeposits.find(d => d.id === id);
+            if (item) {
+                logSystemActivity('Deposit Rejected', `Owner rejected deposit of ₱${item.amount.toFixed(2)} for ${item.nickname}.`);
+            }
             pendingDeposits = pendingDeposits.filter(d => d.id !== id);
             persistData();
             renderOwnerQueues();
@@ -2250,8 +2352,10 @@
         function approveWithdrawal(id) {
             const idx = pendingWithdrawals.findIndex(w => w.id === id);
             if(idx > -1) {
-                approvedWithdrawalsLog.push(pendingWithdrawals[idx]);
+                const item = pendingWithdrawals[idx];
+                approvedWithdrawalsLog.push(item);
                 pendingWithdrawals.splice(idx, 1);
+                logSystemActivity('Withdrawal Approved', `Owner approved withdrawal of ₱${item.amount.toFixed(2)} for ${item.nickname} via ${item.method}.`);
                 persistData();
                 renderOwnerQueues();
                 alert('Withdrawal approved (Zero Fee)!');
@@ -2259,10 +2363,16 @@
         }
 
         function rejectWithdrawal(id, email, amt) {
-            const targetUser = registeredAccounts.find(acc => acc.email === email);
-            if(targetUser) targetUser.balance += amt;
-            if(currentUser && currentUser.email === email) updateWalletDisplay();
+            const targetUser = registeredAccounts.find(acc => acc.email.toLowerCase() === email.toLowerCase());
+            if(targetUser) {
+                targetUser.balance += amt;
+                if(currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
+                    currentUser = targetUser;
+                    updateWalletDisplay();
+                }
+            }
             pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
+            logSystemActivity('Withdrawal Rejected', `Owner rejected withdrawal of ₱${amt.toFixed(2)} for ${email} and refunded to wallet.`);
             persistData();
             renderOwnerQueues();
             alert('Withdrawal rejected and refunded.');
