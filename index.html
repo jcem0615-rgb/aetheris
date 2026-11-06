@@ -780,34 +780,6 @@
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
                 role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
             });
-
-            // Check session persistence
-            const savedEmail = localStorage.getItem('aetheris_logged_email');
-            if (savedEmail) {
-                const foundUser = registeredAccounts.find(acc => acc.email === savedEmail);
-                if (foundUser) {
-                    currentUser = foundUser;
-                    document.getElementById('view-auth').classList.add('hidden');
-                    document.getElementById('nav-wallet-container').classList.remove('hidden');
-                    document.getElementById('nav-menu').classList.remove('hidden');
-                    document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
-                    document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
-                    updateWalletDisplay();
-                    setActiveHeroUI(currentUser.activeHero);
-
-                    if(currentUser.role === 'owner') {
-                        document.getElementById('btn-hub').classList.add('hidden');
-                        document.getElementById('btn-roster').classList.add('hidden');
-                        document.getElementById('btn-owner').classList.remove('hidden');
-                        switchTab('owner');
-                    } else {
-                        document.getElementById('btn-owner').classList.add('hidden');
-                        document.getElementById('btn-hub').classList.remove('hidden');
-                        document.getElementById('btn-roster').classList.remove('hidden');
-                        switchTab('hub');
-                    }
-                }
-            }
         });
 
         function togglePass(inputId, btn) {
@@ -849,7 +821,6 @@
             };
             registeredAccounts.push(newAcc);
             currentUser = newAcc;
-            localStorage.setItem('aetheris_logged_email', currentUser.email);
 
             alert('Account registered successfully! Registration fee of ₱50.00 processed. Please select your 1 free starter champion.');
             
@@ -880,7 +851,6 @@
         function pickStarterHero(id) {
             currentUser.unlockedHeroes = [id];
             currentUser.activeHero = id;
-            localStorage.setItem('aetheris_logged_email', currentUser.email);
             document.getElementById('view-starter-pick').classList.add('hidden');
             
             document.getElementById('nav-wallet-container').classList.remove('hidden');
@@ -902,8 +872,6 @@
             if(!user) { alert('Invalid email or password.'); return; }
 
             currentUser = user;
-            localStorage.setItem('aetheris_logged_email', currentUser.email);
-
             document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('nav-wallet-container').classList.remove('hidden');
             document.getElementById('nav-menu').classList.remove('hidden');
@@ -927,7 +895,6 @@
 
         function logoutPlayer() {
             currentUser = null;
-            localStorage.removeItem('aetheris_logged_email');
             document.getElementById('nav-wallet-container').classList.add('hidden');
             document.getElementById('nav-menu').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
@@ -1068,4 +1035,481 @@
             updateWalletDisplay();
             setActiveHeroUI(id);
             renderHeroes();
-            alert('Basic
+            alert('Basic hero purchased and unlocked successfully! Set as active champion.');
+            switchTab('hub');
+        }
+
+        function claimRankedHero(id) {
+            if (!currentUser) return;
+            const h = heroes.find(item => item.id === id);
+            if (!h || currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) {
+                alert('Rank requirements not met yet!');
+                return;
+            }
+            if (!currentUser.unlockedHeroes.includes(id)) currentUser.unlockedHeroes.push(id);
+            currentUser.activeHero = id;
+            setActiveHeroUI(id);
+            renderHeroes();
+            alert(`Congratulations! You have unlocked ${h.name} through ranked progression and set it as your active champion.`);
+            switchTab('hub');
+        }
+
+        function setActiveHeroUI(id) {
+            const h = heroes.find(item => item.id === id);
+            if (!h) return;
+            document.getElementById('active-hero-name').innerText = `${h.name} (${h.role})`;
+            document.getElementById('hub-rank-badge').innerText = currentUser.rank;
+            
+            const avatar = document.getElementById('active-hero-avatar');
+            avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
+            document.getElementById('active-hero-img-el').src = h.iconImg;
+
+            const fsPlayerSprite = document.getElementById('fs-player-sprite');
+            fsPlayerSprite.className = `w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5`;
+            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg mb-0.5"><span class="font-cinzel text-[10px] font-bold text-amber-300">${h.name}</span>`;
+        }
+
+        function switchTab(tab) {
+            if (currentUser && currentUser.role === 'owner' && tab !== 'owner') {
+                alert('Security Notice: Owner accounts are strictly restricted to the Admin Portal.');
+                switchTab('owner');
+                return;
+            }
+            if (currentUser && currentUser.role === 'player' && tab === 'owner') {
+                alert('Security Notice: Access denied. Insufficient clearance for Admin Portal.');
+                switchTab('hub');
+                return;
+            }
+
+            document.getElementById('view-hub').classList.add('hidden');
+            document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+
+            document.getElementById('btn-hub').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('btn-roster').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('btn-owner').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('btn-hub').classList.add('text-slate-400');
+            document.getElementById('btn-roster').classList.add('text-slate-400');
+            document.getElementById('btn-owner').classList.add('text-slate-400');
+
+            if(tab === 'hub') {
+                document.getElementById('view-hub').classList.remove('hidden');
+                document.getElementById('btn-hub').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('btn-hub').classList.remove('text-slate-400');
+            } else if(tab === 'select') {
+                renderHeroes();
+                document.getElementById('view-select').classList.remove('hidden');
+                document.getElementById('btn-roster').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('btn-roster').classList.remove('text-slate-400');
+            } else if(tab === 'owner') {
+                document.getElementById('view-owner').classList.remove('hidden');
+                document.getElementById('btn-owner').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('btn-owner').classList.remove('text-slate-400');
+                renderOwnerQueues();
+            }
+        }
+
+        function openBettingModal() {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-bet').classList.remove('hidden');
+        }
+
+        function getActiveHeroDeck() {
+            const h = heroes.find(item => item.id === currentUser.activeHero);
+            return h ? h.skillDeck : heroes[0].skillDeck;
+        }
+
+        function shuffleAndDrawHand() {
+            let deckCopy = [...getActiveHeroDeck()];
+            for (let i = deckCopy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deckCopy[i], deckCopy[j]] = [deckCopy[j], deckCopy[i]];
+            }
+            currentHand = deckCopy.slice(0, 4);
+            renderHandCards();
+        }
+
+        function renderHandCards() {
+            const container = document.getElementById('shuffled-hand-container');
+            container.innerHTML = currentHand.map((card, idx) => `
+                <div onclick="playCard(${idx})" class="bg-slate-900 border border-slate-700 hover:border-${card.color}-500 rounded-xl p-2.5 cursor-pointer card-hover space-y-0.5">
+                    <div class="flex justify-between text-[10px] text-${card.color}-400 font-bold">
+                        <span>${card.name}</span><span>${card.ap} AP</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 leading-tight">${card.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        function startDuelWithBet(amount) {
+            if (!currentUser) return;
+            if (currentUser.balance < amount) {
+                alert('Insufficient wallet balance for this bet stake!');
+                closeModal();
+                return;
+            }
+
+            currentUser.balance -= amount;
+            currentDuelBet = amount;
+            updateWalletDisplay();
+            closeModal();
+
+            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
+            duelState = { playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' };
+            
+            shuffleAndDrawHand();
+            document.getElementById('fs-battle-log').innerText = `[Arena]: Ranked match started with ₱${amount} wager! Skill deck shuffled. Your turn.`;
+            
+            updateDuelUI();
+
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('view-hub').classList.add('hidden');
+            document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-duel-fullscreen').classList.remove('hidden');
+        }
+
+        function surrenderDuel() {
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            switchTab('hub');
+        }
+
+        function updateDuelUI() {
+            document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
+            document.getElementById('fs-player-hp-bar').style.width = `${(duelState.playerHp / duelState.playerMaxHp) * 100}%`;
+            document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
+            document.getElementById('fs-player-ap').innerText = duelState.playerAp;
+
+            document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
+            document.getElementById('fs-enemy-hp-bar').style.width = `${(duelState.enemyHp / duelState.enemyMaxHp) * 100}%`;
+            document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
+            document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
+            document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
+        }
+
+        function logDuel(msg) {
+            document.getElementById('fs-battle-log').innerText = msg;
+        }
+
+        function handleVictory() {
+            const reward = currentDuelBet * 2;
+            const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
+            
+            currentUser.balance += reward;
+            currentUser.wins += 1;
+            currentUser.xp += earnedXp;
+
+            evaluateRankAndUnlocks();
+            updateWalletDisplay();
+
+            logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
+            alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
+            surrenderDuel();
+        }
+
+        function handleDefeat() {
+            const consolationXp = 15;
+            currentUser.xp += consolationXp;
+            evaluateRankAndUnlocks();
+
+            logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
+            alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP.`);
+            surrenderDuel();
+        }
+
+        function playCard(index) {
+            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
+            const card = currentHand[index];
+            if (!card) return;
+
+            if (duelState.playerAp < card.ap) {
+                logDuel(`[System]: Not enough AP for ${card.name} (Requires ${card.ap} AP)!`);
+                return;
+            }
+
+            duelState.playerAp -= card.ap;
+
+            const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero);
+            const baseAtkMultiplier = activeHeroObj ? (activeHeroObj.stats?.atk || 2000) / 2000 : 1;
+
+            if (card.type === 'strike') {
+                let dmg = Math.round(18 * baseAtkMultiplier);
+                if (duelState.enemyDebuff === 'Armor-Break') dmg = Math.round(dmg * 1.5);
+                if (duelState.enemyArmor > 0) {
+                    if (duelState.enemyArmor >= dmg) { duelState.enemyArmor -= dmg; dmg = 0; }
+                    else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
+                }
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
+                logDuel(`[You]: Played ${card.name}! Dealt ${dmg} damage.`);
+            } else if (card.type === 'defend') {
+                const blockVal = card.name.includes('COSMIC') ? 20 : 12;
+                duelState.playerArmor += blockVal;
+                logDuel(`[You]: Played ${card.name}! Gained ${blockVal} Armor block.`);
+            } else if (card.type === 'poison') {
+                duelState.enemyPoison += 9;
+                let poisonDmg = Math.round(15 * baseAtkMultiplier);
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - poisonDmg);
+                logDuel(`[You]: Played ${card.name}! Dealt ${poisonDmg} damage & applied status.`);
+            } else if (card.type === 'debuff') {
+                let heavyDmg = Math.round(30 * baseAtkMultiplier);
+                duelState.enemyDebuff = 'Armor-Break';
+                if (duelState.enemyArmor > 0) duelState.enemyArmor = 0;
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - heavyDmg);
+                logDuel(`[You]: Played ${card.name}! Dealt ${heavyDmg} damage & inflicted Armor-Break!`);
+            } else if (card.type === 'heal') {
+                const healVal = card.name.includes('ASTRAL') || card.name.includes('BLOOD') ? 25 : 15;
+                duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + healVal);
+                logDuel(`[You]: Played ${card.name}! Restored ${healVal} HP.`);
+            }
+
+            currentHand.splice(index, 1);
+            renderHandCards();
+            updateDuelUI();
+
+            if (duelState.enemyHp <= 0) {
+                handleVictory();
+                return;
+            }
+        }
+
+        function endDuelTurn() {
+            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
+
+            logDuel(`[System]: Ending turn & shuffling skill deck... Enemy counterattacking...`);
+            
+            if (duelState.enemyPoison > 0) {
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
+                logDuel(`[Effect]: Enemy took ${duelState.enemyPoison} poison damage.`);
+            }
+
+            updateDuelUI();
+
+            if (duelState.enemyHp <= 0) {
+                handleVictory();
+                return;
+            }
+
+            setTimeout(() => {
+                if (duelState.enemyHp > 0) {
+                    let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 12 : 16;
+                    duelState.playerArmor = 0;
+                    duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
+                    logDuel(`[Opponent]: Boss attacks for ${enemyDmg} damage!`);
+                }
+                
+                updateDuelUI();
+
+                if (duelState.playerHp <= 0) {
+                    handleDefeat();
+                    return;
+                }
+
+                duelState.playerAp = 3;
+                shuffleAndDrawHand();
+                updateDuelUI();
+            }, 800);
+        }
+
+        function handleQRUpload(event, type) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if(type === 'gcash') uploadedGcashQR = e.target.result;
+                    if(type === 'maya') uploadedMayaQR = e.target.result;
+                    alert(type.toUpperCase() + ' QR Code uploaded successfully! Click "Save" to apply.');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveOwnerDetails() {
+            const gNum = document.getElementById('input-gcash-num').value;
+            const gName = document.getElementById('input-gcash-name').value;
+            const mNum = document.getElementById('input-maya-num').value;
+            const mName = document.getElementById('input-maya-name').value;
+
+            document.getElementById('display-gcash-num').innerText = gNum;
+            document.getElementById('display-gcash-name').innerText = gName;
+            document.getElementById('display-maya-num').innerText = mNum;
+            document.getElementById('display-maya-name').innerText = mName;
+
+            if(uploadedGcashQR) document.getElementById('player-gcash-qr').innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            if(uploadedMayaQR) document.getElementById('player-maya-qr').innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+
+            alert('Owner merchant e-wallet credentials and QR codes updated successfully!');
+        }
+
+        function openModal(type) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
+            if(type === 'topup') document.getElementById('modal-topup').classList.remove('hidden');
+            if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
+
+        function viewReceipt(receiptDataUrl) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.remove('hidden');
+            document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-60 rounded object-contain">`;
+        }
+
+        function submitTopUp() {
+            const amt = parseFloat(document.getElementById('topup-amount').value);
+            const ref = document.getElementById('topup-ref').value;
+            const receiptFile = document.getElementById('topup-receipt').files[0];
+
+            if(!amt || !ref || !receiptFile) { alert('Please fill in all top-up details and upload your payment receipt screenshot.'); return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dateStr = new Date().toISOString().split('T')[0];
+                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
+                alert('Top-up request and receipt submitted successfully! Awaiting owner approval.');
+                closeModal();
+            };
+            reader.readAsDataURL(receiptFile);
+        }
+
+        function submitWithdrawal() {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value);
+            const method = document.getElementById('withdraw-method').value;
+            const acc = document.getElementById('withdraw-account').value;
+            const name = document.getElementById('withdraw-name').value;
+            if(!amt || !acc || !name) { alert('Please fill out all withdrawal form fields.'); return; }
+            if(amt > currentUser.balance) { alert('Insufficient wallet balance!'); return; }
+            
+            currentUser.balance -= amt;
+            updateWalletDisplay();
+            const dateStr = new Date().toISOString().split('T')[0];
+            pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: method, account: acc, name: name, date: dateStr });
+            alert('Withdrawal request submitted successfully! Awaiting owner approval.');
+            closeModal();
+        }
+
+        function updateWalletDisplay() {
+            if(currentUser) document.getElementById('nav-wallet').innerText = '₱' + currentUser.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function renderOwnerQueues() {
+            const filterDate = document.getElementById('filter-date').value;
+
+            const resetContainer = document.getElementById('owner-reset-list');
+            if(pendingResets.length === 0) {
+                resetContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
+            } else {
+                resetContainer.innerHTML = pendingResets.map(r => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-amber-400">Reset Request: ${r.name}</span><div class="text-[10px] text-slate-400">Email: ${r.email}</div></div>
+                        <div class="space-x-1">
+                            <button onclick="approveReset(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
+                            <button onclick="rejectReset(${r.id})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const filteredDeposits = filterDate ? pendingDeposits.filter(d => d.date === filterDate) : pendingDeposits;
+            const depContainer = document.getElementById('owner-deposit-list');
+            if(filteredDeposits.length === 0) {
+                depContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>';
+            } else {
+                depContainer.innerHTML = filteredDeposits.map(d => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.nickname})</span><div class="text-[10px] text-slate-400">Ref: ${d.ref} | Date: ${d.date}</div></div>
+                        <div class="space-x-1 flex items-center">
+                            <button onclick="viewReceipt('${d.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
+                            <button onclick="approveDeposit(${d.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
+                            <button onclick="rejectDeposit(${d.id})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const filteredWithdrawals = filterDate ? pendingWithdrawals.filter(w => w.date === filterDate) : pendingWithdrawals;
+            const witContainer = document.getElementById('owner-withdraw-list');
+            if(filteredWithdrawals.length === 0) {
+                witContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>';
+            } else {
+                witContainer.innerHTML = filteredWithdrawals.map(w => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname}</span><div class="text-[10px] text-slate-400">To: ${w.account} | Date: ${w.date}</div></div>
+                        <div class="space-x-1">
+                            <button onclick="approveWithdrawal(${w.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
+                            <button onclick="rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const totalDep = (filterDate ? approvedDepositsLog.filter(d => d.date === filterDate) : approvedDepositsLog).reduce((sum, item) => sum + item.amount, 0);
+            const totalWit = (filterDate ? approvedWithdrawalsLog.filter(w => w.date === filterDate) : approvedWithdrawalsLog).reduce((sum, item) => sum + item.amount, 0);
+
+            document.getElementById('metric-total-deposits').innerText = '₱' + totalDep.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('metric-total-withdrawals').innerText = '₱' + totalWit.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function approveReset(id) {
+            pendingResets = pendingResets.filter(r => r.id !== id);
+            alert('Password reset request approved!');
+            document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('view-force-reset').classList.remove('hidden');
+        }
+
+        function rejectReset(id) {
+            pendingResets = pendingResets.filter(r => r.id !== id);
+            renderOwnerQueues();
+            alert('Password reset request rejected.');
+        }
+
+        function approveDeposit(id) {
+            const idx = pendingDeposits.findIndex(d => d.id === id);
+            if(idx > -1) {
+                const item = pendingDeposits[idx];
+                const targetUser = registeredAccounts.find(acc => acc.email === item.email);
+                if(targetUser) targetUser.balance += item.amount;
+                if(currentUser && currentUser.email === item.email) updateWalletDisplay();
+                approvedDepositsLog.push(item);
+                pendingDeposits.splice(idx, 1);
+                renderOwnerQueues();
+                alert('Deposit approved and credited!');
+            }
+        }
+
+        function rejectDeposit(id) {
+            pendingDeposits = pendingDeposits.filter(d => d.id !== id);
+            renderOwnerQueues();
+            alert('Deposit rejected.');
+        }
+
+        function approveWithdrawal(id) {
+            const idx = pendingWithdrawals.findIndex(w => w.id === id);
+            if(idx > -1) {
+                approvedWithdrawalsLog.push(pendingWithdrawals[idx]);
+                pendingWithdrawals.splice(idx, 1);
+                renderOwnerQueues();
+                alert('Withdrawal approved!');
+            }
+        }
+
+        function rejectWithdrawal(id, email, amt) {
+            const targetUser = registeredAccounts.find(acc => acc.email === email);
+            if(targetUser) targetUser.balance += amt;
+            if(currentUser && currentUser.email === email) updateWalletDisplay();
+            pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
+            renderOwnerQueues();
+            alert('Withdrawal rejected and refunded.');
+        }
+    </script>
+</body>
+</html>
