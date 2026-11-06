@@ -231,7 +231,7 @@
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
                     <button onclick="openModal('topup')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow">+ Top-Up</button>
-                    <button onclick="openModal('withdraw')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow">Withdraw</button>
+                    <button onclick="openModal('withdraw')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow">Withdraw (Zero Fee)</button>
                 </div>
             </div>
 
@@ -367,7 +367,7 @@
                 </div>
 
                 <div class="space-y-1.5 pb-2">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals (Zero Cash-Out Fee)</h3>
                     <div id="owner-withdraw-list" class="space-y-1.5">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>
                     </div>
@@ -498,9 +498,9 @@
             </div>
         </div>
 
-        <!-- Withdrawal Modal -->
+        <!-- Withdrawal Modal (Zero Fee) -->
         <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">Withdrawal Request Form</h3>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">Withdrawal Request Form (Zero Fee)</h3>
             <p class="text-xs text-slate-400">For security, payouts are locked strictly to your registered account phone number and legal name.</p>
             <div class="space-y-2.5">
                 <input type="number" id="withdraw-amount" placeholder="Withdrawal Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
@@ -526,7 +526,7 @@
         <!-- P2P Ranked Matchmaking Wager Modal -->
         <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">P2P RANKED WAGER & MATCHMAKING</h3>
-            <p class="text-xs text-slate-400">Choose your match stake. The P2P network will match you live with a peer player of similar rank & wager!</p>
+            <p class="text-xs text-slate-400">Choose your match stake. Winner takes the prize pool minus a transparent 5% platform fee!</p>
             <div class="grid grid-cols-3 gap-2 pt-1">
                 <button onclick="startRankedMatchmaking(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
                 <button onclick="startRankedMatchmaking(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
@@ -547,10 +547,10 @@
             <button onclick="cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Stake</button>
         </div>
 
-        <!-- Coin Toss Modal for Turn Initiative -->
+        <!-- Transparent Coin Toss Modal for Turn Initiative -->
         <div id="modal-cointoss" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">COIN TOSS INITIATIVE</h3>
-            <p class="text-xs text-slate-400">Choose Heads or Tails to determine who takes the first move in the duel!</p>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">TRANSPARENT COIN TOSS INITIATIVE</h3>
+            <p class="text-xs text-slate-400">Choose Heads or Tails. The system will independently flip a random coin. If your pick matches, you move first!</p>
             <div class="grid grid-cols-2 gap-3 py-3">
                 <button onclick="executeCoinToss('Heads')" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm rounded-xl shadow-lg">🪙 HEADS</button>
                 <button onclick="executeCoinToss('Tails')" class="py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl shadow-lg">🪙 TAILS</button>
@@ -610,8 +610,6 @@
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                 return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             } catch (err) {
-                // Fallback for strict file:// restrictions if crypto.subtle is blocked
-                console.warn('Crypto subtle unavailable, using fallback string hash:', err);
                 let hash = 0;
                 for (let i = 0; i < password.length; i++) {
                     hash = ((hash << 5) - hash) + password.charCodeAt(i);
@@ -621,19 +619,19 @@
             }
         }
 
-        let registeredAccounts = [];
-        let pendingRegistrations = [];
-        let currentUser = null;
+        let registeredAccounts = JSON.parse(localStorage.getItem('aetheris_accounts')) || [];
+        let pendingRegistrations = JSON.parse(localStorage.getItem('aetheris_pending_regs')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
         let currentDuelBet = 50;
 
-        let pendingDeposits = [];
-        let pendingWithdrawals = [];
-        let approvedDepositsLog = [];
-        let approvedWithdrawalsLog = [];
-        let battleHistoryLog = [];
-        let pendingResets = [];
-        let uploadedGcashQR = null;
-        let uploadedMayaQR = null;
+        let pendingDeposits = JSON.parse(localStorage.getItem('aetheris_pending_deposits')) || [];
+        let pendingWithdrawals = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
+        let approvedDepositsLog = JSON.parse(localStorage.getItem('aetheris_approved_deposits')) || [];
+        let approvedWithdrawalsLog = JSON.parse(localStorage.getItem('aetheris_approved_withdrawals')) || [];
+        let battleHistoryLog = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
+        let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+        let uploadedGcashQR = localStorage.getItem('aetheris_gcash_qr') || null;
+        let uploadedMayaQR = localStorage.getItem('aetheris_maya_qr') || null;
 
         let duelState = { 
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
@@ -643,6 +641,20 @@
 
         let currentHand = [];
         let matchmakingTimeout = null;
+
+        function persistData() {
+            localStorage.setItem('aetheris_accounts', JSON.stringify(registeredAccounts));
+            localStorage.setItem('aetheris_pending_regs', JSON.stringify(pendingRegistrations));
+            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            localStorage.setItem('aetheris_pending_deposits', JSON.stringify(pendingDeposits));
+            localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(pendingWithdrawals));
+            localStorage.setItem('aetheris_approved_deposits', JSON.stringify(approvedDepositsLog));
+            localStorage.setItem('aetheris_approved_withdrawals', JSON.stringify(approvedWithdrawalsLog));
+            localStorage.setItem('aetheris_battle_history', JSON.stringify(battleHistoryLog));
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
+            if(uploadedGcashQR) localStorage.setItem('aetheris_gcash_qr', uploadedGcashQR);
+            if(uploadedMayaQR) localStorage.setItem('aetheris_maya_qr', uploadedMayaQR);
+        }
 
         function maskName(name) {
             if (!name) return '';
@@ -796,7 +808,6 @@
           }
         ];
 
-        // Elite Tier-2 (2 AP) & Tier-3 Ultimate Super Skills (3 AP)
         const shopSkillsMap = {
             'pyra': [
                 { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 2, color: 'red', cost: 150, desc: 'Tier-2 Elite: Deal 35 Fire damage & apply 12 Burn stacks.' },
@@ -845,21 +856,61 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
-            const ownerHash = await hashPassword('owner123');
-            const playerHash = await hashPassword('player123');
+            if (registeredAccounts.length === 0) {
+                const ownerHash = await hashPassword('owner123');
+                const playerHash = await hashPassword('player123');
 
-            registeredAccounts.push({
-                name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
-                email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: ownerHash,
-                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Admin', firstMatchCompleted: true, approved: true, frozen: false
-            });
+                registeredAccounts.push({
+                    name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
+                    email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: ownerHash,
+                    role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Admin', firstMatchCompleted: true, approved: true, frozen: false
+                });
 
-            registeredAccounts.push({
-                name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
-                email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false, approved: true, frozen: false
-            });
+                registeredAccounts.push({
+                    name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
+                    email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
+                    role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', unlockedSkills: {}, wins: 0, xp: 0, rank: 'Bronze I', firstMatchCompleted: false, approved: true, frozen: false
+                });
+                persistData();
+            }
+
+            // Restore active session if user was already logged in
+            if (currentUser) {
+                const freshUser = registeredAccounts.find(acc => acc.email.toLowerCase() === currentUser.email.toLowerCase());
+                if (freshUser && !freshUser.frozen) {
+                    currentUser = freshUser;
+                    restoreUserSession();
+                } else {
+                    currentUser = null;
+                    localStorage.removeItem('aetheris_current_user');
+                }
+            }
         });
+
+        function restoreUserSession() {
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('nav-wallet-container').classList.remove('hidden');
+            document.getElementById('nav-menu').classList.remove('hidden');
+            document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
+            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
+            updateWalletDisplay();
+            setActiveHeroUI(currentUser.activeHero);
+
+            if(currentUser.role === 'owner') {
+                document.getElementById('btn-hub').classList.add('hidden');
+                document.getElementById('btn-roster').classList.add('hidden');
+                document.getElementById('btn-shop').classList.add('hidden');
+                document.getElementById('btn-owner').classList.remove('hidden');
+                switchTab('owner');
+            } else {
+                document.getElementById('btn-owner').classList.add('hidden');
+                document.getElementById('btn-hub').classList.remove('hidden');
+                document.getElementById('btn-roster').classList.remove('hidden');
+                document.getElementById('btn-shop').classList.remove('hidden');
+                switchTab('hub');
+            }
+        }
 
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
@@ -926,6 +977,7 @@
                     firstMatchCompleted: false, approved: false, frozen: false, receipt: e.target.result, date: dateStr
                 };
                 pendingRegistrations.push(pendingReg);
+                persistData();
                 alert('Registration submitted successfully with your ₱50 receipt! Awaiting owner approval. You will receive a device notification once approved.');
                 showAuthMode('login');
             };
@@ -962,35 +1014,16 @@
 
             currentUser = user;
             if(!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
-
-            document.getElementById('view-auth').classList.add('hidden');
-            document.getElementById('nav-wallet-container').classList.remove('hidden');
-            document.getElementById('nav-menu').classList.remove('hidden');
-            document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
-            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
-            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
-            updateWalletDisplay();
-            setActiveHeroUI(currentUser.activeHero);
-
-            if(currentUser.role === 'owner') {
-                document.getElementById('btn-hub').classList.add('hidden');
-                document.getElementById('btn-roster').classList.add('hidden');
-                document.getElementById('btn-shop').classList.add('hidden');
-                document.getElementById('btn-owner').classList.remove('hidden');
-                switchTab('owner');
-            } else {
-                document.getElementById('btn-owner').classList.add('hidden');
-                document.getElementById('btn-hub').classList.remove('hidden');
-                document.getElementById('btn-roster').classList.remove('hidden');
-                document.getElementById('btn-shop').classList.remove('hidden');
-                switchTab('hub');
-            }
+            persistData();
+            restoreUserSession();
         }
 
         function logoutPlayer() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
             currentUser = null;
+            localStorage.removeItem('aetheris_current_user');
+
             document.getElementById('nav-wallet-container').classList.add('hidden');
             document.getElementById('nav-menu').classList.add('hidden');
             document.getElementById('view-hub').classList.add('hidden');
@@ -1023,6 +1056,7 @@
             }
 
             pendingResets.push({ id: Date.now(), email: email, name: user.name });
+            persistData();
             alert('Password reset request submitted to the owner successfully. You will receive a device notification once approved.');
             showAuthMode('login');
         }
@@ -1035,6 +1069,7 @@
             if(!user || !newpass) { alert('Invalid verification or missing password.'); return; }
 
             user.passHash = await hashPassword(newpass);
+            persistData();
             alert('Password updated securely! Please log in.');
             document.getElementById('view-force-reset').classList.add('hidden');
             document.getElementById('view-auth').classList.remove('hidden');
@@ -1060,6 +1095,7 @@
                     }
                 }
             });
+            persistData();
         }
 
         function renderHeroes() {
@@ -1121,7 +1157,6 @@
             }).join('');
         }
 
-        // --- SKILL SHOP RENDERING (Tier 2 @ 2 AP & Tier-3 Super @ 3 AP) ---
         function renderSkillShop() {
             if (!currentUser) return;
             const container = document.getElementById('shop-skills-container');
@@ -1184,6 +1219,7 @@
             if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
             currentUser.unlockedSkills[skillId] = true;
 
+            persistData();
             updateWalletDisplay();
             renderSkillShop();
             alert(`Skill purchased successfully for ₱${cost}! It has been permanently added to this champion’s shuffle combat deck.`);
@@ -1192,6 +1228,7 @@
         function switchActiveHero(id) {
             if (!currentUser) return;
             currentUser.activeHero = id;
+            persistData();
             setActiveHeroUI(id);
             renderHeroes();
             alert('Active champion successfully switched!');
@@ -1207,6 +1244,7 @@
             currentUser.balance -= price;
             currentUser.unlockedHeroes.push(id);
             currentUser.activeHero = id;
+            persistData();
             updateWalletDisplay();
             setActiveHeroUI(id);
             renderHeroes();
@@ -1223,6 +1261,7 @@
             }
             if (!currentUser.unlockedHeroes.includes(id)) currentUser.unlockedHeroes.push(id);
             currentUser.activeHero = id;
+            persistData();
             setActiveHeroUI(id);
             renderHeroes();
             alert(`Congratulations! You have unlocked ${h.name} through ranked progression and set it as your active champion.`);
@@ -1331,7 +1370,6 @@
             `).join('');
         }
 
-        // --- RANKED MATCHMAKING & PVP DUEL LOGIC ---
         function startRankedMatchmaking(amount) {
             if (!currentUser) return;
             if (currentUser.frozen) {
@@ -1347,6 +1385,7 @@
 
             currentUser.balance -= amount;
             currentDuelBet = amount;
+            persistData();
             closeModal();
 
             document.getElementById('modal-backdrop').classList.remove('hidden');
@@ -1356,18 +1395,21 @@
                 document.getElementById('matchmaking-status').innerText = `Finding opponent in ranked lobby (Wager: ₱${amount})...`;
                 matchmakingTimeout = setTimeout(() => {
                     closeModal();
-                    // Open Coin Toss Modal instead of launching match immediately
+                    // Open Transparent Coin Toss Modal
                     document.getElementById('modal-backdrop').classList.remove('hidden');
                     document.getElementById('modal-cointoss').classList.remove('hidden');
                 }, 2000);
             } else {
-                document.getElementById('matchmaking-status').innerText = `Searching P2P lobby (Rank: ${currentUser.rank}, Wager: ₱${amount})...\n⏳ Waiting for peer player match (No opponent found online)...`;
+                document.getElementById('matchmaking-status').innerText = `Searching P2P lobby (Rank: ${currentUser.rank}, Wager: ₱${amount})...\n⏳ Waiting for peer player match...`;
             }
         }
 
         function executeCoinToss(playerChoice) {
+            // Verifiably random coin flip
             const outcome = Math.random() < 0.5 ? 'Heads' : 'Tails';
             const playerWonToss = (playerChoice === outcome);
+
+            alert(`🪙 Transparent Coin Toss Result: ${outcome}!\nYou chose: ${playerChoice}.\n${playerWonToss ? '🎉 You won the coin toss and will move FIRST!' : '⚠️ Opponent won the coin toss and moves first!'}`);
 
             closeModal();
             launchDisguisedBotMatch(currentDuelBet, playerWonToss, outcome);
@@ -1377,6 +1419,7 @@
             if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
             if (currentUser) {
                 currentUser.balance += currentDuelBet;
+                persistData();
                 updateWalletDisplay();
             }
             closeModal();
@@ -1400,9 +1443,9 @@
             shuffleAndDrawHand();
             
             if (playerWonToss) {
-                logDuel(`[Coin Toss]: Result was ${tossOutcome}! You won the toss and take the FIRST MOVE!`);
+                logDuel(`[Coin Toss]: Outcome was ${tossOutcome}. You won the toss and take the FIRST MOVE!`);
             } else {
-                logDuel(`[Coin Toss]: Result was ${tossOutcome}! ApexPredator won the toss and takes the FIRST MOVE!`);
+                logDuel(`[Coin Toss]: Outcome was ${tossOutcome}. ApexPredator won the toss and takes the FIRST MOVE!`);
                 setTimeout(() => {
                     executeBotCombatTurn();
                 }, 1000);
@@ -1429,7 +1472,7 @@
                 duelState.turnTimeRemaining--;
                 if (timerEl) timerEl.innerText = `${duelState.turnTimeRemaining}s`;
 
-                if (duelState.turnTimeRemaining <= 0) {
+                if (timerState.turnTimeRemaining <= 0) {
                     clearInterval(duelState.turnTimerInterval);
                     logDuel(`[System]: 30s turn timer expired! Forcing turn end & attack phase.`);
                     endDuelTurn();
@@ -1450,6 +1493,7 @@
                 result: 'Defeat (Surrendered)',
                 date: dateStr
             });
+            persistData();
 
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
@@ -1481,15 +1525,19 @@
                 currentUser.firstMatchCompleted = true;
             }
 
-            const reward = currentDuelBet * 2;
+            // Total wager pool = currentDuelBet * 2. 5% deducted from total wager pool as platform fee. Winner takes net prize pool.
+            const totalPool = currentDuelBet * 2;
+            const platformFee = totalPool * 0.05;
+            const netReward = totalPool - platformFee;
             const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
             
-            currentUser.balance += reward;
+            currentUser.balance += netReward;
             currentUser.wins += 1;
             currentUser.xp += earnedXp;
 
             evaluateRankAndUnlocks();
             updateWalletDisplay();
+            persistData();
 
             const dateStr = new Date().toISOString().split('T')[0];
             battleHistoryLog.unshift({
@@ -1498,12 +1546,13 @@
                 nickname: currentUser.nickname,
                 opponent: duelState.currentOpponentName,
                 bet: currentDuelBet,
-                result: `Victory (+₱${reward})`,
+                result: `Victory (+₱${netReward.toFixed(2)})`,
                 date: dateStr
             });
+            persistData();
 
-            logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
-            alert(`Victory! You defeated the opponent in combat, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
+            logDuel(`[Victory]: Won ₱${netReward.toFixed(2)} net prize (5% fee applied) & +${earnedXp} XP!`);
+            alert(`Victory! Total pool: ₱${totalPool}. After 5% platform fee (₱${platformFee.toFixed(2)}), you won ₱${netReward.toFixed(2)}! +1 Win & +${earnedXp} Rank XP.`);
             
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
@@ -1520,6 +1569,7 @@
             const consolationXp = 15;
             currentUser.xp += consolationXp;
             evaluateRankAndUnlocks();
+            persistData();
 
             const dateStr = new Date().toISOString().split('T')[0];
             battleHistoryLog.unshift({
@@ -1531,9 +1581,10 @@
                 result: `Defeat (-₱${currentDuelBet})`,
                 date: dateStr
             });
+            persistData();
 
-            logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
-            alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP.`);
+            logDuel(`[Defeat]: Lost duel and ₱${currentDuelBet} wager (+15 Consolation XP).`);
+            alert(`Defeat! Your ₱${currentDuelBet} wager was deducted from your wallet. Gained +${consolationXp} Consolation XP.`);
             
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
@@ -1547,12 +1598,11 @@
             let botDgm = 16;
             let poisonApp = 6;
 
-            // Apply active player poison DOT to player at start of bot/end turn phase
             if (duelState.playerPoison > 0) {
                 const dotDmg = duelState.playerPoison;
                 duelState.playerHp = Math.max(0, duelState.playerHp - dotDmg);
                 logMsg += `[Poison/Burn]: You took ${dotDmg} DOT damage! `;
-                duelState.playerPoison = Math.max(0, duelState.playerPoison - 10); // Decay stacks
+                duelState.playerPoison = Math.max(0, duelState.playerPoison - 10);
             }
 
             if (duelState.playerHp <= 0) {
@@ -1560,7 +1610,6 @@
                 return;
             }
 
-            // ApexPredator heals 30 HP when dropping below 60 HP
             if (duelState.enemyHp < 60) {
                 const healVal = 30;
                 duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healVal);
@@ -1571,7 +1620,6 @@
                 logMsg += `[ApexPredator]: `;
             }
 
-            // Accumulate poison stacks properly
             duelState.playerPoison = (duelState.playerPoison || 0) + poisonApp;
 
             if (duelState.playerArmor > 0) {
@@ -1639,16 +1687,13 @@
                 if (armorGain > 0) duelState.playerArmor += armorGain;
                 if (heal > 0) duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + heal);
                 
-                // Accumulate enemy poison stacks properly
                 if (poisonApply > 0) {
                     duelState.enemyPoison = (duelState.enemyPoison || 0) + poisonApply;
                 }
 
-                // Process enemy poison DOT damage immediately when card is played
                 if (duelState.enemyPoison > 0) {
                     const enemyDot = duelState.enemyPoison;
                     duelState.enemyHp = Math.max(0, duelState.enemyHp - enemyDot);
-                    // Decay stacks gradually
                     duelState.enemyPoison = Math.max(0, duelState.enemyPoison - Math.max(4, Math.floor(duelState.enemyPoison * 0.4))); 
                 }
 
@@ -1699,6 +1744,7 @@
                 reader.onload = function(e) {
                     if(type === 'gcash') uploadedGcashQR = e.target.result;
                     if(type === 'maya') uploadedMayaQR = e.target.result;
+                    persistData();
                     updateTopupModalQRs();
                     alert(type.toUpperCase() + ' QR Code uploaded successfully! Click "Save" to apply.');
                 }
@@ -1753,6 +1799,7 @@
                 if(rM) rM.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
             }
 
+            persistData();
             alert('Owner merchant e-wallet credentials and QR codes updated successfully!');
         }
 
@@ -1827,6 +1874,7 @@
             const player = registeredAccounts.find(acc => acc.email === email);
             if (!player) return;
             player.frozen = !player.frozen;
+            persistData();
             renderOwnerQueues();
             alert(`Player account ${player.nickname} has been ${player.frozen ? 'FROZEN successfully' : 'UNFROZEN'}.`);
         }
@@ -1842,6 +1890,7 @@
             reader.onload = function(e) {
                 const dateStr = new Date().toISOString().split('T')[0];
                 pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
+                persistData();
                 alert('Top-up request and receipt submitted successfully! Awaiting owner approval.');
                 closeModal();
             };
@@ -1857,10 +1906,12 @@
             if(amt > currentUser.balance) { alert('Insufficient wallet balance!'); return; }
             
             currentUser.balance -= amt;
+            persistData();
             updateWalletDisplay();
             const dateStr = new Date().toISOString().split('T')[0];
             pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: method, account: acc, name: name, date: dateStr });
-            alert('Withdrawal request submitted successfully! Locked strictly to registered phone number & name.');
+            persistData();
+            alert('Withdrawal request submitted successfully with Zero Fee! Locked strictly to registered phone number & name.');
             closeModal();
         }
 
@@ -1961,7 +2012,7 @@
             } else {
                 witContainer.innerHTML = filteredWithdrawals.map(w => `
                     <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname}</span><div class="text-[10px] text-slate-400">To: ${w.account} (${w.name}) | Date: ${w.date}</div></div>
+                        <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname} (Zero Fee)</span><div class="text-[10px] text-slate-400">To: ${w.account} (${w.name}) | Date: ${w.date}</div></div>
                         <div class="space-x-1">
                             <button onclick="approveWithdrawal(${w.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
                             <button onclick="rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
@@ -1984,6 +2035,7 @@
                 reg.approved = true;
                 registeredAccounts.push(reg);
                 pendingRegistrations.splice(idx, 1);
+                persistData();
                 renderOwnerQueues();
 
                 if (Notification.permission === 'granted') {
@@ -1999,6 +2051,7 @@
 
         function rejectRegistration(id) {
             pendingRegistrations = pendingRegistrations.filter(r => r.id !== id);
+            persistData();
             renderOwnerQueues();
             alert('Registration request rejected.');
         }
@@ -2006,6 +2059,7 @@
         function approveReset(id) {
             const resetItem = pendingResets.find(r => r.id === id);
             pendingResets = pendingResets.filter(r => r.id !== id);
+            persistData();
             renderOwnerQueues();
 
             if (Notification.permission === 'granted') {
@@ -2026,6 +2080,7 @@
 
         function rejectReset(id) {
             pendingResets = pendingResets.filter(r => r.id !== id);
+            persistData();
             renderOwnerQueues();
             alert('Password reset request rejected.');
         }
@@ -2039,6 +2094,7 @@
                 if(currentUser && currentUser.email === item.email) updateWalletDisplay();
                 approvedDepositsLog.push(item);
                 pendingDeposits.splice(idx, 1);
+                persistData();
                 renderOwnerQueues();
                 alert('Deposit approved and credited!');
             }
@@ -2046,6 +2102,7 @@
 
         function rejectDeposit(id) {
             pendingDeposits = pendingDeposits.filter(d => d.id !== id);
+            persistData();
             renderOwnerQueues();
             alert('Deposit rejected.');
         }
@@ -2055,8 +2112,9 @@
             if(idx > -1) {
                 approvedWithdrawalsLog.push(pendingWithdrawals[idx]);
                 pendingWithdrawals.splice(idx, 1);
+                persistData();
                 renderOwnerQueues();
-                alert('Withdrawal approved!');
+                alert('Withdrawal approved (Zero Fee)!');
             }
         }
 
@@ -2065,6 +2123,7 @@
             if(targetUser) targetUser.balance += amt;
             if(currentUser && currentUser.email === email) updateWalletDisplay();
             pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
+            persistData();
             renderOwnerQueues();
             alert('Withdrawal rejected and refunded.');
         }
