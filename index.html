@@ -27,7 +27,7 @@
 <body class="h-screen overflow-hidden flex flex-col selection:bg-amber-500 selection:text-black">
 
     <!-- Top Navigation Bar -->
-    <header id="main-header" class="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-50 px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
+    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50">
         <div class="flex items-center space-x-2 sm:space-x-3">
             <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -59,18 +59,25 @@
     </header>
 
     <!-- Main Content Container (Full Screen / Non-Scrollable Layout) -->
-    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 overflow-y-auto flex flex-col justify-center">
+    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 overflow-y-auto flex flex-col">
 
         <!-- AUTH VIEW -->
-        <div id="view-auth" class="max-w-md w-full mx-auto space-y-4 py-4">
+        <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-2 my-auto">
             <div class="text-center space-y-1">
                 <h2 class="font-cinzel text-2xl sm:text-3xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
                 <p class="text-xs text-slate-400">Secured with SHA-256 Hashing & Role Isolation</p>
             </div>
 
             <!-- Login Box -->
-            <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 glow-box">
-                <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
+            <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
+                    <!-- Install App Button Inside Login Window -->
+                    <button id="auth-install-btn" onclick="installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>Install App</span>
+                    </button>
+                </div>
                 <div class="space-y-2.5">
                     <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <div class="relative">
@@ -91,7 +98,7 @@
             </div>
 
             <!-- Register Box -->
-            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 glow-box hidden">
+            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
                 <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies to new account activation.</p>
                 <div class="space-y-2.5">
@@ -115,7 +122,7 @@
             </div>
 
             <!-- Forgot Password Box -->
-            <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 glow-box hidden">
+            <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Request Password Reset</h3>
                 <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request to the owner.</p>
                 <div class="space-y-2.5">
@@ -133,7 +140,7 @@
         </div>
 
         <!-- Initial Starter Hero Selection View -->
-        <div id="view-starter-pick" class="max-w-2xl mx-auto py-4 space-y-4 hidden">
+        <div id="view-starter-pick" class="max-w-2xl mx-auto py-3 space-y-3 hidden">
             <div class="text-center space-y-1">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">CHOOSE YOUR STARTER CHAMPION</h2>
                 <p class="text-xs text-slate-400">Select <strong class="text-amber-400">only 1</strong> of the 4 basic foundational heroes below for free.</p>
@@ -144,8 +151,8 @@
         </div>
 
         <!-- Force Change Password View -->
-        <div id="view-force-reset" class="max-w-md mx-auto py-8 space-y-4 hidden">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 glow-box">
+        <div id="view-force-reset" class="max-w-md mx-auto py-6 space-y-3 hidden">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box">
                 <h3 class="font-cinzel text-base font-bold text-amber-400">Force Password Change</h3>
                 <p class="text-xs text-slate-400">Your password reset request was approved by the owner. Please verify your identity and enter a new password.</p>
                 <div class="space-y-2.5">
@@ -165,7 +172,7 @@
 
         <!-- Hero Roster & Rank Unlocks View -->
         <div id="view-select" class="hidden space-y-3 py-2">
-            <div class="text-center max-w-lg mx-auto mb-3">
+            <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
                 <p class="text-slate-400 text-xs">Acquire additional basic heroes or advance your rank through duels to unlock advanced champions!</p>
                 <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-xs space-y-1.5 w-full">
@@ -180,12 +187,12 @@
                     </div>
                 </div>
             </div>
-            <div id="hero-cards-container" class="space-y-2.5 pb-2"></div>
+            <div id="hero-cards-container" class="space-y-2 pb-2"></div>
         </div>
 
         <!-- Player Hub View -->
-        <div id="view-hub" class="hidden space-y-4 py-2">
-            <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between glow-box">
+        <div id="view-hub" class="hidden space-y-3 py-2">
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between glow-box">
                 <div class="flex items-center space-x-3">
                     <!-- Active Hero Canva Icon Badge -->
                     <div id="active-hero-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
@@ -207,22 +214,22 @@
             </div>
 
             <!-- Owner Payment QR Banner for Players -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
                 <div>
                     <h3 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm">OFFICIAL OWNER PAYMENT CHANNELS</h3>
                     <p class="text-[11px] text-slate-400 mt-0.5">Scan or send funds to the official e-wallet accounts below before submitting a top-up request.</p>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center space-x-3">
-                        <div id="player-gcash-qr" class="w-16 h-16 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center space-x-3">
+                        <div id="player-gcash-qr" class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
                         <div>
                             <span class="text-[11px] font-bold text-blue-400 block mb-0.5">GCASH PAYMENT</span>
                             <span id="display-gcash-num" class="text-[11px] font-mono font-bold text-white block">0912-345-6789</span>
                             <span id="display-gcash-name" class="text-[10px] text-slate-400 block">John Carlo M.</span>
                         </div>
                     </div>
-                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center space-x-3">
-                        <div id="player-maya-qr" class="w-16 h-16 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center space-x-3">
+                        <div id="player-maya-qr" class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
                         <div>
                             <span class="text-[11px] font-bold text-teal-400 block mb-0.5">MAYA PAYMENT</span>
                             <span id="display-maya-num" class="text-[11px] font-mono font-bold text-white block">0918-987-6543</span>
@@ -232,35 +239,35 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-2">
-                <div onclick="openBettingModal()" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-4 cursor-pointer card-hover">
-                    <div class="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-2">⚔</div>
-                    <h3 class="font-cinzel font-bold text-white text-sm">RANKED PVP DUEL</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2">
+                <div onclick="openBettingModal()" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1.5 text-xs">⚔</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">RANKED PVP DUEL</h3>
                     <p class="text-[11px] text-slate-400 mt-0.5">Select bet stake (₱50-₱1000) and win matches to gain Rank XP.</p>
                 </div>
-                <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-4 cursor-pointer card-hover">
-                    <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-2">🛡</div>
-                    <h3 class="font-cinzel font-bold text-white text-sm">HERO ROSTER</h3>
+                <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1.5 text-xs">🛡</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">HERO ROSTER</h3>
                     <p class="text-[11px] text-slate-400 mt-0.5">Acquire basic heroes or inspect rank unlock requirements.</p>
                 </div>
-                <div onclick="alert('P2P Room Code created! Share code with friend.')" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-4 cursor-pointer card-hover">
-                    <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-2">🗝</div>
-                    <h3 class="font-cinzel font-bold text-white text-sm">P2P ROOM DUEL</h3>
+                <div onclick="alert('P2P Room Code created! Share code with friend.')" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-1.5 text-xs">🗝</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">P2P ROOM DUEL</h3>
                     <p class="text-[11px] text-slate-400 mt-0.5">Create private room codes to duel real players.</p>
                 </div>
             </div>
         </div>
 
         <!-- Owner Portal View -->
-        <div id="view-owner" class="hidden space-y-4 py-2">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div id="view-owner" class="hidden space-y-3 py-2">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                     <h2 class="font-cinzel text-base sm:text-lg font-bold text-amber-400">OWNER ADMIN PORTAL</h2>
                     <span class="text-[11px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/30">Admin Mode</span>
                 </div>
 
                 <!-- Date Picker Filter & Metrics Summary -->
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5">
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                         <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
                         <div class="flex items-center space-x-2 text-xs">
@@ -269,12 +276,12 @@
                             <button onclick="document.getElementById('filter-date').value=''; renderOwnerQueues();" class="px-2 py-1 bg-slate-800 text-slate-300 rounded-lg text-[11px] hover:bg-slate-700">Clear</button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-3 pt-1">
-                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-center">
+                    <div class="grid grid-cols-2 gap-2.5 pt-1">
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
                             <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Total Deposits</span>
                             <span id="metric-total-deposits" class="text-sm sm:text-base font-bold text-emerald-400">₱0.00</span>
                         </div>
-                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-center">
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
                             <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Total Withdrawals</span>
                             <span id="metric-total-withdrawals" class="text-sm sm:text-base font-bold text-amber-400">₱0.00</span>
                         </div>
@@ -282,17 +289,17 @@
                 </div>
 
                 <!-- Owner Account & QR Upload Setup -->
-                <div class="space-y-2.5">
+                <div class="space-y-2">
                     <h3 class="font-cinzel text-xs font-bold text-white">Merchant E-Wallet Credentials & QR Codes</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
                             <span class="text-[11px] font-bold text-blue-400 block">GCash Account & QR Setup</span>
                             <input type="text" id="input-gcash-num" placeholder="Account Number" value="0912-345-6789" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="text" id="input-gcash-name" placeholder="Account Name" value="John Carlo M." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="file" id="input-gcash-qr" accept="image/*" onchange="handleQRUpload(event, 'gcash')" class="w-full text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
                             <button onclick="saveOwnerDetails()" class="w-full py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Save GCash</button>
                         </div>
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
                             <span class="text-[11px] font-bold text-teal-400 block">Maya Account & QR Setup</span>
                             <input type="text" id="input-maya-num" placeholder="Account Number" value="0918-987-6543" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="text" id="input-maya-name" placeholder="Account Name" value="Logicgrid Hub" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
@@ -303,26 +310,26 @@
                 </div>
 
                 <!-- Password Reset Approvals -->
-                <div class="space-y-2">
+                <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Password Reset Requests</h3>
-                    <div id="owner-reset-list" class="space-y-2">
-                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>
+                    <div id="owner-reset-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>
                     </div>
                 </div>
 
                 <!-- Top-Up Monitoring & Approvals -->
-                <div class="space-y-2">
+                <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals</h3>
-                    <div id="owner-deposit-list" class="space-y-2">
-                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending deposit requests.</div>
+                    <div id="owner-deposit-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending deposit requests.</div>
                     </div>
                 </div>
 
                 <!-- Withdrawal Monitoring & Approvals -->
-                <div class="space-y-2 pb-2">
+                <div class="space-y-1.5 pb-2">
                     <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals</h3>
-                    <div id="owner-withdraw-list" class="space-y-2">
-                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawal requests.</div>
+                    <div id="owner-withdraw-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawal requests.</div>
                     </div>
                 </div>
             </div>
@@ -462,7 +469,7 @@
         <!-- Receipt Preview Modal -->
         <div id="modal-receipt" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Payment Receipt Inspection</h3>
-            <div id="receipt-preview-container" class="max-h-64 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center p-2"></div>
+            <div id="receipt-preview-container" class="max-h-60 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center p-2"></div>
             <button onclick="closeModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Preview</button>
         </div>
     </div>
@@ -475,9 +482,14 @@
             e.preventDefault();
             deferredPrompt = e;
             const installBtn = document.getElementById('btn-install-pwa');
+            const authInstallBtn = document.getElementById('auth-install-btn');
             if (installBtn) {
                 installBtn.classList.remove('hidden');
                 installBtn.classList.add('flex');
+            }
+            if (authInstallBtn) {
+                authInstallBtn.classList.remove('hidden');
+                authInstallBtn.classList.add('flex');
             }
         });
 
@@ -497,7 +509,9 @@
         window.addEventListener('appinstalled', (evt) => {
             console.log('Aetheris Duel Arena was successfully installed');
             const installBtn = document.getElementById('btn-install-pwa');
+            const authInstallBtn = document.getElementById('auth-install-btn');
             if (installBtn) installBtn.classList.add('hidden');
+            if (authInstallBtn) authInstallBtn.classList.add('hidden');
         });
 
         // SHA-256 Hashing Utility
@@ -818,7 +832,7 @@
         function renderStarterPickOptions() {
             const starterHeroes = heroes.filter(h => h.isStarter);
             document.getElementById('starter-options-container').innerHTML = starterHeroes.map(h => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 card-hover">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex flex-col justify-between space-y-2.5 card-hover">
                     <div class="flex items-center space-x-3">
                         <div class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
                             <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
@@ -1391,10 +1405,10 @@
 
             const resetContainer = document.getElementById('owner-reset-list');
             if(pendingResets.length === 0) {
-                resetContainer.innerHTML = '<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
+                resetContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
             } else {
                 resetContainer.innerHTML = pendingResets.map(r => `
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                         <div><span class="font-bold text-amber-400">Reset Request: ${r.name}</span><div class="text-[10px] text-slate-400">Email: ${r.email}</div></div>
                         <div class="space-x-1">
                             <button onclick="approveReset(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
@@ -1407,10 +1421,10 @@
             const filteredDeposits = filterDate ? pendingDeposits.filter(d => d.date === filterDate) : pendingDeposits;
             const depContainer = document.getElementById('owner-deposit-list');
             if(filteredDeposits.length === 0) {
-                depContainer.innerHTML = '<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>';
+                depContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>';
             } else {
                 depContainer.innerHTML = filteredDeposits.map(d => `
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                         <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.nickname})</span><div class="text-[10px] text-slate-400">Ref: ${d.ref} | Date: ${d.date}</div></div>
                         <div class="space-x-1 flex items-center">
                             <button onclick="viewReceipt('${d.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
@@ -1424,10 +1438,10 @@
             const filteredWithdrawals = filterDate ? pendingWithdrawals.filter(w => w.date === filterDate) : pendingWithdrawals;
             const witContainer = document.getElementById('owner-withdraw-list');
             if(filteredWithdrawals.length === 0) {
-                witContainer.innerHTML = '<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>';
+                witContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>';
             } else {
                 witContainer.innerHTML = filteredWithdrawals.map(w => `
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                         <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname}</span><div class="text-[10px] text-slate-400">To: ${w.account} | Date: ${w.date}</div></div>
                         <div class="space-x-1">
                             <button onclick="approveWithdrawal(${w.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
