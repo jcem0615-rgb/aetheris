@@ -547,6 +547,16 @@
             <button onclick="cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Stake</button>
         </div>
 
+        <!-- Coin Toss Modal for Turn Initiative -->
+        <div id="modal-cointoss" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">COIN TOSS INITIATIVE</h3>
+            <p class="text-xs text-slate-400">Choose Heads or Tails to determine who takes the first move in the duel!</p>
+            <div class="grid grid-cols-2 gap-3 py-3">
+                <button onclick="executeCoinToss('Heads')" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm rounded-xl shadow-lg">🪙 HEADS</button>
+                <button onclick="executeCoinToss('Tails')" class="py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl shadow-lg">🪙 TAILS</button>
+            </div>
+        </div>
+
         <!-- Receipt Preview Modal -->
         <div id="modal-receipt" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Payment Receipt Inspection</h3>
@@ -571,7 +581,7 @@
             const installBtn = document.getElementById('btn-install-pwa');
             const authInstallBtn = document.getElementById('auth-install-btn');
             if (installBtn) { installBtn.classList.remove('hidden'); installBtn.classList.add('flex'); }
-            if (authInstallBtn) { authInstallBtn.classList.remove('hidden'); authInstallBtn.classList.add('flex'); }
+            if (authInstallBtn) { authInstallBtn.classList.add('flex'); }
         });
 
         async function installPWA() {
@@ -617,7 +627,7 @@
         let duelState = { 
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
             enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-            turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: false, currentOpponentName: 'ApexPredator'
+            turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: false, currentOpponentName: 'ApexPredator', isPlayerTurn: true
         };
 
         let currentHand = [];
@@ -1326,11 +1336,21 @@
                 document.getElementById('matchmaking-status').innerText = `Finding opponent in ranked lobby (Wager: ₱${amount})...`;
                 matchmakingTimeout = setTimeout(() => {
                     closeModal();
-                    launchDisguisedBotMatch(amount);
+                    // Open Coin Toss Modal instead of launching match immediately
+                    document.getElementById('modal-backdrop').classList.remove('hidden');
+                    document.getElementById('modal-cointoss').classList.remove('hidden');
                 }, 2000);
             } else {
                 document.getElementById('matchmaking-status').innerText = `Searching P2P lobby (Rank: ${currentUser.rank}, Wager: ₱${amount})...\n⏳ Waiting for peer player match (No opponent found online)...`;
             }
+        }
+
+        function executeCoinToss(playerChoice) {
+            const outcome = Math.random() < 0.5 ? 'Heads' : 'Tails';
+            const playerWonToss = (playerChoice === outcome);
+
+            closeModal();
+            launchDisguisedBotMatch(currentDuelBet, playerWonToss, outcome);
         }
 
         function cancelMatchmakingQueue() {
@@ -1343,7 +1363,7 @@
             alert('Matchmaking cancelled. Your ₱' + currentDuelBet + ' stake has been refunded to your wallet.');
         }
 
-        function launchDisguisedBotMatch(amount) {
+        function launchDisguisedBotMatch(amount, playerWonToss, tossOutcome) {
             duelState.currentOpponentName = 'ApexPredator';
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
             document.getElementById('fs-enemy-title').innerText = `ApexPredator (${currentUser.rank})`;
@@ -1355,9 +1375,18 @@
             duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
             duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
             duelState.isFirstMatchBot = true;
+            duelState.isPlayerTurn = playerWonToss;
             
             shuffleAndDrawHand();
-            logDuel(`[Match]: Connected with opponent ApexPredator! Choose tactical skills within 30s.`);
+            
+            if (playerWonToss) {
+                logDuel(`[Coin Toss]: Result was ${tossOutcome}! You won the toss and take the FIRST MOVE!`);
+            } else {
+                logDuel(`[Coin Toss]: Result was ${tossOutcome}! ApexPredator won the toss and takes the FIRST MOVE!`);
+                setTimeout(() => {
+                    executeBotCombatTurn();
+                }, 1000);
+            }
             
             document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
             document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
@@ -1409,7 +1438,7 @@
 
         function updateDuelUI() {
             document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
-            document.getElementById('fs-player-hp-bar').style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
+            document.getElementById('fs-player-hp-bar'].style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
             document.getElementById('fs-player-ap').innerText = duelState.playerAp;
             document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
             document.getElementById('fs-player-poison').innerText = duelState.playerPoison;
@@ -1511,8 +1540,9 @@
                 return;
             }
 
+            // Updated: ApexPredator heals 30 HP when dropping below 60 HP
             if (duelState.enemyHp < 60) {
-                const healVal = 20;
+                const healVal = 30;
                 duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healVal);
                 duelState.enemyArmor += 20;
                 duelState.enemyDebuff = 'Poisoned';
@@ -1713,6 +1743,7 @@
             document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-matchmaking').classList.add('hidden');
+            document.getElementById('modal-cointoss').classList.add('hidden');
             document.getElementById('modal-player-details').classList.add('hidden');
 
             if(type === 'topup') {
@@ -1735,6 +1766,7 @@
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-matchmaking').classList.add('hidden');
+            document.getElementById('modal-cointoss').classList.add('hidden');
             document.getElementById('modal-player-details').classList.add('hidden');
             document.getElementById('modal-receipt').classList.remove('hidden');
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-60 rounded object-contain">`;
@@ -1750,6 +1782,7 @@
             document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-matchmaking').classList.add('hidden');
+            document.getElementById('modal-cointoss').classList.add('hidden');
             document.getElementById('modal-player-details').classList.remove('hidden');
 
             const pHistory = battleHistoryLog.filter(h => h.email === email);
