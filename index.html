@@ -101,7 +101,7 @@
                 <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies to new account activation.</p>
                 <div class="space-y-2.5">
                     <input type="text" id="reg-name" placeholder="Full Legal Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="text" id="reg-nickname" placeholder="Player Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-phone" placeholder="Phone Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="email" id="reg-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <div class="space-y-1">
@@ -376,11 +376,11 @@
             <div class="flex flex-col items-center space-y-1.5 z-10">
                 <div id="fs-player-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5">
                     <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
-                    <span class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">PYRA</span>
+                    <span id="fs-player-avatar-username" class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">PYRA</span>
                 </div>
                 <div class="w-64 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
                     <div class="flex justify-between text-[11px] font-bold">
-                        <span id="fs-player-name" class="text-blue-400">PLAYER</span>
+                        <span id="fs-player-name" class="text-blue-400 uppercase">PLAYER</span>
                         <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
@@ -554,7 +554,7 @@
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
             enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
             enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
-            turnTimeRemaining: 30, turnTimerInterval: null 
+            turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: false 
         };
 
         let currentHand = [];
@@ -709,13 +709,13 @@
             registeredAccounts.push({
                 name: 'Owner Admin', nickname: 'Owner', phone: '09000000000',
                 email: 'owner@logicgrid.com', bday: '2000-01-01', passHash: ownerHash,
-                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin'
+                role: 'owner', balance: 0.00, unlockedHeroes: ['pyra'], activeHero: 'pyra', wins: 0, xp: 0, rank: 'Admin', firstMatchCompleted: true
             });
 
             registeredAccounts.push({
                 name: 'Shadow Striker', nickname: 'ShadowStriker', phone: '09123456789',
                 email: 'player@logicgrid.com', bday: '2000-06-15', passHash: playerHash,
-                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I'
+                role: 'player', balance: 2000.00, unlockedHeroes: ['pyra', 'sylph', 'storm-knight'], activeHero: 'pyra', wins: 3, xp: 220, rank: 'Silver I', firstMatchCompleted: true
             });
         });
 
@@ -750,12 +750,13 @@
             const newAcc = {
                 name, nickname, phone, email, bday, passHash,
                 role: 'player', balance: 0.00,
-                unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I'
+                unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I',
+                firstMatchCompleted: false // First match is set to false for new accounts to trigger initial 1000% IQ bot match
             };
             registeredAccounts.push(newAcc);
             currentUser = newAcc;
 
-            alert('Account registered successfully! Registration fee of ₱50.00 processed. Please select your 1 free starter champion.');
+            alert('Account registered successfully! Username ('+nickname+') saved. Registration fee of ₱50.00 processed. Please select your 1 free starter champion.');
             document.getElementById('view-auth').classList.add('hidden');
             renderStarterPickOptions();
             document.getElementById('view-starter-pick').classList.remove('hidden');
@@ -789,6 +790,7 @@
             document.getElementById('nav-menu').classList.remove('hidden');
             document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
             document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
             updateWalletDisplay();
             setActiveHeroUI(currentUser.activeHero);
             switchTab('hub');
@@ -809,6 +811,7 @@
             document.getElementById('nav-menu').classList.remove('hidden');
             document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
             document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
             updateWalletDisplay();
             setActiveHeroUI(currentUser.activeHero);
 
@@ -1000,7 +1003,7 @@
 
             const fsPlayerSprite = document.getElementById('fs-player-sprite');
             fsPlayerSprite.className = `w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5`;
-            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg mb-0.5"><span class="font-cinzel text-[10px] font-bold text-amber-300">${h.name}</span>`;
+            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg mb-0.5"><span id="fs-player-avatar-username" class="font-cinzel text-[10px] font-bold text-amber-300 uppercase">${currentUser.nickname}</span>`;
         }
 
         function switchTab(tab) {
@@ -1073,7 +1076,7 @@
             `).join('');
         }
 
-        // --- P2P MATCHMAKING & PVP DUEL LOGIC ---
+        // --- MATCHMAKING & PVP DUEL LOGIC ---
         const availablePeerOpponents = [
             { name: "VortexMage", rank: "Silver I", img: "image_e51741b7.jpg" },
             { name: "ShadowStalker", rank: "Bronze I", img: "image_a9978665.jpg" },
@@ -1095,12 +1098,51 @@
 
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-matchmaking').classList.remove('hidden');
-            document.getElementById('matchmaking-status').innerText = `Searching P2P online lobby for peer player match (Rank: ${currentUser.rank}, Wager: ₱${amount})...`;
 
-            setTimeout(() => {
-                closeModal();
-                launchMatchedPvPDuel(amount);
-            }, 2000);
+            // Check if this is the user's very first fight
+            if (!currentUser.firstMatchCompleted) {
+                document.getElementById('matchmaking-status').innerText = `Finding opponent in ranked lobby (Wager: ₱${amount})...`;
+                setTimeout(() => {
+                    closeModal();
+                    launchDisguisedBotMatch(amount);
+                }, 2000);
+            } else {
+                document.getElementById('matchmaking-status').innerText = `Connecting to online P2P lobby for peer player match (Rank: ${currentUser.rank}, Wager: ₱${amount})...`;
+                setTimeout(() => {
+                    closeModal();
+                    launchMatchedPvPDuel(amount);
+                }, 2000);
+            }
+        }
+
+        function launchDisguisedBotMatch(amount) {
+            // Disguised bot match (1000% IQ bot designed to win the first match)
+            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
+            document.getElementById('fs-enemy-title').innerText = `ApexPredator (Diamond II)`;
+            document.getElementById('fs-enemy-name-label').innerText = `APEXPREDATOR`;
+            document.getElementById('fs-enemy-img-el').src = "image_1d431b92.jpg";
+
+            if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+
+            duelState = { 
+                playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
+                enemyHp: 250, enemyMaxHp: 250, enemyArmor: 50, enemyPoison: 0, enemyDebuff: 'None',
+                enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
+                turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: true
+            };
+            
+            shuffleAndDrawHand();
+            logDuel(`[P2P Arena]: Match connected with opponent ApexPredator! Choose tactical skills within 30s.`);
+            
+            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
+            updateDuelUI();
+
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('view-hub').classList.add('hidden');
+            document.getElementById('view-select').classList.add('hidden');
+            document.getElementById('view-duel-fullscreen').classList.remove('hidden');
         }
 
         function launchMatchedPvPDuel(amount) {
@@ -1118,12 +1160,14 @@
                 playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
                 enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
                 enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
-                turnTimeRemaining: 30, turnTimerInterval: null 
+                turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: false
             };
             
             shuffleAndDrawHand();
             logDuel(`[P2P Network]: Connected with peer ${matchedOpponent.name}! Your turn (30s timer started).`);
             
+            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
+            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
             updateDuelUI();
 
             document.getElementById('main-header').classList.add('hidden');
@@ -1151,6 +1195,10 @@
         }
 
         function simulateToggleEnemyConnection() {
+            if (duelState.isFirstMatchBot) {
+                alert('Connection is stable in this match.');
+                return;
+            }
             if (duelState.enemyStatus === 'Connected') {
                 duelState.enemyStatus = 'Disconnected';
                 duelState.enemyDisconnectTimer = 120;
@@ -1195,13 +1243,13 @@
 
         function updateDuelUI() {
             document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
-            document.getElementById('fs-player-hp-bar').style.width = `${(duelState.playerHp / duelState.playerMaxHp) * 100}%`;
+            document.getElementById('fs-player-hp-bar').style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
             document.getElementById('fs-player-ap').innerText = duelState.playerAp;
             document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
             document.getElementById('fs-player-poison').innerText = duelState.playerPoison;
 
             document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
-            document.getElementById('fs-enemy-hp-bar').style.width = `${(duelState.enemyHp / duelState.enemyMaxHp) * 100}%`;
+            document.getElementById('fs-enemy-hp-bar').style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
             document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
             document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
             document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
@@ -1232,12 +1280,17 @@
         function handleDefeat() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
+            
+            if (duelState.isFirstMatchBot) {
+                currentUser.firstMatchCompleted = true; // Mark first match as completed so next matches are P2P
+            }
+
             const consolationXp = 15;
             currentUser.xp += consolationXp;
             evaluateRankAndUnlocks();
 
             logDuel(`[Defeat]: You lost the duel and your ₱${currentDuelBet} bet (+15 Consolation XP).`);
-            alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP.`);
+            alert(`Defeat! You lost your ₱${currentDuelBet} wager, but gained +${consolationXp} Consolation XP. Your next matches are now live Player-to-Player (P2P)!`);
             surrenderDuel();
         }
 
@@ -1291,8 +1344,15 @@
             updateDuelUI();
 
             if (duelState.enemyHp <= 0) {
-                handleVictory();
-                return;
+                if (duelState.isFirstMatchBot) {
+                    // 1000% IQ bot overrides win if somehow beaten on first try
+                    duelState.enemyHp = 100;
+                    logDuel(`[ApexPredator]: 1000% IQ Overclock activated! Full HP restored.`);
+                    updateDuelUI();
+                } else {
+                    handleVictory();
+                    return;
+                }
             }
         }
 
@@ -1300,29 +1360,30 @@
             if (duelState.enemyHp <= 0 || duelState.playerHp <= 0 || duelState.enemyStatus === 'Disconnected') return;
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
-            logDuel(`[System]: Ending turn & attacking... Peer player counterattacking...`);
+            logDuel(`[System]: Ending turn & attacking... Opponent counterattacking...`);
             
-            if (duelState.enemyPoison > 0) {
+            if (duelState.enemyPoison > 0 && !duelState.isFirstMatchBot) {
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
-                logDuel(`[Effect]: Peer player took ${duelState.enemyPoison} poison/burn damage.`);
+                logDuel(`[Effect]: Opponent took ${duelState.enemyPoison} poison/burn damage.`);
             }
 
             updateDuelUI();
 
-            if (duelState.enemyHp <= 0) {
+            if (duelState.enemyHp <= 0 && !duelState.isFirstMatchBot) {
                 handleVictory();
                 return;
             }
 
             setTimeout(() => {
                 if (duelState.enemyHp > 0 && duelState.enemyStatus === 'Connected') {
-                    let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 12 : 16;
+                    let enemyDmg = duelState.isFirstMatchBot ? 45 : (duelState.enemyDebuff === 'Armor-Break' ? 12 : 16);
                     if (duelState.playerArmor > 0) {
                         if (duelState.playerArmor >= enemyDmg) { duelState.playerArmor -= enemyDmg; enemyDmg = 0; }
                         else { enemyDmg -= duelState.playerArmor; duelState.playerArmor = 0; }
                     }
                     duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
-                    logDuel(`[Peer Player]: Counterattacked for ${enemyDmg} damage!`);
+                    let counterName = duelState.isFirstMatchBot ? "ApexPredator (1000% IQ Ultimate Strike)" : "Peer Player";
+                    logDuel(`[${counterName}]: Counterattacked for ${enemyDmg} damage!`);
                 }
                 
                 updateDuelUI();
