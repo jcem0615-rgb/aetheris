@@ -52,7 +52,8 @@
                 <button onclick="switchTab('hub')" id="btn-hub" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-600 text-white transition">Home</button>
                 <button onclick="switchTab('select')" id="btn-roster" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition">Roster</button>
                 <button onclick="switchTab('shop')" id="btn-shop" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition">Skill Shop</button>
-                <button onclick="openPlayerProfileModal()" id="btn-profile" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-amber-400 hover:bg-amber-500/10 transition">Profile & History</button>
+                <button onclick="openPlayerProfileModal()" id="btn-profile" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-amber-400 hover:bg-amber-500/10 transition">Profile</button>
+                <button onclick="openLeaderboardModal()" id="btn-leaderboard" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 transition">Leaderboard</button>
                 <button onclick="switchTab('owner')" id="btn-owner" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition hidden">Owner</button>
                 <button onclick="logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-red-400 hover:bg-red-500/10 transition">Logout</button>
             </nav>
@@ -194,7 +195,7 @@
                 <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-xs space-y-1.5 w-full">
                     <div class="flex items-center justify-between space-x-4">
                         <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
-                        <span>XP: <strong id="player-xp-badge" class="text-emerald-400">0 / 100</strong></span>
+                        <span>EXP Level: <strong id="player-explevel-badge" class="text-emerald-400">Lv. 1 (0 XP)</strong></span>
                         <span>Wins: <strong id="player-wins-badge" class="text-blue-400">0</strong></span>
                     </div>
                     <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
@@ -205,7 +206,7 @@
             <div id="hero-cards-container" class="space-y-2.5 pb-6"></div>
         </div>
 
-        <!-- Skill Shop View (Role Gated & Fair Gameplay) -->
+        <!-- Skill Shop View -->
         <div id="view-shop" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO SKILL MARKETPLACE</h2>
@@ -225,6 +226,7 @@
                         <div class="flex items-center space-x-2">
                             <span id="player-nickname-badge" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">ShadowStriker</span>
                             <span id="hub-rank-badge" class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
+                            <span id="hub-explevel-badge" class="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Lv. 1</span>
                         </div>
                         <h2 id="active-hero-name" class="font-cinzel text-base sm:text-lg font-bold text-white">PYRA</h2>
                         <p class="text-[11px] text-slate-400">Active Champion • Ready for P2P Matchmaking</p>
@@ -581,6 +583,17 @@
             <div id="player-profile-content" class="space-y-2.5 text-xs text-slate-300 max-h-80 overflow-y-auto pr-1"></div>
             <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Profile</button>
         </div>
+
+        <!-- Top 10 Leaderboard Modal -->
+        <div id="modal-leaderboard" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">🏆 TOP 10 RANKED LEADERBOARD</h3>
+                <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">Live Season</span>
+            </div>
+            <p class="text-xs text-slate-400">Global ranking based on total EXP level, rank tier, and ranked match victories.</p>
+            <div id="leaderboard-list-content" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Leaderboard</button>
+        </div>
     </div>
 
     <script>
@@ -915,11 +928,15 @@
             updateWalletDisplay();
             setActiveHeroUI(currentUser.activeHero);
 
+            const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
+            document.getElementById('hub-explevel-badge').innerText = `Lv. ${expLevel}`;
+
             if(currentUser.role === 'owner') {
                 document.getElementById('btn-hub').classList.add('hidden');
                 document.getElementById('btn-roster').classList.add('hidden');
                 document.getElementById('btn-shop').classList.add('hidden');
                 document.getElementById('btn-profile').classList.add('hidden');
+                document.getElementById('btn-leaderboard').classList.add('hidden');
                 document.getElementById('btn-owner').classList.remove('hidden');
                 switchTab('owner');
             } else {
@@ -928,6 +945,7 @@
                 document.getElementById('btn-roster').classList.remove('hidden');
                 document.getElementById('btn-shop').classList.remove('hidden');
                 document.getElementById('btn-profile').classList.remove('hidden');
+                document.getElementById('btn-leaderboard').classList.remove('hidden');
                 switchTab('hub');
             }
         }
@@ -1121,8 +1139,11 @@
         function renderHeroes() {
             evaluateRankAndUnlocks();
 
+            const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
             document.getElementById('player-rank-badge').innerText = currentUser.rank;
             document.getElementById('hub-rank-badge').innerText = currentUser.rank;
+            document.getElementById('player-explevel-badge').innerText = `Lv. ${expLevel} (${currentUser.xp} XP)`;
+            document.getElementById('hub-explevel-badge').innerText = `Lv. ${expLevel}`;
             document.getElementById('player-wins-badge').innerText = currentUser.wins;
             
             let maxXpForTier = 150;
@@ -1135,7 +1156,6 @@
             else if (currentUser.xp >= 350) maxXpForTier = 600;
             else if (currentUser.xp >= 150) maxXpForTier = 350;
 
-            document.getElementById('player-xp-badge').innerText = `${currentUser.xp} / ${maxXpForTier} XP`;
             const xpPercent = Math.min(100, Math.round((currentUser.xp / maxXpForTier) * 100));
             document.getElementById('player-xp-bar').style.width = `${xpPercent}%`;
 
@@ -1603,7 +1623,7 @@
             persistData();
 
             logDuel(`[Defeat]: Lost duel and ₱${currentDuelBet} wager (+15 Consolation XP).`);
-            alert(`Defeat! Your ₱${currentDuelBet} wager has been permanently deducted from your wallet[cite: 10]. Gained +${consolationXp} Consolation XP.`);
+            alert(`Defeat! Your ₱${currentDuelBet} wager has been permanently deducted from your wallet. Gained +${consolationXp} Consolation XP.`);
             
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
@@ -1832,6 +1852,7 @@
             document.getElementById('modal-cointoss').classList.add('hidden');
             document.getElementById('modal-player-details').classList.add('hidden');
             document.getElementById('modal-player-profile').classList.add('hidden');
+            document.getElementById('modal-leaderboard').classList.add('hidden');
 
             if(type === 'topup') {
                 document.getElementById('modal-topup').classList.remove('hidden');
@@ -1855,10 +1876,12 @@
             document.getElementById('modal-matchmaking').classList.add('hidden');
             document.getElementById('modal-cointoss').classList.add('hidden');
             document.getElementById('modal-player-details').classList.add('hidden');
+            document.getElementById('modal-leaderboard').classList.add('hidden');
             document.getElementById('modal-player-profile').classList.remove('hidden');
 
             document.getElementById('profile-modal-rank').innerText = currentUser.rank;
 
+            const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
             const myHistory = battleHistoryLog.filter(h => h.email === currentUser.email);
             let historyHtml = myHistory.length ? myHistory.map(h => `
                 <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
@@ -1880,13 +1903,60 @@
                     <div class="flex justify-between"><span><strong>Email:</strong></span> <span class="text-white">${currentUser.email}</span></div>
                     <div class="flex justify-between"><span><strong>Locked Phone (Payouts):</strong></span> <span class="text-white">${currentUser.phone}</span></div>
                     <div class="flex justify-between"><span><strong>Wallet Balance:</strong></span> <span class="text-emerald-400 font-bold">₱${currentUser.balance.toFixed(2)}</span></div>
-                    <div class="flex justify-between"><span><strong>Total Wins / XP:</strong></span> <span class="text-blue-400 font-bold">${currentUser.wins} Wins | ${currentUser.xp} XP</span></div>
+                    <div class="flex justify-between"><span><strong>Rank Tier:</strong></span> <span class="text-amber-400 font-bold">${currentUser.rank}</span></div>
+                    <div class="flex justify-between"><span><strong>EXP Level:</strong></span> <span class="text-emerald-400 font-bold">Level ${expLevel} (${currentUser.xp} Total XP)</span></div>
+                    <div class="flex justify-between"><span><strong>Total Wins:</strong></span> <span class="text-blue-400 font-bold">${currentUser.wins} Wins</span></div>
                 </div>
                 <div class="space-y-2 pt-1">
                     <h4 class="font-cinzel text-xs font-bold text-amber-400">My Ranked Battle History (${myHistory.length || 0})</h4>
                     <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">${historyHtml}</div>
                 </div>
             `;
+        }
+
+        function openLeaderboardModal() {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-matchmaking').classList.add('hidden');
+            document.getElementById('modal-cointoss').classList.add('hidden');
+            document.getElementById('modal-player-details').classList.add('hidden');
+            document.getElementById('modal-player-profile').classList.add('hidden');
+            document.getElementById('modal-leaderboard').classList.remove('hidden');
+
+            const allPlayers = registeredAccounts.filter(acc => acc.role === 'player');
+            // Sort by XP and Wins descending
+            allPlayers.sort((a, b) => (b.xp - a.xp) || (b.wins - a.wins));
+            const top10 = allPlayers.slice(0, 10);
+
+            let lbHtml = '';
+            if (top10.length === 0) {
+                lbHtml = '<div class="text-slate-500 text-xs text-center py-6 bg-slate-950 rounded-xl">No players registered on the leaderboard yet.</div>';
+            } else {
+                lbHtml = top10.map((p, idx) => {
+                    const pLv = Math.floor((p.xp || 0) / 100) + 1;
+                    const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `#${idx + 1}`));
+                    return `
+                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="font-bold text-base w-6 text-center">${medal}</span>
+                                <div>
+                                    <span class="font-bold text-amber-400">${p.nickname}</span>
+                                    <div class="text-[10px] text-slate-400">Rank: ${p.rank || 'Bronze I'} | Level ${pLv}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold text-emerald-400 block">${p.xp || 0} XP</span>
+                                <span class="text-[10px] text-blue-400">${p.wins || 0} Wins</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('leaderboard-list-content').innerHTML = lbHtml;
         }
 
         function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
@@ -1900,6 +1970,7 @@
             document.getElementById('modal-cointoss').classList.add('hidden');
             document.getElementById('modal-player-details').classList.add('hidden');
             document.getElementById('modal-player-profile').classList.add('hidden');
+            document.getElementById('modal-leaderboard').classList.add('hidden');
             document.getElementById('modal-receipt').classList.remove('hidden');
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-60 rounded object-contain">`;
         }
@@ -1916,10 +1987,13 @@
             document.getElementById('modal-matchmaking').classList.add('hidden');
             document.getElementById('modal-cointoss').classList.add('hidden');
             document.getElementById('modal-player-profile').classList.add('hidden');
+            document.getElementById('modal-leaderboard').classList.add('hidden');
             document.getElementById('modal-player-details').classList.remove('hidden');
 
             const pHistory = battleHistoryLog.filter(h => h.email === email);
             let historyHtml = pHistory.length ? pHistory.map(h => `<div class="border-t border-slate-800 pt-1 text-[11px]">⚔ Vs ${h.opponent} (${h.date}): <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span> (Bet: ₱${h.bet})</div>`).join('') : '<div class="text-slate-500 text-[11px]">No matches played yet.</div>';
+
+            const pLv = Math.floor((player.xp || 0) / 100) + 1;
 
             document.getElementById('player-inspection-content').innerHTML = `
                 <div class="space-y-1">
@@ -1928,7 +2002,7 @@
                     <div><strong>Email:</strong> ${player.email}</div>
                     <div><strong>Phone (Withdrawal Locked):</strong> ${player.phone}</div>
                     <div><strong>Wallet Balance:</strong> ₱${player.balance.toFixed(2)}</div>
-                    <div><strong>Rank / XP:</strong> ${player.rank} (${player.xp} XP) | Wins: ${player.wins}</div>
+                    <div><strong>Rank Tier / Level:</strong> ${player.rank} (Level ${pLv} | ${player.xp} XP) | Wins: ${player.wins}</div>
                     <div><strong>Account Status:</strong> <span class="${player.frozen ? 'text-red-400 font-bold' : 'text-emerald-400'}">${player.frozen ? 'FROZEN (Cheating Suspected)' : 'Active'}</span></div>
                     <div class="pt-2 border-t border-slate-800 font-bold text-amber-400">Player Match History:</div>
                     <div class="max-h-32 overflow-y-auto space-y-1">${historyHtml}</div>
