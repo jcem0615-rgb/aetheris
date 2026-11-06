@@ -98,8 +98,31 @@
             <!-- Register Box -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
-                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies. Please upload your payment receipt below. Push notifications must be allowed to receive your approval alert.</p>
+                <p class="text-xs text-amber-400/90">*Note: A ₱50.00 registration fee applies. Send payment to the official channels below and upload your receipt.</p>
                 
+                <!-- Payment Channels Shown in Register Form -->
+                <div class="space-y-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px]">
+                    <p class="text-[10px] text-amber-400 font-bold mb-1">Official Payment Channels for ₱50 Fee:</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="p-1.5 border-r border-slate-800 flex flex-col items-center text-center space-y-1">
+                            <div id="reg-gcash-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                            <div>
+                                <span class="font-bold text-blue-400 block">GCash</span>
+                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-[10px]">0912-345-6789</span>
+                                <span class="text-slate-400 text-[9px]">J*** C**** M.</span>
+                            </div>
+                        </div>
+                        <div class="p-1.5 flex flex-col items-center text-center space-y-1">
+                            <div id="reg-maya-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                            <div>
+                                <span class="font-bold text-teal-400 block">Maya</span>
+                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-[10px]">0918-987-6543</span>
+                                <span class="text-slate-400 text-[9px]">L****** Hub</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="space-y-2.5">
                     <input type="text" id="reg-name" placeholder="Full Legal Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
@@ -1521,6 +1544,11 @@
             const mayaEl = document.getElementById('topup-maya-qr');
             if(uploadedGcashQR) gcashEl.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
             if(uploadedMayaQR) mayaEl.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+
+            const regGcashEl = document.getElementById('reg-gcash-qr');
+            const regMayaEl = document.getElementById('reg-maya-qr');
+            if(regGcashEl && uploadedGcashQR) regGcashEl.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            if(regMayaEl && uploadedMayaQR) regMayaEl.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
         }
 
         function saveOwnerDetails() {
@@ -1540,8 +1568,21 @@
             document.getElementById('topup-opt-gcash').innerText = gNum;
             document.getElementById('topup-opt-maya').innerText = mNum;
 
-            if(uploadedGcashQR) document.getElementById('player-gcash-qr').innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
-            if(uploadedMayaQR) document.getElementById('player-maya-qr').innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+            const regOptG = document.getElementById('reg-opt-gcash');
+            const regOptM = document.getElementById('reg-opt-maya');
+            if(regOptG) regOptG.innerText = gNum;
+            if(regOptM) regOptM.innerText = mNum;
+
+            if(uploadedGcashQR) {
+                document.getElementById('player-gcash-qr').innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+                const rG = document.getElementById('reg-gcash-qr');
+                if(rG) rG.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            }
+            if(uploadedMayaQR) {
+                document.getElementById('player-maya-qr').innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+                const rM = document.getElementById('reg-maya-qr');
+                if(rM) rM.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+            }
 
             alert('Owner merchant e-wallet credentials and QR codes updated successfully!');
         }
