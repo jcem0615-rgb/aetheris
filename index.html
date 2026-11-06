@@ -58,7 +58,7 @@
         </div>
     </header>
 
-    <!-- Main Content Container (Full Screen / Non-Scrollable Layout with responsive scrolling) -->
+    <!-- Main Content Container -->
     <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 overflow-y-auto flex flex-col pb-12">
 
         <!-- AUTH VIEW -->
@@ -144,9 +144,7 @@
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">CHOOSE YOUR STARTER CHAMPION</h2>
                 <p class="text-xs text-slate-400">Select <strong class="text-amber-400">only 1</strong> of the 4 basic foundational heroes below for free.</p>
             </div>
-            <div id="starter-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <!-- Populated dynamically -->
-            </div>
+            <div id="starter-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
         </div>
 
         <!-- Force Change Password View -->
@@ -169,7 +167,7 @@
             </div>
         </div>
 
-        <!-- Hero Roster & Rank Unlocks View (Shows all 11 Heroes) -->
+        <!-- Hero Roster & Rank Unlocks View -->
         <div id="view-select" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
@@ -180,7 +178,6 @@
                         <span>XP: <strong id="player-xp-badge" class="text-emerald-400">0 / 100</strong></span>
                         <span>Wins: <strong id="player-wins-badge" class="text-blue-400">0</strong></span>
                     </div>
-                    <!-- XP Progress Bar -->
                     <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
                         <div id="player-xp-bar" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
                     </div>
@@ -193,7 +190,6 @@
         <div id="view-hub" class="hidden space-y-3 py-2">
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between glow-box">
                 <div class="flex items-center space-x-3">
-                    <!-- Active Hero Avatar Badge -->
                     <div id="active-hero-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
                         <img id="active-hero-img-el" src="" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
                     </div>
@@ -224,7 +220,7 @@
                         <div>
                             <span class="text-[11px] font-bold text-blue-400 block mb-0.5">GCASH PAYMENT</span>
                             <span id="display-gcash-num" class="text-[11px] font-mono font-bold text-white block">0912-345-6789</span>
-                            <span id="display-gcash-name" class="text-[10px] text-slate-400 block">John Carlo M.</span>
+                            <span id="display-gcash-name" class="text-[10px] text-slate-400 block">J*** C**** M.</span>
                         </div>
                     </div>
                     <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center space-x-3">
@@ -232,14 +228,14 @@
                         <div>
                             <span class="text-[11px] font-bold text-teal-400 block mb-0.5">MAYA PAYMENT</span>
                             <span id="display-maya-num" class="text-[11px] font-mono font-bold text-white block">0918-987-6543</span>
-                            <span id="display-maya-name" class="text-[10px] text-slate-400 block">Logicgrid Hub</span>
+                            <span id="display-maya-name" class="text-[10px] text-slate-400 block">L****** Hub</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2">
-                <div onclick="openBettingModal()" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
+                <div onclick="openModal('bet')" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1.5 text-xs">⚔</div>
                     <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">RANKED PVP MATCHMAKING</h3>
                     <p class="text-[11px] text-slate-400 mt-0.5">Select bet stake (₱50-₱1000) & match against online players based on rank.</p>
@@ -265,7 +261,6 @@
                     <span class="text-[11px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/30">Admin Mode</span>
                 </div>
 
-                <!-- Date Picker Filter & Metrics Summary -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                         <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
@@ -287,7 +282,6 @@
                     </div>
                 </div>
 
-                <!-- Owner Account & QR Upload Setup -->
                 <div class="space-y-2">
                     <h3 class="font-cinzel text-xs font-bold text-white">Merchant E-Wallet Credentials & QR Codes</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -308,7 +302,6 @@
                     </div>
                 </div>
 
-                <!-- Password Reset Approvals -->
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Password Reset Requests</h3>
                     <div id="owner-reset-list" class="space-y-1.5">
@@ -316,7 +309,6 @@
                     </div>
                 </div>
 
-                <!-- Top-Up Monitoring & Approvals -->
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals</h3>
                     <div id="owner-deposit-list" class="space-y-1.5">
@@ -324,7 +316,6 @@
                     </div>
                 </div>
 
-                <!-- Withdrawal Monitoring & Approvals -->
                 <div class="space-y-1.5 pb-2">
                     <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals</h3>
                     <div id="owner-withdraw-list" class="space-y-1.5">
@@ -335,7 +326,7 @@
         </div>
     </main>
 
-    <!-- FULL-SCREEN PVP AXIE-STYLE BATTLE ARENA VIEW -->
+    <!-- FULL-SCREEN PVP BATTLE ARENA VIEW -->
     <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-3 sm:p-6 hidden overflow-hidden">
         <!-- Top Battle Bar -->
         <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-2 backdrop-blur shrink-0">
@@ -343,7 +334,10 @@
                 <h2 class="font-cinzel font-bold text-sm sm:text-base text-amber-400 glow-gold">PLAYER VS PLAYER ARENA</h2>
                 <span id="fullscreen-bet-badge" class="text-[11px] bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
             </div>
-            <button onclick="surrenderDuel()" class="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-xl transition">Surrender</button>
+            <div class="flex items-center space-x-2">
+                <button onclick="simulateToggleEnemyConnection()" id="btn-sim-disconnect" class="px-2.5 py-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 text-[10px] font-bold rounded-xl transition">Simulate Opponent Disconnect</button>
+                <button onclick="surrenderDuel()" class="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-xl transition">Surrender</button>
+            </div>
         </div>
 
         <!-- Main Combat Stage -->
@@ -352,7 +346,7 @@
 
             <!-- Opponent Stage Area (Top) -->
             <div class="flex flex-col items-center space-y-1.5 z-10">
-                <div class="w-48 bg-slate-950/90 border border-red-900/50 rounded-xl p-2 space-y-1 shadow-lg">
+                <div class="w-56 bg-slate-950/90 border border-red-900/50 rounded-xl p-2 space-y-1 shadow-lg">
                     <div class="flex justify-between text-[10px] font-bold">
                         <span id="fs-enemy-title" class="text-red-400">OPPONENT (SILVER I)</span>
                         <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
@@ -360,10 +354,9 @@
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
                         <div id="fs-enemy-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
                     </div>
-                    <div class="flex justify-between text-[9px] text-slate-400">
+                    <div class="flex items-center justify-between text-[9px] text-slate-400">
+                        <span>Status: <strong id="fs-enemy-status" class="text-emerald-400">🟢 Connected</strong></span>
                         <span>Armor: <strong id="fs-enemy-armor" class="text-blue-300">0</strong></span>
-                        <span>Poison: <strong id="fs-enemy-poison" class="text-purple-300">0</strong></span>
-                        <span>Debuff: <strong id="fs-enemy-debuff" class="text-amber-400">None</strong></span>
                     </div>
                 </div>
                 <div id="fs-enemy-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] p-1.5">
@@ -383,7 +376,7 @@
                     <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
                     <span class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">PYRA</span>
                 </div>
-                <div class="w-48 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2 space-y-1 shadow-lg">
+                <div class="w-56 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2 space-y-1 shadow-lg">
                     <div class="flex justify-between text-[10px] font-bold">
                         <span id="fs-player-name" class="text-blue-400">PLAYER</span>
                         <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
@@ -391,8 +384,8 @@
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
                         <div id="fs-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
                     </div>
-                    <div class="flex justify-between text-[9px] text-slate-400">
-                        <span>Armor: <strong id="fs-player-armor" class="text-blue-300">0</strong></span>
+                    <div class="flex items-center justify-between text-[9px] text-slate-400">
+                        <span>Status: <strong id="fs-player-status" class="text-emerald-400">🟢 Connected</strong></span>
                         <span>AP: <strong id="fs-player-ap" class="text-amber-400">3</strong>/3</span>
                     </div>
                 </div>
@@ -405,32 +398,34 @@
                 <span class="font-cinzel text-[11px] font-bold text-amber-400">UNIQUE HERO SKILL DECK</span>
                 <button onclick="endDuelTurn()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] rounded-xl shadow-lg transition">End Turn & Shuffle</button>
             </div>
-            <!-- Dynamically Rendered Shuffled Hand Cards -->
-            <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <!-- Populated dynamically via JS shuffle -->
-            </div>
+            <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
         </div>
     </div>
 
     <!-- Modals -->
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
-        <!-- Top-up Modal (Payment Options Displayed FIRST Before Transaction Details) -->
+        <!-- Top-up Modal -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Submit Top-Up Request</h3>
             
-            <!-- Payment Options & Accounts Displayed First -->
             <div class="space-y-1.5">
-                <p class="text-[11px] text-slate-400">1. Send payment to one of our official merchant channels below:</p>
+                <p class="text-[11px] text-slate-400">1. Scan or send payment to one of our official merchant channels below:</p>
                 <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px]">
-                    <div class="p-1.5 border-r border-slate-800">
-                        <span class="font-bold text-blue-400 block">GCash</span>
-                        <span id="topup-opt-gcash" class="text-white font-mono font-bold text-[10px]">0912-345-6789</span>
-                        <span class="text-slate-400 text-[10px]">John Carlo M.</span>
+                    <div class="p-1.5 border-r border-slate-800 flex flex-col items-center text-center space-y-1">
+                        <div id="topup-gcash-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                        <div>
+                            <span class="font-bold text-blue-400 block">GCash</span>
+                            <span id="topup-opt-gcash" class="text-white font-mono font-bold text-[10px]">0912-345-6789</span>
+                            <span class="text-slate-400 text-[9px]">J*** C**** M.</span>
+                        </div>
                     </div>
-                    <div class="p-1.5">
-                        <span class="font-bold text-teal-400 block">Maya</span>
-                        <span id="topup-opt-maya" class="text-white font-mono font-bold text-[10px]">0918-987-6543</span>
-                        <span class="text-slate-400 text-[10px]">Logicgrid Hub</span>
+                    <div class="p-1.5 flex flex-col items-center text-center space-y-1">
+                        <div id="topup-maya-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                        <div>
+                            <span class="font-bold text-teal-400 block">Maya</span>
+                            <span id="topup-opt-maya" class="text-white font-mono font-bold text-[10px]">0918-987-6543</span>
+                            <span class="text-slate-400 text-[9px]">L****** Hub</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -501,7 +496,6 @@
     </div>
 
     <script>
-        // PWA Install Prompt Handler
         let deferredPrompt = null;
 
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -515,7 +509,7 @@
 
         async function installPWA() {
             if (!deferredPrompt) {
-                alert('PWA installation prompt is ready! If the button does not trigger a popup, you can also install this app directly from your browser menu.');
+                alert('PWA installation prompt is ready! You can also install this app directly from your browser menu.');
                 return;
             }
             deferredPrompt.prompt();
@@ -532,7 +526,6 @@
             if (authInstallBtn) authInstallBtn.classList.add('hidden');
         });
 
-        // SHA-256 Hashing Utility
         async function hashPassword(password) {
             const msgBuffer = new TextEncoder().encode(password);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -554,12 +547,20 @@
 
         let duelState = { 
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, 
-            enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' 
+            enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
+            enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null 
         };
 
         let currentHand = [];
 
-        // Master Character Data Matrix with all 11 UNIQUE Heroes
+        function maskName(name) {
+            if (!name) return '';
+            return name.split(' ').map(part => {
+                if (part.length <= 1) return part;
+                return part[0] + '*'.repeat(part.length - 1);
+            }).join(' ');
+        }
+
         const heroes = [
           {
             id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER (Basic)',
@@ -901,7 +902,6 @@
             const xpPercent = Math.min(100, Math.round((currentUser.xp / maxXpForTier) * 100));
             document.getElementById('player-xp-bar').style.width = `${xpPercent}%`;
 
-            // Renders all 11 heroes cleanly without any truncation
             document.getElementById('hero-cards-container').innerHTML = heroes.map(h => {
                 const isUnlocked = currentUser && currentUser.unlockedHeroes.includes(h.id);
                 const isActive = currentUser && currentUser.activeHero === h.id;
@@ -1037,11 +1037,6 @@
             }
         }
 
-        function openBettingModal() {
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal-bet').classList.remove('hidden');
-        }
-
         function getActiveHeroDeck() {
             const h = heroes.find(item => item.id === currentUser.activeHero);
             return h ? h.skillDeck : heroes[0].skillDeck;
@@ -1087,10 +1082,9 @@
 
             currentUser.balance -= amount;
             currentDuelBet = amount;
-            updateWalletDisplay();
             closeModal();
 
-            // Open Matchmaking search modal
+            // Open Matchmaking search modal exclusively
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-matchmaking').classList.remove('hidden');
             document.getElementById('matchmaking-status').innerText = `Searching active queue for player with Rank (${currentUser.rank}) & Wager (₱${amount})...`;
@@ -1102,7 +1096,6 @@
         }
 
         function launchMatchedPvPDuel(amount) {
-            // Select random opponent matched by rank
             const matchedOpponent = availableOpponents[Math.floor(Math.random() * availableOpponents.length)];
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
@@ -1110,7 +1103,13 @@
             document.getElementById('fs-enemy-name-label').innerText = matchedOpponent.name.toUpperCase();
             document.getElementById('fs-enemy-img-el').src = matchedOpponent.img;
 
-            duelState = { playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' };
+            if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
+
+            duelState = { 
+                playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, 
+                enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
+                enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null 
+            };
             
             shuffleAndDrawHand();
             logDuel(`[Matchmaking]: Matched vs ${matchedOpponent.name} (${matchedOpponent.rank})! Wager ₱${amount}. Your turn.`);
@@ -1123,7 +1122,43 @@
             document.getElementById('view-duel-fullscreen').classList.remove('hidden');
         }
 
+        function simulateToggleEnemyConnection() {
+            if (duelState.enemyStatus === 'Connected') {
+                duelState.enemyStatus = 'Disconnected';
+                duelState.enemyDisconnectTimer = 120;
+                logDuel(`[Connection]: Opponent disconnected! Waiting 2 minutes for reconnection...`);
+                document.getElementById('fs-enemy-status').innerHTML = `<span class="text-red-400">🔴 Disconnected (120s)</span>`;
+                
+                if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
+                duelState.disconnectInterval = setInterval(() => {
+                    duelState.enemyDisconnectTimer--;
+                    const mins = Math.floor(duelState.enemyDisconnectTimer / 60);
+                    const secs = duelState.enemyDisconnectTimer % 60;
+                    const timeStr = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+                    if (duelState.enemyStatus === 'Disconnected') {
+                        document.getElementById('fs-enemy-status').innerHTML = `<span class="text-red-400">🔴 DC (${timeStr})</span>`;
+                        logDuel(`[Connection]: Opponent disconnected. Auto-win in ${timeStr}...`);
+                    }
+
+                    if (duelState.enemyDisconnectTimer <= 0) {
+                        clearInterval(duelState.disconnectInterval);
+                        if (duelState.enemyStatus === 'Disconnected') {
+                            alert('Opponent failed to reconnect within the 2-minute limit. You win by default!');
+                            handleVictory();
+                        }
+                    }
+                }, 1000);
+            } else {
+                duelState.enemyStatus = 'Connected';
+                if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
+                document.getElementById('fs-enemy-status').innerHTML = `<span class="text-emerald-400">🟢 Connected</span>`;
+                logDuel(`[Connection]: Opponent reconnected successfully! Match resumed.`);
+            }
+        }
+
         function surrenderDuel() {
+            if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
             switchTab('hub');
@@ -1132,14 +1167,11 @@
         function updateDuelUI() {
             document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
             document.getElementById('fs-player-hp-bar').style.width = `${(duelState.playerHp / duelState.playerMaxHp) * 100}%`;
-            document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
             document.getElementById('fs-player-ap').innerText = duelState.playerAp;
 
             document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
             document.getElementById('fs-enemy-hp-bar').style.width = `${(duelState.enemyHp / duelState.enemyMaxHp) * 100}%`;
             document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
-            document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
-            document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
         }
 
         function logDuel(msg) {
@@ -1147,6 +1179,7 @@
         }
 
         function handleVictory() {
+            if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             const reward = currentDuelBet * 2;
             const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
             
@@ -1158,11 +1191,12 @@
             updateWalletDisplay();
 
             logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
-            alert(`Victory! You defeated your opponent in PvP, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
+            alert(`Victory! You received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
             surrenderDuel();
         }
 
         function handleDefeat() {
+            if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             const consolationXp = 15;
             currentUser.xp += consolationXp;
             evaluateRankAndUnlocks();
@@ -1173,7 +1207,7 @@
         }
 
         function playCard(index) {
-            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
+            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0 || duelState.enemyStatus === 'Disconnected') return;
             const card = currentHand[index];
             if (!card) return;
 
@@ -1228,7 +1262,7 @@
         }
 
         function endDuelTurn() {
-            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
+            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0 || duelState.enemyStatus === 'Disconnected') return;
 
             logDuel(`[System]: Ending turn & shuffling skill deck... Opponent counterattacking...`);
             
@@ -1245,7 +1279,7 @@
             }
 
             setTimeout(() => {
-                if (duelState.enemyHp > 0) {
+                if (duelState.enemyHp > 0 && duelState.enemyStatus === 'Connected') {
                     let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 12 : 16;
                     duelState.playerArmor = 0;
                     duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
@@ -1272,24 +1306,34 @@
                 reader.onload = function(e) {
                     if(type === 'gcash') uploadedGcashQR = e.target.result;
                     if(type === 'maya') uploadedMayaQR = e.target.result;
+                    updateTopupModalQRs();
                     alert(type.toUpperCase() + ' QR Code uploaded successfully! Click "Save" to apply.');
                 }
                 reader.readAsDataURL(file);
             }
         }
 
+        function updateTopupModalQRs() {
+            const gcashEl = document.getElementById('topup-gcash-qr');
+            const mayaEl = document.getElementById('topup-maya-qr');
+            if(uploadedGcashQR) gcashEl.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            if(uploadedMayaQR) mayaEl.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+        }
+
         function saveOwnerDetails() {
             const gNum = document.getElementById('input-gcash-num').value;
-            const gName = document.getElementById('input-gcash-name').value;
+            const gNameRaw = document.getElementById('input-gcash-name').value;
             const mNum = document.getElementById('input-maya-num').value;
-            const mName = document.getElementById('input-maya-name').value;
+            const mNameRaw = document.getElementById('input-maya-name').value;
+
+            const gNameMasked = maskName(gNameRaw);
+            const mNameMasked = maskName(mNameRaw);
 
             document.getElementById('display-gcash-num').innerText = gNum;
-            document.getElementById('display-gcash-name').innerText = gName;
+            document.getElementById('display-gcash-name').innerText = gNameMasked;
             document.getElementById('display-maya-num').innerText = mNum;
-            document.getElementById('display-maya-name').innerText = mName;
+            document.getElementById('display-maya-name').innerText = mNameMasked;
 
-            // Update Top-up modal display as well
             document.getElementById('topup-opt-gcash').innerText = gNum;
             document.getElementById('topup-opt-maya').innerText = mNum;
 
@@ -1306,8 +1350,13 @@
             document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-matchmaking').classList.add('hidden');
-            if(type === 'topup') document.getElementById('modal-topup').classList.remove('hidden');
+
+            if(type === 'topup') {
+                document.getElementById('modal-topup').classList.remove('hidden');
+                updateTopupModalQRs();
+            }
             if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
+            if(type === 'bet') document.getElementById('modal-bet').classList.remove('hidden');
         }
 
         function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
