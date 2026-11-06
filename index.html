@@ -34,12 +34,11 @@
             </div>
             <div>
                 <h1 class="font-cinzel font-bold text-sm sm:text-lg tracking-wider text-amber-400">AETHERIS DUEL</h1>
-                <p class="text-[10px] text-slate-400">Secure PWA Arena</p>
+                <p class="text-[10px] text-slate-400">Secure P2P Arena</p>
             </div>
         </div>
 
         <div class="flex items-center space-x-2">
-            <!-- PWA Install Button -->
             <button id="btn-install-pwa" onclick="installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-xl text-[11px] font-bold shadow-lg transition">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <span>Install</span>
@@ -65,7 +64,7 @@
         <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-2 my-auto">
             <div class="text-center space-y-1">
                 <h2 class="font-cinzel text-2xl sm:text-3xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
-                <p class="text-xs text-slate-400">Secured with SHA-256 Hashing & Role Isolation</p>
+                <p class="text-xs text-slate-400">Peer-to-Peer Tactical Card & Combat Arena</p>
             </div>
 
             <!-- Login Box -->
@@ -199,7 +198,7 @@
                             <span id="hub-rank-badge" class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
                         </div>
                         <h2 id="active-hero-name" class="font-cinzel text-base sm:text-lg font-bold text-white">PYRA</h2>
-                        <p class="text-[11px] text-slate-400">Active Champion • Ready for Ranked</p>
+                        <p class="text-[11px] text-slate-400">Active Champion • Ready for P2P Matchmaking</p>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
@@ -237,18 +236,18 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2">
                 <div onclick="openModal('bet')" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1.5 text-xs">⚔</div>
-                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">RANKED PVP MATCHMAKING</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Select bet stake (₱50-₱1000) & match against online players based on rank.</p>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">P2P RANKED MATCHMAKING</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Select bet stake (₱50-₱1000) & queue for live player-to-player duels.</p>
                 </div>
                 <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1.5 text-xs">🛡</div>
                     <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">HERO ROSTER (11)</h3>
                     <p class="text-[11px] text-slate-400 mt-0.5">Inspect all 11 champions, unlock requirements, and manage loadouts.</p>
                 </div>
-                <div onclick="alert('P2P Room Code created! Share code with friend.')" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
+                <div onclick="alert('P2P Room Code created! Share code with peer player.')" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-1.5 text-xs">🗝</div>
                     <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">P2P ROOM DUEL</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Create private room codes to duel real players.</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Create private room codes to duel real players directly.</p>
                 </div>
             </div>
         </div>
@@ -326,16 +325,16 @@
         </div>
     </main>
 
-    <!-- FULL-SCREEN PVP BATTLE ARENA VIEW -->
+    <!-- FULL-SCREEN P2P PVP BATTLE ARENA VIEW -->
     <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-3 sm:p-6 hidden overflow-hidden">
         <!-- Top Battle Bar -->
         <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-2 backdrop-blur shrink-0">
             <div class="flex items-center space-x-2">
-                <h2 class="font-cinzel font-bold text-sm sm:text-base text-amber-400 glow-gold">PLAYER VS PLAYER ARENA</h2>
+                <h2 class="font-cinzel font-bold text-sm sm:text-base text-amber-400 glow-gold">P2P DUEL ARENA</h2>
                 <span id="fullscreen-bet-badge" class="text-[11px] bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="simulateToggleEnemyConnection()" id="btn-sim-disconnect" class="px-2.5 py-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 text-[10px] font-bold rounded-xl transition">Simulate Opponent Disconnect</button>
+                <button onclick="simulateToggleEnemyConnection()" id="btn-sim-disconnect" class="px-2.5 py-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 text-[10px] font-bold rounded-xl transition">Simulate Peer DC</button>
                 <button onclick="surrenderDuel()" class="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-xl transition">Surrender</button>
             </div>
         </div>
@@ -344,19 +343,22 @@
         <div class="flex-1 my-2 bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-950 border border-slate-800/80 rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden shadow-2xl">
             <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
 
-            <!-- Opponent Stage Area (Top) -->
+            <!-- Opponent (Peer Player) Stage Area (Top) -->
             <div class="flex flex-col items-center space-y-1.5 z-10">
-                <div class="w-56 bg-slate-950/90 border border-red-900/50 rounded-xl p-2 space-y-1 shadow-lg">
-                    <div class="flex justify-between text-[10px] font-bold">
-                        <span id="fs-enemy-title" class="text-red-400">OPPONENT (SILVER I)</span>
+                <div class="w-64 bg-slate-950/90 border border-red-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <span id="fs-enemy-title" class="text-red-400">PEER PLAYER (SILVER I)</span>
                         <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
                         <div id="fs-enemy-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
                     </div>
-                    <div class="flex items-center justify-between text-[9px] text-slate-400">
+                    <!-- Detailed Opponent Status & Effects -->
+                    <div class="grid grid-cols-2 gap-1 text-[10px] text-slate-300">
                         <span>Status: <strong id="fs-enemy-status" class="text-emerald-400">🟢 Connected</strong></span>
-                        <span>Armor: <strong id="fs-enemy-armor" class="text-blue-300">0</strong></span>
+                        <span>Armor: <strong id="fs-enemy-armor" class="text-blue-400">0</strong></span>
+                        <span>Poison/Burn: <strong id="fs-enemy-poison" class="text-purple-400">0</strong></span>
+                        <span>Debuff: <strong id="fs-enemy-debuff" class="text-amber-400">None</strong></span>
                     </div>
                 </div>
                 <div id="fs-enemy-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] p-1.5">
@@ -367,7 +369,7 @@
 
             <!-- Central Battle Log Floating Pill -->
             <div class="self-center z-20 max-w-md w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-center text-[11px] text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
-                [Arena]: Matchmaking connected! PvP duel engaged. Choose your tactical skills.
+                [P2P Arena]: Match connected with peer player! Choose tactical skills within 30s.
             </div>
 
             <!-- Player Stage Area (Bottom) -->
@@ -376,17 +378,20 @@
                     <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
                     <span class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">PYRA</span>
                 </div>
-                <div class="w-56 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2 space-y-1 shadow-lg">
-                    <div class="flex justify-between text-[10px] font-bold">
+                <div class="w-64 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
+                    <div class="flex justify-between text-[11px] font-bold">
                         <span id="fs-player-name" class="text-blue-400">PLAYER</span>
                         <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
                         <div id="fs-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
                     </div>
-                    <div class="flex items-center justify-between text-[9px] text-slate-400">
-                        <span>Status: <strong id="fs-player-status" class="text-emerald-400">🟢 Connected</strong></span>
+                    <!-- Detailed Player Status, Armor & 30s Attack Timer -->
+                    <div class="grid grid-cols-2 gap-1 text-[10px] text-slate-300">
+                        <span>Armor: <strong id="fs-player-armor" class="text-blue-400">0</strong></span>
                         <span>AP: <strong id="fs-player-ap" class="text-amber-400">3</strong>/3</span>
+                        <span>Poison/Burn: <strong id="fs-player-poison" class="text-purple-400">0</strong></span>
+                        <span>Turn Timer: <strong id="fs-turn-timer" class="text-amber-400 font-bold">30s</strong></span>
                     </div>
                 </div>
             </div>
@@ -396,7 +401,7 @@
         <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2 backdrop-blur shrink-0">
             <div class="flex justify-between items-center px-1">
                 <span class="font-cinzel text-[11px] font-bold text-amber-400">UNIQUE HERO SKILL DECK</span>
-                <button onclick="endDuelTurn()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] rounded-xl shadow-lg transition">End Turn & Shuffle</button>
+                <button onclick="endDuelTurn()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] rounded-xl shadow-lg transition">End Turn & Attack</button>
             </div>
             <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
         </div>
@@ -464,10 +469,10 @@
             </div>
         </div>
 
-        <!-- PVP Bet & Matchmaking Selection Modal -->
+        <!-- P2P Ranked Matchmaking Selection Modal -->
         <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">SELECT RANKED PVP WAGER & QUEUE</h3>
-            <p class="text-xs text-slate-400">Choose your match stake. The system will match you against an online player with a similar rank & wager!</p>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">P2P RANKED WAGER & MATCHMAKING</h3>
+            <p class="text-xs text-slate-400">Choose your match stake. The P2P network will match you live with a peer player of similar rank & wager!</p>
             <div class="grid grid-cols-3 gap-2 pt-1">
                 <button onclick="startRankedMatchmaking(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
                 <button onclick="startRankedMatchmaking(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
@@ -478,12 +483,12 @@
             <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-1">Cancel</button>
         </div>
 
-        <!-- Matchmaking Loading Modal -->
+        <!-- P2P Matchmaking Loading Modal -->
         <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">FINDING RANKED OPPONENT</h3>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING P2P NETWORK</h3>
             <div class="py-4 space-y-3">
                 <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p id="matchmaking-status" class="text-xs text-slate-300">Searching active queue for player with matching rank & wager...</p>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Connecting to online P2P lobby for peer player match...</p>
             </div>
         </div>
 
@@ -546,9 +551,10 @@
         let uploadedMayaQR = null;
 
         let duelState = { 
-            playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, 
+            playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
             enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-            enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null 
+            enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
+            turnTimeRemaining: 30, turnTimerInterval: null 
         };
 
         let currentHand = [];
@@ -820,6 +826,8 @@
         }
 
         function logoutPlayer() {
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             currentUser = null;
             document.getElementById('nav-wallet-container').classList.add('hidden');
             document.getElementById('nav-menu').classList.add('hidden');
@@ -1050,6 +1058,7 @@
             }
             currentHand = deckCopy.slice(0, 4);
             renderHandCards();
+            startTurnTimer();
         }
 
         function renderHandCards() {
@@ -1064,8 +1073,8 @@
             `).join('');
         }
 
-        // --- MATCHMAKING & PVP DUEL LOGIC ---
-        const availableOpponents = [
+        // --- P2P MATCHMAKING & PVP DUEL LOGIC ---
+        const availablePeerOpponents = [
             { name: "VortexMage", rank: "Silver I", img: "image_e51741b7.jpg" },
             { name: "ShadowStalker", rank: "Bronze I", img: "image_a9978665.jpg" },
             { name: "IronPaladin", rank: "Silver II", img: "image_4b6fe95a.jpg" },
@@ -1084,35 +1093,36 @@
             currentDuelBet = amount;
             closeModal();
 
-            // Open Matchmaking search modal exclusively
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-matchmaking').classList.remove('hidden');
-            document.getElementById('matchmaking-status').innerText = `Searching active queue for player with Rank (${currentUser.rank}) & Wager (₱${amount})...`;
+            document.getElementById('matchmaking-status').innerText = `Searching P2P online lobby for peer player match (Rank: ${currentUser.rank}, Wager: ₱${amount})...`;
 
             setTimeout(() => {
                 closeModal();
                 launchMatchedPvPDuel(amount);
-            }, 1800);
+            }, 2000);
         }
 
         function launchMatchedPvPDuel(amount) {
-            const matchedOpponent = availableOpponents[Math.floor(Math.random() * availableOpponents.length)];
+            const matchedOpponent = availablePeerOpponents[Math.floor(Math.random() * availablePeerOpponents.length)];
 
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
-            document.getElementById('fs-enemy-title').innerText = `${matchedOpponent.name} (${matchedOpponent.rank})`;
+            document.getElementById('fs-enemy-title').innerText = `${matchedOpponent.name.toUpperCase()} (${matchedOpponent.rank})`;
             document.getElementById('fs-enemy-name-label').innerText = matchedOpponent.name.toUpperCase();
             document.getElementById('fs-enemy-img-el').src = matchedOpponent.img;
 
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
             duelState = { 
-                playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, 
+                playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
                 enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-                enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null 
+                enemyStatus: 'Connected', enemyDisconnectTimer: 120, disconnectInterval: null,
+                turnTimeRemaining: 30, turnTimerInterval: null 
             };
             
             shuffleAndDrawHand();
-            logDuel(`[Matchmaking]: Matched vs ${matchedOpponent.name} (${matchedOpponent.rank})! Wager ₱${amount}. Your turn.`);
+            logDuel(`[P2P Network]: Connected with peer ${matchedOpponent.name}! Your turn (30s timer started).`);
             
             updateDuelUI();
 
@@ -1122,11 +1132,29 @@
             document.getElementById('view-duel-fullscreen').classList.remove('hidden');
         }
 
+        function startTurnTimer() {
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            duelState.turnTimeRemaining = 30;
+            const timerEl = document.getElementById('fs-turn-timer');
+            if (timerEl) timerEl.innerText = `${duelState.turnTimeRemaining}s`;
+
+            duelState.turnTimerInterval = setInterval(() => {
+                duelState.turnTimeRemaining--;
+                if (timerEl) timerEl.innerText = `${duelState.turnTimeRemaining}s`;
+
+                if (duelState.turnTimeRemaining <= 0) {
+                    clearInterval(duelState.turnTimerInterval);
+                    logDuel(`[System]: 30s turn timer expired! Forcing turn end & attack phase.`);
+                    endDuelTurn();
+                }
+            }, 1000);
+        }
+
         function simulateToggleEnemyConnection() {
             if (duelState.enemyStatus === 'Connected') {
                 duelState.enemyStatus = 'Disconnected';
                 duelState.enemyDisconnectTimer = 120;
-                logDuel(`[Connection]: Opponent disconnected! Waiting 2 minutes for reconnection...`);
+                logDuel(`[Connection]: Peer player disconnected! Waiting 2 minutes for reconnection...`);
                 document.getElementById('fs-enemy-status').innerHTML = `<span class="text-red-400">🔴 Disconnected (120s)</span>`;
                 
                 if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
@@ -1138,13 +1166,13 @@
 
                     if (duelState.enemyStatus === 'Disconnected') {
                         document.getElementById('fs-enemy-status').innerHTML = `<span class="text-red-400">🔴 DC (${timeStr})</span>`;
-                        logDuel(`[Connection]: Opponent disconnected. Auto-win in ${timeStr}...`);
+                        logDuel(`[Connection]: Peer disconnected. Auto-win in ${timeStr}...`);
                     }
 
                     if (duelState.enemyDisconnectTimer <= 0) {
                         clearInterval(duelState.disconnectInterval);
                         if (duelState.enemyStatus === 'Disconnected') {
-                            alert('Opponent failed to reconnect within the 2-minute limit. You win by default!');
+                            alert('Peer player failed to reconnect within the 2-minute limit. You win by default!');
                             handleVictory();
                         }
                     }
@@ -1153,11 +1181,12 @@
                 duelState.enemyStatus = 'Connected';
                 if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
                 document.getElementById('fs-enemy-status').innerHTML = `<span class="text-emerald-400">🟢 Connected</span>`;
-                logDuel(`[Connection]: Opponent reconnected successfully! Match resumed.`);
+                logDuel(`[Connection]: Peer player reconnected successfully! Match resumed.`);
             }
         }
 
         function surrenderDuel() {
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
@@ -1168,10 +1197,14 @@
             document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
             document.getElementById('fs-player-hp-bar').style.width = `${(duelState.playerHp / duelState.playerMaxHp) * 100}%`;
             document.getElementById('fs-player-ap').innerText = duelState.playerAp;
+            document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
+            document.getElementById('fs-player-poison').innerText = duelState.playerPoison;
 
             document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
             document.getElementById('fs-enemy-hp-bar').style.width = `${(duelState.enemyHp / duelState.enemyMaxHp) * 100}%`;
             document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
+            document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
+            document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
         }
 
         function logDuel(msg) {
@@ -1179,6 +1212,7 @@
         }
 
         function handleVictory() {
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             const reward = currentDuelBet * 2;
             const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
@@ -1191,11 +1225,12 @@
             updateWalletDisplay();
 
             logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
-            alert(`Victory! You received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
+            alert(`Victory! You defeated the peer player in P2P combat, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
             surrenderDuel();
         }
 
         function handleDefeat() {
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (duelState.disconnectInterval) clearInterval(duelState.disconnectInterval);
             const consolationXp = 15;
             currentUser.xp += consolationXp;
@@ -1263,12 +1298,13 @@
 
         function endDuelTurn() {
             if (duelState.enemyHp <= 0 || duelState.playerHp <= 0 || duelState.enemyStatus === 'Disconnected') return;
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
-            logDuel(`[System]: Ending turn & shuffling skill deck... Opponent counterattacking...`);
+            logDuel(`[System]: Ending turn & attacking... Peer player counterattacking...`);
             
             if (duelState.enemyPoison > 0) {
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
-                logDuel(`[Effect]: Opponent took ${duelState.enemyPoison} poison damage.`);
+                logDuel(`[Effect]: Peer player took ${duelState.enemyPoison} poison/burn damage.`);
             }
 
             updateDuelUI();
@@ -1281,9 +1317,12 @@
             setTimeout(() => {
                 if (duelState.enemyHp > 0 && duelState.enemyStatus === 'Connected') {
                     let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 12 : 16;
-                    duelState.playerArmor = 0;
+                    if (duelState.playerArmor > 0) {
+                        if (duelState.playerArmor >= enemyDmg) { duelState.playerArmor -= enemyDmg; enemyDmg = 0; }
+                        else { enemyDmg -= duelState.playerArmor; duelState.playerArmor = 0; }
+                    }
                     duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
-                    logDuel(`[Opponent]: Counterattacked for ${enemyDmg} damage!`);
+                    logDuel(`[Peer Player]: Counterattacked for ${enemyDmg} damage!`);
                 }
                 
                 updateDuelUI();
