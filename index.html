@@ -45,7 +45,7 @@
                 <span>Install</span>
             </button>
 
-            <div id="nav-wallet-container" class="hidden items-center space-x-1.5 bg-slate-900 border border-slate-700 rounded-full px-2.5 py-1">
+            <div id="nav-wallet-container" class="hidden items-center space-x-1.5 bg-slate-900 border border-slate-700 rounded-full px-3 py-1">
                 <span class="text-[11px] text-slate-400">Wallet:</span>
                 <span id="nav-wallet" class="text-xs sm:text-sm font-bold text-emerald-400">₱0.00</span>
             </div>
@@ -58,8 +58,8 @@
         </div>
     </header>
 
-    <!-- Main Content Container (Full Screen / Non-Scrollable Layout) -->
-    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 overflow-y-auto flex flex-col">
+    <!-- Main Content Container (Full Screen / Non-Scrollable Layout with responsive scrolling) -->
+    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 overflow-y-auto flex flex-col pb-12">
 
         <!-- AUTH VIEW -->
         <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-2 my-auto">
@@ -72,7 +72,6 @@
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box">
                 <div class="flex items-center justify-between">
                     <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
-                    <!-- Install App Button Inside Login Window -->
                     <button id="auth-install-btn" onclick="installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         <span>Install App</span>
@@ -170,11 +169,11 @@
             </div>
         </div>
 
-        <!-- Hero Roster & Rank Unlocks View -->
+        <!-- Hero Roster & Rank Unlocks View (Shows all 11 Heroes) -->
         <div id="view-select" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
-                <p class="text-slate-400 text-xs">Acquire additional basic heroes or advance your rank through duels to unlock advanced champions!</p>
+                <p class="text-slate-400 text-xs">Inspect all 11 champions across tiers. Advance your rank and wins to unlock advanced fighters!</p>
                 <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-xs space-y-1.5 w-full">
                     <div class="flex items-center justify-between space-x-4">
                         <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
@@ -187,14 +186,14 @@
                     </div>
                 </div>
             </div>
-            <div id="hero-cards-container" class="space-y-2 pb-2"></div>
+            <div id="hero-cards-container" class="space-y-2.5 pb-6"></div>
         </div>
 
         <!-- Player Hub View -->
         <div id="view-hub" class="hidden space-y-3 py-2">
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between glow-box">
                 <div class="flex items-center space-x-3">
-                    <!-- Active Hero Canva Icon Badge -->
+                    <!-- Active Hero Avatar Badge -->
                     <div id="active-hero-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
                         <img id="active-hero-img-el" src="" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
                     </div>
@@ -242,13 +241,13 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2">
                 <div onclick="openBettingModal()" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1.5 text-xs">⚔</div>
-                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">RANKED PVP DUEL</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Select bet stake (₱50-₱1000) and win matches to gain Rank XP.</p>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">RANKED PVP MATCHMAKING</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Select bet stake (₱50-₱1000) & match against online players based on rank.</p>
                 </div>
                 <div onclick="switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1.5 text-xs">🛡</div>
-                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">HERO ROSTER</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Acquire basic heroes or inspect rank unlock requirements.</p>
+                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">HERO ROSTER (11)</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Inspect all 11 champions, unlock requirements, and manage loadouts.</p>
                 </div>
                 <div onclick="alert('P2P Room Code created! Share code with friend.')" class="bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-1.5 text-xs">🗝</div>
@@ -259,7 +258,7 @@
         </div>
 
         <!-- Owner Portal View -->
-        <div id="view-owner" class="hidden space-y-3 py-2">
+        <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                     <h2 class="font-cinzel text-base sm:text-lg font-bold text-amber-400">OWNER ADMIN PORTAL</h2>
@@ -341,7 +340,7 @@
         <!-- Top Battle Bar -->
         <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-2 backdrop-blur shrink-0">
             <div class="flex items-center space-x-2">
-                <h2 class="font-cinzel font-bold text-sm sm:text-base text-amber-400 glow-gold">AXIE ARENA BATTLE</h2>
+                <h2 class="font-cinzel font-bold text-sm sm:text-base text-amber-400 glow-gold">PLAYER VS PLAYER ARENA</h2>
                 <span id="fullscreen-bet-badge" class="text-[11px] bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
             </div>
             <button onclick="surrenderDuel()" class="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-xl transition">Surrender</button>
@@ -353,9 +352,9 @@
 
             <!-- Opponent Stage Area (Top) -->
             <div class="flex flex-col items-center space-y-1.5 z-10">
-                <div class="w-44 bg-slate-950/90 border border-red-900/50 rounded-xl p-2 space-y-1 shadow-lg">
+                <div class="w-48 bg-slate-950/90 border border-red-900/50 rounded-xl p-2 space-y-1 shadow-lg">
                     <div class="flex justify-between text-[10px] font-bold">
-                        <span class="text-red-400">CHRONO WARDEN</span>
+                        <span id="fs-enemy-title" class="text-red-400">OPPONENT (SILVER I)</span>
                         <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
@@ -368,14 +367,14 @@
                     </div>
                 </div>
                 <div id="fs-enemy-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] p-1.5">
-                    <img id="fs-enemy-img-el" src="image_a4f1655c.jpg" alt="Chrono Warden" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
-                    <span class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">CHRONO</span>
+                    <img id="fs-enemy-img-el" src="image_a4f1655c.jpg" alt="Opponent Champion" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
+                    <span id="fs-enemy-name-label" class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">CHRONO</span>
                 </div>
             </div>
 
             <!-- Central Battle Log Floating Pill -->
             <div class="self-center z-20 max-w-md w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-center text-[11px] text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
-                [Arena]: Deck shuffled! Combat engaged. Choose your drawn tactical skills below.
+                [Arena]: Matchmaking connected! PvP duel engaged. Choose your tactical skills.
             </div>
 
             <!-- Player Stage Area (Bottom) -->
@@ -384,7 +383,7 @@
                     <img id="fs-player-img-el" src="image_b2781538.jpg" alt="Pyra" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
                     <span class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">PYRA</span>
                 </div>
-                <div class="w-44 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2 space-y-1 shadow-lg">
+                <div class="w-48 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2 space-y-1 shadow-lg">
                     <div class="flex justify-between text-[10px] font-bold">
                         <span id="fs-player-name" class="text-blue-400">PLAYER</span>
                         <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
@@ -415,15 +414,33 @@
 
     <!-- Modals -->
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
-        <!-- Top-up Modal -->
+        <!-- Top-up Modal (Payment Options Displayed FIRST Before Transaction Details) -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Submit Top-Up Request</h3>
-            <p class="text-xs text-slate-400">Send payment to owner's official e-wallet, enter reference, and upload payment receipt screenshot.</p>
+            
+            <!-- Payment Options & Accounts Displayed First -->
+            <div class="space-y-1.5">
+                <p class="text-[11px] text-slate-400">1. Send payment to one of our official merchant channels below:</p>
+                <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px]">
+                    <div class="p-1.5 border-r border-slate-800">
+                        <span class="font-bold text-blue-400 block">GCash</span>
+                        <span id="topup-opt-gcash" class="text-white font-mono font-bold text-[10px]">0912-345-6789</span>
+                        <span class="text-slate-400 text-[10px]">John Carlo M.</span>
+                    </div>
+                    <div class="p-1.5">
+                        <span class="font-bold text-teal-400 block">Maya</span>
+                        <span id="topup-opt-maya" class="text-white font-mono font-bold text-[10px]">0918-987-6543</span>
+                        <span class="text-slate-400 text-[10px]">Logicgrid Hub</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-slate-400">2. Enter transaction reference and upload your receipt screenshot:</p>
             <div class="space-y-2.5">
-                <input type="number" id="topup-amount" placeholder="Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="number" id="topup-amount" placeholder="Amount Sent (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <div class="space-y-1">
-                    <label class="text-[10px] text-slate-400 block">Upload Payment Receipt:</label>
+                    <label class="text-[10px] text-slate-400 block">Upload Payment Receipt Screenshot:</label>
                     <input type="file" id="topup-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-600 file:text-white">
                 </div>
             </div>
@@ -452,18 +469,27 @@
             </div>
         </div>
 
-        <!-- PVP Bet Selection Modal -->
+        <!-- PVP Bet & Matchmaking Selection Modal -->
         <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">SELECT RANKED PVP WAGER</h3>
-            <p class="text-xs text-slate-400">Choose your match stake. Winner takes double the bet and earns Rank XP!</p>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">SELECT RANKED PVP WAGER & QUEUE</h3>
+            <p class="text-xs text-slate-400">Choose your match stake. The system will match you against an online player with a similar rank & wager!</p>
             <div class="grid grid-cols-3 gap-2 pt-1">
-                <button onclick="startDuelWithBet(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
-                <button onclick="startDuelWithBet(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
-                <button onclick="startDuelWithBet(200)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱200</button>
-                <button onclick="startDuelWithBet(500)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱500</button>
-                <button onclick="startDuelWithBet(1000)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs col-span-2">₱1,000</button>
+                <button onclick="startRankedMatchmaking(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
+                <button onclick="startRankedMatchmaking(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
+                <button onclick="startRankedMatchmaking(200)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱200</button>
+                <button onclick="startRankedMatchmaking(500)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱500</button>
+                <button onclick="startRankedMatchmaking(1000)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs col-span-2">₱1,000</button>
             </div>
             <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-1">Cancel</button>
+        </div>
+
+        <!-- Matchmaking Loading Modal -->
+        <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">FINDING RANKED OPPONENT</h3>
+            <div class="py-4 space-y-3">
+                <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching active queue for player with matching rank & wager...</p>
+            </div>
         </div>
 
         <!-- Receipt Preview Modal -->
@@ -483,14 +509,8 @@
             deferredPrompt = e;
             const installBtn = document.getElementById('btn-install-pwa');
             const authInstallBtn = document.getElementById('auth-install-btn');
-            if (installBtn) {
-                installBtn.classList.remove('hidden');
-                installBtn.classList.add('flex');
-            }
-            if (authInstallBtn) {
-                authInstallBtn.classList.remove('hidden');
-                authInstallBtn.classList.add('flex');
-            }
+            if (installBtn) { installBtn.classList.remove('hidden'); installBtn.classList.add('flex'); }
+            if (authInstallBtn) { authInstallBtn.classList.remove('hidden'); authInstallBtn.classList.add('flex'); }
         });
 
         async function installPWA() {
@@ -500,9 +520,7 @@
             }
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-            }
+            if (outcome === 'accepted') console.log('User accepted the install prompt');
             deferredPrompt = null;
         }
 
@@ -541,21 +559,13 @@
 
         let currentHand = [];
 
-        // Master Character Data Matrix with UNIQUE Skill Decks
+        // Master Character Data Matrix with all 11 UNIQUE Heroes
         const heroes = [
           {
-            id: 'pyra',
-            name: 'PYRA',
-            role: 'Fire Mage',
-            rarity: 'STARTER (Basic)',
+            id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER (Basic)',
             desc: 'Fire-elemental spellcaster with explosive burn damage.',
-            bg: 'from-red-950 to-slate-950',
-            border: 'border-red-500/50',
-            iconImg: 'image_b2781538.jpg',
-            price: 150,
-            requiredWins: 0,
-            requiredXp: 0,
-            isStarter: true,
+            bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', iconImg: 'image_b2781538.jpg',
+            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
             skillDeck: [
               { type: 'strike', name: 'FLAME DART', ap: 1, color: 'red', desc: 'Deal 15 Fire damage.' },
               { type: 'defend', name: 'FIRE SHIELD', ap: 1, color: 'red', desc: 'Gain 10 Armor block.' },
@@ -564,18 +574,10 @@
             ]
           },
           {
-            id: 'sylph',
-            name: 'SYLPH',
-            role: 'Wind Ranger',
-            rarity: 'STARTER (Basic)',
+            id: 'sylph', name: 'SYLPH', role: 'Wind Ranger', rarity: 'STARTER (Basic)',
             desc: 'Agile archer with high movement and gale evasion.',
-            bg: 'from-emerald-950 to-slate-950',
-            border: 'border-emerald-500/50',
-            iconImg: 'image_e51741b7.jpg',
-            price: 150,
-            requiredWins: 0,
-            requiredXp: 0,
-            isStarter: true,
+            bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', iconImg: 'image_e51741b7.jpg',
+            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
             skillDeck: [
               { type: 'strike', name: 'GALE SLASH', ap: 1, color: 'emerald', desc: 'Deal 16 Wind damage.' },
               { type: 'defend', name: 'WIND STEP', ap: 1, color: 'emerald', desc: 'Gain 12 Armor block.' },
@@ -584,18 +586,10 @@
             ]
           },
           {
-            id: 'valen',
-            name: 'VALEN',
-            role: 'Iron Guardian',
-            rarity: 'STARTER (Basic)',
+            id: 'valen', name: 'VALEN', role: 'Iron Guardian', rarity: 'STARTER (Basic)',
             desc: 'Holy tank with impenetrable defense and holy barrier.',
-            bg: 'from-blue-950 to-slate-950',
-            border: 'border-blue-500/50',
-            iconImg: 'image_4b6fe95a.jpg',
-            price: 150,
-            requiredWins: 0,
-            requiredXp: 0,
-            isStarter: true,
+            bg: 'from-blue-950 to-slate-950', border: 'border-blue-500/50', iconImg: 'image_4b6fe95a.jpg',
+            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
             skillDeck: [
               { type: 'strike', name: 'SHIELD BASH', ap: 1, color: 'blue', desc: 'Deal 12 Physical damage.' },
               { type: 'defend', name: 'IRON BASTION', ap: 1, color: 'blue', desc: 'Gain 15 Armor block.' },
@@ -604,18 +598,10 @@
             ]
           },
           {
-            id: 'nyx',
-            name: 'NYX',
-            role: 'Shadow Assassin',
-            rarity: 'STARTER (Basic)',
+            id: 'nyx', name: 'NYX', role: 'Shadow Assassin', rarity: 'STARTER (Basic)',
             desc: 'Deadly operative with stealth and shadow-strike bursts.',
-            bg: 'from-purple-950 to-slate-950',
-            border: 'border-purple-500/50',
-            iconImg: 'image_a9978665.jpg',
-            price: 150,
-            requiredWins: 0,
-            requiredXp: 0,
-            isStarter: true,
+            bg: 'from-purple-950 to-slate-950', border: 'border-purple-500/50', iconImg: 'image_a9978665.jpg',
+            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
             skillDeck: [
               { type: 'strike', name: 'SHADOW STAB', ap: 1, color: 'purple', desc: 'Deal 17 Dark damage.' },
               { type: 'defend', name: 'SMOKE CLOAK', ap: 1, color: 'purple', desc: 'Gain 10 Armor block.' },
@@ -624,18 +610,10 @@
             ]
           },
           {
-            id: 'storm-knight',
-            name: 'STORM KNIGHT',
-            role: 'Electric Knight',
-            rarity: 'RANKED (Silver I)',
+            id: 'storm-knight', name: 'STORM KNIGHT', role: 'Electric Knight', rarity: 'RANKED (Silver I)',
             desc: 'Electric armored duelist wielding lightning strikes.',
-            bg: 'from-amber-950 to-slate-950',
-            border: 'border-amber-500/50',
-            iconImg: 'image_d3c262a5.jpg',
-            price: 150,
-            requiredWins: 2,
-            requiredXp: 150,
-            isStarter: false,
+            bg: 'from-amber-950 to-slate-950', border: 'border-amber-500/50', iconImg: 'image_d3c262a5.jpg',
+            price: 150, requiredWins: 2, requiredXp: 150, isStarter: false,
             skillDeck: [
               { type: 'strike', name: 'SPARK STRIKE', ap: 1, color: 'amber', desc: 'Deal 20 Electric damage.' },
               { type: 'defend', name: 'STATIC GUARD', ap: 1, color: 'amber', desc: 'Gain 14 Armor block.' },
@@ -644,18 +622,10 @@
             ]
           },
           {
-            id: 'ironclad-titan',
-            name: 'IRONCLAD TITAN',
-            role: 'Earth Titan',
-            rarity: 'RANKED (Silver II)',
+            id: 'ironclad-titan', name: 'IRONCLAD TITAN', role: 'Earth Titan', rarity: 'RANKED (Silver II)',
             desc: 'Colossal earth juggernaut with earth-shattering slams.',
-            bg: 'from-stone-950 to-slate-950',
-            border: 'border-stone-500/50',
-            iconImg: 'image_e1196f4d.jpg',
-            price: 150,
-            requiredWins: 4,
-            requiredXp: 350,
-            isStarter: false,
+            bg: 'from-stone-950 to-slate-950', border: 'border-stone-500/50', iconImg: 'image_e1196f4d.jpg',
+            price: 150, requiredWins: 4, requiredXp: 350, isStarter: false,
             skillDeck: [
               { type: 'strike', name: 'STONE SMASH', ap: 1, color: 'stone', desc: 'Deal 18 Earth damage.' },
               { type: 'defend', name: 'TECTONIC BLOCK', ap: 1, color: 'stone', desc: 'Gain 18 Armor block.' },
@@ -664,18 +634,10 @@
             ]
           },
           {
-            id: 'chrono-warden',
-            name: 'CHRONO WARDEN',
-            role: 'Time Mage',
-            rarity: 'RANKED (Gold I)',
+            id: 'chrono-warden', name: 'CHRONO WARDEN', role: 'Time Mage', rarity: 'RANKED (Gold I)',
             desc: 'Time controller manipulating action queues and hourglass power.',
-            bg: 'from-yellow-950 to-slate-950',
-            border: 'border-yellow-500/50',
-            iconImg: 'image_a4f1655c.jpg',
-            price: 150,
-            requiredWins: 7,
-            requiredXp: 600,
-            isStarter: false,
+            bg: 'from-yellow-950 to-slate-950', border: 'border-yellow-500/50', iconImg: 'image_a4f1655c.jpg',
+            price: 150, requiredWins: 7, requiredXp: 600, isStarter: false,
             skillDeck: [
               { type: 'strike', name: 'TIME SLASH', ap: 1, color: 'yellow', desc: 'Deal 22 Temporal damage.' },
               { type: 'defend', name: 'TEMPORAL WARD', ap: 1, color: 'yellow', desc: 'Gain 15 Armor block.' },
@@ -684,18 +646,10 @@
             ]
           },
           {
-            id: 'sky-valkyrie',
-            name: 'SKY VALKYRIE',
-            role: 'Light Warrior',
-            rarity: 'RANKED (Gold II)',
+            id: 'sky-valkyrie', name: 'SKY VALKYRIE', role: 'Light Warrior', rarity: 'RANKED (Gold II)',
             desc: 'Aerial divine warrior with celestial flight capabilities.',
-            bg: 'from-orange-950 to-slate-950',
-            border: 'border-orange-500/50',
-            iconImg: 'image_9b984ce7.jpg',
-            price: 150,
-            requiredWins: 10,
-            requiredXp: 950,
-            isStarter: false,
+            bg: 'from-orange-950 to-slate-950', border: 'border-orange-500/50', iconImg: 'image_9b984ce7.jpg',
+            price: 150, requiredWins: 10, requiredXp: 950, isStarter: false,
             skillDeck: [
               { type: 'strike', name: 'HOLY SPEAR', ap: 1, color: 'orange', desc: 'Deal 24 Light damage.' },
               { type: 'defend', name: 'RADIANT SHIELD', ap: 1, color: 'orange', desc: 'Gain 16 Armor block.' },
@@ -704,18 +658,10 @@
             ]
           },
           {
-            id: 'void-necromancer',
-            name: 'VOID NECROMANCER',
-            role: 'Void Sorcerer',
-            rarity: 'RANKED (Platinum I)',
+            id: 'void-necromancer', name: 'VOID NECROMANCER', role: 'Void Sorcerer', rarity: 'RANKED (Platinum I)',
             desc: 'Dark sorcerer capable of summoning spectral minions.',
-            bg: 'from-violet-950 to-slate-950',
-            border: 'border-violet-500/50',
-            iconImg: 'image_42205d6.jpg',
-            price: 150,
-            requiredWins: 15,
-            requiredXp: 1400,
-            isStarter: false,
+            bg: 'from-violet-950 to-slate-950', border: 'border-violet-500/50', iconImg: 'image_42205d6.jpg',
+            price: 150, requiredWins: 15, requiredXp: 1400, isStarter: false,
             skillDeck: [
               { type: 'strike', name: 'DARK BOLT', ap: 1, color: 'violet', desc: 'Deal 26 Void damage.' },
               { type: 'defend', name: 'SOUL BARRIER', ap: 1, color: 'violet', desc: 'Gain 15 Armor block.' },
@@ -724,18 +670,10 @@
             ]
           },
           {
-            id: 'blood-berserker',
-            name: 'BLOOD BERSERKER',
-            role: 'Blood Brawler',
-            rarity: 'ADVANCED (Elite)',
+            id: 'blood-berserker', name: 'BLOOD BERSERKER', role: 'Blood Brawler', rarity: 'ADVANCED (Elite)',
             desc: 'Furious warrior scaling attack power as health drops.',
-            bg: 'from-rose-950 to-slate-950',
-            border: 'border-rose-500/50',
-            iconImg: 'image_2e90c1d9.jpg',
-            price: 300,
-            requiredWins: 25,
-            requiredXp: 2500,
-            isStarter: false,
+            bg: 'from-rose-950 to-slate-950', border: 'border-rose-500/50', iconImg: 'image_2e90c1d9.jpg',
+            price: 300, requiredWins: 25, requiredXp: 2500, isStarter: false,
             skillDeck: [
               { type: 'strike', name: 'BLOOD AXE', ap: 1, color: 'rose', desc: 'Deal 30 Physical damage.' },
               { type: 'defend', name: 'FRENZIED BLOCK', ap: 1, color: 'rose', desc: 'Gain 12 Armor block.' },
@@ -744,18 +682,10 @@
             ]
           },
           {
-            id: 'astral-archmage',
-            name: 'ASTRAL ARCHMAGE',
-            role: 'Cosmic Sorcerer',
-            rarity: 'ADVANCED (Elite)',
+            id: 'astral-archmage', name: 'ASTRAL ARCHMAGE', role: 'Cosmic Sorcerer', rarity: 'ADVANCED (Elite)',
             desc: 'Cosmic spellcaster manipulating planetary layout orbits.',
-            bg: 'from-indigo-950 to-slate-950',
-            border: 'border-indigo-500/50',
-            iconImg: 'image_1d431b92.jpg',
-            price: 300,
-            requiredWins: 30,
-            requiredXp: 3200,
-            isStarter: false,
+            bg: 'from-indigo-950 to-slate-950', border: 'border-indigo-500/50', iconImg: 'image_1d431b92.jpg',
+            price: 300, requiredWins: 30, requiredXp: 3200, isStarter: false,
             skillDeck: [
               { type: 'strike', name: 'STELLAR RAY', ap: 1, color: 'indigo', desc: 'Deal 32 Cosmic damage.' },
               { type: 'defend', name: 'COSMIC BARRIER', ap: 1, color: 'indigo', desc: 'Gain 20 Armor block.' },
@@ -813,17 +743,12 @@
             const newAcc = {
                 name, nickname, phone, email, bday, passHash,
                 role: 'player', balance: 0.00,
-                unlockedHeroes: [],
-                activeHero: '',
-                wins: 0,
-                xp: 0,
-                rank: 'Bronze I'
+                unlockedHeroes: [], activeHero: '', wins: 0, xp: 0, rank: 'Bronze I'
             };
             registeredAccounts.push(newAcc);
             currentUser = newAcc;
 
             alert('Account registered successfully! Registration fee of ₱50.00 processed. Please select your 1 free starter champion.');
-            
             document.getElementById('view-auth').classList.add('hidden');
             renderStarterPickOptions();
             document.getElementById('view-starter-pick').classList.remove('hidden');
@@ -976,6 +901,7 @@
             const xpPercent = Math.min(100, Math.round((currentUser.xp / maxXpForTier) * 100));
             document.getElementById('player-xp-bar').style.width = `${xpPercent}%`;
 
+            // Renders all 11 heroes cleanly without any truncation
             document.getElementById('hero-cards-container').innerHTML = heroes.map(h => {
                 const isUnlocked = currentUser && currentUser.unlockedHeroes.includes(h.id);
                 const isActive = currentUser && currentUser.activeHero === h.id;
@@ -983,13 +909,13 @@
 
                 let actionBtn = '';
                 if (isActive) {
-                    actionBtn = `<span class="px-4 py-2 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/40">Active</span>`;
+                    actionBtn = `<span class="px-3 py-1.5 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/40">Active</span>`;
                 } else if (isUnlocked) {
-                    actionBtn = `<button onclick="switchActiveHero('${h.id}')" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Equip</button>`;
+                    actionBtn = `<button onclick="switchActiveHero('${h.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Equip</button>`;
                 } else if (h.isStarter) {
-                    actionBtn = `<button onclick="buyBasicHero('${h.id}', ${h.price})" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow transition">₱${h.price}</button>`;
+                    actionBtn = `<button onclick="buyBasicHero('${h.id}', ${h.price})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow transition">₱${h.price}</button>`;
                 } else if (meetsReqs) {
-                    actionBtn = `<button onclick="claimRankedHero('${h.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition">Unlock</button>`;
+                    actionBtn = `<button onclick="claimRankedHero('${h.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition">Unlock</button>`;
                 } else {
                     actionBtn = `<span class="text-[10px] text-amber-400 font-mono text-right block">Req: ${h.requiredWins}W / ${h.requiredXp}XP</span>`;
                 }
@@ -1143,7 +1069,15 @@
             `).join('');
         }
 
-        function startDuelWithBet(amount) {
+        // --- MATCHMAKING & PVP DUEL LOGIC ---
+        const availableOpponents = [
+            { name: "VortexMage", rank: "Silver I", img: "image_e51741b7.jpg" },
+            { name: "ShadowStalker", rank: "Bronze I", img: "image_a9978665.jpg" },
+            { name: "IronPaladin", rank: "Silver II", img: "image_4b6fe95a.jpg" },
+            { name: "StormBringer", rank: "Gold I", img: "image_d3c262a5.jpg" }
+        ];
+
+        function startRankedMatchmaking(amount) {
             if (!currentUser) return;
             if (currentUser.balance < amount) {
                 alert('Insufficient wallet balance for this bet stake!');
@@ -1156,11 +1090,30 @@
             updateWalletDisplay();
             closeModal();
 
+            // Open Matchmaking search modal
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-matchmaking').classList.remove('hidden');
+            document.getElementById('matchmaking-status').innerText = `Searching active queue for player with Rank (${currentUser.rank}) & Wager (₱${amount})...`;
+
+            setTimeout(() => {
+                closeModal();
+                launchMatchedPvPDuel(amount);
+            }, 1800);
+        }
+
+        function launchMatchedPvPDuel(amount) {
+            // Select random opponent matched by rank
+            const matchedOpponent = availableOpponents[Math.floor(Math.random() * availableOpponents.length)];
+
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
+            document.getElementById('fs-enemy-title').innerText = `${matchedOpponent.name} (${matchedOpponent.rank})`;
+            document.getElementById('fs-enemy-name-label').innerText = matchedOpponent.name.toUpperCase();
+            document.getElementById('fs-enemy-img-el').src = matchedOpponent.img;
+
             duelState = { playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None' };
             
             shuffleAndDrawHand();
-            document.getElementById('fs-battle-log').innerText = `[Arena]: Ranked match started with ₱${amount} wager! Skill deck shuffled. Your turn.`;
+            logDuel(`[Matchmaking]: Matched vs ${matchedOpponent.name} (${matchedOpponent.rank})! Wager ₱${amount}. Your turn.`);
             
             updateDuelUI();
 
@@ -1205,7 +1158,7 @@
             updateWalletDisplay();
 
             logDuel(`[Victory]: You won ₱${reward} prize & +${earnedXp} Rank XP!`);
-            alert(`Victory! You won the Ranked Duel, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
+            alert(`Victory! You defeated your opponent in PvP, received ₱${reward} (Double Wager), +1 Win, and gained +${earnedXp} Rank XP (Current Tier: ${currentUser.rank})!`);
             surrenderDuel();
         }
 
@@ -1232,7 +1185,7 @@
             duelState.playerAp -= card.ap;
 
             const activeHeroObj = heroes.find(h => h.id === currentUser.activeHero);
-            const baseAtkMultiplier = activeHeroObj ? (activeHeroObj.stats?.atk || 2000) / 2000 : 1;
+            const baseAtkMultiplier = activeHeroObj ? 1.1 : 1;
 
             if (card.type === 'strike') {
                 let dmg = Math.round(18 * baseAtkMultiplier);
@@ -1277,11 +1230,11 @@
         function endDuelTurn() {
             if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
 
-            logDuel(`[System]: Ending turn & shuffling skill deck... Enemy counterattacking...`);
+            logDuel(`[System]: Ending turn & shuffling skill deck... Opponent counterattacking...`);
             
             if (duelState.enemyPoison > 0) {
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
-                logDuel(`[Effect]: Enemy took ${duelState.enemyPoison} poison damage.`);
+                logDuel(`[Effect]: Opponent took ${duelState.enemyPoison} poison damage.`);
             }
 
             updateDuelUI();
@@ -1296,7 +1249,7 @@
                     let enemyDmg = duelState.enemyDebuff === 'Armor-Break' ? 12 : 16;
                     duelState.playerArmor = 0;
                     duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
-                    logDuel(`[Opponent]: Boss attacks for ${enemyDmg} damage!`);
+                    logDuel(`[Opponent]: Counterattacked for ${enemyDmg} damage!`);
                 }
                 
                 updateDuelUI();
@@ -1336,6 +1289,10 @@
             document.getElementById('display-maya-num').innerText = mNum;
             document.getElementById('display-maya-name').innerText = mName;
 
+            // Update Top-up modal display as well
+            document.getElementById('topup-opt-gcash').innerText = gNum;
+            document.getElementById('topup-opt-maya').innerText = mNum;
+
             if(uploadedGcashQR) document.getElementById('player-gcash-qr').innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
             if(uploadedMayaQR) document.getElementById('player-maya-qr').innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
 
@@ -1348,6 +1305,7 @@
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-receipt').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-matchmaking').classList.add('hidden');
             if(type === 'topup') document.getElementById('modal-topup').classList.remove('hidden');
             if(type === 'withdraw') document.getElementById('modal-withdraw').classList.remove('hidden');
         }
@@ -1359,6 +1317,7 @@
             document.getElementById('modal-topup').classList.add('hidden');
             document.getElementById('modal-withdraw').classList.add('hidden');
             document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-matchmaking').classList.add('hidden');
             document.getElementById('modal-receipt').classList.remove('hidden');
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-60 rounded object-contain">`;
         }
