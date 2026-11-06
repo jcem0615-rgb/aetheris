@@ -208,7 +208,7 @@
         <div id="view-shop" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO SKILL MARKETPLACE</h2>
-                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills (₱150-₱350) and Tier-3 Ultimate Super Skills (₱500) to empower your owned champions!</p>
+                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills (₱150-₱350) and Tier-3 Ultimate Super Skills (₱500) that cost exactly 3 AP to unleash!</p>
             </div>
             <div id="shop-skills-container" class="space-y-2.5 pb-6"></div>
         </div>
@@ -775,51 +775,51 @@
           }
         ];
 
-        // Elite Tier-2 & Tier-3 Ultimate Super Skills (Role-Gated & Fair Gameplay Balanced)
+        // Elite Tier-2 & Tier-3 Ultimate Super Skills (Role-Gated & Balanced to 3 AP)
         const shopSkillsMap = {
             'pyra': [
-                { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 3, color: 'red', cost: 150, desc: 'Tier-2 Elite: Deal 40 Fire damage & apply 15 Burn stacks.' },
-                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 4, color: 'red', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Obliterate target with 80 solar fire damage & 25 burn stacks! (Requires 4 AP).' }
+                { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 2, color: 'red', cost: 150, desc: 'Tier-2 Elite: Deal 35 Fire damage & apply 12 Burn stacks.' },
+                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 3, color: 'red', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to deal 75 solar fire damage & 20 burn stacks!' }
             ],
             'sylph': [
-                { id: 'shop-sylph-2', name: 'HURRICANE BARRAGE', type: 'strike', ap: 3, color: 'emerald', cost: 150, desc: 'Tier-2 Elite: Unleash rapid wind strikes totaling 45 damage.' },
-                { id: 'shop-sylph-3', name: 'HURRICANE APOCALYPSE', type: 'strike', ap: 4, color: 'emerald', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Unleash a devastating gale for 75 wind damage & full evasion block! (Requires 4 AP).' }
+                { id: 'shop-sylph-2', name: 'HURRICANE BARRAGE', type: 'strike', ap: 2, color: 'emerald', cost: 150, desc: 'Tier-2 Elite: Unleash rapid wind strikes totaling 38 damage.' },
+                { id: 'shop-sylph-3', name: 'HURRICANE APOCALYPSE', type: 'strike', ap: 3, color: 'emerald', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 70 wind damage & 25 armor block!' }
             ],
             'valen': [
-                { id: 'shop-valen-2', name: 'AEGIS FORTRESS', type: 'heal', ap: 3, color: 'blue', cost: 150, desc: 'Tier-2 Elite: Fortify stance with 30 Armor block & restore 20 HP.' },
-                { id: 'shop-valen-3', name: 'DIVINE INVINCIBILITY', type: 'heal', ap: 4, color: 'blue', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Grant impenetrable holy shield of 50 Armor block & restore 40 HP! (Requires 4 AP).' }
+                { id: 'shop-valen-2', name: 'AEGIS FORTRESS', type: 'heal', ap: 2, color: 'blue', cost: 150, desc: 'Tier-2 Elite: Fortify stance with 25 Armor block & restore 15 HP.' },
+                { id: 'shop-valen-3', name: 'DIVINE INVINCIBILITY', type: 'heal', ap: 3, color: 'blue', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to gain 45 Armor block & restore 35 HP!' }
             ],
             'nyx': [
-                { id: 'shop-nyx-2', name: 'SHADOW ASSASSINATION', type: 'strike', ap: 3, color: 'purple', cost: 150, desc: 'Tier-2 Elite: Strike from the shadows for 50 critical dark damage.' },
-                { id: 'shop-nyx-3', name: 'ABSOLUTE SHADOW ECLIPSE', type: 'poison', ap: 4, color: 'purple', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Plunge arena into total darkness for 85 lethal shadow damage! (Requires 4 AP).' }
+                { id: 'shop-nyx-2', name: 'SHADOW ASSASSINATION', type: 'strike', ap: 2, color: 'purple', cost: 150, desc: 'Tier-2 Elite: Strike from the shadows for 42 critical dark damage.' },
+                { id: 'shop-nyx-3', name: 'ABSOLUTE SHADOW ECLIPSE', type: 'poison', ap: 3, color: 'purple', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 75 lethal dark damage & 15 poison!' }
             ],
             'storm-knight': [
-                { id: 'shop-storm-2', name: 'THUNDER GODS WRATH', type: 'debuff', ap: 3, color: 'amber', cost: 200, desc: 'Tier-2 Elite: Summon divine lightning for 52 damage & shock armor.' },
-                { id: 'shop-storm-3', name: 'ZEUS THUNDERSTORM', type: 'debuff', ap: 4, color: 'amber', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Summon roaring heavens for 85 electrical catastrophe damage! (Requires 4 AP).' }
+                { id: 'shop-storm-2', name: 'THUNDER GODS WRATH', type: 'debuff', ap: 2, color: 'amber', cost: 200, desc: 'Tier-2 Elite: Summon divine lightning for 45 damage & shock.' },
+                { id: 'shop-storm-3', name: 'ZEUS THUNDERSTORM', type: 'debuff', ap: 3, color: 'amber', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to strike with 78 electrical catastrophe damage!' }
             ],
             'ironclad-titan': [
-                { id: 'shop-titan-2', name: 'CONTINENTAL CRUSH', type: 'strike', ap: 3, color: 'stone', cost: 200, desc: 'Tier-2 Elite: Crush target with tectonic force for 55 earth damage.' },
-                { id: 'shop-titan-3', name: 'WORLD SHATTERING METEOR', type: 'strike', ap: 4, color: 'stone', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Bring down a colossal meteor for 90 earth damage! (Requires 4 AP).' }
+                { id: 'shop-titan-2', name: 'CONTINENTAL CRUSH', type: 'strike', ap: 2, color: 'stone', cost: 200, desc: 'Tier-2 Elite: Crush target with tectonic force for 45 earth damage.' },
+                { id: 'shop-titan-3', name: 'WORLD SHATTERING METEOR', type: 'strike', ap: 3, color: 'stone', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to drop a colossal meteor for 82 earth damage!' }
             ],
             'chrono-warden': [
-                { id: 'shop-chrono-2', name: 'TEMPORAL REWIND', type: 'heal', ap: 3, color: 'yellow', cost: 250, desc: 'Tier-2 Elite: Rewind timeline to restore 35 HP & cleanse debuffs.' },
-                { id: 'shop-chrono-3', name: 'ETERNAL TIME COLLAPSE', type: 'heal', ap: 4, color: 'yellow', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Bend spacetime to restore 60 HP & inflict temporal stun! (Requires 4 AP).' }
+                { id: 'shop-chrono-2', name: 'TEMPORAL REWIND', type: 'heal', ap: 2, color: 'yellow', cost: 250, desc: 'Tier-2 Elite: Rewind timeline to restore 30 HP & cleanse debuffs.' },
+                { id: 'shop-chrono-3', name: 'ETERNAL TIME COLLAPSE', type: 'heal', ap: 3, color: 'yellow', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to restore 55 HP & 25 Armor!' }
             ],
             'sky-valkyrie': [
-                { id: 'shop-valkyrie-2', name: 'DIVINE JUDGMENT', type: 'debuff', ap: 3, color: 'orange', cost: 250, desc: 'Tier-2 Elite: Bring celestial judgment dealing 60 holy damage.' },
-                { id: 'shop-valkyrie-3', name: 'HEAVENLY RAGNAROK', type: 'debuff', ap: 4, color: 'orange', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Unleash divine ragnarok for 85 holy destruction damage! (Requires 4 AP).' }
+                { id: 'shop-valkyrie-2', name: 'DIVINE JUDGMENT', type: 'debuff', ap: 2, color: 'orange', cost: 250, desc: 'Tier-2 Elite: Bring celestial judgment dealing 50 holy damage.' },
+                { id: 'shop-valkyrie-3', name: 'HEAVENLY RAGNAROK', type: 'debuff', ap: 3, color: 'orange', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 78 holy destruction damage!' }
             ],
             'void-necromancer': [
-                { id: 'shop-void-2', name: 'SOUL HARVEST', type: 'poison', ap: 3, color: 'violet', cost: 300, desc: 'Tier-2 Elite: Harvest life force for 45 damage, 18 poison & 20 HP drain.' },
-                { id: 'shop-void-3', name: 'VOID REALM ANNIHILATION', type: 'poison', ap: 4, color: 'violet', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Tear open the void rift for 88 dark void damage & massive drain! (Requires 4 AP).' }
+                { id: 'shop-void-2', name: 'SOUL HARVEST', type: 'poison', ap: 2, color: 'violet', cost: 300, desc: 'Tier-2 Elite: Harvest life force for 40 damage & 15 HP drain.' },
+                { id: 'shop-void-3', name: 'VOID REALM ANNIHILATION', type: 'poison', ap: 3, color: 'violet', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 80 dark damage & heavy life steal!' }
             ],
             'blood-berserker': [
-                { id: 'shop-berserk-2', name: 'APOCALYPSE FRENZY', type: 'strike', ap: 3, color: 'rose', cost: 300, desc: 'Tier-2 Elite: Berserk rampage dealing 65 brutal physical damage.' },
-                { id: 'shop-berserk-3', name: 'RAGING BLOOD GOD RAMPAGE', type: 'strike', ap: 4, color: 'rose', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Enter uncontrollable blood god fury for 90 crushing damage! (Requires 4 AP).' }
+                { id: 'shop-berserk-2', name: 'APOCALYPSE FRENZY', type: 'strike', ap: 2, color: 'rose', cost: 300, desc: 'Tier-2 Elite: Berserk rampage dealing 55 brutal physical damage.' },
+                { id: 'shop-berserk-3', name: 'RAGING BLOOD GOD RAMPAGE', type: 'strike', ap: 3, color: 'rose', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 85 crushing blood fury damage!' }
             ],
             'astral-archmage': [
-                { id: 'shop-astral-2', name: 'GALAXY COLLAPSE', type: 'debuff', ap: 3, color: 'indigo', cost: 350, desc: 'Tier-2 Elite: Collapse cosmic orbits for 70 cosmic cataclysm damage.' },
-                { id: 'shop-astral-3', name: 'BIG BANG UNIVERSE STRIKE', type: 'debuff', ap: 4, color: 'indigo', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Unleash the raw energy of the Big Bang for 95 cosmic damage! (Requires 4 AP).' }
+                { id: 'shop-astral-2', name: 'GALAXY COLLAPSE', type: 'debuff', ap: 2, color: 'indigo', cost: 350, desc: 'Tier-2 Elite: Collapse cosmic orbits for 60 cosmic damage.' },
+                { id: 'shop-astral-3', name: 'BIG BANG UNIVERSE STRIKE', type: 'debuff', ap: 3, color: 'indigo', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to unleash the Big Bang for 88 cosmic damage!' }
             ]
         };
 
@@ -1091,7 +1091,7 @@
             }).join('');
         }
 
-        // --- SKILL SHOP RENDERING (Tier 2 & Tier-3 ₱500 Super Skills) ---
+        // --- SKILL SHOP RENDERING (Tier 2 & Tier-3 ₱500 Super Skills set to 3 AP) ---
         function renderSkillShop() {
             if (!currentUser) return;
             const container = document.getElementById('shop-skills-container');
@@ -1125,7 +1125,7 @@
                                 <div>
                                     <div class="flex items-center space-x-2 mb-0.5">
                                         <h3 class="font-cinzel font-bold ${isSuperCard ? 'text-amber-400 glow-gold' : 'text-white'} text-xs sm:text-sm">${skill.name}</h3>
-                                        <span class="text-[9px] ${isSuperCard ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-blue-600/20 text-blue-400 border-blue-500/30'} px-2 py-0.2 rounded-full border">${isSuperCard ? '⭐ Tier-3 SUPER (₱500)' : 'Tier-2 Elite'} (${h.name})</span>
+                                        <span class="text-[9px] ${isSuperCard ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-blue-600/20 text-blue-400 border-blue-500/30'} px-2 py-0.2 rounded-full border">${isSuperCard ? '⭐ Tier-3 SUPER (₱500 • 3 AP)' : 'Tier-2 Elite'} (${h.name})</span>
                                     </div>
                                     <p class="text-[11px] text-slate-400 max-w-sm sm:max-w-lg">${skill.desc}</p>
                                 </div>
@@ -1544,29 +1544,29 @@
                 let heal = 0;
                 let armorGain = 0;
 
-                // Dynamic damage and effects for Tier-2 & Tier-3 Super Skills
-                if (card.name === 'INFERNAL HELLFIRE') dmg = 40;
-                else if (card.name === 'SOLAR SUPERNOVA') dmg = 80;
-                else if (card.name === 'HURRICANE BARRAGE') dmg = 45;
-                else if (card.name === 'HURRICANE APOCALYPSE') dmg = 75;
-                else if (card.name === 'AEGIS FORTRESS') { armorGain = 30; heal = 20; }
-                else if (card.name === 'DIVINE INVINCIBILITY') { armorGain = 50; heal = 40; }
-                else if (card.name === 'SHADOW ASSASSINATION') dmg = 50;
-                else if (card.name === 'ABSOLUTE SHADOW ECLIPSE') dmg = 85;
-                else if (card.name === 'THUNDER GODS WRATH') dmg = 52;
-                else if (card.name === 'ZEUS THUNDERSTORM') dmg = 85;
-                else if (card.name === 'CONTINENTAL CRUSH') dmg = 55;
-                else if (card.name === 'WORLD SHATTERING METEOR') dmg = 90;
-                else if (card.name === 'TEMPORAL REWIND') heal = 35;
-                else if (card.name === 'ETERNAL TIME COLLAPSE') heal = 60;
-                else if (card.name === 'DIVINE JUDGMENT') dmg = 60;
-                else if (card.name === 'HEAVENLY RAGNAROK') dmg = 85;
-                else if (card.name === 'SOUL HARVEST') { dmg = 45; heal = 20; }
-                else if (card.name === 'VOID REALM ANNIHILATION') dmg = 88;
-                else if (card.name === 'APOCALYPSE FRENZY') dmg = 65;
-                else if (card.name === 'RAGING BLOOD GOD RAMPAGE') dmg = 90;
-                else if (card.name === 'GALAXY COLLAPSE') dmg = 70;
-                else if (card.name === 'BIG BANG UNIVERSE STRIKE') dmg = 95;
+                // Dynamic damage and effects for Tier-2 & Tier-3 Super Skills (Balanced to 3 AP)
+                if (card.name === 'INFERNAL HELLFIRE') dmg = 35;
+                else if (card.name === 'SOLAR SUPERNOVA') dmg = 75;
+                else if (card.name === 'HURRICANE BARRAGE') dmg = 38;
+                else if (card.name === 'HURRICANE APOCALYPSE') dmg = 70;
+                else if (card.name === 'AEGIS FORTRESS') { armorGain = 25; heal = 15; }
+                else if (card.name === 'DIVINE INVINCIBILITY') { armorGain = 45; heal = 35; }
+                else if (card.name === 'SHADOW ASSASSINATION') dmg = 42;
+                else if (card.name === 'ABSOLUTE SHADOW ECLIPSE') dmg = 75;
+                else if (card.name === 'THUNDER GODS WRATH') dmg = 45;
+                else if (card.name === 'ZEUS THUNDERSTORM') dmg = 78;
+                else if (card.name === 'CONTINENTAL CRUSH') dmg = 45;
+                else if (card.name === 'WORLD SHATTERING METEOR') dmg = 82;
+                else if (card.name === 'TEMPORAL REWIND') heal = 30;
+                else if (card.name === 'ETERNAL TIME COLLAPSE') { heal = 55; armorGain = 25; }
+                else if (card.name === 'DIVINE JUDGMENT') dmg = 50;
+                else if (card.name === 'HEAVENLY RAGNAROK') dmg = 78;
+                else if (card.name === 'SOUL HARVEST') { dmg = 40; heal = 15; }
+                else if (card.name === 'VOID REALM ANNIHILATION') dmg = 80;
+                else if (card.name === 'APOCALYPSE FRENZY') dmg = 55;
+                else if (card.name === 'RAGING BLOOD GOD RAMPAGE') dmg = 85;
+                else if (card.name === 'GALAXY COLLAPSE') dmg = 60;
+                else if (card.name === 'BIG BANG UNIVERSE STRIKE') dmg = 88;
                 else if (card.type === 'strike') dmg = 22;
                 else if (card.type === 'defend') armorGain = 15;
                 else if (card.type === 'heal') heal = 18;
