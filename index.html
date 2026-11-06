@@ -108,7 +108,7 @@
                             <div id="reg-gcash-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                             <div>
                                 <span class="font-bold text-blue-400 block">GCash</span>
-                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-[10px]">0912-345-6789</span>
+                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-[10px]">0912-***-6789</span>
                                 <span class="text-slate-400 text-[9px]">J*** C**** M.</span>
                             </div>
                         </div>
@@ -116,7 +116,7 @@
                             <div id="reg-maya-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                             <div>
                                 <span class="font-bold text-teal-400 block">Maya</span>
-                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-[10px]">0918-987-6543</span>
+                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-[10px]">0918-***-6543</span>
                                 <span class="text-slate-400 text-[9px]">L****** Hub</span>
                             </div>
                         </div>
@@ -246,7 +246,7 @@
                         <div id="player-gcash-qr" class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
                         <div>
                             <span class="text-[11px] font-bold text-blue-400 block mb-0.5">GCASH PAYMENT</span>
-                            <span id="display-gcash-num" class="text-[11px] font-mono font-bold text-white block">0912-345-6789</span>
+                            <span id="display-gcash-num" class="text-[11px] font-mono font-bold text-white block">0912-***-6789</span>
                             <span id="display-gcash-name" class="text-[10px] text-slate-400 block">J*** C**** M.</span>
                         </div>
                     </div>
@@ -254,7 +254,7 @@
                         <div id="player-maya-qr" class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
                         <div>
                             <span class="text-[11px] font-bold text-teal-400 block mb-0.5">MAYA PAYMENT</span>
-                            <span id="display-maya-num" class="text-[11px] font-mono font-bold text-white block">0918-987-6543</span>
+                            <span id="display-maya-num" class="text-[11px] font-mono font-bold text-white block">0918-***-6543</span>
                             <span id="display-maya-name" class="text-[10px] text-slate-400 block">L****** Hub</span>
                         </div>
                     </div>
@@ -455,7 +455,7 @@
                         <div id="topup-gcash-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                         <div>
                             <span class="font-bold text-blue-400 block">GCash</span>
-                            <span id="topup-opt-gcash" class="text-white font-mono font-bold text-[10px]">0912-345-6789</span>
+                            <span id="topup-opt-gcash" class="text-white font-mono font-bold text-[10px]">0912-***-6789</span>
                             <span class="text-slate-400 text-[9px]">J*** C**** M.</span>
                         </div>
                     </div>
@@ -463,7 +463,7 @@
                         <div id="topup-maya-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                         <div>
                             <span class="font-bold text-teal-400 block">Maya</span>
-                            <span id="topup-opt-maya" class="text-white font-mono font-bold text-[10px]">0918-987-6543</span>
+                            <span id="topup-opt-maya" class="text-white font-mono font-bold text-[10px]">0918-***-6543</span>
                             <span class="text-slate-400 text-[9px]">L****** Hub</span>
                         </div>
                     </div>
@@ -601,6 +601,15 @@
                 if (part.length <= 1) return part;
                 return part[0] + '*'.repeat(part.length - 1);
             }).join(' ');
+        }
+
+        function maskNumber(numStr) {
+            if (!numStr) return '';
+            const cleaned = numStr.replace(/\D/g, '');
+            if (cleaned.length < 7) return '***-****';
+            const start = cleaned.slice(0, 4);
+            const end = cleaned.slice(-4);
+            return `${start}-***-${end}`;
         }
 
         const heroes = [
@@ -1552,26 +1561,28 @@
         }
 
         function saveOwnerDetails() {
-            const gNum = document.getElementById('input-gcash-num').value;
+            const gNumRaw = document.getElementById('input-gcash-num').value;
             const gNameRaw = document.getElementById('input-gcash-name').value;
-            const mNum = document.getElementById('input-maya-num').value;
+            const mNumRaw = document.getElementById('input-maya-num').value;
             const mNameRaw = document.getElementById('input-maya-name').value;
 
+            const gNumMasked = maskNumber(gNumRaw);
+            const mNumMasked = maskNumber(mNumRaw);
             const gNameMasked = maskName(gNameRaw);
             const mNameMasked = maskName(mNameRaw);
 
-            document.getElementById('display-gcash-num').innerText = gNum;
+            document.getElementById('display-gcash-num').innerText = gNumMasked;
             document.getElementById('display-gcash-name').innerText = gNameMasked;
-            document.getElementById('display-maya-num').innerText = mNum;
+            document.getElementById('display-maya-num').innerText = mNumMasked;
             document.getElementById('display-maya-name').innerText = mNameMasked;
 
-            document.getElementById('topup-opt-gcash').innerText = gNum;
-            document.getElementById('topup-opt-maya').innerText = mNum;
+            document.getElementById('topup-opt-gcash').innerText = gNumMasked;
+            document.getElementById('topup-opt-maya').innerText = mNumMasked;
 
             const regOptG = document.getElementById('reg-opt-gcash');
             const regOptM = document.getElementById('reg-opt-maya');
-            if(regOptG) regOptG.innerText = gNum;
-            if(regOptM) regOptM.innerText = mNum;
+            if(regOptG) regOptG.innerText = gNumMasked;
+            if(regOptM) regOptM.innerText = mNumMasked;
 
             if(uploadedGcashQR) {
                 document.getElementById('player-gcash-qr').innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
