@@ -52,6 +52,7 @@
                 <button onclick="switchTab('hub')" id="btn-hub" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-600 text-white transition">Home</button>
                 <button onclick="switchTab('select')" id="btn-roster" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition">Roster</button>
                 <button onclick="switchTab('shop')" id="btn-shop" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition">Skill Shop</button>
+                <button onclick="openPlayerProfileModal()" id="btn-profile" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-amber-400 hover:bg-amber-500/10 transition">Profile & History</button>
                 <button onclick="switchTab('owner')" id="btn-owner" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition hidden">Owner</button>
                 <button onclick="logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-red-400 hover:bg-red-500/10 transition">Logout</button>
             </nav>
@@ -570,6 +571,16 @@
             <div id="player-inspection-content" class="space-y-2 text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
             <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
+
+        <!-- Player Profile & Personal Battle History Modal -->
+        <div id="modal-player-profile" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">PLAYER PROFILE & BATTLE HISTORY</h3>
+                <span id="profile-modal-rank" class="text-xs bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
+            </div>
+            <div id="player-profile-content" class="space-y-2.5 text-xs text-slate-300 max-h-80 overflow-y-auto pr-1"></div>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Profile</button>
+        </div>
     </div>
 
     <script>
@@ -646,7 +657,6 @@
             localStorage.setItem('aetheris_accounts', JSON.stringify(registeredAccounts));
             localStorage.setItem('aetheris_pending_regs', JSON.stringify(pendingRegistrations));
             if (currentUser) {
-                // Sync current user state back into registeredAccounts array
                 const index = registeredAccounts.findIndex(acc => acc.email.toLowerCase() === currentUser.email.toLowerCase());
                 if (index > -1) {
                     registeredAccounts[index] = currentUser;
@@ -883,7 +893,6 @@
                 persistData();
             }
 
-            // Restore active session reliably by matching email from registeredAccounts storage
             if (currentUser && currentUser.email) {
                 const freshUser = registeredAccounts.find(acc => acc.email.toLowerCase() === currentUser.email.toLowerCase());
                 if (freshUser && !freshUser.frozen) {
@@ -910,6 +919,7 @@
                 document.getElementById('btn-hub').classList.add('hidden');
                 document.getElementById('btn-roster').classList.add('hidden');
                 document.getElementById('btn-shop').classList.add('hidden');
+                document.getElementById('btn-profile').classList.add('hidden');
                 document.getElementById('btn-owner').classList.remove('hidden');
                 switchTab('owner');
             } else {
@@ -917,6 +927,7 @@
                 document.getElementById('btn-hub').classList.remove('hidden');
                 document.getElementById('btn-roster').classList.remove('hidden');
                 document.getElementById('btn-shop').classList.remove('hidden');
+                document.getElementById('btn-profile').classList.remove('hidden');
                 switchTab('hub');
             }
         }
@@ -1405,7 +1416,6 @@
                 document.getElementById('matchmaking-status').innerText = `Finding opponent in ranked lobby (Wager: ₱${amount})...`;
                 matchmakingTimeout = setTimeout(() => {
                     closeModal();
-                    // Open Transparent Coin Toss Modal
                     document.getElementById('modal-backdrop').classList.remove('hidden');
                     document.getElementById('modal-cointoss').classList.remove('hidden');
                 }, 2000);
@@ -1415,7 +1425,6 @@
         }
 
         function executeCoinToss(playerChoice) {
-            // Verifiably random coin flip
             const outcome = Math.random() < 0.5 ? 'Heads' : 'Tails';
             const playerWonToss = (playerChoice === outcome);
 
@@ -1594,7 +1603,7 @@
             persistData();
 
             logDuel(`[Defeat]: Lost duel and ₱${currentDuelBet} wager (+15 Consolation XP).`);
-            alert(`Defeat! Your ₱${currentDuelBet} wager has been permanently deducted from your wallet. Gained +${consolationXp} Consolation XP.`);
+            alert(`Defeat! Your ₱${currentDuelBet} wager has been permanently deducted from your wallet[cite: 10]. Gained +${consolationXp} Consolation XP.`);
             
             document.getElementById('view-duel-fullscreen').classList.add('hidden');
             document.getElementById('main-header').classList.remove('hidden');
@@ -1822,6 +1831,7 @@
             document.getElementById('modal-matchmaking').classList.add('hidden');
             document.getElementById('modal-cointoss').classList.add('hidden');
             document.getElementById('modal-player-details').classList.add('hidden');
+            document.getElementById('modal-player-profile').classList.add('hidden');
 
             if(type === 'topup') {
                 document.getElementById('modal-topup').classList.remove('hidden');
@@ -1835,6 +1845,50 @@
             if(type === 'bet') document.getElementById('modal-bet').classList.remove('hidden');
         }
 
+        function openPlayerProfileModal() {
+            if (!currentUser) return;
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-topup').classList.add('hidden');
+            document.getElementById('modal-withdraw').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.add('hidden');
+            document.getElementById('modal-bet').classList.add('hidden');
+            document.getElementById('modal-matchmaking').classList.add('hidden');
+            document.getElementById('modal-cointoss').classList.add('hidden');
+            document.getElementById('modal-player-details').classList.add('hidden');
+            document.getElementById('modal-player-profile').classList.remove('hidden');
+
+            document.getElementById('profile-modal-rank').innerText = currentUser.rank;
+
+            const myHistory = battleHistoryLog.filter(h => h.email === currentUser.email);
+            let historyHtml = myHistory.length ? myHistory.map(h => `
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-white">Vs ${h.opponent}</span>
+                        <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 flex justify-between">
+                        <span>Wager Stake: ₱${h.bet}</span>
+                        <span>Date: ${h.date}</span>
+                    </div>
+                </div>
+            `).join('') : '<div class="text-slate-500 text-xs text-center py-4 bg-slate-950 rounded-xl">No battle history recorded yet. Enter a ranked duel to start logging matches!</div>';
+
+            document.getElementById('player-profile-content').innerHTML = `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">
+                    <div class="flex justify-between"><span><strong>Full Name:</strong></span> <span class="text-white">${currentUser.name}</span></div>
+                    <div class="flex justify-between"><span><strong>Username:</strong></span> <span class="text-amber-400">${currentUser.nickname}</span></div>
+                    <div class="flex justify-between"><span><strong>Email:</strong></span> <span class="text-white">${currentUser.email}</span></div>
+                    <div class="flex justify-between"><span><strong>Locked Phone (Payouts):</strong></span> <span class="text-white">${currentUser.phone}</span></div>
+                    <div class="flex justify-between"><span><strong>Wallet Balance:</strong></span> <span class="text-emerald-400 font-bold">₱${currentUser.balance.toFixed(2)}</span></div>
+                    <div class="flex justify-between"><span><strong>Total Wins / XP:</strong></span> <span class="text-blue-400 font-bold">${currentUser.wins} Wins | ${currentUser.xp} XP</span></div>
+                </div>
+                <div class="space-y-2 pt-1">
+                    <h4 class="font-cinzel text-xs font-bold text-amber-400">My Ranked Battle History (${myHistory.length || 0})</h4>
+                    <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">${historyHtml}</div>
+                </div>
+            `;
+        }
+
         function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
 
         function viewReceipt(receiptDataUrl) {
@@ -1845,6 +1899,7 @@
             document.getElementById('modal-matchmaking').classList.add('hidden');
             document.getElementById('modal-cointoss').classList.add('hidden');
             document.getElementById('modal-player-details').classList.add('hidden');
+            document.getElementById('modal-player-profile').classList.add('hidden');
             document.getElementById('modal-receipt').classList.remove('hidden');
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${receiptDataUrl}" class="max-h-60 rounded object-contain">`;
         }
@@ -1860,6 +1915,7 @@
             document.getElementById('modal-bet').classList.add('hidden');
             document.getElementById('modal-matchmaking').classList.add('hidden');
             document.getElementById('modal-cointoss').classList.add('hidden');
+            document.getElementById('modal-player-profile').classList.add('hidden');
             document.getElementById('modal-player-details').classList.remove('hidden');
 
             const pHistory = battleHistoryLog.filter(h => h.email === email);
