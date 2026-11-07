@@ -31,42 +31,44 @@
 </head>
 <body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
 
-    <!-- Top Navigation Bar -->
-    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-50 sticky top-0 hidden">
-        <div class="flex items-center space-x-2 sm:space-x-3">
-            <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl overflow-hidden shadow-lg shadow-blue-500/30 border border-blue-500/50 flex-shrink-0">
-                <img src="image_114c6025.jpg" alt="Aetheris Emblem" class="w-full h-full object-cover">
+    <!-- Top Navigation Bar (Mobile Optimized) -->
+    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 py-2 flex flex-col gap-2 shrink-0 z-50 sticky top-0 hidden">
+        <div class="flex items-center justify-between w-full">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl overflow-hidden shadow-lg shadow-blue-500/30 border border-blue-500/50 flex-shrink-0">
+                    <img src="image_114c6025.jpg" alt="Aetheris Emblem" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <h1 class="font-cinzel font-bold text-xs tracking-wider text-amber-400">AETHERIS ARENA</h1>
+                    <p class="text-[9px] text-slate-400">P2P Tactical Card Arena</p>
+                </div>
             </div>
-            <div>
-                <h1 class="font-cinzel font-bold text-sm sm:text-lg tracking-wider text-amber-400">AETHERIS DUEL</h1>
-                <p class="text-[10px] text-slate-400">Secure P2P Arena (Cloud Sync)</p>
+
+            <div class="flex items-center space-x-1.5">
+                <button id="btn-install-pwa" onclick="window.installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow transition">
+                    <span>Install</span>
+                </button>
+                <div id="nav-wallet-container" class="hidden items-center space-x-1 bg-slate-900 border border-slate-700 rounded-full px-2.5 py-0.5">
+                    <span class="text-[10px] text-slate-400">Bal:</span>
+                    <span id="nav-wallet" class="text-xs font-bold text-emerald-400">₱0.00</span>
+                </div>
             </div>
         </div>
 
-        <div class="flex items-center space-x-2">
-            <button id="btn-install-pwa" onclick="window.installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-xl text-[11px] font-bold shadow-lg transition">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                <span>Install</span>
-            </button>
-
-            <div id="nav-wallet-container" class="hidden items-center space-x-1.5 bg-slate-900 border border-slate-700 rounded-full px-3 py-1">
-                <span class="text-[11px] text-slate-400">Wallet:</span>
-                <span id="nav-wallet" class="text-xs sm:text-sm font-bold text-emerald-400">₱0.00</span>
-            </div>
-            <nav id="nav-menu" class="hidden space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
-                <button onclick="window.switchTab('hub')" id="btn-hub" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-600 text-white transition">Home</button>
-                <button onclick="window.switchTab('select')" id="btn-roster" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition">Roster</button>
-                <button onclick="window.switchTab('shop')" id="btn-shop" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition">Skill Shop</button>
-                <button onclick="window.openPlayerProfileModal()" id="btn-profile" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-amber-400 hover:bg-amber-500/10 transition">Profile</button>
-                <button onclick="window.openLeaderboardModal()" id="btn-leaderboard" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 transition">Leaderboard</button>
-                <button onclick="window.switchTab('owner')" id="btn-owner" class="px-3 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-400 hover:text-white transition hidden">Owner</button>
-                <button onclick="window.logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-red-400 hover:bg-red-500/10 transition">Logout</button>
-            </nav>
-        </div>
+        <!-- Scrollable Navigation Tabs for Mobile -->
+        <nav id="nav-menu" class="hidden flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto w-full no-scrollbar">
+            <button onclick="window.switchTab('hub')" id="btn-hub" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white whitespace-nowrap transition">Home</button>
+            <button onclick="window.switchTab('select')" id="btn-roster" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Roster</button>
+            <button onclick="window.switchTab('shop')" id="btn-shop" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Shop</button>
+            <button onclick="window.openPlayerProfileModal()" id="btn-profile" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-amber-400 hover:bg-amber-500/10 whitespace-nowrap transition">Profile</button>
+            <button onclick="window.openLeaderboardModal()" id="btn-leaderboard" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10 whitespace-nowrap transition">Rankings</button>
+            <button onclick="window.switchTab('owner')" id="btn-owner" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition hidden">Owner</button>
+            <button onclick="window.logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition ml-auto">Logout</button>
+        </nav>
     </header>
 
     <!-- Main Content Container -->
-    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 flex flex-col justify-center my-auto">
+    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 flex flex-col justify-center my-auto">
 
         <!-- AUTH VIEW -->
         <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4">
@@ -79,32 +81,31 @@
             </div>
 
             <!-- Login Box -->
-            <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box">
+            <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
                 <div class="flex items-center justify-between">
                     <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
                     <button id="auth-install-btn" onclick="window.installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         <span>Install App</span>
                     </button>
                 </div>
                 <div class="space-y-2.5">
-                    <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
                     <div class="relative">
-                        <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
-                        <button type="button" onclick="window.togglePass('login-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                        <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <button type="button" onclick="window.togglePass('login-pass', this)" class="absolute right-3 top-3 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
                 </div>
                 <div class="flex items-center justify-between text-xs">
                     <button onclick="window.showAuthMode('register')" class="text-blue-400 hover:underline">Create Account</button>
                     <button onclick="window.showAuthMode('forgot')" class="text-amber-400 hover:underline">Forgot Password?</button>
                 </div>
-                <button onclick="window.handleLogin()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
+                <button onclick="window.handleLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
             </div>
 
             <!-- Register Box -->
-            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-2.5 glow-box hidden">
+            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2.5 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
-                <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced. Registered phone & name will be locked for withdrawals.</p>
+                <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced.</p>
                 
                 <div class="space-y-1 bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px]">
                     <p class="text-[10px] text-amber-400 font-bold">Official Payment Channels for ₱50 Fee:</p>
@@ -131,7 +132,7 @@
                 <div class="space-y-2">
                     <input type="text" id="reg-name" placeholder="Full Legal Name (Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="text" id="reg-phone" placeholder="Phone Number (Unique & Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-phone" placeholder="Phone Number (Unique & Locked)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="email" id="reg-email" placeholder="Email Address (Unique)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <div class="space-y-0.5">
                         <label class="text-[10px] text-slate-400 block">Birthday:</label>
@@ -150,13 +151,13 @@
                 <div class="flex items-center justify-between text-xs pt-1">
                     <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
                 </div>
-                <button onclick="window.handleRegister()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Allow Notifications & Register</button>
+                <button onclick="window.handleRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Register Account</button>
             </div>
 
             <!-- Forgot Password Box -->
-            <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box hidden">
+            <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Request Password Reset</h3>
-                <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request to the owner. You will receive a notification upon approval.</p>
+                <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request to the owner.</p>
                 <div class="space-y-2.5">
                     <input type="email" id="forgot-email" placeholder="Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
                     <div class="space-y-1">
@@ -167,13 +168,13 @@
                 <div class="flex items-center justify-between text-xs">
                     <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
                 </div>
-                <button onclick="window.submitResetRequest()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Allow Notifications & Submit Reset</button>
+                <button onclick="window.submitResetRequest()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Submit Reset Request</button>
             </div>
         </div>
 
         <!-- Force Change Password View -->
         <div id="view-force-reset" class="max-w-md mx-auto py-6 space-y-3 hidden">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 glow-box">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
                 <h3 class="font-cinzel text-base font-bold text-amber-400">Force Password Change</h3>
                 <p class="text-xs text-slate-400">Your password reset request was approved by the owner. Please verify your identity and enter a new password.</p>
                 <div class="space-y-2.5">
@@ -187,7 +188,7 @@
                         <button type="button" onclick="window.togglePass('force-newpass', this)" class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
                 </div>
-                <button onclick="window.executeForceReset()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Update Password & Login</button>
+                <button onclick="window.executeForceReset()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Update Password & Login</button>
             </div>
         </div>
 
@@ -205,10 +206,10 @@
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
                 <p class="text-slate-400 text-xs">Inspect all 11 champions across tiers. Advance your rank and wins to unlock advanced fighters!</p>
-                <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-xs space-y-1.5 w-full">
-                    <div class="flex items-center justify-between space-x-4">
+                <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl p-3 text-xs space-y-1.5 w-full">
+                    <div class="flex items-center justify-between space-x-2">
                         <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
-                        <span>EXP Level: <strong id="player-explevel-badge" class="text-emerald-400">Lv. 1 (0 XP)</strong></span>
+                        <span>EXP: <strong id="player-explevel-badge" class="text-emerald-400">Lv. 1 (0 XP)</strong></span>
                         <span>Wins: <strong id="player-wins-badge" class="text-blue-400">0</strong></span>
                     </div>
                     <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
@@ -223,75 +224,75 @@
         <div id="view-shop" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO SKILL MARKETPLACE</h2>
-                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills (₱150-₱350) and Tier-3 Ultimate Super Skills (₱500) that cost exactly 3 AP to unleash!</p>
+                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills (₱150-₱350) and Tier-3 Ultimate Super Skills (₱500) that cost 3 AP to unleash!</p>
             </div>
             <div id="shop-skills-container" class="space-y-2.5 pb-6"></div>
         </div>
 
-        <!-- Player Hub View -->
+        <!-- Player Hub View (Optimized for Mobile Layout) -->
         <div id="view-hub" class="hidden space-y-3 py-2">
-            <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between glow-box">
-                <div class="flex items-center space-x-3">
-                    <div id="active-hero-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 glow-box">
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <div id="active-hero-avatar" class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
                         <img id="active-hero-img-el" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
                     </div>
-                    <div>
-                        <div class="flex items-center space-x-2">
-                            <span id="player-nickname-badge" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">ShadowStriker</span>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center space-x-1.5 flex-wrap gap-y-0.5">
+                            <span id="player-nickname-badge" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider truncate">Player</span>
                             <span id="hub-rank-badge" class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
                             <span id="hub-explevel-badge" class="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Lv. 1</span>
                         </div>
-                        <h2 id="active-hero-name" class="font-cinzel text-base sm:text-lg font-bold text-white">PYRA</h2>
-                        <p class="text-[11px] text-slate-400">Active Champion • Ready for P2P Matchmaking</p>
+                        <h2 id="active-hero-name" class="font-cinzel text-sm sm:text-base font-bold text-white truncate">PYRA</h2>
+                        <p class="text-[10px] text-slate-400">Active Champion • Ready for P2P</p>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
-                    <button onclick="window.openModal('topup')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow">+ Top-Up</button>
-                    <button onclick="window.openModal('withdraw')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow">Withdraw (Zero Fee)</button>
+                <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                    <button onclick="window.openModal('topup')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">+ Top-Up</button>
+                    <button onclick="window.openModal('withdraw')" class="flex-1 sm:flex-none px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">Withdraw (0 Fee)</button>
                 </div>
             </div>
 
             <!-- Owner Payment QR Banner for Players -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-2">
                 <div>
-                    <h3 class="font-cinzel font-bold text-amber-400 text-xs sm:text-sm">OFFICIAL OWNER PAYMENT CHANNELS</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Scan or send funds to the official e-wallet accounts below before submitting a top-up request.</p>
+                    <h3 class="font-cinzel font-bold text-amber-400 text-xs">OFFICIAL OWNER PAYMENT CHANNELS</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Scan or send funds to the official e-wallet accounts below before top-up request.</p>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center space-x-3">
-                        <div id="player-gcash-qr" class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
-                        <div>
-                            <span class="text-[11px] font-bold text-blue-400 block mb-0.5">GCASH PAYMENT</span>
-                            <span id="display-gcash-num" class="text-[11px] font-mono font-bold text-white block">0992-397-8537</span>
-                            <span id="display-gcash-name" class="text-[10px] text-slate-400 block">John Carlo E.</span>
+                        <div id="player-gcash-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[9px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
+                        <div class="min-w-0">
+                            <span class="text-[11px] font-bold text-blue-400 block">GCASH PAYMENT</span>
+                            <span id="display-gcash-num" class="text-[10px] font-mono font-bold text-white block truncate">0992-397-8537</span>
+                            <span id="display-gcash-name" class="text-[9px] text-slate-400 block truncate">John Carlo E.</span>
                         </div>
                     </div>
                     <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center space-x-3">
-                        <div id="player-maya-qr" class="w-14 h-14 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
-                        <div>
-                            <span class="text-[11px] font-bold text-teal-400 block mb-0.5">MAYA PAYMENT</span>
-                            <span id="display-maya-num" class="text-[11px] font-mono font-bold text-white block">0930-160-1780</span>
-                            <span id="display-maya-name" class="text-[10px] text-slate-400 block">FMCM IT Solutions</span>
+                        <div id="player-maya-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[9px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
+                        <div class="min-w-0">
+                            <span class="text-[11px] font-bold text-teal-400 block">MAYA PAYMENT</span>
+                            <span id="display-maya-num" class="text-[10px] font-mono font-bold text-white block truncate">0930-160-1780</span>
+                            <span id="display-maya-name" class="text-[9px] text-slate-400 block truncate">FMCM IT Solutions</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2">
-                <div onclick="window.openModal('bet')" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
-                    <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1.5 text-xs">⚔</div>
-                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">P2P RANKED DUEL</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Select stake & queue for live player battles.</p>
+                <div onclick="window.openModal('bet')" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1 text-xs">⚔</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs">P2P RANKED DUEL</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Select stake & queue for live battles.</p>
                 </div>
-                <div onclick="window.switchTab('shop')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
-                    <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1.5 text-xs">📜</div>
-                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">SKILL SHOP (Tier 2 & 3)</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Buy elite & ₱500 super skills for your champions.</p>
+                <div onclick="window.switchTab('shop')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1 text-xs">📜</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs">SKILL SHOP (Tier 2 & 3)</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Buy elite & ₱500 super skills.</p>
                 </div>
-                <div onclick="window.switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-3.5 cursor-pointer card-hover">
-                    <div class="w-7 h-7 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold mb-1.5 text-xs">🛡</div>
-                    <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">ROSTER (11)</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Inspect champions & manage loadouts.</p>
+                <div onclick="window.switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-3 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold mb-1 text-xs">🛡</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs">ROSTER (11)</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Inspect champions & loadouts.</p>
                 </div>
             </div>
         </div>
@@ -300,35 +301,35 @@
         <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                    <h2 class="font-cinzel text-base sm:text-lg font-bold text-amber-400">OWNER ADMIN PORTAL</h2>
-                    <span class="text-[11px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
+                    <h2 class="font-cinzel text-base font-bold text-amber-400">OWNER ADMIN PORTAL</h2>
+                    <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
                 </div>
 
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                         <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
-                        <div class="flex items-center space-x-2 text-xs">
-                            <span class="text-slate-400 text-[11px]">Filter Date:</span>
+                        <div class="flex items-center space-x-2 text-xs w-full sm:w-auto">
+                            <span class="text-slate-400 text-[10px]">Filter Date:</span>
                             <input type="date" id="filter-date" onchange="window.renderOwnerQueues()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
-                            <button onclick="document.getElementById('filter-date').value=''; window.renderOwnerQueues();" class="px-2 py-1 bg-slate-800 text-slate-300 rounded-lg text-[11px] hover:bg-slate-700">Clear</button>
+                            <button onclick="document.getElementById('filter-date').value=''; window.renderOwnerQueues();" class="px-2 py-1 bg-slate-800 text-slate-300 rounded-lg text-[10px] hover:bg-slate-700">Clear</button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2.5 pt-1">
+                    <div class="grid grid-cols-2 gap-2 pt-1">
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
-                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Total Deposits</span>
-                            <span id="metric-total-deposits" class="text-sm sm:text-base font-bold text-emerald-400">₱0.00</span>
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Deposits</span>
+                            <span id="metric-total-deposits" class="text-sm font-bold text-emerald-400">₱0.00</span>
                         </div>
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
-                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Total Withdrawals</span>
-                            <span id="metric-total-withdrawals" class="text-sm sm:text-base font-bold text-amber-400">₱0.00</span>
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Withdrawals</span>
+                            <span id="metric-total-withdrawals" class="text-sm font-bold text-amber-400">₱0.00</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- PLAYER ACCOUNTS DIRECTORY & DELETE/FREEZE MANAGEMENT -->
+                <!-- PLAYER ACCOUNTS DIRECTORY -->
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory & Account Deletion</h3>
-                    <div id="owner-players-list" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory</h3>
+                    <div id="owner-players-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Loading players directory...</div>
                     </div>
                 </div>
@@ -336,37 +337,36 @@
                 <!-- SYSTEM ACTIVITY & AUDIT LOG -->
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <h3 class="font-cinzel text-xs font-bold text-amber-400">System Activity & Audit Log (Timestamped)</h3>
-                        <span class="text-[10px] text-slate-400">Records all platform events</span>
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">System Activity & Audit Log</h3>
                     </div>
-                    <div id="owner-system-audit-log" class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                    <div id="owner-system-audit-log" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>
                     </div>
                 </div>
 
-                <!-- BATTLE MATCH HISTORY MONITORING -->
+                <!-- BATTLE HISTORY -->
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">P2P Combat & Battle History Monitoring</h3>
-                    <div id="owner-battle-history-list" class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                    <div id="owner-battle-history-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>
                     </div>
                 </div>
 
                 <div class="space-y-2">
                     <h3 class="font-cinzel text-xs font-bold text-white">Merchant E-Wallet Credentials & QR Codes</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
                             <span class="text-[11px] font-bold text-blue-400 block">GCash Account & QR Setup</span>
                             <input type="text" id="input-gcash-num" placeholder="Account Number" value="09923978537" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="text" id="input-gcash-name" placeholder="Account Name" value="John Carlo Estrada Morales" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
-                            <input type="file" id="input-gcash-qr" accept="image/*" onchange="window.handleQRUpload(event, 'gcash')" class="w-full text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
+                            <input type="file" id="input-gcash-qr" accept="image/*" onchange="window.handleQRUpload(event, 'gcash')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
                             <button onclick="window.saveOwnerDetails()" class="w-full py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Save GCash</button>
                         </div>
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
                             <span class="text-[11px] font-bold text-teal-400 block">Maya Account & QR Setup</span>
                             <input type="text" id="input-maya-num" placeholder="Account Number" value="09301601780" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="text" id="input-maya-name" placeholder="Account Name" value="FMCM IT Solutions" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
-                            <input type="file" id="input-maya-qr" accept="image/*" onchange="window.handleQRUpload(event, 'maya')" class="w-full text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
+                            <input type="file" id="input-maya-qr" accept="image/*" onchange="window.handleQRUpload(event, 'maya')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
                             <button onclick="window.saveOwnerDetails()" class="w-full py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg">Save Maya</button>
                         </div>
                     </div>
@@ -404,107 +404,102 @@
     </main>
 
     <!-- FULL-SCREEN P2P PVP BATTLE ARENA VIEW -->
-    <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-3 sm:p-6 hidden overflow-hidden">
+    <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-3 hidden overflow-hidden">
         <!-- Top Battle Bar -->
-        <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-2 backdrop-blur shrink-0">
+        <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-3 py-2 backdrop-blur shrink-0">
             <div class="flex items-center space-x-2">
-                <h2 class="font-cinzel font-bold text-sm sm:text-base text-amber-400 glow-gold">P2P DUEL ARENA</h2>
-                <span id="fullscreen-bet-badge" class="text-[11px] bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
+                <h2 class="font-cinzel font-bold text-xs sm:text-sm text-amber-400 glow-gold">P2P DUEL ARENA</h2>
+                <span id="fullscreen-bet-badge" class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="window.surrenderDuel()" class="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[11px] font-bold rounded-xl transition">Surrender</button>
+                <button onclick="window.surrenderDuel()" class="px-2.5 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[10px] font-bold rounded-xl transition">Surrender</button>
             </div>
         </div>
 
         <!-- Main Combat Stage -->
-        <div class="flex-1 my-2 bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-950 border border-slate-800/80 rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+        <div class="flex-1 my-2 bg-gradient-to-b from-indigo-950/20 via-slate-900/40 to-slate-950 border border-slate-800/80 rounded-3xl p-3 flex flex-col justify-between relative overflow-hidden shadow-2xl">
             <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
 
             <!-- Opponent Stage Area (Top) -->
-            <div class="flex flex-col items-center space-y-1.5 z-10">
-                <div class="w-64 bg-slate-950/90 border border-red-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
-                    <div class="flex justify-between text-[11px] font-bold">
-                        <span id="fs-enemy-title" class="text-red-400">OPPONENT (BRONZE I)</span>
+            <div class="flex flex-col items-center space-y-1 z-10">
+                <div class="w-full max-w-xs bg-slate-950/90 border border-red-900/50 rounded-xl p-2 space-y-1 shadow-lg">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <span id="fs-enemy-title" class="text-red-400 truncate">OPPONENT</span>
                         <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
                         <div id="fs-enemy-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-1 text-[10px] text-slate-300">
+                    <div class="grid grid-cols-2 gap-1 text-[9px] text-slate-300">
                         <span>Status: <strong id="fs-enemy-status" class="text-emerald-400">🟢 Connected</strong></span>
                         <span>Armor: <strong id="fs-enemy-armor" class="text-blue-400">0</strong></span>
-                        <span>Poison/Burn: <strong id="fs-enemy-poison" class="text-purple-400">0</strong></span>
-                        <span>Debuff: <strong id="fs-enemy-debuff" class="text-amber-400">None</strong></span>
                     </div>
                 </div>
-                <div id="fs-enemy-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] p-1.5">
-                    <img id="fs-enemy-img-el" alt="Opponent Champion" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg">
-                    <span id="fs-enemy-name-label" class="font-cinzel text-[10px] font-bold text-amber-300 mt-0.5">APEXPREDATOR</span>
+                <div id="fs-enemy-sprite" class="w-20 h-20 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.2)] p-1">
+                    <img id="fs-enemy-img-el" alt="Opponent Champion" class="w-12 h-12 object-cover rounded-xl shadow-lg">
+                    <span id="fs-enemy-name-label" class="font-cinzel text-[9px] font-bold text-amber-300 mt-0.5">OPPONENT</span>
                 </div>
             </div>
 
             <!-- Central Battle Log Floating Pill -->
-            <div class="self-center z-20 max-w-md w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-center text-[11px] text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
-                [Arena]: Match connected! Choose tactical skills within 30s.
+            <div class="self-center z-20 max-w-sm w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-2.5 py-1 text-center text-[10px] text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
+                [Arena]: Match connected! Choose tactical skills.
             </div>
 
             <!-- Player Stage Area (Bottom) -->
-            <div class="flex flex-col items-center space-y-1.5 z-10">
-                <div id="fs-player-sprite" class="w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5">
-                    <img id="fs-player-img-el" alt="Pyra" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg mb-0.5">
-                    <span id="fs-player-avatar-username" class="font-cinzel text-[10px] font-bold text-amber-300 uppercase">PLAYER</span>
+            <div class="flex flex-col items-center space-y-1 z-10">
+                <div id="fs-player-sprite" class="w-20 h-20 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.2)] p-1">
+                    <img id="fs-player-img-el" alt="Pyra" class="w-12 h-12 object-cover rounded-xl shadow-lg mb-0.5">
+                    <span id="fs-player-avatar-username" class="font-cinzel text-[9px] font-bold text-amber-300 uppercase truncate">PLAYER</span>
                 </div>
-                <div class="w-64 bg-slate-950/90 border border-blue-900/50 rounded-xl p-2.5 space-y-1.5 shadow-lg">
-                    <div class="flex justify-between text-[11px] font-bold">
-                        <span id="fs-player-name" class="text-blue-400 uppercase">PLAYER</span>
+                <div class="w-full max-w-xs bg-slate-950/90 border border-blue-900/50 rounded-xl p-2 space-y-1 shadow-lg">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <span id="fs-player-name" class="text-blue-400 uppercase truncate">PLAYER</span>
                         <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
                     </div>
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
                         <div id="fs-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-1 text-[10px] text-slate-300">
+                    <div class="grid grid-cols-3 gap-1 text-[9px] text-slate-300 text-center">
                         <span>Armor: <strong id="fs-player-armor" class="text-blue-400">0</strong></span>
                         <span>AP: <strong id="fs-player-ap" class="text-amber-400">3</strong>/3</span>
-                        <span>Poison/Burn: <strong id="fs-player-poison" class="text-purple-400">0</strong></span>
-                        <span>Turn Timer: <strong id="fs-turn-timer" class="text-amber-400 font-bold">30s</strong></span>
+                        <span>Timer: <strong id="fs-turn-timer" class="text-amber-400 font-bold">30s</strong></span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Bottom Shuffled Action Cards Deck -->
-        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2 backdrop-blur shrink-0">
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-2.5 space-y-1.5 backdrop-blur shrink-0">
             <div class="flex justify-between items-center px-1">
-                <span class="font-cinzel text-[11px] font-bold text-amber-400">UNIQUE HERO SKILL DECK (Tier 1, 2 & Super)</span>
-                <button onclick="window.endDuelTurn()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] rounded-xl shadow-lg transition">End Turn & Attack</button>
+                <span class="font-cinzel text-[10px] font-bold text-amber-400">SKILL DECK</span>
+                <button onclick="window.endDuelTurn()" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-xl shadow transition">End Turn & Attack</button>
             </div>
-            <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+            <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5"></div>
         </div>
     </div>
 
     <!-- Modals -->
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
         <!-- Top-up Modal -->
-        <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden">
+        <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Submit Top-Up Request</h3>
             
             <div class="space-y-1.5">
                 <p class="text-[11px] text-slate-400">1. Scan or send payment to one of our official merchant channels below:</p>
                 <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px]">
-                    <div class="p-1.5 border-r border-slate-800 flex flex-col items-center text-center space-y-1">
+                    <div class="p-1 border-r border-slate-800 flex flex-col items-center text-center space-y-1">
                         <div id="topup-gcash-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                         <div>
-                            <span class="font-bold text-blue-400 block">GCash</span>
-                            <span id="topup-opt-gcash" class="text-white font-mono font-bold text-[10px]">0992-397-8537</span>
-                            <span class="text-slate-400 text-[9px]">John Carlo E.</span>
+                            <span class="font-bold text-blue-400 block text-[10px]">GCash</span>
+                            <span id="topup-opt-gcash" class="text-white font-mono font-bold text-[9px]">0992-397-8537</span>
                         </div>
                     </div>
-                    <div class="p-1.5 flex flex-col items-center text-center space-y-1">
+                    <div class="p-1 flex flex-col items-center text-center space-y-1">
                         <div id="topup-maya-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                         <div>
-                            <span class="font-bold text-teal-400 block">Maya</span>
-                            <span id="topup-opt-maya" class="text-white font-mono font-bold text-[10px]">0930-160-1780</span>
-                            <span class="text-slate-400 text-[9px]">FMCM IT Solutions</span>
+                            <span class="font-bold text-teal-400 block text-[10px]">Maya</span>
+                            <span id="topup-opt-maya" class="text-white font-mono font-bold text-[9px]">0930-160-1780</span>
                         </div>
                     </div>
                 </div>
@@ -515,7 +510,7 @@
                 <input type="number" id="topup-amount" placeholder="Amount Sent (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <div class="space-y-1">
-                    <label class="text-[10px] text-slate-400 block">Upload Payment Receipt Screenshot:</label>
+                    <label class="text-[10px] text-slate-400 block">Upload Receipt Screenshot:</label>
                     <input type="file" id="topup-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-600 file:text-white">
                 </div>
             </div>
@@ -526,21 +521,21 @@
         </div>
 
         <!-- Withdrawal Modal (Zero Fee) -->
-        <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">Withdrawal Request Form (Zero Fee)</h3>
-            <p class="text-xs text-slate-400">For security, payouts are locked strictly to your registered account phone number and legal name.</p>
+        <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">Withdrawal Request (Zero Fee)</h3>
+            <p class="text-xs text-slate-400">Payouts are locked strictly to your registered phone number and legal name.</p>
             <div class="space-y-2.5">
-                <input type="number" id="withdraw-amount" placeholder="Withdrawal Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="number" id="withdraw-amount" placeholder="Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <select id="withdraw-method" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <option value="GCash">GCash</option>
                     <option value="Maya">Maya</option>
                 </select>
                 <div class="space-y-1">
-                    <label class="text-[10px] text-slate-400 block">Locked Account Number (From Registration):</label>
+                    <label class="text-[10px] text-slate-400 block">Locked Account Number:</label>
                     <input type="text" id="withdraw-account" readonly class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 cursor-not-allowed">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] text-slate-400 block">Locked Account Holder Name (From Registration):</label>
+                    <label class="text-[10px] text-slate-400 block">Locked Account Name:</label>
                     <input type="text" id="withdraw-name" readonly class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 cursor-not-allowed">
                 </div>
             </div>
@@ -551,9 +546,9 @@
         </div>
 
         <!-- P2P Ranked Matchmaking Wager Modal -->
-        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">P2P RANKED WAGER & MATCHMAKING</h3>
-            <p class="text-xs text-slate-400">Choose your match stake. Winner takes the prize pool minus a transparent 5% platform fee!</p>
+        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">P2P RANKED WAGER</h3>
+            <p class="text-xs text-slate-400">Choose your match stake. Winner takes prize pool minus a 5% platform fee!</p>
             <div class="grid grid-cols-3 gap-2 pt-1">
                 <button onclick="window.startRankedMatchmaking(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
                 <button onclick="window.startRankedMatchmaking(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
@@ -565,58 +560,57 @@
         </div>
 
         <!-- P2P Matchmaking Loading Modal -->
-        <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md space-y-4 hidden text-center">
+        <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-4 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING P2P NETWORK</h3>
-            <div class="py-4 space-y-3">
-                <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div class="py-3 space-y-3">
+                <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
                 <p id="matchmaking-status" class="text-xs text-slate-300">Searching online lobby for peer player match...</p>
             </div>
-            <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Stake</button>
+            <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund</button>
         </div>
 
-        <!-- Transparent Coin Toss Modal for Turn Initiative -->
-        <div id="modal-cointoss" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">TRANSPARENT COIN TOSS INITIATIVE</h3>
-            <p class="text-xs text-slate-400">Choose Heads or Tails. The system will independently flip a random coin. If your pick matches, you move first!</p>
-            <div class="grid grid-cols-2 gap-3 py-3">
-                <button onclick="window.executeCoinToss('Heads')" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm rounded-xl shadow-lg">🪙 HEADS</button>
-                <button onclick="window.executeCoinToss('Tails')" class="py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl shadow-lg">🪙 TAILS</button>
+        <!-- Transparent Coin Toss Modal -->
+        <div id="modal-cointoss" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">COIN TOSS INITIATIVE</h3>
+            <p class="text-xs text-slate-400">Choose Heads or Tails. If your pick matches, you move first!</p>
+            <div class="grid grid-cols-2 gap-3 py-2">
+                <button onclick="window.executeCoinToss('Heads')" class="py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow">🪙 HEADS</button>
+                <button onclick="window.executeCoinToss('Tails')" class="py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow">🪙 TAILS</button>
             </div>
         </div>
 
         <!-- Receipt Preview Modal -->
-        <div id="modal-receipt" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">Payment Receipt Inspection</h3>
+        <div id="modal-receipt" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">Payment Receipt</h3>
             <div id="receipt-preview-container" class="max-h-60 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center p-2"></div>
-            <button onclick="window.closeModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Preview</button>
+            <button onclick="window.closeModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
 
         <!-- Player Details Modal -->
-        <div id="modal-player-details" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-3 hidden">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">Player Account Inspection</h3>
+        <div id="modal-player-details" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection</h3>
             <div id="player-inspection-content" class="space-y-2 text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
 
-        <!-- Player Profile & Personal Battle History Modal -->
-        <div id="modal-player-profile" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-lg space-y-3 hidden">
+        <!-- Player Profile & Battle History Modal -->
+        <div id="modal-player-profile" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-cinzel text-base font-bold text-amber-400">PLAYER PROFILE & BATTLE HISTORY</h3>
-                <span id="profile-modal-rank" class="text-xs bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
+                <h3 class="font-cinzel text-base font-bold text-amber-400">PLAYER PROFILE</h3>
+                <span id="profile-modal-rank" class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
             </div>
             <div id="player-profile-content" class="space-y-2.5 text-xs text-slate-300 max-h-80 overflow-y-auto pr-1"></div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Profile</button>
         </div>
 
         <!-- Top 10 Leaderboard Modal -->
-        <div id="modal-leaderboard" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-lg space-y-3 hidden">
+        <div id="modal-leaderboard" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-cinzel text-base font-bold text-amber-400">🏆 TOP 10 RANKED LEADERBOARD</h3>
-                <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">Live Season</span>
+                <h3 class="font-cinzel text-base font-bold text-amber-400">🏆 TOP 10 LEADERBOARD</h3>
+                <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Live Season</span>
             </div>
-            <p class="text-xs text-slate-400">Global ranking based on total EXP level, rank tier, and ranked match victories (Owner excluded).</p>
             <div id="leaderboard-list-content" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
-            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Leaderboard</button>
+            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
     </div>
 
@@ -648,12 +642,12 @@
 
         async function installPWA() {
             if (!deferredPrompt) {
-                alert('PWA installation prompt is ready! You can also install this app directly from your browser menu.');
+                alert('PWA installation ready! You can also install this app directly from your browser menu.');
                 return;
             }
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') console.log('User accepted the install prompt');
+            if (outcome === 'accepted') console.log('User accepted install');
             deferredPrompt = null;
         }
         window.installPWA = installPWA;
@@ -888,47 +882,47 @@
         const shopSkillsMap = {
             'pyra': [
                 { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 2, color: 'red', cost: 150, desc: 'Tier-2 Elite: Deal 35 Fire damage & apply 12 Burn stacks.' },
-                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 3, color: 'red', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to deal 75 solar fire damage & 20 burn stacks!' }
+                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 3, color: 'red', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to deal 75 solar fire damage!' }
             ],
             'sylph': [
                 { id: 'shop-sylph-2', name: 'HURRICANE BARRAGE', type: 'strike', ap: 2, color: 'emerald', cost: 150, desc: 'Tier-2 Elite: Unleash rapid wind strikes totaling 38 damage.' },
-                { id: 'shop-sylph-3', name: 'HURRICANE APOCALYPSE', type: 'strike', ap: 3, color: 'emerald', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 70 wind damage & 25 armor block!' }
+                { id: 'shop-sylph-3', name: 'HURRICANE APOCALYPSE', type: 'strike', ap: 3, color: 'emerald', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 70 wind damage!' }
             ],
             'valen': [
                 { id: 'shop-valen-2', name: 'AEGIS FORTRESS', type: 'heal', ap: 2, color: 'blue', cost: 150, desc: 'Tier-2 Elite: Fortify stance with 25 Armor block & restore 15 HP.' },
-                { id: 'shop-valen-3', name: 'DIVINE INVINCIBILITY', type: 'heal', ap: 3, color: 'blue', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to gain 45 Armor block & restore 35 HP!' }
+                { id: 'shop-valen-3', name: 'DIVINE INVINCIBILITY', type: 'heal', ap: 3, color: 'blue', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to gain 45 Armor block!' }
             ],
             'nyx': [
                 { id: 'shop-nyx-2', name: 'SHADOW ASSASSINATION', type: 'strike', ap: 2, color: 'purple', cost: 150, desc: 'Tier-2 Elite: Strike from the shadows for 42 critical dark damage.' },
-                { id: 'shop-nyx-3', name: 'ABSOLUTE SHADOW ECLIPSE', type: 'poison', ap: 3, color: 'purple', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 75 lethal dark damage & 15 poison!' }
+                { id: 'shop-nyx-3', name: 'ABSOLUTE SHADOW ECLIPSE', type: 'poison', ap: 3, color: 'purple', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 75 lethal dark damage!' }
             ],
             'storm-knight': [
                 { id: 'shop-storm-2', name: 'THUNDER GODS WRATH', type: 'debuff', ap: 2, color: 'amber', cost: 200, desc: 'Tier-2 Elite: Summon divine lightning for 45 damage & shock.' },
-                { id: 'shop-storm-3', name: 'ZEUS THUNDERSTORM', type: 'debuff', ap: 3, color: 'amber', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to strike with 78 electrical catastrophe damage!' }
+                { id: 'shop-storm-3', name: 'ZEUS THUNDERSTORM', type: 'debuff', ap: 3, color: 'amber', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to strike with 78 electrical damage!' }
             ],
             'ironclad-titan': [
                 { id: 'shop-titan-2', name: 'CONTINENTAL CRUSH', type: 'strike', ap: 2, color: 'stone', cost: 200, desc: 'Tier-2 Elite: Crush target with tectonic force for 45 earth damage.' },
-                { id: 'shop-titan-3', name: 'WORLD SHATTERING METEOR', type: 'strike', ap: 3, color: 'stone', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to drop a colossal meteor for 82 earth damage!' }
+                { id: 'shop-titan-3', name: 'WORLD SHATTERING METEOR', type: 'strike', ap: 3, color: 'stone', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to drop a colossal meteor!' }
             ],
             'chrono-warden': [
                 { id: 'shop-chrono-2', name: 'TEMPORAL REWIND', type: 'heal', ap: 2, color: 'yellow', cost: 250, desc: 'Tier-2 Elite: Rewind timeline to restore 30 HP & cleanse debuffs.' },
-                { id: 'shop-chrono-3', name: 'ETERNAL TIME COLLAPSE', type: 'heal', ap: 3, color: 'yellow', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to restore 55 HP & 25 Armor!' }
+                { id: 'shop-chrono-3', name: 'ETERNAL TIME COLLAPSE', type: 'heal', ap: 3, color: 'yellow', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to restore 55 HP!' }
             ],
             'sky-valkyrie': [
                 { id: 'shop-valkyrie-2', name: 'DIVINE JUDGMENT', type: 'debuff', ap: 2, color: 'orange', cost: 250, desc: 'Tier-2 Elite: Bring celestial judgment dealing 50 holy damage.' },
-                { id: 'shop-valkyrie-3', name: 'HEAVENLY RAGNAROK', type: 'debuff', ap: 3, color: 'orange', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 78 holy destruction damage!' }
+                { id: 'shop-valkyrie-3', name: 'HEAVENLY RAGNAROK', type: 'debuff', ap: 3, color: 'orange', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 78 holy destruction!' }
             ],
             'void-necromancer': [
                 { id: 'shop-void-2', name: 'SOUL HARVEST', type: 'poison', ap: 2, color: 'violet', cost: 300, desc: 'Tier-2 Elite: Harvest life force for 40 damage & 15 HP drain.' },
-                { id: 'shop-void-3', name: 'VOID REALM ANNIHILATION', type: 'poison', ap: 3, color: 'violet', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 80 dark damage & heavy life steal!' }
+                { id: 'shop-void-3', name: 'VOID REALM ANNIHILATION', type: 'poison', ap: 3, color: 'violet', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 80 dark damage!' }
             ],
             'blood-berserker': [
                 { id: 'shop-berserk-2', name: 'APOCALYPSE FRENZY', type: 'strike', ap: 2, color: 'rose', cost: 300, desc: 'Tier-2 Elite: Berserk rampage dealing 55 brutal physical damage.' },
-                { id: 'shop-berserk-3', name: 'RAGING BLOOD GOD RAMPAGE', type: 'strike', ap: 3, color: 'rose', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 85 crushing blood fury damage!' }
+                { id: 'shop-berserk-3', name: 'RAGING BLOOD GOD RAMPAGE', type: 'strike', ap: 3, color: 'rose', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 85 blood fury damage!' }
             ],
             'astral-archmage': [
                 { id: 'shop-astral-2', name: 'GALAXY COLLAPSE', type: 'debuff', ap: 2, color: 'indigo', cost: 350, desc: 'Tier-2 Elite: Collapse cosmic orbits for 60 cosmic damage.' },
-                { id: 'shop-astral-3', name: 'BIG BANG UNIVERSE STRIKE', type: 'debuff', ap: 3, color: 'indigo', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to unleash the Big Bang for 88 cosmic damage!' }
+                { id: 'shop-astral-3', name: 'BIG BANG UNIVERSE STRIKE', type: 'debuff', ap: 3, color: 'indigo', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to unleash Big Bang!' }
             ]
         };
 
@@ -1042,7 +1036,7 @@
             if (!container) return;
             container.innerHTML = starterHeroes.map(h => `
                 <div onclick="window.chooseStarterHero('${h.id}')" class="bg-slate-900 border border-slate-800 hover:border-amber-500 rounded-2xl p-4 cursor-pointer card-hover flex items-center space-x-3.5">
-                    <div class="w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-xl">
+                    <div class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-xl">
                         <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
                     </div>
                     <div class="space-y-1">
@@ -1051,7 +1045,7 @@
                             <span class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">${h.role}</span>
                         </div>
                         <p class="text-[11px] text-slate-400 leading-tight">${h.desc}</p>
-                        <span class="text-[10px] text-emerald-400 font-bold block pt-1">▶ Click to Select Starter Champion</span>
+                        <span class="text-[10px] text-emerald-400 font-bold block pt-1">▶ Select Champion</span>
                     </div>
                 </div>
             `).join('');
@@ -1068,13 +1062,13 @@
                 unlocked_heroes: currentUser.unlocked_heroes
             }).eq('email', currentUser.email);
 
-            logSystemActivity('Starter Hero Chosen', `${currentUser.nickname} chose ${heroId} as starter champion.`);
+            logSystemActivity('Starter Hero Chosen', `${currentUser.nickname} chose ${heroId}.`);
             persistLocalStorage();
 
             const starterSelect = document.getElementById('view-starter-select');
             if (starterSelect) starterSelect.classList.add('hidden');
             restoreUserSession();
-            alert(`Champion selected successfully! Welcome to the Aetheris Arena dashboard.`);
+            alert(`Champion selected successfully!`);
         }
         window.chooseStarterHero = chooseStarterHero;
 
@@ -1110,11 +1104,6 @@
                 const refEl = document.getElementById('reg-ref');
                 const receiptEl = document.getElementById('reg-receipt');
 
-                if (!nameEl || !nickEl || !phoneEl || !emailEl || !bdayEl || !passEl || !refEl || !receiptEl) {
-                    alert('Registration form elements missing.');
-                    return;
-                }
-
                 const name = nameEl.value.trim();
                 const nickname = nickEl.value.trim();
                 const phone = phoneEl.value.trim();
@@ -1125,20 +1114,11 @@
                 const receiptFile = receiptEl.files[0];
 
                 if(!name || !nickname || !phone || !email || !bday || !pass || !refNum || !receiptFile) { 
-                    alert('Please fill in all registration fields, enter the transaction reference number, and upload your ₱50 registration receipt.'); 
+                    alert('Please fill in all registration fields and upload your receipt.'); 
                     return; 
                 }
 
-                if (!supabaseClient) {
-                    alert('Database client not connected.');
-                    return;
-                }
-
-                if ('Notification' in window) {
-                    try {
-                        await Notification.requestPermission();
-                    } catch(e) {}
-                }
+                if (!supabaseClient) { alert('Database client not connected.'); return; }
 
                 const passHash = await hashPassword(pass);
                 const dateStr = new Date().toISOString().split('T')[0];
@@ -1152,13 +1132,10 @@
                         approved: false, frozen: false, receipt: e.target.result, ref: refNum, date: dateStr
                     }]);
 
-                    if (error) {
-                        alert('Registration failed: ' + error.message);
-                        return;
-                    }
+                    if (error) { alert('Registration failed: ' + error.message); return; }
 
-                    logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration with Ref: ${refNum}. Awaiting owner approval.`);
-                    alert('Registration submitted successfully! Your account is pending owner approval of your ₱50 registration fee receipt.');
+                    logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration.`);
+                    alert('Registration submitted successfully! Awaiting owner approval of your ₱50 fee receipt.');
                     showAuthMode('login');
                 };
                 reader.readAsDataURL(receiptFile);
@@ -1172,26 +1149,13 @@
             try {
                 const emailEl = document.getElementById('login-email');
                 const passEl = document.getElementById('login-pass');
-                if (!emailEl || !passEl) {
-                    alert('Login input elements not found.');
-                    return;
-                }
-
                 const email = emailEl.value.trim();
                 const pass = passEl.value;
                 
-                if(!email || !pass) {
-                    alert('Please enter both email and password.');
-                    return;
-                }
-
-                if (!supabaseClient) {
-                    alert('Supabase client is not initialized.');
-                    return;
-                }
+                if(!email || !pass) { alert('Please enter email and password.'); return; }
+                if (!supabaseClient) { alert('Supabase client not initialized.'); return; }
 
                 const inputHash = await hashPassword(pass);
-
                 const { data: user, error } = await supabaseClient
                     .from('profiles')
                     .select('*')
@@ -1199,10 +1163,7 @@
                     .eq('pass_hash', inputHash)
                     .single();
 
-                if (error || !user) {
-                    alert('Invalid email or password.');
-                    return;
-                }
+                if (error || !user) { alert('Invalid email or password.'); return; }
 
                 if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                     user.role = 'owner';
@@ -1210,20 +1171,17 @@
                 }
 
                 if (!user.approved && user.role !== 'owner') {
-                    alert('Account Approval Pending: Your ₱50 registration fee receipt is awaiting review and approval by the owner.');
+                    alert('Account Approval Pending: Your ₱50 registration fee receipt is awaiting review by the owner.');
                     return;
                 }
 
-                if (user.frozen) {
-                    alert('Security Alert: This player account has been frozen by the owner.');
-                    return;
-                }
+                if (user.frozen) { alert('Security Alert: Account frozen by owner.'); return; }
 
                 currentUser = user;
                 if(!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
                 if(!currentUser.activeHero) currentUser.activeHero = currentUser.active_hero || null;
                 
-                logSystemActivity('User Login', `User ${currentUser.nickname} (${currentUser.email}) signed in.`);
+                logSystemActivity('User Login', `User ${currentUser.nickname} signed in.`);
                 localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
                 restoreUserSession();
             } catch(err) {
@@ -1233,16 +1191,13 @@
         window.handleLogin = handleLogin;
 
         function logoutPlayer() {
-            if (currentUser) {
-                logSystemActivity('User Logout', `User ${currentUser.nickname} signed out.`);
-            }
+            if (currentUser) { logSystemActivity('User Logout', `${currentUser.nickname} signed out.`); }
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
             currentUser = null;
             localStorage.removeItem('aetheris_current_user');
 
-            const idsToHide = ['nav-wallet-container', 'nav-menu', 'view-hub', 'view-shop', 'view-owner', 'view-select', 'view-starter-select', 'view-duel-fullscreen', 'main-header', 'view-force-reset'];
-            idsToHide.forEach(id => {
+            ['nav-wallet-container', 'nav-menu', 'view-hub', 'view-shop', 'view-owner', 'view-select', 'view-starter-select', 'view-duel-fullscreen', 'main-header', 'view-force-reset'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.classList.add('hidden');
             });
@@ -1256,29 +1211,19 @@
             try {
                 const email = document.getElementById('forgot-email').value;
                 const bday = document.getElementById('forgot-bday').value;
-                if(!email || !bday || !supabaseClient) { alert('Please enter email and birthday.'); return; }
+                if(!email || !bday || !supabaseClient) { alert('Enter email and birthday.'); return; }
                 
-                const { data: user, error } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('email', email)
-                    .eq('bday', bday)
-                    .single();
-
-                if(error || !user) { alert('No matching account found with that email and birthday.'); return; }
-                if(pendingResets.some(r => r.email === email)) { alert('A password reset request is already pending.'); return; }
-
-                if ('Notification' in window) {
-                    try { await Notification.requestPermission(); } catch(e) {}
-                }
+                const { data: user, error } = await supabaseClient.from('profiles').select('*').eq('email', email).eq('bday', bday).single();
+                if(error || !user) { alert('No matching account found.'); return; }
+                if(pendingResets.some(r => r.email === email)) { alert('Reset request already pending.'); return; }
 
                 pendingResets.push({ id: Date.now(), email: email, name: user.name });
-                logSystemActivity('Password Reset Requested', `Reset requested for ${user.nickname} (${email}).`);
+                logSystemActivity('Password Reset Requested', `Reset requested for ${email}.`);
                 persistLocalStorage();
-                alert('Password reset request submitted to the owner successfully. You will receive a device notification once approved.');
+                alert('Password reset request submitted successfully.');
                 showAuthMode('login');
             } catch(err) {
-                alert('Reset request error: ' + err.message);
+                alert('Reset error: ' + err.message);
             }
         }
         window.submitResetRequest = submitResetRequest;
@@ -1288,28 +1233,19 @@
                 const email = document.getElementById('force-email').value;
                 const bday = document.getElementById('force-bday').value;
                 const newpass = document.getElementById('force-newpass').value;
-                
-                if(!email || !bday || !newpass || !supabaseClient) { alert('Please fill in all reset fields.'); return; }
+                if(!email || !bday || !newpass || !supabaseClient) { alert('Fill in all fields.'); return; }
 
-                const { data: user, error } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('email', email)
-                    .eq('bday', bday)
-                    .single();
-
-                if(error || !user) { alert('Invalid verification or missing password.'); return; }
+                const { data: user, error } = await supabaseClient.from('profiles').select('*').eq('email', email).eq('bday', bday).single();
+                if(error || !user) { alert('Invalid verification.'); return; }
 
                 const newHash = await hashPassword(newpass);
                 await supabaseClient.from('profiles').update({ pass_hash: newHash }).eq('email', email);
 
-                logSystemActivity('Password Reset Executed', `Password successfully updated for ${user.nickname} (${email}).`);
+                logSystemActivity('Password Reset Executed', `Password updated for ${email}.`);
                 persistLocalStorage();
-                alert('Password updated securely! Please log in.');
-                const forceReset = document.getElementById('view-force-reset');
-                const viewAuth = document.getElementById('view-auth');
-                if(forceReset) forceReset.classList.add('hidden');
-                if(viewAuth) viewAuth.classList.remove('hidden');
+                alert('Password updated successfully! Please log in.');
+                document.getElementById('view-force-reset').classList.add('hidden');
+                document.getElementById('view-auth').classList.remove('hidden');
                 showAuthMode('login');
             } catch(err) {
                 alert('Force reset error: ' + err.message);
@@ -1344,13 +1280,11 @@
                 wins: currentUser.wins,
                 unlocked_heroes: currentUser.unlocked_heroes
             }).eq('email', currentUser.email);
-
             persistLocalStorage();
         }
 
         async function renderHeroes() {
             await evaluateRankAndUnlocks();
-
             const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
             document.getElementById('player-rank-badge').innerText = currentUser.rank;
             document.getElementById('hub-rank-badge').innerText = currentUser.rank;
@@ -1380,13 +1314,13 @@
 
                 let actionBtn = '';
                 if (isActive) {
-                    actionBtn = `<span class="px-3 py-1.5 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/40">Active</span>`;
+                    actionBtn = `<span class="px-3 py-1.5 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/45">Active</span>`;
                 } else if (isUnlocked) {
-                    actionBtn = `<button onclick="window.switchActiveHero('${h.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Equip</button>`;
+                    actionBtn = `<button onclick="window.switchActiveHero('${h.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow">Equip</button>`;
                 } else if (h.isStarter) {
-                    actionBtn = `<button onclick="window.buyBasicHero('${h.id}', ${h.price})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow transition">₱${h.price}</button>`;
+                    actionBtn = `<button onclick="window.buyBasicHero('${h.id}', ${h.price})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow">₱${h.price}</button>`;
                 } else if (meetsReqs) {
-                    actionBtn = `<button onclick="window.claimRankedHero('${h.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition">Unlock</button>`;
+                    actionBtn = `<button onclick="window.claimRankedHero('${h.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow">Unlock</button>`;
                 } else {
                     actionBtn = `<span class="text-[10px] text-amber-400 font-mono text-right block">Req: ${h.requiredWins}W / ${h.requiredXp}XP</span>`;
                 }
@@ -1402,7 +1336,7 @@
                                     <h3 class="font-cinzel font-bold text-white text-xs sm:text-sm">${h.name} (${h.role})</h3>
                                     <span class="text-[9px] bg-blue-600/20 text-blue-400 px-2 py-0.2 rounded-full border border-blue-500/30">${h.rarity}</span>
                                 </div>
-                                <p class="text-[11px] text-slate-400 max-w-xs sm:max-w-md">${h.desc}</p>
+                                <p class="text-[11px] text-slate-400 max-w-xs">${h.desc}</p>
                             </div>
                         </div>
                         <div>${actionBtn}</div>
@@ -1428,28 +1362,27 @@
 
                     let actionBtn = '';
                     if (!ownsHero) {
-                        actionBtn = `<span class="text-[10px] text-red-400 font-bold bg-red-950/40 px-2.5 py-1 rounded-lg border border-red-500/30">Locked (Require Hero Ownership)</span>`;
+                        actionBtn = `<span class="text-[10px] text-red-400 font-bold bg-red-950/40 px-2.5 py-1 rounded-lg border border-red-500/35">Locked</span>`;
                     } else if (alreadyOwned) {
-                        actionBtn = `<span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-500/30">Owned & Active</span>`;
+                        actionBtn = `<span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-500/35">Owned</span>`;
                     } else {
                         const isSuper = skill.cost === 500;
-                        actionBtn = `<button onclick="window.buyHeroSkill('${h.id}', '${skill.id}', ${skill.cost})" class="px-3 py-1.5 ${isSuper ? 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 shadow-amber-500/20' : 'bg-amber-600 hover:bg-amber-500'} text-white font-bold text-xs rounded-xl shadow transition">Buy Skill (₱${skill.cost})</button>`;
+                        actionBtn = `<button onclick="window.buyHeroSkill('${h.id}', '${skill.id}', ${skill.cost})" class="px-3 py-1.5 ${isSuper ? 'bg-gradient-to-r from-amber-600 to-yellow-600' : 'bg-amber-600 hover:bg-amber-500'} text-white font-bold text-xs rounded-xl shadow">Buy (₱${skill.cost})</button>`;
                     }
 
                     const isSuperCard = skill.cost === 500;
-
                     shopHtml += `
-                        <div class="bg-[#0e1322] border ${isSuperCard ? 'border-amber-500/80 shadow-[0_0_15px_rgba(234,179,8,0.15)]' : (ownsHero ? 'border-amber-500/40' : 'border-slate-800')} rounded-2xl p-3.5 flex items-center justify-between card-hover">
+                        <div class="bg-[#0e1322] border ${isSuperCard ? 'border-amber-500/80 shadow-[0_0_15px_rgba(234,179,8,0.15)]' : 'border-slate-800'} rounded-2xl p-3 flex items-center justify-between card-hover">
                             <div class="flex items-center space-x-3">
-                                <div class="w-12 h-12 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
+                                <div class="w-12 h-12 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow">
                                     <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
                                 </div>
                                 <div>
                                     <div class="flex items-center space-x-2 mb-0.5">
-                                        <h3 class="font-cinzel font-bold ${isSuperCard ? 'text-amber-400 glow-gold' : 'text-white'} text-xs sm:text-sm">${skill.name}</h3>
-                                        <span class="text-[9px] ${isSuperCard ? 'bg-amber-500/20 text-amber-300 border-amber-500/50' : 'bg-blue-600/20 text-blue-400 border-blue-500/30'} px-2 py-0.2 rounded-full border">${isSuperCard ? '⭐ Tier-3 SUPER (₱500 • 3 AP)' : 'Tier-2 Elite (₱' + skill.cost + ' • 2 AP)'} (${h.name})</span>
+                                        <h3 class="font-cinzel font-bold ${isSuperCard ? 'text-amber-400 glow-gold' : 'text-white'} text-xs">${skill.name}</h3>
+                                        <span class="text-[9px] ${isSuperCard ? 'bg-amber-500/20 text-amber-300' : 'bg-blue-600/20 text-blue-400'} px-2 py-0.2 rounded-full border">${isSuperCard ? '⭐ Tier-3 (₱500)' : 'Tier-2 (₱' + skill.cost + ')'}</span>
                                     </div>
-                                    <p class="text-[11px] text-slate-400 max-w-sm sm:max-w-lg">${skill.desc}</p>
+                                    <p class="text-[10px] text-slate-400 max-w-xs">${skill.desc}</p>
                                 </div>
                             </div>
                             <div>${actionBtn}</div>
@@ -1457,36 +1390,22 @@
                     `;
                 });
             });
-
             container.innerHTML = shopHtml;
         }
 
         async function buyHeroSkill(heroId, skillId, cost) {
             if (!currentUser || !supabaseClient) return;
-            const unlockedList = currentUser.unlocked_heroes || currentUser.unlockedHeroes || [];
-            if (!unlockedList.includes(heroId)) {
-                alert('Role restriction: You must own this hero before purchasing its skill!');
-                return;
-            }
-            if (currentUser.balance < cost) {
-                alert('Insufficient wallet balance to purchase this skill! Please top up.');
-                return;
-            }
-
+            if (currentUser.balance < cost) { alert('Insufficient wallet balance!'); return; }
             currentUser.balance -= cost;
             if (!currentUser.unlocked_skills) currentUser.unlocked_skills = currentUser.unlockedSkills || {};
             currentUser.unlocked_skills[skillId] = true;
 
-            await supabaseClient.from('profiles').update({
-                balance: currentUser.balance,
-                unlocked_skills: currentUser.unlocked_skills
-            }).eq('email', currentUser.email);
-
-            logSystemActivity('Skill Purchased', `${currentUser.nickname} bought skill ${skillId} for ₱${cost}.`);
+            await supabaseClient.from('profiles').update({ balance: currentUser.balance, unlocked_skills: currentUser.unlocked_skills }).eq('email', currentUser.email);
+            logSystemActivity('Skill Purchased', `Bought skill ${skillId} for ₱${cost}.`);
             persistLocalStorage();
             updateWalletDisplay();
             renderSkillShop();
-            alert(`Skill purchased successfully for ₱${cost}! It has been permanently added to this champion’s shuffle combat deck.`);
+            alert(`Skill purchased successfully for ₱${cost}!`);
         }
         window.buyHeroSkill = buyHeroSkill;
 
@@ -1494,41 +1413,29 @@
             if (!currentUser || !supabaseClient) return;
             currentUser.active_hero = id;
             currentUser.activeHero = id;
-
             await supabaseClient.from('profiles').update({ active_hero: id }).eq('email', currentUser.email);
-
             persistLocalStorage();
             setActiveHeroUI(id);
             renderHeroes();
-            alert('Active champion successfully switched!');
             switchTab('hub');
         }
         window.switchActiveHero = switchActiveHero;
 
         async function buyBasicHero(id, price) {
             if (!currentUser || !supabaseClient) return;
-            if (currentUser.balance < price) {
-                alert('Insufficient wallet balance to purchase this basic hero! Please top up.');
-                return;
-            }
+            if (currentUser.balance < price) { alert('Insufficient wallet balance!'); return; }
             currentUser.balance -= price;
             if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = currentUser.unlockedHeroes || [];
             currentUser.unlocked_heroes.push(id);
             currentUser.active_hero = id;
             currentUser.activeHero = id;
 
-            await supabaseClient.from('profiles').update({
-                balance: currentUser.balance,
-                unlocked_heroes: currentUser.unlocked_heroes,
-                active_hero: id
-            }).eq('email', currentUser.email);
-
-            logSystemActivity('Hero Purchased', `${currentUser.nickname} bought basic hero ${id} for ₱${price}.`);
+            await supabaseClient.from('profiles').update({ balance: currentUser.balance, unlocked_heroes: currentUser.unlocked_heroes, active_hero: id }).eq('email', currentUser.email);
+            logSystemActivity('Hero Purchased', `Bought hero ${id} for ₱${price}.`);
             persistLocalStorage();
             updateWalletDisplay();
             setActiveHeroUI(id);
             renderHeroes();
-            alert('Basic hero purchased and unlocked successfully! Set as active champion.');
             switchTab('hub');
         }
         window.buyBasicHero = buyBasicHero;
@@ -1536,25 +1443,17 @@
         async function claimRankedHero(id) {
             if (!currentUser || !supabaseClient) return;
             const h = heroes.find(item => item.id === id);
-            if (!h || currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) {
-                alert('Rank requirements not met yet!');
-                return;
-            }
+            if (!h || currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) { alert('Rank requirements not met!'); return; }
             if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = currentUser.unlockedHeroes || [];
             if (!currentUser.unlocked_heroes.includes(id)) currentUser.unlocked_heroes.push(id);
             currentUser.active_hero = id;
             currentUser.activeHero = id;
 
-            await supabaseClient.from('profiles').update({
-                unlocked_heroes: currentUser.unlocked_heroes,
-                active_hero: id
-            }).eq('email', currentUser.email);
-
-            logSystemActivity('Ranked Hero Unlocked', `${currentUser.nickname} unlocked ranked hero ${h.name}.`);
+            await supabaseClient.from('profiles').update({ unlocked_heroes: currentUser.unlocked_heroes, active_hero: id }).eq('email', currentUser.email);
+            logSystemActivity('Ranked Hero Unlocked', `Unlocked ${h.name}.`);
             persistLocalStorage();
             setActiveHeroUI(id);
             renderHeroes();
-            alert(`Congratulations! You have unlocked ${h.name} through ranked progression and set it as your active champion.`);
             switchTab('hub');
         }
         window.claimRankedHero = claimRankedHero;
@@ -1569,67 +1468,51 @@
             
             const avatar = document.getElementById('active-hero-avatar');
             const activeImg = document.getElementById('active-hero-img-el');
-            if (avatar) avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
+            if (avatar) avatar.className = `w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
             if (activeImg) activeImg.src = h.iconImg;
 
             const fsPlayerSprite = document.getElementById('fs-player-sprite');
             if (fsPlayerSprite) {
-                fsPlayerSprite.className = `w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5`;
-                fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg mb-0.5"><span id="fs-player-avatar-username" class="font-cinzel text-[10px] font-bold text-amber-300 uppercase">${currentUser.nickname}</span>`;
+                fsPlayerSprite.className = `w-20 h-20 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-2xl flex flex-col items-center justify-center shadow p-1`;
+                fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-12 h-12 object-cover rounded-xl shadow mb-0.5"><span class="font-cinzel text-[9px] font-bold text-amber-300 uppercase truncate">${currentUser.nickname}</span>`;
             }
         }
 
         function switchTab(tab) {
             if (currentUser && currentUser.role === 'owner' && tab !== 'owner') {
-                alert('Security Notice: Owner accounts are strictly restricted to the Admin Portal.');
                 switchTab('owner');
                 return;
             }
-            if (currentUser && currentUser.role === 'player' && tab === 'owner') {
-                alert('Security Notice: Access denied. Insufficient clearance for Admin Portal.');
-                switchTab('hub');
-                return;
-            }
-
-            const views = ['view-hub', 'view-select', 'view-shop', 'view-owner', 'view-starter-select', 'view-duel-fullscreen'];
-            views.forEach(v => {
+            ['view-hub', 'view-select', 'view-shop', 'view-owner', 'view-starter-select', 'view-duel-fullscreen'].forEach(v => {
                 const el = document.getElementById(v);
                 if(el) el.classList.add('hidden');
             });
             const mainHeader = document.getElementById('main-header');
             if(mainHeader) mainHeader.classList.remove('hidden');
 
-            const btnIds = ['btn-hub', 'btn-roster', 'btn-shop', 'btn-owner'];
-            btnIds.forEach(bId => {
+            ['btn-hub', 'btn-roster', 'btn-shop', 'btn-owner'].forEach(bId => {
                 const btn = document.getElementById(bId);
-                if(btn) {
-                    btn.classList.remove('bg-blue-600', 'text-white');
-                    btn.classList.add('text-slate-400');
-                }
+                if(btn) { btn.classList.remove('bg-blue-600', 'text-white'); btn.classList.add('text-slate-400'); }
             });
 
             if(tab === 'hub') {
-                const vHub = document.getElementById('view-hub');
-                const bHub = document.getElementById('btn-hub');
-                if(vHub) vHub.classList.remove('hidden');
-                if(bHub) { bHub.classList.add('bg-blue-600', 'text-white'); bHub.classList.remove('text-slate-400'); }
+                document.getElementById('view-hub').classList.remove('hidden');
+                const b = document.getElementById('btn-hub');
+                if(b) { b.classList.add('bg-blue-600', 'text-white'); b.classList.remove('text-slate-400'); }
             } else if(tab === 'select') {
                 renderHeroes();
-                const vSelect = document.getElementById('view-select');
-                const bRoster = document.getElementById('btn-roster');
-                if(vSelect) vSelect.classList.remove('hidden');
-                if(bRoster) { bRoster.classList.add('bg-blue-600', 'text-white'); bRoster.classList.remove('text-slate-400'); }
+                document.getElementById('view-select').classList.remove('hidden');
+                const b = document.getElementById('btn-roster');
+                if(b) { b.classList.add('bg-blue-600', 'text-white'); b.classList.remove('text-slate-400'); }
             } else if(tab === 'shop') {
                 renderSkillShop();
-                const vShop = document.getElementById('view-shop');
-                const bShop = document.getElementById('btn-shop');
-                if(vShop) vShop.classList.remove('hidden');
-                if(bShop) { bShop.classList.add('bg-blue-600', 'text-white'); bShop.classList.remove('text-slate-400'); }
+                document.getElementById('view-shop').classList.remove('hidden');
+                const b = document.getElementById('btn-shop');
+                if(b) { b.classList.add('bg-blue-600', 'text-white'); b.classList.remove('text-slate-400'); }
             } else if(tab === 'owner') {
-                const vOwner = document.getElementById('view-owner');
-                const bOwner = document.getElementById('btn-owner');
-                if(vOwner) vOwner.classList.remove('hidden');
-                if(bOwner) { bOwner.classList.add('bg-blue-600', 'text-white'); bOwner.classList.remove('text-slate-400'); }
+                document.getElementById('view-owner').classList.remove('hidden');
+                const b = document.getElementById('btn-owner');
+                if(b) { b.classList.add('bg-blue-600', 'text-white'); b.classList.remove('text-slate-400'); }
                 renderOwnerQueues();
             }
         }
@@ -1637,1151 +1520,4 @@
 
         function getActiveHeroDeck() {
             const activeId = currentUser.active_hero || currentUser.activeHero || 'pyra';
-            const h = heroes.find(item => item.id === activeId);
-            let deck = h ? [...h.baseSkills] : [...heroes[0].baseSkills];
-
-            const availableShopSkills = shopSkillsMap[activeId] || [];
-            availableShopSkills.forEach(skill => {
-                const skillsMap = currentUser.unlocked_skills || currentUser.unlockedSkills || {};
-                if (skillsMap[skill.id]) {
-                    deck.push(skill);
-                }
-            });
-
-            return deck;
-        }
-
-        function shuffleAndDrawHand() {
-            let deckCopy = [...getActiveHeroDeck()];
-            for (let i = deckCopy.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [deckCopy[i], deckCopy[j]] = [deckCopy[j], deckCopy[i]];
-            }
-            currentHand = deckCopy.slice(0, 4);
-            renderHandCards();
-            startTurnTimer();
-        }
-
-        function renderHandCards() {
-            const container = document.getElementById('shuffled-hand-container');
-            if(!container) return;
-            container.innerHTML = currentHand.map((card, idx) => `
-                <div onclick="window.playCard(${idx})" class="bg-slate-900 border ${card.cost === 500 ? 'border-amber-500 shadow-amber-500/20' : 'border-slate-700'} hover:border-${card.color}-500 rounded-xl p-2.5 cursor-pointer card-hover space-y-0.5">
-                    <div class="flex justify-between text-[10px] text-${card.color}-400 font-bold">
-                        <span>${card.name}</span><span>${card.ap} AP</span>
-                    </div>
-                    <p class="text-[10px] text-slate-400 leading-tight">${card.desc}</p>
-                </div>
-            `).join('');
-        }
-
-        async function startRankedMatchmaking(amount) {
-            if (!currentUser || !supabaseClient) return;
-            if (currentUser.frozen) {
-                alert('Your account is frozen. Matchmaking is disabled.');
-                closeModal();
-                return;
-            }
-            if (currentUser.balance < amount) {
-                alert('Insufficient wallet balance for this bet stake! Please top up your account.');
-                closeModal();
-                return;
-            }
-
-            currentUser.balance -= amount;
-            currentDuelBet = amount;
-            
-            await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
-
-            persistLocalStorage();
-            updateWalletDisplay();
-            closeModal();
-
-            const backdrop = document.getElementById('modal-backdrop');
-            const matchmaking = document.getElementById('modal-matchmaking');
-            if(backdrop) backdrop.classList.remove('hidden');
-            if(matchmaking) matchmaking.classList.remove('hidden');
-
-            const firstMatch = currentUser.first_match_completed !== undefined ? currentUser.first_match_completed : currentUser.firstMatchCompleted;
-            const statusEl = document.getElementById('matchmaking-status');
-            if (!firstMatch) {
-                if(statusEl) statusEl.innerText = `Finding opponent in ranked lobby (Wager: ₱${amount})...`;
-                matchmakingTimeout = setTimeout(() => {
-                    closeModal();
-                    if(backdrop) backdrop.classList.remove('hidden');
-                    const cointoss = document.getElementById('modal-cointoss');
-                    if(cointoss) cointoss.classList.remove('hidden');
-                }, 2000);
-            } else {
-                if(statusEl) statusEl.innerText = `Searching P2P lobby (Rank: ${currentUser.rank}, Wager: ₱${amount})...\n⏳ Waiting for peer player match...`;
-            }
-        }
-        window.startRankedMatchmaking = startRankedMatchmaking;
-
-        function executeCoinToss(playerChoice) {
-            const outcome = Math.random() < 0.5 ? 'Heads' : 'Tails';
-            const playerWonToss = (playerChoice === outcome);
-
-            alert(`🪙 Transparent Coin Toss Result: ${outcome}!\nYou chose: ${playerChoice}.\n${playerWonToss ? '🎉 You won the coin toss and will take the FIRST MOVE!' : '⚠️ Opponent won the coin toss and takes the first move!'}`);
-
-            closeModal();
-            launchDisguisedBotMatch(currentDuelBet, playerWonToss, outcome);
-        }
-        window.executeCoinToss = executeCoinToss;
-
-        async function cancelMatchmakingQueue() {
-            if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
-            if (currentUser && supabaseClient) {
-                currentUser.balance += currentDuelBet;
-                await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
-                persistLocalStorage();
-                updateWalletDisplay();
-            }
-            closeModal();
-            alert('Matchmaking cancelled. Your ₱' + currentDuelBet + ' stake has been refunded to your wallet.');
-        }
-        window.cancelMatchmakingQueue = cancelMatchmakingQueue;
-
-        function launchDisguisedBotMatch(amount, playerWonToss, tossOutcome) {
-            duelState.currentOpponentName = 'ApexPredator';
-            const betBadge = document.getElementById('fullscreen-bet-badge');
-            const enemyTitle = document.getElementById('fs-enemy-title');
-            const enemyNameLbl = document.getElementById('fs-enemy-name-label');
-            const enemyImg = document.getElementById('fs-enemy-img-el');
-
-            if(betBadge) betBadge.innerText = `Bet: ₱${amount}`;
-            if(enemyTitle) enemyTitle.innerText = `ApexPredator (${currentUser.rank})`;
-            if(enemyNameLbl) enemyNameLbl.innerText = `APEXPREDATOR`;
-            if(enemyImg) enemyImg.src = "image_1d431b92.jpg";
-
-            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-
-            duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
-            duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
-            duelState.isFirstMatchBot = true;
-            duelState.isPlayerTurn = playerWonToss;
-            
-            shuffleAndDrawHand();
-            
-            if (playerWonToss) {
-                logDuel(`[Coin Toss]: Outcome was ${tossOutcome}. You won the toss and take the FIRST MOVE!`);
-            } else {
-                logDuel(`[Coin Toss]: Outcome was ${tossOutcome}. ApexPredator won the toss and takes the first move!`);
-                setTimeout(() => {
-                    executeBotCombatTurn();
-                }, 1000);
-            }
-            
-            const pNameEl = document.getElementById('fs-player-name');
-            const pAvatarName = document.getElementById('fs-player-avatar-username');
-            if(pNameEl) pNameEl.innerText = currentUser.nickname.toUpperCase();
-            if(pAvatarName) pAvatarName.innerText = currentUser.nickname.toUpperCase();
-            updateDuelUI();
-
-            const mainHeader = document.getElementById('main-header');
-            const vHub = document.getElementById('view-hub');
-            const vShop = document.getElementById('view-shop');
-            const vSelect = document.getElementById('view-select');
-            const vStarter = document.getElementById('view-starter-select');
-            const vDuelFs = document.getElementById('view-duel-fullscreen');
-
-            if(mainHeader) mainHeader.classList.add('hidden');
-            if(vHub) vHub.classList.add('hidden');
-            if(vShop) vShop.classList.add('hidden');
-            if(vSelect) vSelect.classList.add('hidden');
-            if(vStarter) vStarter.classList.add('hidden');
-            if(vDuelFs) vDuelFs.classList.remove('hidden');
-        }
-
-        function startTurnTimer() {
-            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-            duelState.turnTimeRemaining = 30;
-            const timerEl = document.getElementById('fs-turn-timer');
-            if (timerEl) timerEl.innerText = `${duelState.turnTimeRemaining}s`;
-
-            duelState.turnTimerInterval = setInterval(() => {
-                duelState.turnTimeRemaining--;
-                if (timerEl) timerEl.innerText = `${duelState.turnTimeRemaining}s`;
-
-                if (duelState.turnTimeRemaining <= 0) {
-                    clearInterval(duelState.turnTimerInterval);
-                    logDuel(`[System]: 30s turn timer expired! Forcing turn end & attack phase.`);
-                    endDuelTurn();
-                }
-            }, 1000);
-        }
-
-        function surrenderDuel() {
-            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-            
-            const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
-            const battleRecord = {
-                id: Date.now(),
-                email: currentUser.email,
-                nickname: currentUser.nickname,
-                opponent: duelState.currentOpponentName,
-                bet: currentDuelBet,
-                result: 'Defeat (Surrendered)',
-                date: dateStr
-            };
-            battleHistoryLog.unshift(battleRecord);
-            logSystemActivity('P2P Match Surrendered', `${currentUser.nickname} surrendered duel vs ${duelState.currentOpponentName} (Stake: ₱${currentDuelBet}).`);
-            persistLocalStorage();
-
-            const vDuelFs = document.getElementById('view-duel-fullscreen');
-            const mainHeader = document.getElementById('main-header');
-            if(vDuelFs) vDuelFs.classList.add('hidden');
-            if(mainHeader) mainHeader.classList.remove('hidden');
-            switchTab('hub');
-        }
-        window.surrenderDuel = surrenderDuel;
-
-        function updateDuelUI() {
-            const pHpText = document.getElementById('fs-player-hp-text');
-            const pHpBar = document.getElementById('fs-player-hp-bar');
-            const pAp = document.getElementById('fs-player-ap');
-            const pArmor = document.getElementById('fs-player-armor');
-            const pPoison = document.getElementById('fs-player-poison');
-
-            if(pHpText) pHpText.innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
-            if(pHpBar) pHpBar.style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
-            if(pAp) pAp.innerText = duelState.playerAp;
-            if(pArmor) pArmor.innerText = duelState.playerArmor;
-            if(pPoison) pPoison.innerText = duelState.playerPoison;
-
-            const eHpText = document.getElementById('fs-enemy-hp-text');
-            const eHpBar = document.getElementById('fs-enemy-hp-bar');
-            const eArmor = document.getElementById('fs-enemy-armor');
-            const ePoison = document.getElementById('fs-enemy-poison');
-            const eDebuff = document.getElementById('fs-enemy-debuff');
-
-            if(eHpText) eHpText.innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
-            if(eHpBar) eHpBar.style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
-            if(eArmor) eArmor.innerText = duelState.enemyArmor;
-            if(ePoison) ePoison.innerText = duelState.enemyPoison;
-            if(eDebuff) eDebuff.innerText = duelState.enemyDebuff;
-        }
-
-        function logDuel(msg) {
-            const logEl = document.getElementById('fs-battle-log');
-            if(logEl) logEl.innerText = msg;
-        }
-
-        async function handleVictory() {
-            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-            
-            if (duelState.isFirstMatchBot && supabaseClient) {
-                currentUser.first_match_completed = true;
-                currentUser.firstMatchCompleted = true;
-                await supabaseClient.from('profiles').update({ first_match_completed: true }).eq('email', currentUser.email);
-            }
-
-            const totalPool = currentDuelBet * 2;
-            const platformFee = totalPool * 0.05;
-            const netReward = totalPool - platformFee;
-            const earnedXp = Math.round(50 + (currentDuelBet * 0.25));
-            
-            currentUser.balance += netReward;
-            currentUser.wins += 1;
-            currentUser.xp += earnedXp;
-
-            await evaluateRankAndUnlocks();
-            updateWalletDisplay();
-
-            const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
-            battleHistoryLog.unshift({
-                id: Date.now(),
-                email: currentUser.email,
-                nickname: currentUser.nickname,
-                opponent: duelState.currentOpponentName,
-                bet: currentDuelBet,
-                result: `Victory (+₱${netReward.toFixed(2)})`,
-                date: dateStr
-            });
-            logSystemActivity('P2P Match Victory', `${currentUser.nickname} won duel vs ${duelState.currentOpponentName}, netting ₱${netReward.toFixed(2)}.`);
-            persistLocalStorage();
-
-            logDuel(`[Victory]: Won ₱${netReward.toFixed(2)} net prize (5% fee applied) & +${earnedXp} XP!`);
-            alert(`Victory! Total pool: ₱${totalPool}. After 5% platform fee (₱${platformFee.toFixed(2)}), you won ₱${netReward.toFixed(2)}! +1 Win & +${earnedXp} Rank XP.`);
-            
-            const vDuelFs = document.getElementById('view-duel-fullscreen');
-            const mainHeader = document.getElementById('main-header');
-            if(vDuelFs) vDuelFs.classList.add('hidden');
-            if(mainHeader) mainHeader.classList.remove('hidden');
-            switchTab('hub');
-        }
-
-        async function handleDefeat() {
-            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-            
-            if (duelState.isFirstMatchBot && supabaseClient) {
-                currentUser.first_match_completed = true;
-                currentUser.firstMatchCompleted = true;
-                await supabaseClient.from('profiles').update({ first_match_completed: true }).eq('email', currentUser.email);
-            }
-
-            const consolationXp = 15;
-            currentUser.xp += consolationXp;
-            await evaluateRankAndUnlocks();
-            updateWalletDisplay();
-
-            const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
-            battleHistoryLog.unshift({
-                id: Date.now(),
-                email: currentUser.email,
-                nickname: currentUser.nickname,
-                opponent: duelState.currentOpponentName,
-                bet: currentDuelBet,
-                result: `Defeat (-₱${currentDuelBet})`,
-                date: dateStr
-            });
-            logSystemActivity('P2P Match Defeat', `${currentUser.nickname} lost duel vs ${duelState.currentOpponentName} (Stake: ₱${currentDuelBet}).`);
-            persistLocalStorage();
-
-            logDuel(`[Defeat]: Lost duel and ₱${currentDuelBet} wager (+15 Consolation XP).`);
-            alert(`Defeat! Your ₱${currentDuelBet} wager has been permanently deducted from your wallet. Gained +${consolationXp} Consolation XP.`);
-            
-            const vDuelFs = document.getElementById('view-duel-fullscreen');
-            const mainHeader = document.getElementById('main-header');
-            if(vDuelFs) vDuelFs.classList.add('hidden');
-            if(mainHeader) mainHeader.classList.remove('hidden');
-            switchTab('hub');
-        }
-
-        function executeBotCombatTurn() {
-            if (!duelState.isFirstMatchBot) return;
-
-            let logMsg = "";
-            let botDgm = 16;
-            let poisonApp = 6;
-
-            if (duelState.playerPoison > 0) {
-                const dotDmg = duelState.playerPoison;
-                duelState.playerHp = Math.max(0, duelState.playerHp - dotDmg);
-                logMsg += `[Poison/Burn]: You took ${dotDmg} DOT damage! `;
-                duelState.playerPoison = Math.max(0, duelState.playerPoison - 10);
-            }
-
-            if (duelState.playerHp <= 0) {
-                handleDefeat();
-                return;
-            }
-
-            if (duelState.enemyHp < 60) {
-                const healVal = 30;
-                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healVal);
-                duelState.enemyArmor += 20;
-                duelState.enemyDebuff = 'Poisoned';
-                logMsg += `[ApexPredator]: Healed +${healVal} HP, added +20 Armor, `;
-            } else {
-                logMsg += `[ApexPredator]: `;
-            }
-
-            duelState.playerPoison = (duelState.playerPoison || 0) + poisonApp;
-
-            if (duelState.playerArmor > 0) {
-                if (duelState.playerArmor >= botDgm) { duelState.playerArmor -= botDgm; botDgm = 0; }
-                else { botDgm -= duelState.playerArmor; duelState.playerArmor = 0; }
-            }
-            duelState.playerHp = Math.max(0, duelState.playerHp - botDgm);
-
-            logMsg += `struck for ${botDgm} damage & applied +${poisonApp} poison!`;
-            logDuel(logMsg);
-            updateDuelUI();
-
-            if (duelState.playerHp <= 0) {
-                handleDefeat();
-            } else if (duelState.enemyHp <= 0) {
-                handleVictory();
-            }
-        }
-
-        function playCard(index) {
-            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
-            const card = currentHand[index];
-            if (!card) return;
-
-            if (duelState.playerAp < card.ap) {
-                logDuel(`[System]: Not enough AP for ${card.name} (Requires ${card.ap} AP)!`);
-                return;
-            }
-
-            duelState.playerAp -= card.ap;
-
-            if (duelState.isFirstMatchBot) {
-                let dmg = 18;
-                let heal = 0;
-                let armorGain = 0;
-                let poisonApply = 0;
-
-                if (card.name === 'INFERNAL HELLFIRE') { dmg = 35; poisonApply = 12; }
-                else if (card.name === 'SOLAR SUPERNOVA') { dmg = 75; poisonApply = 20; }
-                else if (card.name === 'HURRICANE BARRAGE') dmg = 38;
-                else if (card.name === 'HURRICANE APOCALYPSE') dmg = 70;
-                else if (card.name === 'AEGIS FORTRESS') { armorGain = 25; heal = 15; }
-                else if (card.name === 'DIVINE INVINCIBILITY') { armorGain = 45; heal = 35; }
-                else if (card.name === 'SHADOW ASSASSINATION') dmg = 42;
-                else if (card.name === 'ABSOLUTE SHADOW ECLIPSE') { dmg = 75; poisonApply = 15; }
-                else if (card.name === 'THUNDER GODS WRATH') dmg = 45;
-                else if (card.name === 'ZEUS THUNDERSTORM') dmg = 78;
-                else if (card.name === 'CONTINENTAL CRUSH') dmg = 45;
-                else if (card.name === 'WORLD SHATTERING METEOR') dmg = 82;
-                else if (card.name === 'TEMPORAL REWIND') heal = 30;
-                else if (card.name === 'ETERNAL TIME COLLAPSE') { heal = 55; armorGain = 25; }
-                else if (card.name === 'DIVINE JUDGMENT') dmg = 50;
-                else if (card.name === 'HEAVENLY RAGNAROK') dmg = 78;
-                else if (card.name === 'SOUL HARVEST') { dmg = 40; heal = 15; poisonApply = 10; }
-                else if (card.name === 'VOID REALM ANNIHILATION') { dmg = 80; poisonApply = 18; }
-                else if (card.name === 'APOCALYPSE FRENZY') dmg = 55;
-                else if (card.name === 'RAGING BLOOD GOD RAMPAGE') dmg = 85;
-                else if (card.name === 'GALAXY COLLAPSE') dmg = 60;
-                else if (card.name === 'BIG BANG UNIVERSE STRIKE') dmg = 88;
-                else if (card.type === 'strike') dmg = 22;
-                else if (card.type === 'defend') armorGain = 15;
-                else if (card.type === 'heal') heal = 18;
-                else if (card.type === 'poison') { dmg = 25; poisonApply = 8; }
-
-                if (armorGain > 0) duelState.playerArmor += armorGain;
-                if (heal > 0) duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + heal);
-                
-                if (poisonApply > 0) {
-                    duelState.enemyPoison = (duelState.enemyPoison || 0) + poisonApply;
-                }
-
-                if (duelState.enemyPoison > 0) {
-                    const enemyDot = duelState.enemyPoison;
-                    duelState.enemyHp = Math.max(0, duelState.enemyHp - enemyDot);
-                    duelState.enemyPoison = Math.max(0, duelState.enemyPoison - Math.max(4, Math.floor(duelState.enemyPoison * 0.4))); 
-                }
-
-                if (dmg > 0) {
-                    if (duelState.enemyArmor > 0) {
-                        if (duelState.enemyArmor >= dmg) { duelState.enemyArmor -= dmg; dmg = 0; }
-                        else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
-                    }
-                    duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
-                }
-
-                logDuel(`[You]: Played ${card.name}! Dealt ${dmg} damage & applied poison DOT.`);
-                updateDuelUI();
-
-                if (duelState.enemyHp <= 0) {
-                    handleVictory();
-                    return;
-                }
-
-                currentHand.splice(index, 1);
-                renderHandCards();
-                return;
-            }
-        }
-        window.playCard = playCard;
-
-        function endDuelTurn() {
-            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
-            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-
-            if (duelState.isFirstMatchBot) {
-                logDuel(`[System]: Ending turn... ApexPredator reacts!`);
-                setTimeout(() => {
-                    executeBotCombatTurn();
-                    if (duelState.playerHp > 0 && duelState.enemyHp > 0) {
-                        duelState.playerAp = 3;
-                        shuffleAndDrawHand();
-                        updateDuelUI();
-                    }
-                }, 600);
-                return;
-            }
-        }
-        window.endDuelTurn = endDuelTurn;
-
-        function handleQRUpload(event, type) {
-            const file = event.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if(type === 'gcash') uploadedGcashQR = e.target.result;
-                    if(type === 'maya') uploadedMayaQR = e.target.result;
-                    logSystemActivity('QR Code Updated', `Owner updated ${type.toUpperCase()} payment QR code.`);
-                    persistLocalStorage();
-                    updateTopupModalQRs();
-                    alert(type.toUpperCase() + ' QR Code uploaded successfully! Click "Save" to apply.');
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-        window.handleQRUpload = handleQRUpload;
-
-        function updateTopupModalQRs() {
-            const gcashEl = document.getElementById('topup-gcash-qr');
-            const mayaEl = document.getElementById('topup-maya-qr');
-            if(uploadedGcashQR && gcashEl) gcashEl.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
-            if(uploadedMayaQR && mayaEl) mayaEl.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
-
-            const regGcashEl = document.getElementById('reg-gcash-qr');
-            const regMayaEl = document.getElementById('reg-maya-qr');
-            if(regGcashEl && uploadedGcashQR) regGcashEl.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
-            if(regMayaEl && uploadedMayaQR) regMayaEl.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
-        }
-
-        function saveOwnerDetails() {
-            const gNumRaw = document.getElementById('input-gcash-num').value;
-            const gNameRaw = document.getElementById('input-gcash-name').value;
-            const mNumRaw = document.getElementById('input-maya-num').value;
-            const mNameRaw = document.getElementById('input-maya-name').value;
-
-            const gNumMasked = maskNumber(gNumRaw);
-            const mNumMasked = maskNumber(mNumRaw);
-            const gNameMasked = maskName(gNameRaw);
-            const mNameMasked = maskName(mNameRaw);
-
-            const dGcashNum = document.getElementById('display-gcash-num');
-            const dGcashName = document.getElementById('display-gcash-name');
-            const dMayaNum = document.getElementById('display-maya-num');
-            const dMayaName = document.getElementById('display-maya-name');
-
-            if(dGcashNum) dGcashNum.innerText = gNumMasked;
-            if(dGcashName) dGcashName.innerText = gNameMasked;
-            if(dMayaNum) dMayaNum.innerText = mNumMasked;
-            if(dMayaName) dMayaName.innerText = mNameMasked;
-
-            const tOptG = document.getElementById('topup-opt-gcash');
-            const tOptM = document.getElementById('topup-opt-maya');
-            if(tOptG) tOptG.innerText = gNumMasked;
-            if(tOptM) tOptM.innerText = mNumMasked;
-
-            const regOptG = document.getElementById('reg-opt-gcash');
-            const regOptM = document.getElementById('reg-opt-maya');
-            if(regOptG) regOptG.innerText = gNumMasked;
-            if(regOptM) regOptM.innerText = mNumMasked;
-
-            if(uploadedGcashQR) {
-                const pGcashQr = document.getElementById('player-gcash-qr');
-                if(pGcashQr) pGcashQr.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
-                const rG = document.getElementById('reg-gcash-qr');
-                if(rG) rG.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
-            }
-            if(uploadedMayaQR) {
-                const pMayaQr = document.getElementById('player-maya-qr');
-                if(pMayaQr) pMayaQr.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
-                const rM = document.getElementById('reg-maya-qr');
-                if(rM) rM.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
-            }
-
-            logSystemActivity('Merchant Details Saved', 'Owner updated official e-wallet merchant numbers and names.');
-            persistLocalStorage();
-            alert('Owner merchant e-wallet credentials and QR codes updated successfully!');
-        }
-        window.saveOwnerDetails = saveOwnerDetails;
-
-        function openModal(type) {
-            const backdrop = document.getElementById('modal-backdrop');
-            if(backdrop) backdrop.classList.remove('hidden');
-
-            const modals = ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'];
-            modals.forEach(m => {
-                const el = document.getElementById(m);
-                if(el) el.classList.add('hidden');
-            });
-
-            if(type === 'topup') {
-                const mTopup = document.getElementById('modal-topup');
-                if(mTopup) mTopup.classList.remove('hidden');
-                updateTopupModalQRs();
-            }
-            if(type === 'withdraw' && currentUser) {
-                const wAcc = document.getElementById('withdraw-account');
-                const wName = document.getElementById('withdraw-name');
-                const mWithdraw = document.getElementById('modal-withdraw');
-                if(wAcc) wAcc.value = currentUser.phone;
-                if(wName) wName.value = currentUser.name;
-                if(mWithdraw) mWithdraw.classList.remove('hidden');
-            }
-            if(type === 'bet') {
-                const mBet = document.getElementById('modal-bet');
-                if(mBet) mBet.classList.remove('hidden');
-            }
-        }
-        window.openModal = openModal;
-
-        function openPlayerProfileModal() {
-            if (!currentUser) return;
-            const backdrop = document.getElementById('modal-backdrop');
-            const modals = ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-leaderboard'];
-            modals.forEach(m => {
-                const el = document.getElementById(m);
-                if(el) el.classList.add('hidden');
-            });
-            const mProfile = document.getElementById('modal-player-profile');
-            if(backdrop) backdrop.classList.remove('hidden');
-            if(mProfile) mProfile.classList.remove('hidden');
-
-            const pRank = document.getElementById('profile-modal-rank');
-            if(pRank) pRank.innerText = currentUser.rank;
-
-            const myHistory = battleHistoryLog.filter(h => h.email === currentUser.email);
-            let historyHtml = myHistory.length ? myHistory.map(h => `
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-white">Vs ${h.opponent}</span>
-                        <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span>
-                    </div>
-                    <div class="text-[10px] text-slate-400 flex justify-between">
-                        <span>Wager Stake: ₱${h.bet}</span>
-                        <span>Date: ${h.date}</span>
-                    </div>
-                </div>
-            `).join('') : '<div class="text-slate-500 text-xs text-center py-4 bg-slate-950 rounded-xl">No battle history recorded yet. Enter a ranked duel to start logging matches!</div>';
-
-            const profileContent = document.getElementById('player-profile-content');
-            if(profileContent) {
-                const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
-                profileContent.innerHTML = `
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">
-                        <div class="flex justify-between"><span><strong>Full Name:</strong></span> <span class="text-white">${currentUser.name}</span></div>
-                        <div class="flex justify-between"><span><strong>Username:</strong></span> <span class="text-amber-400">${currentUser.nickname}</span></div>
-                        <div class="flex justify-between"><span><strong>Email:</strong></span> <span class="text-white">${currentUser.email}</span></div>
-                        <div class="flex justify-between"><span><strong>Locked Phone (Payouts):</strong></span> <span class="text-white">${currentUser.phone}</span></div>
-                        <div class="flex justify-between"><span><strong>Wallet Balance:</strong></span> <span class="text-emerald-400 font-bold">₱${currentUser.balance.toFixed(2)}</span></div>
-                        <div class="flex justify-between"><span><strong>Rank Tier:</strong></span> <span class="text-amber-400 font-bold">${currentUser.rank}</span></div>
-                        <div class="flex justify-between"><span><strong>EXP Level:</strong></span> <span class="text-emerald-400 font-bold">Level ${expLevel} (${currentUser.xp} Total XP)</span></div>
-                        <div class="flex justify-between"><span><strong>Total Wins:</strong></span> <span class="text-blue-400 font-bold">${currentUser.wins} Wins</span></div>
-                    </div>
-                    <div class="space-y-2 pt-1">
-                        <h4 class="font-cinzel text-xs font-bold text-amber-400">My Ranked Battle History (${myHistory.length || 0})</h4>
-                        <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">${historyHtml}</div>
-                    </div>
-                `;
-            }
-        }
-        window.openPlayerProfileModal = openPlayerProfileModal;
-
-        async function openLeaderboardModal() {
-            const backdrop = document.getElementById('modal-backdrop');
-            const modals = ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile'];
-            modals.forEach(m => {
-                const el = document.getElementById(m);
-                if(el) el.classList.add('hidden');
-            });
-            const mLeaderboard = document.getElementById('modal-leaderboard');
-            if(backdrop) backdrop.classList.remove('hidden');
-            if(mLeaderboard) mLeaderboard.classList.remove('hidden');
-
-            if (!supabaseClient) return;
-            const { data: allProfiles, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('role', 'player')
-                .neq('email', EXCLUSIVE_OWNER_EMAIL)
-                .order('xp', { ascending: false });
-
-            const allPlayers = error || !allProfiles ? [] : allProfiles;
-            allPlayers.sort((a, b) => (b.xp - a.xp) || (b.wins - a.wins));
-            const top10 = allPlayers.slice(0, 10);
-
-            let lbHtml = '';
-            if (top10.length === 0) {
-                lbHtml = '<div class="text-slate-500 text-xs text-center py-6 bg-slate-950 rounded-xl">No players registered on the leaderboard yet.</div>';
-            } else {
-                lbHtml = top10.map((p, idx) => {
-                    const pLv = Math.floor((p.xp || 0) / 100) + 1;
-                    const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `#${idx + 1}`));
-                    return `
-                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="font-bold text-base w-6 text-center">${medal}</span>
-                                <div>
-                                    <span class="font-bold text-amber-400">${p.nickname}</span>
-                                    <div class="text-[10px] text-slate-400">Rank: ${p.rank || 'Bronze I'} | Level ${pLv}</div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <span class="font-bold text-emerald-400 block">${p.xp || 0} XP</span>
-                                <span class="text-[10px] text-blue-400">${p.wins || 0} Wins</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            const lbList = document.getElementById('leaderboard-list-content');
-            if(lbList) lbList.innerHTML = lbHtml;
-        }
-        window.openLeaderboardModal = openLeaderboardModal;
-
-        function closeModal() {
-            const backdrop = document.getElementById('modal-backdrop');
-            if(backdrop) backdrop.classList.add('hidden');
-        }
-        window.closeModal = closeModal;
-
-        function viewReceipt(receiptDataUrl) {
-            const backdrop = document.getElementById('modal-backdrop');
-            const modals = ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'];
-            modals.forEach(m => {
-                const el = document.getElementById(m);
-                if(el) el.classList.add('hidden');
-            });
-            const mReceipt = document.getElementById('modal-receipt');
-            if(backdrop) backdrop.classList.remove('hidden');
-            if(mReceipt) mReceipt.classList.remove('hidden');
-            const recCont = document.getElementById('receipt-preview-container');
-            if(recCont) recCont.innerHTML = `<img src="${receiptDataUrl}" class="max-h-60 rounded object-contain">`;
-        }
-        window.viewReceipt = viewReceipt;
-
-        async function inspectPlayer(email) {
-            if (!supabaseClient) return;
-            const { data: player, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('email', email)
-                .single();
-
-            if (error || !player) return;
-
-            const backdrop = document.getElementById('modal-backdrop');
-            const modals = ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-profile', 'modal-leaderboard'];
-            modals.forEach(m => {
-                const el = document.getElementById(m);
-                if(el) el.classList.add('hidden');
-            });
-            const mDetails = document.getElementById('modal-player-details');
-            if(backdrop) backdrop.classList.remove('hidden');
-            if(mDetails) mDetails.classList.remove('hidden');
-
-            const pHistory = battleHistoryLog.filter(h => h.email === email);
-            let historyHtml = pHistory.length ? pHistory.map(h => `<div class="border-t border-slate-800 pt-1 text-[11px]">⚔ Vs ${h.opponent} (${h.date}): <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span> (Bet: ₱${h.bet})</div>`).join('') : '<div class="text-slate-500 text-[11px]">No matches played yet.</div>';
-
-            const pLv = Math.floor((player.xp || 0) / 100) + 1;
-            const inspCont = document.getElementById('player-inspection-content');
-            if(inspCont) {
-                inspCont.innerHTML = `
-                    <div class="space-y-1">
-                        <div><strong>Legal Name:</strong> ${player.name}</div>
-                        <div><strong>Nickname:</strong> ${player.nickname}</div>
-                        <div><strong>Email:</strong> ${player.email}</div>
-                        <div><strong>Phone (Withdrawal Locked):</strong> ${player.phone}</div>
-                        <div><strong>Wallet Balance:</strong> ₱${player.balance.toFixed(2)}</div>
-                        <div><strong>Rank Tier / Level:</strong> ${player.rank} (Level ${pLv} | ${player.xp} XP) | Wins: ${player.wins}</div>
-                        <div><strong>Account Status:</strong> <span class="${player.frozen ? 'text-red-400 font-bold' : 'text-emerald-400'}">${player.frozen ? 'FROZEN (Cheating Suspected)' : 'Active'}</span></div>
-                        <div class="pt-2 border-t border-slate-800 font-bold text-amber-400">Player Match History:</div>
-                        <div class="max-h-32 overflow-y-auto space-y-1">${historyHtml}</div>
-                    </div>
-                `;
-            }
-        }
-        window.inspectPlayer = inspectPlayer;
-
-        async function toggleFreezePlayer(email) {
-            if (!supabaseClient) return;
-            const { data: player, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('email', email)
-                .single();
-
-            if (error || !player) return;
-            const newFrozen = !player.frozen;
-
-            await supabaseClient.from('profiles').update({ frozen: newFrozen }).eq('email', email);
-
-            logSystemActivity('Player Freeze Toggle', `Player ${player.nickname} (${email}) has been ${newFrozen ? 'frozen' : 'unfrozen'}.`);
-            persistLocalStorage();
-            renderOwnerQueues();
-            alert(`Player account ${player.nickname} has been ${newFrozen ? 'FROZEN successfully' : 'UNFROZEN'}.`);
-        }
-        window.toggleFreezePlayer = toggleFreezePlayer;
-
-        async function deletePlayerAccount(email) {
-            if (!supabaseClient) return;
-            const { data: player, error: fetchErr } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('email', email)
-                .single();
-
-            if (fetchErr || !player) return;
-            if (player.role === 'owner' || email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                alert('Cannot delete the owner admin account.');
-                return;
-            }
-
-            if (confirm(`Are you sure you want to permanently delete player account ${player.nickname} (${email})? This action cannot be undone.`)) {
-                const { error: deleteErr } = await supabaseClient.from('profiles').delete().eq('email', email);
-                
-                if (deleteErr) {
-                    alert('Supabase RLS Policy restriction prevented database deletion: ' + deleteErr.message + '\n\n(Tip: You can add an RLS delete policy in Supabase SQL editor or delete the row directly from your Supabase table editor).');
-                    return;
-                }
-
-                logSystemActivity('Player Account Deleted', `Owner permanently deleted player account ${player.nickname} (${email}).`);
-                persistLocalStorage();
-                renderOwnerQueues();
-                alert(`Player account ${player.nickname} has been successfully deleted.`);
-            }
-        }
-        window.deletePlayerAccount = deletePlayerAccount;
-
-        function submitTopUp() {
-            const amtEl = document.getElementById('topup-amount');
-            const refEl = document.getElementById('topup-ref');
-            const receiptEl = document.getElementById('topup-receipt');
-
-            if(!amtEl || !refEl || !receiptEl) return;
-            const amt = parseFloat(amtEl.value);
-            const ref = refEl.value;
-            const receiptFile = receiptEl.files[0];
-
-            if(!amt || !ref || !receiptFile) { alert('Please fill in all top-up details and upload your payment receipt screenshot.'); return; }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const now = new Date();
-                const dateStr = now.toISOString().split('T')[0];
-                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
-                logSystemActivity('Top-Up Requested', `${currentUser.nickname} requested deposit of ₱${amt.toFixed(2)} (Ref: ${ref}).`);
-                persistLocalStorage();
-                alert('Top-up request and receipt submitted successfully! Awaiting owner approval.');
-                closeModal();
-            };
-            reader.readAsDataURL(receiptFile);
-        }
-        window.submitTopUp = submitTopUp;
-
-        async function submitWithdrawal() {
-            const amtEl = document.getElementById('withdraw-amount');
-            const methodEl = document.getElementById('withdraw-method');
-            const accEl = document.getElementById('withdraw-account');
-            const nameEl = document.getElementById('withdraw-name');
-
-            if(!amtEl || !currentUser || !supabaseClient) return;
-            const amt = parseFloat(amtEl.value);
-            const method = methodEl ? methodEl.value : 'GCash';
-            const acc = accEl ? accEl.value : currentUser.phone;
-            const name = nameEl ? nameEl.value : currentUser.name;
-
-            if(!amt) { alert('Please enter a valid withdrawal amount.'); return; }
-            if(amt > currentUser.balance) { alert('Insufficient wallet balance!'); return; }
-            
-            currentUser.balance -= amt;
-            await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
-
-            persistLocalStorage();
-            updateWalletDisplay();
-            const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
-            pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: method, account: acc, name: name, date: dateStr });
-            logSystemActivity('Withdrawal Requested', `${currentUser.nickname} requested withdrawal of ₱${amt.toFixed(2)} via ${method}.`);
-            persistLocalStorage();
-            alert('Withdrawal request submitted successfully with Zero Fee! Locked strictly to registered phone number & name.');
-            closeModal();
-        }
-        window.submitWithdrawal = submitWithdrawal;
-
-        function updateWalletDisplay() {
-            const navWallet = document.getElementById('nav-wallet');
-            if(currentUser && navWallet) navWallet.innerText = '₱' + currentUser.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
-        }
-
-        async function renderOwnerQueues() {
-            if (!supabaseClient) return;
-            const filterDateEl = document.getElementById('filter-date');
-            const filterDate = filterDateEl ? filterDateEl.value : '';
-
-            const playersContainer = document.getElementById('owner-players-list');
-            const { data: allProfiles, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .neq('email', EXCLUSIVE_OWNER_EMAIL)
-                .order('created_at', { ascending: false });
-
-            const registeredAccounts = error || !allProfiles ? [] : allProfiles;
-            const filteredPlayers = registeredAccounts.filter(acc => acc.role === 'player' && acc.approved === true);
-            const pendingRegs = registeredAccounts.filter(acc => acc.approved === false);
-            
-            if (playersContainer) {
-                if (filteredPlayers.length === 0) {
-                    playersContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players.</div>';
-                } else {
-                    playersContainer.innerHTML = filteredPlayers.map(p => `
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                            <div>
-                                <span class="font-bold text-amber-400">${p.nickname} (${p.name})</span>
-                                <div class="text-[10px] text-slate-400">Email: ${p.email} | Phone: ${p.phone} | Bal: ₱${p.balance.toFixed(2)}</div>
-                            </div>
-                            <div class="space-x-1 flex items-center">
-                                <button onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[10px]">Inspect</button>
-                                <button onclick="window.toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.frozen ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-amber-600 hover:bg-amber-500'} text-white font-bold rounded-lg text-[10px]">${p.frozen ? 'Unfreeze' : 'Freeze'}</button>
-                                <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[10px]">Delete</button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            const regContainer = document.getElementById('owner-registration-list');
-            const filteredRegs = filterDate ? pendingRegs.filter(r => r.date === filterDate) : pendingRegs;
-            if(regContainer) {
-                if(filteredRegs.length === 0) {
-                    regContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>';
-                } else {
-                    regContainer.innerHTML = filteredRegs.map(r => `
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                            <div><span class="font-bold text-amber-400">${r.nickname} (${r.name})</span><div class="text-[10px] text-slate-400">Email: ${r.email} | Ref: ${r.ref} | Date: ${r.date}</div></div>
-                            <div class="space-x-1 flex items-center">
-                                <button onclick="window.viewReceipt('${r.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
-                                <button onclick="window.approveRegistration('${r.email}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
-                                <button onclick="window.rejectRegistration('${r.email}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            const auditContainer = document.getElementById('owner-system-audit-log');
-            const filteredAudit = filterDate ? systemAuditLogs.filter(a => a.date === filterDate) : systemAuditLogs;
-            if (auditContainer) {
-                if (filteredAudit.length === 0) {
-                    auditContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>';
-                } else {
-                    auditContainer.innerHTML = filteredAudit.map(a => `
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
-                            <div>
-                                <span class="font-bold text-amber-400">[${a.action}]</span> <span class="text-slate-200">${a.details}</span>
-                            </div>
-                            <div class="text-[10px] text-slate-400 font-mono whitespace-nowrap ml-2">${a.timestamp}</div>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            const battleContainer = document.getElementById('owner-battle-history-list');
-            const filteredBattles = filterDate ? battleHistoryLog.filter(h => h.date === filterDate) : battleHistoryLog;
-            if (battleContainer) {
-                if (filteredBattles.length === 0) {
-                    battleContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged.</div>';
-                } else {
-                    battleContainer.innerHTML = filteredBattles.map(h => `
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                            <div>
-                                <span class="font-bold text-white">${h.nickname} vs ${h.opponent}</span>
-                                <div class="text-[10px] text-slate-400">Result: <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span> | Stake: ₱${h.bet} | Date: ${h.date}</div>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            const resetContainer = document.getElementById('owner-reset-list');
-            if(resetContainer) {
-                if(pendingResets.length === 0) {
-                    resetContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
-                } else {
-                    resetContainer.innerHTML = pendingResets.map(r => `
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                            <div><span class="font-bold text-amber-400">Reset Request: ${r.name}</span><div class="text-[10px] text-slate-400">Email: ${r.email}</div></div>
-                            <div class="space-x-1">
-                                <button onclick="window.approveReset(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
-                                <button onclick="window.rejectReset(${r.id})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            const filteredDeposits = filterDate ? pendingDeposits.filter(d => d.date === filterDate) : pendingDeposits;
-            const depContainer = document.getElementById('owner-deposit-list');
-            if(depContainer) {
-                if(filteredDeposits.length === 0) {
-                    depContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>';
-                } else {
-                    depContainer.innerHTML = filteredDeposits.map(d => `
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                            <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.nickname})</span><div class="text-[10px] text-slate-400">Ref: ${d.ref} | Date: ${d.date}</div></div>
-                            <div class="space-x-1 flex items-center">
-                                <button onclick="window.viewReceipt('${d.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
-                                <button onclick="window.approveDeposit(${d.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
-                                <button onclick="window.rejectDeposit(${d.id})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            const filteredWithdrawals = filterDate ? pendingWithdrawals.filter(w => w.date === filterDate) : pendingWithdrawals;
-            const witContainer = document.getElementById('owner-withdraw-list');
-            if(witContainer) {
-                if(filteredWithdrawals.length === 0) {
-                    witContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>';
-                } else {
-                    witContainer.innerHTML = filteredWithdrawals.map(w => `
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                            <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname} (Zero Fee)</span><div class="text-[10px] text-slate-400">To: ${w.account} (${w.name}) | Date: ${w.date}</div></div>
-                            <div class="space-x-1">
-                                <button onclick="window.approveWithdrawal(${w.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
-                                <button onclick="window.rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-
-            const totalDep = (filterDate ? approvedDepositsLog.filter(d => d.date === filterDate) : approvedDepositsLog).reduce((sum, item) => sum + item.amount, 0);
-            const totalWit = (filterDate ? approvedWithdrawalsLog.filter(w => w.date === filterDate) : approvedWithdrawalsLog).reduce((sum, item) => sum + item.amount, 0);
-
-            const mDep = document.getElementById('metric-total-deposits');
-            const mWit = document.getElementById('metric-total-withdrawals');
-            if(mDep) mDep.innerText = '₱' + totalDep.toLocaleString('en-US', {minimumFractionDigits: 2});
-            if(mWit) mWit.innerText = '₱' + totalWit.toLocaleString('en-US', {minimumFractionDigits: 2});
-        }
-        window.renderOwnerQueues = renderOwnerQueues;
-
-        async function approveRegistration(email) {
-            if (!supabaseClient) return;
-            await supabaseClient.from('profiles').update({ approved: true }).eq('email', email);
-            logSystemActivity('Registration Approved', `Owner approved registration for player (${email}).`);
-            persistLocalStorage();
-            renderOwnerQueues();
-            alert('Registration approved successfully! Player can now sign in.');
-        }
-        window.approveRegistration = approveRegistration;
-
-        async function rejectRegistration(email) {
-            if (!supabaseClient) return;
-            await supabaseClient.from('profiles').delete().eq('email', email);
-            logSystemActivity('Registration Rejected', `Owner rejected and deleted registration for player (${email}).`);
-            persistLocalStorage();
-            renderOwnerQueues();
-            alert('Registration rejected and account removed.');
-        }
-        window.rejectRegistration = rejectRegistration;
-
-        function approveReset(id) {
-            const resetItem = pendingResets.find(r => r.id === id);
-            pendingResets = pendingResets.filter(r => r.id !== id);
-            logSystemActivity('Password Reset Approved', `Owner approved password reset for ${resetItem ? resetItem.email : 'player'}.`);
-            persistLocalStorage();
-            renderOwnerQueues();
-
-            if ('Notification' in window && Notification.permission === 'granted') {
-                try {
-                    new Notification("Aetheris Duel Arena", {
-                        body: `Password Reset Approved! Your reset request has been verified by the owner. Please enter your new password now.`,
-                        icon: "image_114c6025.jpg"
-                    });
-                } catch(e) {}
-            }
-
-            alert('Password reset request approved! Device push notification sent to player.');
-            const vOwner = document.getElementById('view-owner');
-            const vAuth = document.getElementById('view-auth');
-            const vForce = document.getElementById('view-force-reset');
-            if(vOwner) vOwner.classList.add('hidden');
-            if(vAuth) vAuth.classList.add('hidden');
-            if(vForce) vForce.classList.remove('hidden');
-            if (resetItem) {
-                const fEmail = document.getElementById('force-email');
-                if(fEmail) fEmail.value = resetItem.email;
-            }
-        }
-        window.approveReset = approveReset;
-
-        function rejectReset(id) {
-            pendingResets = pendingResets.filter(r => r.id !== id);
-            logSystemActivity('Password Reset Rejected', `Owner rejected password reset request.`);
-            persistLocalStorage();
-            renderOwnerQueues();
-            alert('Password reset request rejected.');
-        }
-        window.rejectReset = rejectReset;
-
-        async function approveDeposit(id) {
-            if (!supabaseClient) return;
-            const idx = pendingDeposits.findIndex(d => d.id === id);
-            if(idx > -1) {
-                const item = pendingDeposits[idx];
-                
-                const { data: targetUser } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('email', item.email)
-                    .single();
-                
-                if(targetUser) {
-                    const newBal = targetUser.balance + item.amount;
-                    await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', item.email);
-
-                    if(currentUser && currentUser.email.toLowerCase() === item.email.toLowerCase()) {
-                        currentUser.balance = newBal;
-                        updateWalletDisplay();
-                    }
-                }
-                
-                approvedDepositsLog.push(item);
-                pendingDeposits.splice(idx, 1);
-                logSystemActivity('Deposit Approved', `Owner approved deposit of ₱${item.amount.toFixed(2)} for ${item.nickname}. Credited directly to wallet.`);
-                persistLocalStorage();
-                renderOwnerQueues();
-                alert(`Deposit of ₱${item.amount.toFixed(2)} approved and credited directly to ${item.nickname}'s wallet!`);
-            }
-        }
-        window.approveDeposit = approveDeposit;
-
-        function rejectDeposit(id) {
-            const item = pendingDeposits.find(d => d.id === id);
-            if (item) {
-                logSystemActivity('Deposit Rejected', `Owner rejected deposit of ₱${item.amount.toFixed(2)} for ${item.nickname}.`);
-            }
-            pendingDeposits = pendingDeposits.filter(d => d.id !== id);
-            persistLocalStorage();
-            renderOwnerQueues();
-            alert('Deposit rejected.');
-        }
-        window.rejectDeposit = rejectDeposit;
-
-        function approveWithdrawal(id) {
-            const idx = pendingWithdrawals.findIndex(w => w.id === id);
-            if(idx > -1) {
-                const item = pendingWithdrawals[idx];
-                approvedWithdrawalsLog.push(item);
-                pendingWithdrawals.splice(idx, 1);
-                logSystemActivity('Withdrawal Approved', `Owner approved withdrawal of ₱${item.amount.toFixed(2)} for ${item.nickname} via ${item.method}.`);
-                persistLocalStorage();
-                renderOwnerQueues();
-                alert('Withdrawal approved (Zero Fee)!');
-            }
-        }
-        window.approveWithdrawal = approveWithdrawal;
-
-        async function rejectWithdrawal(id, email, amt) {
-            if (!supabaseClient) return;
-            const { data: targetUser } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('email', email)
-                .single();
-
-            if(targetUser) {
-                const newBal = targetUser.balance + amt;
-                await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', email);
-
-                if(currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
-                    currentUser.balance = newBal;
-                    updateWalletDisplay();
-                }
-            }
-            pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
-            logSystemActivity('Withdrawal Rejected', `Owner rejected withdrawal of ₱${amt.toFixed(2)} for ${email} and refunded to wallet.`);
-            persistLocalStorage();
-            renderOwnerQueues();
-            alert('Withdrawal rejected and refunded.');
-        }
-        window.rejectWithdrawal = rejectWithdrawal;
-    </script>
-</body>
-</html>
+            const h = heroes.find(item => item.
