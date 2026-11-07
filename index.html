@@ -196,7 +196,7 @@
         <div id="view-starter-select" class="max-w-xl mx-auto py-4 space-y-4 hidden">
             <div class="text-center space-y-1.5">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">CHOOSE YOUR STARTER CHAMPION</h2>
-                <p class="text-xs text-slate-400">Select one of the 4 basic starter heroes to begin your journey in the Aetheris Arena!</p>
+                <p class="text-xs text-slate-400">Select one of the 4 basic starter heroes for free to begin your journey! Others cost ₱200 each.</p>
             </div>
             <div id="starter-heroes-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
         </div>
@@ -205,7 +205,7 @@
         <div id="view-select" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
-                <p class="text-slate-400 text-xs">Inspect all 11 champions across tiers. Advance your rank and wins to unlock advanced fighters!</p>
+                <p class="text-slate-400 text-xs">Inspect all champions across tiers. Starter heroes cost ₱200; ranked heroes require wins/EXP or purchase!</p>
                 <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl p-3 text-xs space-y-1.5 w-full">
                     <div class="flex items-center justify-between space-x-2">
                         <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
@@ -727,29 +727,12 @@
             if(uploadedMayaQR) localStorage.setItem('aetheris_maya_qr', uploadedMayaQR);
         }
 
-        function maskName(name) {
-            if (!name) return '';
-            return name.split(' ').map(part => {
-                if (part.length <= 1) return part;
-                return part[0] + '*'.repeat(part.length - 1);
-            }).join(' ');
-        }
-
-        function maskNumber(numStr) {
-            if (!numStr) return '';
-            const cleaned = numStr.replace(/\D/g, '');
-            if (cleaned.length < 7) return '***-****';
-            const start = cleaned.slice(0, 4);
-            const end = cleaned.slice(-4);
-            return `${start}-***-${end}`;
-        }
-
         const heroes = [
           {
             id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER (Basic)',
             desc: 'Fire-elemental spellcaster with explosive burn damage.',
             bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', iconImg: 'image_b2781538.jpg',
-            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
+            price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
               { id: 'pyra-1', type: 'strike', name: 'FLAME DART', ap: 1, color: 'red', desc: 'Deal 15 Fire damage.' },
               { id: 'pyra-2', type: 'defend', name: 'FIRE SHIELD', ap: 1, color: 'red', desc: 'Gain 10 Armor block.' },
@@ -761,7 +744,7 @@
             id: 'sylph', name: 'SYLPH', role: 'Wind Ranger', rarity: 'STARTER (Basic)',
             desc: 'Agile archer with high movement and gale evasion.',
             bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', iconImg: 'image_e51741b7.jpg',
-            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
+            price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
               { id: 'sylph-1', type: 'strike', name: 'GALE SLASH', ap: 1, color: 'emerald', desc: 'Deal 16 Wind damage.' },
               { id: 'sylph-2', type: 'defend', name: 'WIND STEP', ap: 1, color: 'emerald', desc: 'Gain 12 Armor block.' },
@@ -773,7 +756,7 @@
             id: 'valen', name: 'VALEN', role: 'Iron Guardian', rarity: 'STARTER (Basic)',
             desc: 'Holy tank with impenetrable defense and holy barrier.',
             bg: 'from-blue-950 to-slate-950', border: 'border-blue-500/50', iconImg: 'image_4b6fe95a.jpg',
-            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
+            price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
               { id: 'valen-1', type: 'strike', name: 'SHIELD BASH', ap: 1, color: 'blue', desc: 'Deal 12 Physical damage.' },
               { id: 'valen-2', type: 'defend', name: 'IRON BASTION', ap: 1, color: 'blue', desc: 'Gain 15 Armor block.' },
@@ -785,7 +768,7 @@
             id: 'nyx', name: 'NYX', role: 'Shadow Assassin', rarity: 'STARTER (Basic)',
             desc: 'Deadly operative with stealth and shadow-strike bursts.',
             bg: 'from-purple-950 to-slate-950', border: 'border-purple-500/50', iconImg: 'image_a9978665.jpg',
-            price: 150, requiredWins: 0, requiredXp: 0, isStarter: true,
+            price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
               { id: 'nyx-1', type: 'strike', name: 'SHADOW STAB', ap: 1, color: 'purple', desc: 'Deal 17 Dark damage.' },
               { id: 'nyx-2', type: 'defend', name: 'SMOKE CLOAK', ap: 1, color: 'purple', desc: 'Gain 10 Armor block.' },
@@ -795,86 +778,86 @@
           },
           {
             id: 'storm-knight', name: 'STORM KNIGHT', role: 'Electric Knight', rarity: 'RANKED (Silver I)',
-            desc: 'Electric armored duelist wielding lightning strikes.',
+            desc: 'Electric armored duelist wielding powerful lightning strikes.',
             bg: 'from-amber-950 to-slate-950', border: 'border-amber-500/50', iconImg: 'image_d3c262a5.jpg',
-            price: 150, requiredWins: 2, requiredXp: 150, isStarter: false,
+            price: 350, requiredWins: 2, requiredXp: 150, isStarter: false,
             baseSkills: [
-              { id: 'storm-1', type: 'strike', name: 'SPARK STRIKE', ap: 1, color: 'amber', desc: 'Deal 20 Electric damage.' },
-              { id: 'storm-2', type: 'defend', name: 'STATIC GUARD', ap: 1, color: 'amber', desc: 'Gain 14 Armor block.' },
-              { id: 'storm-3', type: 'debuff', name: 'LIGHTNING BOLT', ap: 2, color: 'yellow', desc: 'Deal 32 damage & shock target.' },
-              { id: 'storm-4', type: 'heal', name: 'ELECTRO MEND', ap: 2, color: 'emerald', desc: 'Restore 18 HP.' }
+              { id: 'storm-1', type: 'strike', name: 'SPARK STRIKE', ap: 1, color: 'amber', desc: 'Deal 22 Electric damage.' },
+              { id: 'storm-2', type: 'defend', name: 'STATIC GUARD', ap: 1, color: 'amber', desc: 'Gain 16 Armor block.' },
+              { id: 'storm-3', type: 'debuff', name: 'LIGHTNING BOLT', ap: 2, color: 'yellow', desc: 'Deal 35 damage & shock target.' },
+              { id: 'storm-4', type: 'heal', name: 'ELECTRO MEND', ap: 2, color: 'emerald', desc: 'Restore 20 HP.' }
             ]
           },
           {
             id: 'ironclad-titan', name: 'IRONCLAD TITAN', role: 'Earth Titan', rarity: 'RANKED (Silver II)',
             desc: 'Colossal earth juggernaut with earth-shattering slams.',
             bg: 'from-stone-950 to-slate-950', border: 'border-stone-500/50', iconImg: 'image_e1196f4d.jpg',
-            price: 150, requiredWins: 4, requiredXp: 350, isStarter: false,
+            price: 500, requiredWins: 4, requiredXp: 350, isStarter: false,
             baseSkills: [
-              { id: 'titan-1', type: 'strike', name: 'STONE SMASH', ap: 1, color: 'stone', desc: 'Deal 18 Earth damage.' },
-              { id: 'titan-2', type: 'defend', name: 'TECTONIC BLOCK', ap: 1, color: 'stone', desc: 'Gain 18 Armor block.' },
-              { id: 'titan-3', type: 'debuff', name: 'EARTHQUAKE', ap: 2, color: 'stone', desc: 'Deal 35 damage & shatter defenses.' },
-              { id: 'titan-4', type: 'heal', name: 'TITAN MEND', ap: 2, color: 'emerald', desc: 'Restore 20 HP & 10 Armor.' }
+              { id: 'titan-1', type: 'strike', name: 'STONE SMASH', ap: 1, color: 'stone', desc: 'Deal 24 Earth damage.' },
+              { id: 'titan-2', type: 'defend', name: 'TECTONIC BLOCK', ap: 1, color: 'stone', desc: 'Gain 22 Armor block.' },
+              { id: 'titan-3', type: 'debuff', name: 'EARTHQUAKE', ap: 2, color: 'stone', desc: 'Deal 40 damage & shatter defenses.' },
+              { id: 'titan-4', type: 'heal', name: 'TITAN MEND', ap: 2, color: 'emerald', desc: 'Restore 22 HP & 12 Armor.' }
             ]
           },
           {
             id: 'chrono-warden', name: 'CHRONO WARDEN', role: 'Time Mage', rarity: 'RANKED (Gold I)',
-            desc: 'Time controller manipulating action queues and hourglass power.',
+            desc: 'Time controller manipulating action queues and powerful hourglass rays.',
             bg: 'from-yellow-950 to-slate-950', border: 'border-yellow-500/50', iconImg: 'image_a4f1655c.jpg',
-            price: 150, requiredWins: 7, requiredXp: 600, isStarter: false,
+            price: 750, requiredWins: 7, requiredXp: 600, isStarter: false,
             baseSkills: [
-              { id: 'chrono-1', type: 'strike', name: 'TIME SLASH', ap: 1, color: 'yellow', desc: 'Deal 22 Temporal damage.' },
-              { id: 'chrono-2', type: 'defend', name: 'TEMPORAL WARD', ap: 1, color: 'yellow', desc: 'Gain 15 Armor block.' },
-              { id: 'chrono-3', type: 'debuff', name: 'TIME WARP', ap: 2, color: 'amber', desc: 'Deal 38 damage & inflict Armor-Break.' },
-              { id: 'chrono-4', type: 'heal', name: 'HOURGLASS HEAL', ap: 2, color: 'emerald', desc: 'Restore 22 HP.' }
+              { id: 'chrono-1', type: 'strike', name: 'TIME SLASH', ap: 1, color: 'yellow', desc: 'Deal 28 Temporal damage.' },
+              { id: 'chrono-2', type: 'defend', name: 'TEMPORAL WARD', ap: 1, color: 'yellow', desc: 'Gain 18 Armor block.' },
+              { id: 'chrono-3', type: 'debuff', name: 'TIME WARP', ap: 2, color: 'amber', desc: 'Deal 45 damage & inflict Armor-Break.' },
+              { id: 'chrono-4', type: 'heal', name: 'HOURGLASS HEAL', ap: 2, color: 'emerald', desc: 'Restore 26 HP.' }
             ]
           },
           {
             id: 'sky-valkyrie', name: 'SKY VALKYRIE', role: 'Light Warrior', rarity: 'RANKED (Gold II)',
-            desc: 'Aerial divine warrior with celestial flight capabilities.',
+            desc: 'Aerial divine warrior with celestial holy judgment capabilities.',
             bg: 'from-orange-950 to-slate-950', border: 'border-orange-500/50', iconImg: 'image_9b984ce7.jpg',
-            price: 150, requiredWins: 10, requiredXp: 950, isStarter: false,
+            price: 1000, requiredWins: 10, requiredXp: 950, isStarter: false,
             baseSkills: [
-              { id: 'valkyrie-1', type: 'strike', name: 'HOLY SPEAR', ap: 1, color: 'orange', desc: 'Deal 24 Light damage.' },
-              { id: 'valkyrie-2', type: 'defend', name: 'RADIANT SHIELD', ap: 1, color: 'orange', desc: 'Gain 16 Armor block.' },
-              { id: 'valkyrie-3', type: 'debuff', name: 'CELESTIAL STRIKE', ap: 2, color: 'amber', desc: 'Deal 42 holy judgment damage.' },
-              { id: 'valkyrie-4', type: 'heal', name: 'DIVINE MEND', ap: 2, color: 'emerald', desc: 'Restore 25 HP.' }
+              { id: 'valkyrie-1', type: 'strike', name: 'HOLY SPEAR', ap: 1, color: 'orange', desc: 'Deal 30 Light damage.' },
+              { id: 'valkyrie-2', type: 'defend', name: 'RADIANT SHIELD', ap: 1, color: 'orange', desc: 'Gain 20 Armor block.' },
+              { id: 'valkyrie-3', type: 'debuff', name: 'CELESTIAL STRIKE', ap: 2, color: 'amber', desc: 'Deal 50 holy judgment damage.' },
+              { id: 'valkyrie-4', type: 'heal', name: 'DIVINE MEND', ap: 2, color: 'emerald', desc: 'Restore 30 HP.' }
             ]
           },
           {
             id: 'void-necromancer', name: 'VOID NECROMANCER', role: 'Void Sorcerer', rarity: 'RANKED (Platinum I)',
-            desc: 'Dark sorcerer capable of summoning spectral minions.',
+            desc: 'Dark sorcerer capable of devastating plague waves and life draining.',
             bg: 'from-violet-950 to-slate-950', border: 'border-violet-500/50', iconImg: 'image_42205d6.jpg',
-            price: 150, requiredWins: 15, requiredXp: 1400, isStarter: false,
+            price: 1500, requiredWins: 15, requiredXp: 1400, isStarter: false,
             baseSkills: [
-              { id: 'void-1', type: 'strike', name: 'DARK BOLT', ap: 1, color: 'violet', desc: 'Deal 26 Void damage.' },
-              { id: 'void-2', type: 'defend', name: 'SOUL BARRIER', ap: 1, color: 'violet', desc: 'Gain 15 Armor block.' },
-              { id: 'void-3', type: 'poison', name: 'PLAGUE WAVE', ap: 2, color: 'purple', desc: 'Deal 25 damage & apply 12 Poison.' },
-              { id: 'void-4', type: 'heal', name: 'ABYSSAL DRAIN', ap: 2, color: 'emerald', desc: 'Deal 35 damage & restore 18 HP.' }
+              { id: 'void-1', type: 'strike', name: 'DARK BOLT', ap: 1, color: 'violet', desc: 'Deal 34 Void damage.' },
+              { id: 'void-2', type: 'defend', name: 'SOUL BARRIER', ap: 1, color: 'violet', desc: 'Gain 20 Armor block.' },
+              { id: 'void-3', type: 'poison', name: 'PLAGUE WAVE', ap: 2, color: 'purple', desc: 'Deal 32 damage & apply 15 Poison.' },
+              { id: 'void-4', type: 'heal', name: 'ABYSSAL DRAIN', ap: 2, color: 'emerald', desc: 'Deal 42 damage & restore 22 HP.' }
             ]
           },
           {
             id: 'blood-berserker', name: 'BLOOD BERSERKER', role: 'Blood Brawler', rarity: 'ADVANCED (Elite)',
-            desc: 'Furious warrior scaling attack power as health drops.',
+            desc: 'Furious warrior with devastating high-damage blood rampages.',
             bg: 'from-rose-950 to-slate-950', border: 'border-rose-500/50', iconImg: 'image_2e90c1d9.jpg',
-            price: 300, requiredWins: 25, requiredXp: 2500, isStarter: false,
+            price: 2500, requiredWins: 25, requiredXp: 2500, isStarter: false,
             baseSkills: [
-              { id: 'berserk-1', type: 'strike', name: 'BLOOD AXE', ap: 1, color: 'rose', desc: 'Deal 30 Physical damage.' },
-              { id: 'berserk-2', type: 'defend', name: 'FRENZIED BLOCK', ap: 1, color: 'rose', desc: 'Gain 12 Armor block.' },
-              { id: 'berserk-3', type: 'debuff', name: 'BLOODY RAMPAGE', ap: 2, color: 'red', desc: 'Deal 48 brutal damage.' },
-              { id: 'berserk-4', type: 'heal', name: 'BLOOD FEAST', ap: 2, color: 'emerald', desc: 'Deal 20 damage & restore 25 HP.' }
+              { id: 'berserk-1', type: 'strike', name: 'BLOOD AXE', ap: 1, color: 'rose', desc: 'Deal 40 Physical damage.' },
+              { id: 'berserk-2', type: 'defend', name: 'FRENZIED BLOCK', ap: 1, color: 'rose', desc: 'Gain 18 Armor block.' },
+              { id: 'berserk-3', type: 'debuff', name: 'BLOODY RAMPAGE', ap: 2, color: 'red', desc: 'Deal 60 brutal damage.' },
+              { id: 'berserk-4', type: 'heal', name: 'BLOOD FEAST', ap: 2, color: 'emerald', desc: 'Deal 28 damage & restore 32 HP.' }
             ]
           },
           {
             id: 'astral-archmage', name: 'ASTRAL ARCHMAGE', role: 'Cosmic Sorcerer', rarity: 'ADVANCED (Elite)',
-            desc: 'Cosmic spellcaster manipulating planetary layout orbits.',
+            desc: 'Cosmic spellcaster wielding galaxy collapse and supernova powers.',
             bg: 'from-indigo-950 to-slate-950', border: 'border-indigo-500/50', iconImg: 'image_1d431b92.jpg',
-            price: 300, requiredWins: 30, requiredXp: 3200, isStarter: false,
+            price: 3500, requiredWins: 30, requiredXp: 3200, isStarter: false,
             baseSkills: [
-              { id: 'astral-1', type: 'strike', name: 'STELLAR RAY', ap: 1, color: 'indigo', desc: 'Deal 32 Cosmic damage.' },
-              { id: 'astral-2', type: 'defend', name: 'COSMIC BARRIER', ap: 1, color: 'indigo', desc: 'Gain 20 Armor block.' },
-              { id: 'astral-3', type: 'debuff', name: 'SUPERNOVA', ap: 2, color: 'blue', desc: 'Deal 55 cosmic cataclysm damage.' },
-              { id: 'astral-4', type: 'heal', name: 'ASTRAL MEND', ap: 2, color: 'emerald', desc: 'Restore 30 HP.' }
+              { id: 'astral-1', type: 'strike', name: 'STELLAR RAY', ap: 1, color: 'indigo', desc: 'Deal 44 Cosmic damage.' },
+              { id: 'astral-2', type: 'defend', name: 'COSMIC BARRIER', ap: 1, color: 'indigo', desc: 'Gain 25 Armor block.' },
+              { id: 'astral-3', type: 'debuff', name: 'SUPERNOVA', ap: 2, color: 'blue', desc: 'Deal 68 cosmic cataclysm damage.' },
+              { id: 'astral-4', type: 'heal', name: 'ASTRAL MEND', ap: 2, color: 'emerald', desc: 'Restore 35 HP.' }
             ]
           }
         ];
@@ -941,6 +924,7 @@
                             currentUser.role = 'owner';
                         }
                         if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
+                        if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [currentUser.active_hero || 'pyra'];
                         restoreUserSession();
                     } else {
                         currentUser = null;
@@ -1045,7 +1029,7 @@
                             <span class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">${h.role}</span>
                         </div>
                         <p class="text-[11px] text-slate-400 leading-tight">${h.desc}</p>
-                        <span class="text-[10px] text-emerald-400 font-bold block pt-1">▶ Select Champion</span>
+                        <span class="text-[10px] text-emerald-400 font-bold block pt-1">▶ Choose Free Starter</span>
                     </div>
                 </div>
             `).join('');
@@ -1055,7 +1039,8 @@
             if (!currentUser || !supabaseClient) return;
             currentUser.active_hero = heroId;
             currentUser.activeHero = heroId;
-            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = ['pyra', 'sylph', 'valen', 'nyx'];
+            // Only unlock the chosen starter for free
+            currentUser.unlocked_heroes = [heroId];
 
             await supabaseClient.from('profiles').update({
                 active_hero: heroId,
@@ -1127,7 +1112,7 @@
                 reader.onload = async function(e) {
                     const { error } = await supabaseClient.from('profiles').insert([{
                         email, pass_hash: passHash, name, nickname, phone, bday,
-                        role: 'player', balance: 0.00, unlocked_heroes: ['pyra', 'sylph', 'valen', 'nyx'], active_hero: null,
+                        role: 'player', balance: 0.00, unlocked_heroes: [], active_hero: null,
                         unlocked_skills: {}, wins: 0, xp: 0, rank: 'Bronze I', first_match_completed: false,
                         approved: false, frozen: false, receipt: e.target.result, ref: refNum, date: dateStr
                     }]);
@@ -1179,6 +1164,7 @@
 
                 currentUser = user;
                 if(!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
+                if(!currentUser.unlocked_heroes) currentUser.unlocked_heroes = currentUser.unlockedHeroes || [currentUser.active_hero || 'pyra'];
                 if(!currentUser.activeHero) currentUser.activeHero = currentUser.active_hero || null;
                 
                 logSystemActivity('User Login', `User ${currentUser.nickname} signed in.`);
@@ -1266,13 +1252,15 @@
             else if (currentUser.xp >= 150) currentUser.rank = 'Silver I';
             else currentUser.rank = 'Bronze I';
 
+            const unlockedList = currentUser.unlocked_heroes || currentUser.unlockedHeroes || [];
             heroes.forEach(h => {
-                if (!h.isStarter && !currentUser.unlocked_heroes.includes(h.id)) {
+                if (!h.isStarter && !unlockedList.includes(h.id)) {
                     if (currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp) {
-                        currentUser.unlocked_heroes.push(h.id);
+                        unlockedList.push(h.id);
                     }
                 }
             });
+            currentUser.unlocked_heroes = unlockedList;
 
             await supabaseClient.from('profiles').update({
                 rank: currentUser.rank,
@@ -1318,11 +1306,11 @@
                 } else if (isUnlocked) {
                     actionBtn = `<button onclick="window.switchActiveHero('${h.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow">Equip</button>`;
                 } else if (h.isStarter) {
-                    actionBtn = `<button onclick="window.buyBasicHero('${h.id}', ${h.price})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow">₱${h.price}</button>`;
+                    actionBtn = `<button onclick="window.buyHero('${h.id}', ${h.price})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow">Buy ₱${h.price}</button>`;
                 } else if (meetsReqs) {
                     actionBtn = `<button onclick="window.claimRankedHero('${h.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow">Unlock</button>`;
                 } else {
-                    actionBtn = `<span class="text-[10px] text-amber-400 font-mono text-right block">Req: ${h.requiredWins}W / ${h.requiredXp}XP</span>`;
+                    actionBtn = `<div class="text-right space-y-0.5"><button onclick="window.buyHero('${h.id}', ${h.price})" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-lg shadow block mb-0.5">Buy ₱${h.price}</button><span class="text-[9px] text-amber-400 font-mono block">Req: ${h.requiredWins}W / ${h.requiredXp}XP</span></div>`;
                 }
 
                 return `
@@ -1421,12 +1409,12 @@
         }
         window.switchActiveHero = switchActiveHero;
 
-        async function buyBasicHero(id, price) {
+        async function buyHero(id, price) {
             if (!currentUser || !supabaseClient) return;
             if (currentUser.balance < price) { alert('Insufficient wallet balance!'); return; }
             currentUser.balance -= price;
             if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = currentUser.unlockedHeroes || [];
-            currentUser.unlocked_heroes.push(id);
+            if (!currentUser.unlocked_heroes.includes(id)) currentUser.unlocked_heroes.push(id);
             currentUser.active_hero = id;
             currentUser.activeHero = id;
 
@@ -1437,8 +1425,9 @@
             setActiveHeroUI(id);
             renderHeroes();
             switchTab('hub');
+            alert(`Hero purchased successfully for ₱${price}!`);
         }
-        window.buyBasicHero = buyBasicHero;
+        window.buyHero = buyHero;
 
         async function claimRankedHero(id) {
             if (!currentUser || !supabaseClient) return;
@@ -1726,7 +1715,7 @@
             if (duelState.playerAp < card.ap) { logDuel(`Not enough AP!`); return; }
 
             duelState.playerAp -= card.ap;
-            let dmg = card.cost === 500 ? 75 : 22;
+            let dmg = card.cost === 500 ? 75 : 24;
             duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
             logDuel(`Played ${card.name}! Dealt ${dmg} damage.`);
             updateDuelUI();
@@ -1935,7 +1924,6 @@
 
         async function renderOwnerQueues() {
             if (!supabaseClient) return;
-            const filterDate = document.getElementById('filter-date')?.value || '';
             const { data: allProfiles } = await supabaseClient.from('profiles').select('*').neq('email', EXCLUSIVE_OWNER_EMAIL);
             const accounts = allProfiles || [];
 
