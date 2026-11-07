@@ -98,7 +98,7 @@
                     <button onclick="window.showAuthMode('register')" class="text-blue-400 hover:underline">Create Account</button>
                     <button onclick="window.showAuthMode('forgot')" class="text-amber-400 hover:underline">Forgot Password?</button>
                 </div>
-                <button onclick="window.handleLogin()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Sign In</button>
+                <button onclick="window.handleLogin()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
             </div>
 
             <!-- Register Box -->
@@ -233,7 +233,7 @@
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between glow-box">
                 <div class="flex items-center space-x-3">
                     <div id="active-hero-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
-                        <img id="active-hero-img-el" src="" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
+                        <img id="active-hero-img-el" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
                     </div>
                     <div>
                         <div class="flex items-center space-x-2">
@@ -624,7 +624,15 @@
         // ================= SUPABASE CONFIGURATION =================
         const SUPABASE_URL = 'https://qocrpleireoffykeendn.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_MzwC0zj5QfPLNvTkcphyww_5pObb4cM';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let supabaseClient = null;
+        try {
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch(e) {
+            console.error('Supabase initialization error:', e);
+        }
 
         const EXCLUSIVE_OWNER_EMAIL = 'jcem0615@gmail.com';
         let deferredPrompt = null;
@@ -650,14 +658,6 @@
         }
         window.installPWA = installPWA;
 
-        window.addEventListener('appinstalled', (evt) => {
-            console.log('Aetheris Duel Arena was successfully installed');
-            const installBtn = document.getElementById('btn-install-pwa');
-            const authInstallBtn = document.getElementById('auth-install-btn');
-            if (installBtn) installBtn.classList.add('hidden');
-            if (authInstallBtn) authInstallBtn.classList.add('hidden');
-        });
-
         async function hashPassword(password) {
             try {
                 const msgBuffer = new TextEncoder().encode(password);
@@ -674,7 +674,13 @@
             }
         }
 
-        let currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
+        let currentUser = null;
+        try {
+            currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
+        } catch(err) {
+            currentUser = null;
+        }
+
         let currentDuelBet = 50;
 
         let pendingDeposits = JSON.parse(localStorage.getItem('aetheris_pending_deposits')) || [];
@@ -927,77 +933,113 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
-            if (currentUser && currentUser.email) {
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('email', currentUser.email)
-                    .single();
-                
-                if (data && !error) {
-                    currentUser = data;
-                    if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                        currentUser.role = 'owner';
+            try {
+                if (currentUser && currentUser.email && supabaseClient) {
+                    const { data, error } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .eq('email', currentUser.email)
+                        .single();
+                    
+                    if (data && !error) {
+                        currentUser = data;
+                        if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                            currentUser.role = 'owner';
+                        }
+                        if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
+                        restoreUserSession();
+                    } else {
+                        currentUser = null;
+                        localStorage.removeItem('aetheris_current_user');
                     }
-                    if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
-                    restoreUserSession();
-                } else {
-                    currentUser = null;
-                    localStorage.removeItem('aetheris_current_user');
                 }
+            } catch (err) {
+                console.error("Init session check error:", err);
             }
         });
 
         function restoreUserSession() {
-            document.getElementById('view-auth').classList.add('hidden');
-            
-            if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase() || currentUser.role === 'owner') {
-                currentUser.role = 'owner';
-                document.getElementById('main-header').classList.remove('hidden');
-                document.getElementById('nav-wallet-container').classList.remove('hidden');
-                document.getElementById('nav-menu').classList.remove('hidden');
-                document.getElementById('btn-hub').classList.add('hidden');
-                document.getElementById('btn-roster').classList.add('hidden');
-                document.getElementById('btn-shop').classList.add('hidden');
-                document.getElementById('btn-profile').classList.add('hidden');
-                document.getElementById('btn-leaderboard').classList.add('hidden');
-                document.getElementById('btn-owner').classList.remove('hidden');
-                switchTab('owner');
-                return;
+            try {
+                const viewAuth = document.getElementById('view-auth');
+                if (viewAuth) viewAuth.classList.add('hidden');
+                
+                if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase() || currentUser.role === 'owner') {
+                    currentUser.role = 'owner';
+                    const mainHeader = document.getElementById('main-header');
+                    const navWallet = document.getElementById('nav-wallet-container');
+                    const navMenu = document.getElementById('nav-menu');
+                    const btnOwner = document.getElementById('btn-owner');
+                    if (mainHeader) mainHeader.classList.remove('hidden');
+                    if (navWallet) navWallet.classList.remove('hidden');
+                    if (navMenu) navMenu.classList.remove('hidden');
+                    const btnHub = document.getElementById('btn-hub');
+                    const btnRoster = document.getElementById('btn-roster');
+                    const btnShop = document.getElementById('btn-shop');
+                    const btnProfile = document.getElementById('btn-profile');
+                    const btnLeaderboard = document.getElementById('btn-leaderboard');
+                    if (btnHub) btnHub.classList.add('hidden');
+                    if (btnRoster) btnRoster.classList.add('hidden');
+                    if (btnShop) btnShop.classList.add('hidden');
+                    if (btnProfile) btnProfile.classList.add('hidden');
+                    if (btnLeaderboard) btnLeaderboard.classList.add('hidden');
+                    if (btnOwner) btnOwner.classList.remove('hidden');
+                    switchTab('owner');
+                    return;
+                }
+
+                const activeHero = currentUser.active_hero || currentUser.activeHero;
+                if (!activeHero) {
+                    const mainHeader = document.getElementById('main-header');
+                    const viewStarter = document.getElementById('view-starter-select');
+                    if (mainHeader) mainHeader.classList.add('hidden');
+                    if (viewStarter) viewStarter.classList.remove('hidden');
+                    renderStarterHeroesSelection();
+                    return;
+                }
+
+                const mainHeader = document.getElementById('main-header');
+                const navWallet = document.getElementById('nav-wallet-container');
+                const navMenu = document.getElementById('nav-menu');
+                if (mainHeader) mainHeader.classList.remove('hidden');
+                if (navWallet) navWallet.classList.remove('hidden');
+                if (navMenu) navMenu.classList.remove('hidden');
+                
+                const nickBadge = document.getElementById('player-nickname-badge');
+                const fsPlayerName = document.getElementById('fs-player-name');
+                const fsPlayerAvatar = document.getElementById('fs-player-avatar-username');
+                if (nickBadge) nickBadge.innerText = currentUser.nickname;
+                if (fsPlayerName) fsPlayerName.innerText = currentUser.nickname.toUpperCase();
+                if (fsPlayerAvatar) fsPlayerAvatar.innerText = currentUser.nickname.toUpperCase();
+                
+                updateWalletDisplay();
+                setActiveHeroUI(activeHero);
+
+                const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
+                const hubExp = document.getElementById('hub-explevel-badge');
+                if (hubExp) hubExp.innerText = `Lv. ${expLevel}`;
+
+                const btnOwner = document.getElementById('btn-owner');
+                const btnHub = document.getElementById('btn-hub');
+                const btnRoster = document.getElementById('btn-roster');
+                const btnShop = document.getElementById('btn-shop');
+                const btnProfile = document.getElementById('btn-profile');
+                const btnLeaderboard = document.getElementById('btn-leaderboard');
+                if (btnOwner) btnOwner.classList.add('hidden');
+                if (btnHub) btnHub.classList.remove('hidden');
+                if (btnRoster) btnRoster.classList.remove('hidden');
+                if (btnShop) btnShop.classList.remove('hidden');
+                if (btnProfile) btnProfile.classList.remove('hidden');
+                if (btnLeaderboard) btnLeaderboard.classList.remove('hidden');
+                switchTab('hub');
+            } catch(err) {
+                console.error("restoreUserSession error:", err);
             }
-
-            const activeHero = currentUser.active_hero || currentUser.activeHero;
-            if (!activeHero) {
-                document.getElementById('main-header').classList.add('hidden');
-                document.getElementById('view-starter-select').classList.remove('hidden');
-                renderStarterHeroesSelection();
-                return;
-            }
-
-            document.getElementById('main-header').classList.remove('hidden');
-            document.getElementById('nav-wallet-container').classList.remove('hidden');
-            document.getElementById('nav-menu').classList.remove('hidden');
-            document.getElementById('player-nickname-badge').innerText = currentUser.nickname;
-            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
-            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
-            updateWalletDisplay();
-            setActiveHeroUI(activeHero);
-
-            const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
-            document.getElementById('hub-explevel-badge').innerText = `Lv. ${expLevel}`;
-
-            document.getElementById('btn-owner').classList.add('hidden');
-            document.getElementById('btn-hub').classList.remove('hidden');
-            document.getElementById('btn-roster').classList.remove('hidden');
-            document.getElementById('btn-shop').classList.remove('hidden');
-            document.getElementById('btn-profile').classList.remove('hidden');
-            document.getElementById('btn-leaderboard').classList.remove('hidden');
-            switchTab('hub');
         }
 
         function renderStarterHeroesSelection() {
             const starterHeroes = heroes.filter(h => h.isStarter);
             const container = document.getElementById('starter-heroes-container');
+            if (!container) return;
             container.innerHTML = starterHeroes.map(h => `
                 <div onclick="window.chooseStarterHero('${h.id}')" class="bg-slate-900 border border-slate-800 hover:border-amber-500 rounded-2xl p-4 cursor-pointer card-hover flex items-center space-x-3.5">
                     <div class="w-16 h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-xl">
@@ -1016,7 +1058,7 @@
         }
 
         async function chooseStarterHero(heroId) {
-            if (!currentUser) return;
+            if (!currentUser || !supabaseClient) return;
             currentUser.active_hero = heroId;
             currentUser.activeHero = heroId;
             if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = ['pyra', 'sylph', 'valen', 'nyx'];
@@ -1029,7 +1071,8 @@
             logSystemActivity('Starter Hero Chosen', `${currentUser.nickname} chose ${heroId} as starter champion.`);
             persistLocalStorage();
 
-            document.getElementById('view-starter-select').classList.add('hidden');
+            const starterSelect = document.getElementById('view-starter-select');
+            if (starterSelect) starterSelect.classList.add('hidden');
             restoreUserSession();
             alert(`Champion selected successfully! Welcome to the Aetheris Arena dashboard.`);
         }
@@ -1037,117 +1080,155 @@
 
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
+            if (!input) return;
             if (input.type === 'password') { input.type = 'text'; btn.innerText = 'HIDE'; }
             else { input.type = 'password'; btn.innerText = 'SHOW'; }
         }
         window.togglePass = togglePass;
 
         function showAuthMode(mode) {
-            document.getElementById('auth-login-box').classList.add('hidden');
-            document.getElementById('auth-register-box').classList.add('hidden');
-            document.getElementById('auth-forgot-box').classList.add('hidden');
-            if(mode === 'login') document.getElementById('auth-login-box').classList.remove('hidden');
-            if(mode === 'register') document.getElementById('auth-register-box').classList.remove('hidden');
-            if(mode === 'forgot') document.getElementById('auth-forgot-box').classList.remove('hidden');
+            const loginBox = document.getElementById('auth-login-box');
+            const registerBox = document.getElementById('auth-register-box');
+            const forgotBox = document.getElementById('auth-forgot-box');
+            if (loginBox) loginBox.classList.add('hidden');
+            if (registerBox) registerBox.classList.add('hidden');
+            if (forgotBox) forgotBox.classList.add('hidden');
+            if(mode === 'login' && loginBox) loginBox.classList.remove('hidden');
+            if(mode === 'register' && registerBox) registerBox.classList.remove('hidden');
+            if(mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
         }
         window.showAuthMode = showAuthMode;
 
         async function handleRegister() {
-            const name = document.getElementById('reg-name').value.trim();
-            const nickname = document.getElementById('reg-nickname').value.trim();
-            const phone = document.getElementById('reg-phone').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const bday = document.getElementById('reg-bday').value;
-            const pass = document.getElementById('reg-pass').value;
-            const refNum = document.getElementById('reg-ref').value.trim();
-            const receiptFile = document.getElementById('reg-receipt').files[0];
+            try {
+                const nameEl = document.getElementById('reg-name');
+                const nickEl = document.getElementById('reg-nickname');
+                const phoneEl = document.getElementById('reg-phone');
+                const emailEl = document.getElementById('reg-email');
+                const bdayEl = document.getElementById('reg-bday');
+                const passEl = document.getElementById('reg-pass');
+                const refEl = document.getElementById('reg-ref');
+                const receiptEl = document.getElementById('reg-receipt');
 
-            if(!name || !nickname || !phone || !email || !bday || !pass || !refNum || !receiptFile) { 
-                alert('Please fill in all registration fields, enter the transaction reference number, and upload your ₱50 registration receipt.'); 
-                return; 
-            }
-
-            if ('Notification' in window) {
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') {
-                    alert('You must allow notifications to proceed with account creation and receive your approval alert.');
-                    return;
-                }
-            } else {
-                alert('Browser notifications are not supported on this device.');
-                return;
-            }
-
-            const passHash = await hashPassword(pass);
-            const dateStr = new Date().toISOString().split('T')[0];
-
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const { error } = await supabaseClient.from('profiles').insert([{
-                    email, pass_hash: passHash, name, nickname, phone, bday,
-                    role: 'player', balance: 0.00, unlocked_heroes: ['pyra', 'sylph', 'valen', 'nyx'], active_hero: null,
-                    unlocked_skills: {}, wins: 0, xp: 0, rank: 'Bronze I', first_match_completed: false,
-                    approved: false, frozen: false, receipt: e.target.result, ref: refNum, date: dateStr
-                }]);
-
-                if (error) {
-                    alert('Registration failed: ' + error.message);
+                if (!nameEl || !nickEl || !phoneEl || !emailEl || !bdayEl || !passEl || !refEl || !receiptEl) {
+                    alert('Registration form elements missing.');
                     return;
                 }
 
-                logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration with Ref: ${refNum}. Awaiting owner approval.`);
-                alert('Registration submitted successfully! Your account is pending owner approval of your ₱50 registration fee receipt.');
-                showAuthMode('login');
-            };
-            reader.readAsDataURL(receiptFile);
+                const name = nameEl.value.trim();
+                const nickname = nickEl.value.trim();
+                const phone = phoneEl.value.trim();
+                const email = emailEl.value.trim();
+                const bday = bdayEl.value;
+                const pass = passEl.value;
+                const refNum = refEl.value.trim();
+                const receiptFile = receiptEl.files[0];
+
+                if(!name || !nickname || !phone || !email || !bday || !pass || !refNum || !receiptFile) { 
+                    alert('Please fill in all registration fields, enter the transaction reference number, and upload your ₱50 registration receipt.'); 
+                    return; 
+                }
+
+                if (!supabaseClient) {
+                    alert('Database client not connected.');
+                    return;
+                }
+
+                if ('Notification' in window) {
+                    try {
+                        await Notification.requestPermission();
+                    } catch(e) {}
+                }
+
+                const passHash = await hashPassword(pass);
+                const dateStr = new Date().toISOString().split('T')[0];
+
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const { error } = await supabaseClient.from('profiles').insert([{
+                        email, pass_hash: passHash, name, nickname, phone, bday,
+                        role: 'player', balance: 0.00, unlocked_heroes: ['pyra', 'sylph', 'valen', 'nyx'], active_hero: null,
+                        unlocked_skills: {}, wins: 0, xp: 0, rank: 'Bronze I', first_match_completed: false,
+                        approved: false, frozen: false, receipt: e.target.result, ref: refNum, date: dateStr
+                    }]);
+
+                    if (error) {
+                        alert('Registration failed: ' + error.message);
+                        return;
+                    }
+
+                    logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration with Ref: ${refNum}. Awaiting owner approval.`);
+                    alert('Registration submitted successfully! Your account is pending owner approval of your ₱50 registration fee receipt.');
+                    showAuthMode('login');
+                };
+                reader.readAsDataURL(receiptFile);
+            } catch(err) {
+                alert('Registration error: ' + err.message);
+            }
         }
         window.handleRegister = handleRegister;
 
         async function handleLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const pass = document.getElementById('login-pass').value;
-            
-            if(!email || !pass) {
-                alert('Please enter both email and password.');
-                return;
+            try {
+                const emailEl = document.getElementById('login-email');
+                const passEl = document.getElementById('login-pass');
+                if (!emailEl || !passEl) {
+                    alert('Login input elements not found.');
+                    return;
+                }
+
+                const email = emailEl.value.trim();
+                const pass = passEl.value;
+                
+                if(!email || !pass) {
+                    alert('Please enter both email and password.');
+                    return;
+                }
+
+                if (!supabaseClient) {
+                    alert('Supabase client is not initialized.');
+                    return;
+                }
+
+                const inputHash = await hashPassword(pass);
+
+                const { data: user, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('pass_hash', inputHash)
+                    .single();
+
+                if (error || !user) {
+                    alert('Invalid email or password.');
+                    return;
+                }
+
+                if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                    user.role = 'owner';
+                    user.approved = true;
+                }
+
+                if (!user.approved && user.role !== 'owner') {
+                    alert('Account Approval Pending: Your ₱50 registration fee receipt is awaiting review and approval by the owner.');
+                    return;
+                }
+
+                if (user.frozen) {
+                    alert('Security Alert: This player account has been frozen by the owner.');
+                    return;
+                }
+
+                currentUser = user;
+                if(!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
+                if(!currentUser.activeHero) currentUser.activeHero = currentUser.active_hero || null;
+                
+                logSystemActivity('User Login', `User ${currentUser.nickname} (${currentUser.email}) signed in.`);
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+                restoreUserSession();
+            } catch(err) {
+                alert('Sign in error: ' + err.message);
             }
-
-            const inputHash = await hashPassword(pass);
-
-            const { data: user, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('email', email)
-                .eq('pass_hash', inputHash)
-                .single();
-
-            if (error || !user) {
-                alert('Invalid email or password.');
-                return;
-            }
-
-            if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                user.role = 'owner';
-                user.approved = true;
-            }
-
-            if (!user.approved && user.role !== 'owner') {
-                alert('Account Approval Pending: Your ₱50 registration fee receipt is awaiting review and approval by the owner.');
-                return;
-            }
-
-            if (user.frozen) {
-                alert('Security Alert: This player account has been frozen by the owner.');
-                return;
-            }
-
-            currentUser = user;
-            if(!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
-            if(!currentUser.activeHero) currentUser.activeHero = currentUser.active_hero || null;
-            
-            logSystemActivity('User Login', `User ${currentUser.nickname} (${currentUser.email}) signed in.`);
-            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
-            restoreUserSession();
         }
         window.handleLogin = handleLogin;
 
@@ -1160,81 +1241,84 @@
             currentUser = null;
             localStorage.removeItem('aetheris_current_user');
 
-            document.getElementById('nav-wallet-container').classList.add('hidden');
-            document.getElementById('nav-menu').classList.add('hidden');
-            document.getElementById('view-hub').classList.add('hidden');
-            document.getElementById('view-shop').classList.add('hidden');
-            document.getElementById('view-owner').classList.add('hidden');
-            document.getElementById('view-select').classList.add('hidden');
-            document.getElementById('view-starter-select').classList.add('hidden');
-            document.getElementById('view-duel-fullscreen').classList.add('hidden');
-            document.getElementById('main-header').classList.add('hidden');
-            document.getElementById('view-force-reset').classList.add('hidden');
-            document.getElementById('view-auth').classList.remove('hidden');
+            const idsToHide = ['nav-wallet-container', 'nav-menu', 'view-hub', 'view-shop', 'view-owner', 'view-select', 'view-starter-select', 'view-duel-fullscreen', 'main-header', 'view-force-reset'];
+            idsToHide.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+            const viewAuth = document.getElementById('view-auth');
+            if(viewAuth) viewAuth.classList.remove('hidden');
             showAuthMode('login');
         }
         window.logoutPlayer = logoutPlayer;
 
         async function submitResetRequest() {
-            const email = document.getElementById('forgot-email').value;
-            const bday = document.getElementById('forgot-bday').value;
-            
-            const { data: user, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('email', email)
-                .eq('bday', bday)
-                .single();
+            try {
+                const email = document.getElementById('forgot-email').value;
+                const bday = document.getElementById('forgot-bday').value;
+                if(!email || !bday || !supabaseClient) { alert('Please enter email and birthday.'); return; }
+                
+                const { data: user, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('bday', bday)
+                    .single();
 
-            if(error || !user) { alert('No matching account found with that email and birthday.'); return; }
-            if(pendingResets.some(r => r.email === email)) { alert('A password reset request is already pending.'); return; }
+                if(error || !user) { alert('No matching account found with that email and birthday.'); return; }
+                if(pendingResets.some(r => r.email === email)) { alert('A password reset request is already pending.'); return; }
 
-            if ('Notification' in window) {
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') {
-                    alert('Please allow notifications to receive your password reset approval alert.');
-                    return;
+                if ('Notification' in window) {
+                    try { await Notification.requestPermission(); } catch(e) {}
                 }
-            } else {
-                alert('Browser notifications are not supported on this device.');
-                return;
-            }
 
-            pendingResets.push({ id: Date.now(), email: email, name: user.name });
-            logSystemActivity('Password Reset Requested', `Reset requested for ${user.nickname} (${email}).`);
-            persistLocalStorage();
-            alert('Password reset request submitted to the owner successfully. You will receive a device notification once approved.');
-            showAuthMode('login');
+                pendingResets.push({ id: Date.now(), email: email, name: user.name });
+                logSystemActivity('Password Reset Requested', `Reset requested for ${user.nickname} (${email}).`);
+                persistLocalStorage();
+                alert('Password reset request submitted to the owner successfully. You will receive a device notification once approved.');
+                showAuthMode('login');
+            } catch(err) {
+                alert('Reset request error: ' + err.message);
+            }
         }
         window.submitResetRequest = submitResetRequest;
 
         async function executeForceReset() {
-            const email = document.getElementById('force-email').value;
-            const bday = document.getElementById('force-bday').value;
-            const newpass = document.getElementById('force-newpass').value;
-            
-            const { data: user, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('email', email)
-                .eq('bday', bday)
-                .single();
+            try {
+                const email = document.getElementById('force-email').value;
+                const bday = document.getElementById('force-bday').value;
+                const newpass = document.getElementById('force-newpass').value;
+                
+                if(!email || !bday || !newpass || !supabaseClient) { alert('Please fill in all reset fields.'); return; }
 
-            if(error || !user || !newpass) { alert('Invalid verification or missing password.'); return; }
+                const { data: user, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('bday', bday)
+                    .single();
 
-            const newHash = await hashPassword(newpass);
-            await supabaseClient.from('profiles').update({ pass_hash: newHash }).eq('email', email);
+                if(error || !user) { alert('Invalid verification or missing password.'); return; }
 
-            logSystemActivity('Password Reset Executed', `Password successfully updated for ${user.nickname} (${email}).`);
-            persistLocalStorage();
-            alert('Password updated securely! Please log in.');
-            document.getElementById('view-force-reset').classList.add('hidden');
-            document.getElementById('view-auth').classList.remove('hidden');
-            showAuthMode('login');
+                const newHash = await hashPassword(newpass);
+                await supabaseClient.from('profiles').update({ pass_hash: newHash }).eq('email', email);
+
+                logSystemActivity('Password Reset Executed', `Password successfully updated for ${user.nickname} (${email}).`);
+                persistLocalStorage();
+                alert('Password updated securely! Please log in.');
+                const forceReset = document.getElementById('view-force-reset');
+                const viewAuth = document.getElementById('view-auth');
+                if(forceReset) forceReset.classList.add('hidden');
+                if(viewAuth) viewAuth.classList.remove('hidden');
+                showAuthMode('login');
+            } catch(err) {
+                alert('Force reset error: ' + err.message);
+            }
         }
         window.executeForceReset = executeForceReset;
 
         async function evaluateRankAndUnlocks() {
+            if (!currentUser || !supabaseClient) return;
             if (currentUser.xp >= 5000) currentUser.rank = 'Legendary';
             else if (currentUser.xp >= 3500) currentUser.rank = 'Grandmaster';
             else if (currentUser.xp >= 2500) currentUser.rank = 'Diamond';
@@ -1330,6 +1414,7 @@
         function renderSkillShop() {
             if (!currentUser) return;
             const container = document.getElementById('shop-skills-container');
+            if(!container) return;
 
             let shopHtml = '';
             heroes.forEach(h => {
@@ -1377,7 +1462,7 @@
         }
 
         async function buyHeroSkill(heroId, skillId, cost) {
-            if (!currentUser) return;
+            if (!currentUser || !supabaseClient) return;
             const unlockedList = currentUser.unlocked_heroes || currentUser.unlockedHeroes || [];
             if (!unlockedList.includes(heroId)) {
                 alert('Role restriction: You must own this hero before purchasing its skill!');
@@ -1406,7 +1491,7 @@
         window.buyHeroSkill = buyHeroSkill;
 
         async function switchActiveHero(id) {
-            if (!currentUser) return;
+            if (!currentUser || !supabaseClient) return;
             currentUser.active_hero = id;
             currentUser.activeHero = id;
 
@@ -1421,7 +1506,7 @@
         window.switchActiveHero = switchActiveHero;
 
         async function buyBasicHero(id, price) {
-            if (!currentUser) return;
+            if (!currentUser || !supabaseClient) return;
             if (currentUser.balance < price) {
                 alert('Insufficient wallet balance to purchase this basic hero! Please top up.');
                 return;
@@ -1449,7 +1534,7 @@
         window.buyBasicHero = buyBasicHero;
 
         async function claimRankedHero(id) {
-            if (!currentUser) return;
+            if (!currentUser || !supabaseClient) return;
             const h = heroes.find(item => item.id === id);
             if (!h || currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) {
                 alert('Rank requirements not met yet!');
@@ -1477,16 +1562,21 @@
         function setActiveHeroUI(id) {
             const h = heroes.find(item => item.id === id);
             if (!h) return;
-            document.getElementById('active-hero-name').innerText = `${h.name} (${h.role})`;
-            document.getElementById('hub-rank-badge').innerText = currentUser.rank;
+            const heroNameEl = document.getElementById('active-hero-name');
+            const hubRankBadge = document.getElementById('hub-rank-badge');
+            if (heroNameEl) heroNameEl.innerText = `${h.name} (${h.role})`;
+            if (hubRankBadge) hubRankBadge.innerText = currentUser.rank;
             
             const avatar = document.getElementById('active-hero-avatar');
-            avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
-            document.getElementById('active-hero-img-el').src = h.iconImg;
+            const activeImg = document.getElementById('active-hero-img-el');
+            if (avatar) avatar.className = `w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg`;
+            if (activeImg) activeImg.src = h.iconImg;
 
             const fsPlayerSprite = document.getElementById('fs-player-sprite');
-            fsPlayerSprite.className = `w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5`;
-            fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg mb-0.5"><span id="fs-player-avatar-username" class="font-cinzel text-[10px] font-bold text-amber-300 uppercase">${currentUser.nickname}</span>`;
+            if (fsPlayerSprite) {
+                fsPlayerSprite.className = `w-24 h-24 sm:w-32 sm:h-32 animate-float bg-gradient-to-br ${h.bg} border-2 ${h.border} rounded-3xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] p-1.5`;
+                fsPlayerSprite.innerHTML = `<img src="${h.iconImg}" alt="${h.name}" class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-xl shadow-lg mb-0.5"><span id="fs-player-avatar-username" class="font-cinzel text-[10px] font-bold text-amber-300 uppercase">${currentUser.nickname}</span>`;
+            }
         }
 
         function switchTab(tab) {
@@ -1501,41 +1591,45 @@
                 return;
             }
 
-            document.getElementById('view-hub').classList.add('hidden');
-            document.getElementById('view-select').classList.add('hidden');
-            document.getElementById('view-shop').classList.add('hidden');
-            document.getElementById('view-owner').classList.add('hidden');
-            document.getElementById('view-starter-select').classList.add('hidden');
-            document.getElementById('view-duel-fullscreen').classList.add('hidden');
-            document.getElementById('main-header').classList.remove('hidden');
+            const views = ['view-hub', 'view-select', 'view-shop', 'view-owner', 'view-starter-select', 'view-duel-fullscreen'];
+            views.forEach(v => {
+                const el = document.getElementById(v);
+                if(el) el.classList.add('hidden');
+            });
+            const mainHeader = document.getElementById('main-header');
+            if(mainHeader) mainHeader.classList.remove('hidden');
 
-            document.getElementById('btn-hub').classList.remove('bg-blue-600', 'text-white');
-            document.getElementById('btn-roster').classList.remove('bg-blue-600', 'text-white');
-            document.getElementById('btn-shop').classList.remove('bg-blue-600', 'text-white');
-            document.getElementById('btn-owner').classList.remove('bg-blue-600', 'text-white');
-            document.getElementById('btn-hub').classList.add('text-slate-400');
-            document.getElementById('btn-roster').classList.add('text-slate-400');
-            document.getElementById('btn-shop').classList.add('text-slate-400');
-            document.getElementById('btn-owner').classList.add('text-slate-400');
+            const btnIds = ['btn-hub', 'btn-roster', 'btn-shop', 'btn-owner'];
+            btnIds.forEach(bId => {
+                const btn = document.getElementById(bId);
+                if(btn) {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('text-slate-400');
+                }
+            });
 
             if(tab === 'hub') {
-                document.getElementById('view-hub').classList.remove('hidden');
-                document.getElementById('btn-hub').classList.add('bg-blue-600', 'text-white');
-                document.getElementById('btn-hub').classList.remove('text-slate-400');
+                const vHub = document.getElementById('view-hub');
+                const bHub = document.getElementById('btn-hub');
+                if(vHub) vHub.classList.remove('hidden');
+                if(bHub) { bHub.classList.add('bg-blue-600', 'text-white'); bHub.classList.remove('text-slate-400'); }
             } else if(tab === 'select') {
                 renderHeroes();
-                document.getElementById('view-select').classList.remove('hidden');
-                document.getElementById('btn-roster').classList.add('bg-blue-600', 'text-white');
-                document.getElementById('btn-roster').classList.remove('text-slate-400');
+                const vSelect = document.getElementById('view-select');
+                const bRoster = document.getElementById('btn-roster');
+                if(vSelect) vSelect.classList.remove('hidden');
+                if(bRoster) { bRoster.classList.add('bg-blue-600', 'text-white'); bRoster.classList.remove('text-slate-400'); }
             } else if(tab === 'shop') {
                 renderSkillShop();
-                document.getElementById('view-shop').classList.remove('hidden');
-                document.getElementById('btn-shop').classList.add('bg-blue-600', 'text-white');
-                document.getElementById('btn-shop').classList.remove('text-slate-400');
+                const vShop = document.getElementById('view-shop');
+                const bShop = document.getElementById('btn-shop');
+                if(vShop) vShop.classList.remove('hidden');
+                if(bShop) { bShop.classList.add('bg-blue-600', 'text-white'); bShop.classList.remove('text-slate-400'); }
             } else if(tab === 'owner') {
-                document.getElementById('view-owner').classList.remove('hidden');
-                document.getElementById('btn-owner').classList.add('bg-blue-600', 'text-white');
-                document.getElementById('btn-owner').classList.remove('text-slate-400');
+                const vOwner = document.getElementById('view-owner');
+                const bOwner = document.getElementById('btn-owner');
+                if(vOwner) vOwner.classList.remove('hidden');
+                if(bOwner) { bOwner.classList.add('bg-blue-600', 'text-white'); bOwner.classList.remove('text-slate-400'); }
                 renderOwnerQueues();
             }
         }
@@ -1570,6 +1664,7 @@
 
         function renderHandCards() {
             const container = document.getElementById('shuffled-hand-container');
+            if(!container) return;
             container.innerHTML = currentHand.map((card, idx) => `
                 <div onclick="window.playCard(${idx})" class="bg-slate-900 border ${card.cost === 500 ? 'border-amber-500 shadow-amber-500/20' : 'border-slate-700'} hover:border-${card.color}-500 rounded-xl p-2.5 cursor-pointer card-hover space-y-0.5">
                     <div class="flex justify-between text-[10px] text-${card.color}-400 font-bold">
@@ -1581,7 +1676,7 @@
         }
 
         async function startRankedMatchmaking(amount) {
-            if (!currentUser) return;
+            if (!currentUser || !supabaseClient) return;
             if (currentUser.frozen) {
                 alert('Your account is frozen. Matchmaking is disabled.');
                 closeModal();
@@ -1602,19 +1697,23 @@
             updateWalletDisplay();
             closeModal();
 
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById('modal-matchmaking').classList.remove('hidden');
+            const backdrop = document.getElementById('modal-backdrop');
+            const matchmaking = document.getElementById('modal-matchmaking');
+            if(backdrop) backdrop.classList.remove('hidden');
+            if(matchmaking) matchmaking.classList.remove('hidden');
 
             const firstMatch = currentUser.first_match_completed !== undefined ? currentUser.first_match_completed : currentUser.firstMatchCompleted;
+            const statusEl = document.getElementById('matchmaking-status');
             if (!firstMatch) {
-                document.getElementById('matchmaking-status').innerText = `Finding opponent in ranked lobby (Wager: ₱${amount})...`;
+                if(statusEl) statusEl.innerText = `Finding opponent in ranked lobby (Wager: ₱${amount})...`;
                 matchmakingTimeout = setTimeout(() => {
                     closeModal();
-                    document.getElementById('modal-backdrop').classList.remove('hidden');
-                    document.getElementById('modal-cointoss').classList.remove('hidden');
+                    if(backdrop) backdrop.classList.remove('hidden');
+                    const cointoss = document.getElementById('modal-cointoss');
+                    if(cointoss) cointoss.classList.remove('hidden');
                 }, 2000);
             } else {
-                document.getElementById('matchmaking-status').innerText = `Searching P2P lobby (Rank: ${currentUser.rank}, Wager: ₱${amount})...\n⏳ Waiting for peer player match...`;
+                if(statusEl) statusEl.innerText = `Searching P2P lobby (Rank: ${currentUser.rank}, Wager: ₱${amount})...\n⏳ Waiting for peer player match...`;
             }
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
@@ -1632,7 +1731,7 @@
 
         async function cancelMatchmakingQueue() {
             if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
-            if (currentUser) {
+            if (currentUser && supabaseClient) {
                 currentUser.balance += currentDuelBet;
                 await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
                 persistLocalStorage();
@@ -1645,10 +1744,15 @@
 
         function launchDisguisedBotMatch(amount, playerWonToss, tossOutcome) {
             duelState.currentOpponentName = 'ApexPredator';
-            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
-            document.getElementById('fs-enemy-title').innerText = `ApexPredator (${currentUser.rank})`;
-            document.getElementById('fs-enemy-name-label').innerText = `APEXPREDATOR`;
-            document.getElementById('fs-enemy-img-el').src = "image_1d431b92.jpg";
+            const betBadge = document.getElementById('fullscreen-bet-badge');
+            const enemyTitle = document.getElementById('fs-enemy-title');
+            const enemyNameLbl = document.getElementById('fs-enemy-name-label');
+            const enemyImg = document.getElementById('fs-enemy-img-el');
+
+            if(betBadge) betBadge.innerText = `Bet: ₱${amount}`;
+            if(enemyTitle) enemyTitle.innerText = `ApexPredator (${currentUser.rank})`;
+            if(enemyNameLbl) enemyNameLbl.innerText = `APEXPREDATOR`;
+            if(enemyImg) enemyImg.src = "image_1d431b92.jpg";
 
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
@@ -1668,16 +1772,25 @@
                 }, 1000);
             }
             
-            document.getElementById('fs-player-name').innerText = currentUser.nickname.toUpperCase();
-            document.getElementById('fs-player-avatar-username').innerText = currentUser.nickname.toUpperCase();
+            const pNameEl = document.getElementById('fs-player-name');
+            const pAvatarName = document.getElementById('fs-player-avatar-username');
+            if(pNameEl) pNameEl.innerText = currentUser.nickname.toUpperCase();
+            if(pAvatarName) pAvatarName.innerText = currentUser.nickname.toUpperCase();
             updateDuelUI();
 
-            document.getElementById('main-header').classList.add('hidden');
-            document.getElementById('view-hub').classList.add('hidden');
-            document.getElementById('view-shop').classList.add('hidden');
-            document.getElementById('view-select').classList.add('hidden');
-            document.getElementById('view-starter-select').classList.add('hidden');
-            document.getElementById('view-duel-fullscreen').classList.remove('hidden');
+            const mainHeader = document.getElementById('main-header');
+            const vHub = document.getElementById('view-hub');
+            const vShop = document.getElementById('view-shop');
+            const vSelect = document.getElementById('view-select');
+            const vStarter = document.getElementById('view-starter-select');
+            const vDuelFs = document.getElementById('view-duel-fullscreen');
+
+            if(mainHeader) mainHeader.classList.add('hidden');
+            if(vHub) vHub.classList.add('hidden');
+            if(vShop) vShop.classList.add('hidden');
+            if(vSelect) vSelect.classList.add('hidden');
+            if(vStarter) vStarter.classList.add('hidden');
+            if(vDuelFs) vDuelFs.classList.remove('hidden');
         }
 
         function startTurnTimer() {
@@ -1716,34 +1829,49 @@
             logSystemActivity('P2P Match Surrendered', `${currentUser.nickname} surrendered duel vs ${duelState.currentOpponentName} (Stake: ₱${currentDuelBet}).`);
             persistLocalStorage();
 
-            document.getElementById('view-duel-fullscreen').classList.add('hidden');
-            document.getElementById('main-header').classList.remove('hidden');
+            const vDuelFs = document.getElementById('view-duel-fullscreen');
+            const mainHeader = document.getElementById('main-header');
+            if(vDuelFs) vDuelFs.classList.add('hidden');
+            if(mainHeader) mainHeader.classList.remove('hidden');
             switchTab('hub');
         }
         window.surrenderDuel = surrenderDuel;
 
         function updateDuelUI() {
-            document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
-            document.getElementById('fs-player-hp-bar').style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
-            document.getElementById('fs-player-ap').innerText = duelState.playerAp;
-            document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
-            document.getElementById('fs-player-poison').innerText = duelState.playerPoison;
+            const pHpText = document.getElementById('fs-player-hp-text');
+            const pHpBar = document.getElementById('fs-player-hp-bar');
+            const pAp = document.getElementById('fs-player-ap');
+            const pArmor = document.getElementById('fs-player-armor');
+            const pPoison = document.getElementById('fs-player-poison');
 
-            document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
-            document.getElementById('fs-enemy-hp-bar').style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
-            document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
-            document.getElementById('fs-enemy-poison').innerText = duelState.enemyPoison;
-            document.getElementById('fs-enemy-debuff').innerText = duelState.enemyDebuff;
+            if(pHpText) pHpText.innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
+            if(pHpBar) pHpBar.style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
+            if(pAp) pAp.innerText = duelState.playerAp;
+            if(pArmor) pArmor.innerText = duelState.playerArmor;
+            if(pPoison) pPoison.innerText = duelState.playerPoison;
+
+            const eHpText = document.getElementById('fs-enemy-hp-text');
+            const eHpBar = document.getElementById('fs-enemy-hp-bar');
+            const eArmor = document.getElementById('fs-enemy-armor');
+            const ePoison = document.getElementById('fs-enemy-poison');
+            const eDebuff = document.getElementById('fs-enemy-debuff');
+
+            if(eHpText) eHpText.innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
+            if(eHpBar) eHpBar.style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
+            if(eArmor) eArmor.innerText = duelState.enemyArmor;
+            if(ePoison) ePoison.innerText = duelState.enemyPoison;
+            if(eDebuff) eDebuff.innerText = duelState.enemyDebuff;
         }
 
         function logDuel(msg) {
-            document.getElementById('fs-battle-log').innerText = msg;
+            const logEl = document.getElementById('fs-battle-log');
+            if(logEl) logEl.innerText = msg;
         }
 
         async function handleVictory() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             
-            if (duelState.isFirstMatchBot) {
+            if (duelState.isFirstMatchBot && supabaseClient) {
                 currentUser.first_match_completed = true;
                 currentUser.firstMatchCompleted = true;
                 await supabaseClient.from('profiles').update({ first_match_completed: true }).eq('email', currentUser.email);
@@ -1778,15 +1906,17 @@
             logDuel(`[Victory]: Won ₱${netReward.toFixed(2)} net prize (5% fee applied) & +${earnedXp} XP!`);
             alert(`Victory! Total pool: ₱${totalPool}. After 5% platform fee (₱${platformFee.toFixed(2)}), you won ₱${netReward.toFixed(2)}! +1 Win & +${earnedXp} Rank XP.`);
             
-            document.getElementById('view-duel-fullscreen').classList.add('hidden');
-            document.getElementById('main-header').classList.remove('hidden');
+            const vDuelFs = document.getElementById('view-duel-fullscreen');
+            const mainHeader = document.getElementById('main-header');
+            if(vDuelFs) vDuelFs.classList.add('hidden');
+            if(mainHeader) mainHeader.classList.remove('hidden');
             switchTab('hub');
         }
 
         async function handleDefeat() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             
-            if (duelState.isFirstMatchBot) {
+            if (duelState.isFirstMatchBot && supabaseClient) {
                 currentUser.first_match_completed = true;
                 currentUser.firstMatchCompleted = true;
                 await supabaseClient.from('profiles').update({ first_match_completed: true }).eq('email', currentUser.email);
@@ -1814,8 +1944,10 @@
             logDuel(`[Defeat]: Lost duel and ₱${currentDuelBet} wager (+15 Consolation XP).`);
             alert(`Defeat! Your ₱${currentDuelBet} wager has been permanently deducted from your wallet. Gained +${consolationXp} Consolation XP.`);
             
-            document.getElementById('view-duel-fullscreen').classList.add('hidden');
-            document.getElementById('main-header').classList.remove('hidden');
+            const vDuelFs = document.getElementById('view-duel-fullscreen');
+            const mainHeader = document.getElementById('main-header');
+            if(vDuelFs) vDuelFs.classList.add('hidden');
+            if(mainHeader) mainHeader.classList.remove('hidden');
             switchTab('hub');
         }
 
@@ -1868,4 +2000,788 @@
         }
 
         function playCard(index) {
-            if (duel
+            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
+            const card = currentHand[index];
+            if (!card) return;
+
+            if (duelState.playerAp < card.ap) {
+                logDuel(`[System]: Not enough AP for ${card.name} (Requires ${card.ap} AP)!`);
+                return;
+            }
+
+            duelState.playerAp -= card.ap;
+
+            if (duelState.isFirstMatchBot) {
+                let dmg = 18;
+                let heal = 0;
+                let armorGain = 0;
+                let poisonApply = 0;
+
+                if (card.name === 'INFERNAL HELLFIRE') { dmg = 35; poisonApply = 12; }
+                else if (card.name === 'SOLAR SUPERNOVA') { dmg = 75; poisonApply = 20; }
+                else if (card.name === 'HURRICANE BARRAGE') dmg = 38;
+                else if (card.name === 'HURRICANE APOCALYPSE') dmg = 70;
+                else if (card.name === 'AEGIS FORTRESS') { armorGain = 25; heal = 15; }
+                else if (card.name === 'DIVINE INVINCIBILITY') { armorGain = 45; heal = 35; }
+                else if (card.name === 'SHADOW ASSASSINATION') dmg = 42;
+                else if (card.name === 'ABSOLUTE SHADOW ECLIPSE') { dmg = 75; poisonApply = 15; }
+                else if (card.name === 'THUNDER GODS WRATH') dmg = 45;
+                else if (card.name === 'ZEUS THUNDERSTORM') dmg = 78;
+                else if (card.name === 'CONTINENTAL CRUSH') dmg = 45;
+                else if (card.name === 'WORLD SHATTERING METEOR') dmg = 82;
+                else if (card.name === 'TEMPORAL REWIND') heal = 30;
+                else if (card.name === 'ETERNAL TIME COLLAPSE') { heal = 55; armorGain = 25; }
+                else if (card.name === 'DIVINE JUDGMENT') dmg = 50;
+                else if (card.name === 'HEAVENLY RAGNAROK') dmg = 78;
+                else if (card.name === 'SOUL HARVEST') { dmg = 40; heal = 15; poisonApply = 10; }
+                else if (card.name === 'VOID REALM ANNIHILATION') { dmg = 80; poisonApply = 18; }
+                else if (card.name === 'APOCALYPSE FRENZY') dmg = 55;
+                else if (card.name === 'RAGING BLOOD GOD RAMPAGE') dmg = 85;
+                else if (card.name === 'GALAXY COLLAPSE') dmg = 60;
+                else if (card.name === 'BIG BANG UNIVERSE STRIKE') dmg = 88;
+                else if (card.type === 'strike') dmg = 22;
+                else if (card.type === 'defend') armorGain = 15;
+                else if (card.type === 'heal') heal = 18;
+                else if (card.type === 'poison') { dmg = 25; poisonApply = 8; }
+
+                if (armorGain > 0) duelState.playerArmor += armorGain;
+                if (heal > 0) duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + heal);
+                
+                if (poisonApply > 0) {
+                    duelState.enemyPoison = (duelState.enemyPoison || 0) + poisonApply;
+                }
+
+                if (duelState.enemyPoison > 0) {
+                    const enemyDot = duelState.enemyPoison;
+                    duelState.enemyHp = Math.max(0, duelState.enemyHp - enemyDot);
+                    duelState.enemyPoison = Math.max(0, duelState.enemyPoison - Math.max(4, Math.floor(duelState.enemyPoison * 0.4))); 
+                }
+
+                if (dmg > 0) {
+                    if (duelState.enemyArmor > 0) {
+                        if (duelState.enemyArmor >= dmg) { duelState.enemyArmor -= dmg; dmg = 0; }
+                        else { dmg -= duelState.enemyArmor; duelState.enemyArmor = 0; }
+                    }
+                    duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
+                }
+
+                logDuel(`[You]: Played ${card.name}! Dealt ${dmg} damage & applied poison DOT.`);
+                updateDuelUI();
+
+                if (duelState.enemyHp <= 0) {
+                    handleVictory();
+                    return;
+                }
+
+                currentHand.splice(index, 1);
+                renderHandCards();
+                return;
+            }
+        }
+        window.playCard = playCard;
+
+        function endDuelTurn() {
+            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+
+            if (duelState.isFirstMatchBot) {
+                logDuel(`[System]: Ending turn... ApexPredator reacts!`);
+                setTimeout(() => {
+                    executeBotCombatTurn();
+                    if (duelState.playerHp > 0 && duelState.enemyHp > 0) {
+                        duelState.playerAp = 3;
+                        shuffleAndDrawHand();
+                        updateDuelUI();
+                    }
+                }, 600);
+                return;
+            }
+        }
+        window.endDuelTurn = endDuelTurn;
+
+        function handleQRUpload(event, type) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if(type === 'gcash') uploadedGcashQR = e.target.result;
+                    if(type === 'maya') uploadedMayaQR = e.target.result;
+                    logSystemActivity('QR Code Updated', `Owner updated ${type.toUpperCase()} payment QR code.`);
+                    persistLocalStorage();
+                    updateTopupModalQRs();
+                    alert(type.toUpperCase() + ' QR Code uploaded successfully! Click "Save" to apply.');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+        window.handleQRUpload = handleQRUpload;
+
+        function updateTopupModalQRs() {
+            const gcashEl = document.getElementById('topup-gcash-qr');
+            const mayaEl = document.getElementById('topup-maya-qr');
+            if(uploadedGcashQR && gcashEl) gcashEl.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            if(uploadedMayaQR && mayaEl) mayaEl.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+
+            const regGcashEl = document.getElementById('reg-gcash-qr');
+            const regMayaEl = document.getElementById('reg-maya-qr');
+            if(regGcashEl && uploadedGcashQR) regGcashEl.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            if(regMayaEl && uploadedMayaQR) regMayaEl.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+        }
+
+        function saveOwnerDetails() {
+            const gNumRaw = document.getElementById('input-gcash-num').value;
+            const gNameRaw = document.getElementById('input-gcash-name').value;
+            const mNumRaw = document.getElementById('input-maya-num').value;
+            const mNameRaw = document.getElementById('input-maya-name').value;
+
+            const gNumMasked = maskNumber(gNumRaw);
+            const mNumMasked = maskNumber(mNumRaw);
+            const gNameMasked = maskName(gNameRaw);
+            const mNameMasked = maskName(mNameRaw);
+
+            const dGcashNum = document.getElementById('display-gcash-num');
+            const dGcashName = document.getElementById('display-gcash-name');
+            const dMayaNum = document.getElementById('display-maya-num');
+            const dMayaName = document.getElementById('display-maya-name');
+
+            if(dGcashNum) dGcashNum.innerText = gNumMasked;
+            if(dGcashName) dGcashName.innerText = gNameMasked;
+            if(dMayaNum) dMayaNum.innerText = mNumMasked;
+            if(dMayaName) dMayaName.innerText = mNameMasked;
+
+            const tOptG = document.getElementById('topup-opt-gcash');
+            const tOptM = document.getElementById('topup-opt-maya');
+            if(tOptG) tOptG.innerText = gNumMasked;
+            if(tOptM) tOptM.innerText = mNumMasked;
+
+            const regOptG = document.getElementById('reg-opt-gcash');
+            const regOptM = document.getElementById('reg-opt-maya');
+            if(regOptG) regOptG.innerText = gNumMasked;
+            if(regOptM) regOptM.innerText = mNumMasked;
+
+            if(uploadedGcashQR) {
+                const pGcashQr = document.getElementById('player-gcash-qr');
+                if(pGcashQr) pGcashQr.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+                const rG = document.getElementById('reg-gcash-qr');
+                if(rG) rG.innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            }
+            if(uploadedMayaQR) {
+                const pMayaQr = document.getElementById('player-maya-qr');
+                if(pMayaQr) pMayaQr.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+                const rM = document.getElementById('reg-maya-qr');
+                if(rM) rM.innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+            }
+
+            logSystemActivity('Merchant Details Saved', 'Owner updated official e-wallet merchant numbers and names.');
+            persistLocalStorage();
+            alert('Owner merchant e-wallet credentials and QR codes updated successfully!');
+        }
+        window.saveOwnerDetails = saveOwnerDetails;
+
+        function openModal(type) {
+            const backdrop = document.getElementById('modal-backdrop');
+            if(backdrop) backdrop.classList.remove('hidden');
+
+            const modals = ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'];
+            modals.forEach(m => {
+                const el = document.getElementById(m);
+                if(el) el.classList.add('hidden');
+            });
+
+            if(type === 'topup') {
+                const mTopup = document.getElementById('modal-topup');
+                if(mTopup) mTopup.classList.remove('hidden');
+                updateTopupModalQRs();
+            }
+            if(type === 'withdraw' && currentUser) {
+                const wAcc = document.getElementById('withdraw-account');
+                const wName = document.getElementById('withdraw-name');
+                const mWithdraw = document.getElementById('modal-withdraw');
+                if(wAcc) wAcc.value = currentUser.phone;
+                if(wName) wName.value = currentUser.name;
+                if(mWithdraw) mWithdraw.classList.remove('hidden');
+            }
+            if(type === 'bet') {
+                const mBet = document.getElementById('modal-bet');
+                if(mBet) mBet.classList.remove('hidden');
+            }
+        }
+        window.openModal = openModal;
+
+        function openPlayerProfileModal() {
+            if (!currentUser) return;
+            const backdrop = document.getElementById('modal-backdrop');
+            const modals = ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-leaderboard'];
+            modals.forEach(m => {
+                const el = document.getElementById(m);
+                if(el) el.classList.add('hidden');
+            });
+            const mProfile = document.getElementById('modal-player-profile');
+            if(backdrop) backdrop.classList.remove('hidden');
+            if(mProfile) mProfile.classList.remove('hidden');
+
+            const pRank = document.getElementById('profile-modal-rank');
+            if(pRank) pRank.innerText = currentUser.rank;
+
+            const myHistory = battleHistoryLog.filter(h => h.email === currentUser.email);
+            let historyHtml = myHistory.length ? myHistory.map(h => `
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-white">Vs ${h.opponent}</span>
+                        <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 flex justify-between">
+                        <span>Wager Stake: ₱${h.bet}</span>
+                        <span>Date: ${h.date}</span>
+                    </div>
+                </div>
+            `).join('') : '<div class="text-slate-500 text-xs text-center py-4 bg-slate-950 rounded-xl">No battle history recorded yet. Enter a ranked duel to start logging matches!</div>';
+
+            const profileContent = document.getElementById('player-profile-content');
+            if(profileContent) {
+                const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
+                profileContent.innerHTML = `
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">
+                        <div class="flex justify-between"><span><strong>Full Name:</strong></span> <span class="text-white">${currentUser.name}</span></div>
+                        <div class="flex justify-between"><span><strong>Username:</strong></span> <span class="text-amber-400">${currentUser.nickname}</span></div>
+                        <div class="flex justify-between"><span><strong>Email:</strong></span> <span class="text-white">${currentUser.email}</span></div>
+                        <div class="flex justify-between"><span><strong>Locked Phone (Payouts):</strong></span> <span class="text-white">${currentUser.phone}</span></div>
+                        <div class="flex justify-between"><span><strong>Wallet Balance:</strong></span> <span class="text-emerald-400 font-bold">₱${currentUser.balance.toFixed(2)}</span></div>
+                        <div class="flex justify-between"><span><strong>Rank Tier:</strong></span> <span class="text-amber-400 font-bold">${currentUser.rank}</span></div>
+                        <div class="flex justify-between"><span><strong>EXP Level:</strong></span> <span class="text-emerald-400 font-bold">Level ${expLevel} (${currentUser.xp} Total XP)</span></div>
+                        <div class="flex justify-between"><span><strong>Total Wins:</strong></span> <span class="text-blue-400 font-bold">${currentUser.wins} Wins</span></div>
+                    </div>
+                    <div class="space-y-2 pt-1">
+                        <h4 class="font-cinzel text-xs font-bold text-amber-400">My Ranked Battle History (${myHistory.length || 0})</h4>
+                        <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">${historyHtml}</div>
+                    </div>
+                `;
+            }
+        }
+        window.openPlayerProfileModal = openPlayerProfileModal;
+
+        async function openLeaderboardModal() {
+            const backdrop = document.getElementById('modal-backdrop');
+            const modals = ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile'];
+            modals.forEach(m => {
+                const el = document.getElementById(m);
+                if(el) el.classList.add('hidden');
+            });
+            const mLeaderboard = document.getElementById('modal-leaderboard');
+            if(backdrop) backdrop.classList.remove('hidden');
+            if(mLeaderboard) mLeaderboard.classList.remove('hidden');
+
+            if (!supabaseClient) return;
+            const { data: allProfiles, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('role', 'player')
+                .neq('email', EXCLUSIVE_OWNER_EMAIL)
+                .order('xp', { ascending: false });
+
+            const allPlayers = error || !allProfiles ? [] : allProfiles;
+            allPlayers.sort((a, b) => (b.xp - a.xp) || (b.wins - a.wins));
+            const top10 = allPlayers.slice(0, 10);
+
+            let lbHtml = '';
+            if (top10.length === 0) {
+                lbHtml = '<div class="text-slate-500 text-xs text-center py-6 bg-slate-950 rounded-xl">No players registered on the leaderboard yet.</div>';
+            } else {
+                lbHtml = top10.map((p, idx) => {
+                    const pLv = Math.floor((p.xp || 0) / 100) + 1;
+                    const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `#${idx + 1}`));
+                    return `
+                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="font-bold text-base w-6 text-center">${medal}</span>
+                                <div>
+                                    <span class="font-bold text-amber-400">${p.nickname}</span>
+                                    <div class="text-[10px] text-slate-400">Rank: ${p.rank || 'Bronze I'} | Level ${pLv}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold text-emerald-400 block">${p.xp || 0} XP</span>
+                                <span class="text-[10px] text-blue-400">${p.wins || 0} Wins</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const lbList = document.getElementById('leaderboard-list-content');
+            if(lbList) lbList.innerHTML = lbHtml;
+        }
+        window.openLeaderboardModal = openLeaderboardModal;
+
+        function closeModal() {
+            const backdrop = document.getElementById('modal-backdrop');
+            if(backdrop) backdrop.classList.add('hidden');
+        }
+        window.closeModal = closeModal;
+
+        function viewReceipt(receiptDataUrl) {
+            const backdrop = document.getElementById('modal-backdrop');
+            const modals = ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'];
+            modals.forEach(m => {
+                const el = document.getElementById(m);
+                if(el) el.classList.add('hidden');
+            });
+            const mReceipt = document.getElementById('modal-receipt');
+            if(backdrop) backdrop.classList.remove('hidden');
+            if(mReceipt) mReceipt.classList.remove('hidden');
+            const recCont = document.getElementById('receipt-preview-container');
+            if(recCont) recCont.innerHTML = `<img src="${receiptDataUrl}" class="max-h-60 rounded object-contain">`;
+        }
+        window.viewReceipt = viewReceipt;
+
+        async function inspectPlayer(email) {
+            if (!supabaseClient) return;
+            const { data: player, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('email', email)
+                .single();
+
+            if (error || !player) return;
+
+            const backdrop = document.getElementById('modal-backdrop');
+            const modals = ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-profile', 'modal-leaderboard'];
+            modals.forEach(m => {
+                const el = document.getElementById(m);
+                if(el) el.classList.add('hidden');
+            });
+            const mDetails = document.getElementById('modal-player-details');
+            if(backdrop) backdrop.classList.remove('hidden');
+            if(mDetails) mDetails.classList.remove('hidden');
+
+            const pHistory = battleHistoryLog.filter(h => h.email === email);
+            let historyHtml = pHistory.length ? pHistory.map(h => `<div class="border-t border-slate-800 pt-1 text-[11px]">⚔ Vs ${h.opponent} (${h.date}): <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span> (Bet: ₱${h.bet})</div>`).join('') : '<div class="text-slate-500 text-[11px]">No matches played yet.</div>';
+
+            const pLv = Math.floor((player.xp || 0) / 100) + 1;
+            const inspCont = document.getElementById('player-inspection-content');
+            if(inspCont) {
+                inspCont.innerHTML = `
+                    <div class="space-y-1">
+                        <div><strong>Legal Name:</strong> ${player.name}</div>
+                        <div><strong>Nickname:</strong> ${player.nickname}</div>
+                        <div><strong>Email:</strong> ${player.email}</div>
+                        <div><strong>Phone (Withdrawal Locked):</strong> ${player.phone}</div>
+                        <div><strong>Wallet Balance:</strong> ₱${player.balance.toFixed(2)}</div>
+                        <div><strong>Rank Tier / Level:</strong> ${player.rank} (Level ${pLv} | ${player.xp} XP) | Wins: ${player.wins}</div>
+                        <div><strong>Account Status:</strong> <span class="${player.frozen ? 'text-red-400 font-bold' : 'text-emerald-400'}">${player.frozen ? 'FROZEN (Cheating Suspected)' : 'Active'}</span></div>
+                        <div class="pt-2 border-t border-slate-800 font-bold text-amber-400">Player Match History:</div>
+                        <div class="max-h-32 overflow-y-auto space-y-1">${historyHtml}</div>
+                    </div>
+                `;
+            }
+        }
+        window.inspectPlayer = inspectPlayer;
+
+        async function toggleFreezePlayer(email) {
+            if (!supabaseClient) return;
+            const { data: player, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('email', email)
+                .single();
+
+            if (error || !player) return;
+            const newFrozen = !player.frozen;
+
+            await supabaseClient.from('profiles').update({ frozen: newFrozen }).eq('email', email);
+
+            logSystemActivity('Player Freeze Toggle', `Player ${player.nickname} (${email}) has been ${newFrozen ? 'frozen' : 'unfrozen'}.`);
+            persistLocalStorage();
+            renderOwnerQueues();
+            alert(`Player account ${player.nickname} has been ${newFrozen ? 'FROZEN successfully' : 'UNFROZEN'}.`);
+        }
+        window.toggleFreezePlayer = toggleFreezePlayer;
+
+        async function deletePlayerAccount(email) {
+            if (!supabaseClient) return;
+            const { data: player, error: fetchErr } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('email', email)
+                .single();
+
+            if (fetchErr || !player) return;
+            if (player.role === 'owner' || email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                alert('Cannot delete the owner admin account.');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to permanently delete player account ${player.nickname} (${email})? This action cannot be undone.`)) {
+                const { error: deleteErr } = await supabaseClient.from('profiles').delete().eq('email', email);
+                
+                if (deleteErr) {
+                    alert('Supabase RLS Policy restriction prevented database deletion: ' + deleteErr.message + '\n\n(Tip: You can add an RLS delete policy in Supabase SQL editor or delete the row directly from your Supabase table editor).');
+                    return;
+                }
+
+                logSystemActivity('Player Account Deleted', `Owner permanently deleted player account ${player.nickname} (${email}).`);
+                persistLocalStorage();
+                renderOwnerQueues();
+                alert(`Player account ${player.nickname} has been successfully deleted.`);
+            }
+        }
+        window.deletePlayerAccount = deletePlayerAccount;
+
+        function submitTopUp() {
+            const amtEl = document.getElementById('topup-amount');
+            const refEl = document.getElementById('topup-ref');
+            const receiptEl = document.getElementById('topup-receipt');
+
+            if(!amtEl || !refEl || !receiptEl) return;
+            const amt = parseFloat(amtEl.value);
+            const ref = refEl.value;
+            const receiptFile = receiptEl.files[0];
+
+            if(!amt || !ref || !receiptFile) { alert('Please fill in all top-up details and upload your payment receipt screenshot.'); return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const now = new Date();
+                const dateStr = now.toISOString().split('T')[0];
+                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: dateStr });
+                logSystemActivity('Top-Up Requested', `${currentUser.nickname} requested deposit of ₱${amt.toFixed(2)} (Ref: ${ref}).`);
+                persistLocalStorage();
+                alert('Top-up request and receipt submitted successfully! Awaiting owner approval.');
+                closeModal();
+            };
+            reader.readAsDataURL(receiptFile);
+        }
+        window.submitTopUp = submitTopUp;
+
+        async function submitWithdrawal() {
+            const amtEl = document.getElementById('withdraw-amount');
+            const methodEl = document.getElementById('withdraw-method');
+            const accEl = document.getElementById('withdraw-account');
+            const nameEl = document.getElementById('withdraw-name');
+
+            if(!amtEl || !currentUser || !supabaseClient) return;
+            const amt = parseFloat(amtEl.value);
+            const method = methodEl ? methodEl.value : 'GCash';
+            const acc = accEl ? accEl.value : currentUser.phone;
+            const name = nameEl ? nameEl.value : currentUser.name;
+
+            if(!amt) { alert('Please enter a valid withdrawal amount.'); return; }
+            if(amt > currentUser.balance) { alert('Insufficient wallet balance!'); return; }
+            
+            currentUser.balance -= amt;
+            await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
+
+            persistLocalStorage();
+            updateWalletDisplay();
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: method, account: acc, name: name, date: dateStr });
+            logSystemActivity('Withdrawal Requested', `${currentUser.nickname} requested withdrawal of ₱${amt.toFixed(2)} via ${method}.`);
+            persistLocalStorage();
+            alert('Withdrawal request submitted successfully with Zero Fee! Locked strictly to registered phone number & name.');
+            closeModal();
+        }
+        window.submitWithdrawal = submitWithdrawal;
+
+        function updateWalletDisplay() {
+            const navWallet = document.getElementById('nav-wallet');
+            if(currentUser && navWallet) navWallet.innerText = '₱' + currentUser.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        async function renderOwnerQueues() {
+            if (!supabaseClient) return;
+            const filterDateEl = document.getElementById('filter-date');
+            const filterDate = filterDateEl ? filterDateEl.value : '';
+
+            const playersContainer = document.getElementById('owner-players-list');
+            const { data: allProfiles, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .neq('email', EXCLUSIVE_OWNER_EMAIL)
+                .order('created_at', { ascending: false });
+
+            const registeredAccounts = error || !allProfiles ? [] : allProfiles;
+            const filteredPlayers = registeredAccounts.filter(acc => acc.role === 'player' && acc.approved === true);
+            const pendingRegs = registeredAccounts.filter(acc => acc.approved === false);
+            
+            if (playersContainer) {
+                if (filteredPlayers.length === 0) {
+                    playersContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players.</div>';
+                } else {
+                    playersContainer.innerHTML = filteredPlayers.map(p => `
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div>
+                                <span class="font-bold text-amber-400">${p.nickname} (${p.name})</span>
+                                <div class="text-[10px] text-slate-400">Email: ${p.email} | Phone: ${p.phone} | Bal: ₱${p.balance.toFixed(2)}</div>
+                            </div>
+                            <div class="space-x-1 flex items-center">
+                                <button onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[10px]">Inspect</button>
+                                <button onclick="window.toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.frozen ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-amber-600 hover:bg-amber-500'} text-white font-bold rounded-lg text-[10px]">${p.frozen ? 'Unfreeze' : 'Freeze'}</button>
+                                <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[10px]">Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const regContainer = document.getElementById('owner-registration-list');
+            const filteredRegs = filterDate ? pendingRegs.filter(r => r.date === filterDate) : pendingRegs;
+            if(regContainer) {
+                if(filteredRegs.length === 0) {
+                    regContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>';
+                } else {
+                    regContainer.innerHTML = filteredRegs.map(r => `
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div><span class="font-bold text-amber-400">${r.nickname} (${r.name})</span><div class="text-[10px] text-slate-400">Email: ${r.email} | Ref: ${r.ref} | Date: ${r.date}</div></div>
+                            <div class="space-x-1 flex items-center">
+                                <button onclick="window.viewReceipt('${r.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
+                                <button onclick="window.approveRegistration('${r.email}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
+                                <button onclick="window.rejectRegistration('${r.email}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const auditContainer = document.getElementById('owner-system-audit-log');
+            const filteredAudit = filterDate ? systemAuditLogs.filter(a => a.date === filterDate) : systemAuditLogs;
+            if (auditContainer) {
+                if (filteredAudit.length === 0) {
+                    auditContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>';
+                } else {
+                    auditContainer.innerHTML = filteredAudit.map(a => `
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                            <div>
+                                <span class="font-bold text-amber-400">[${a.action}]</span> <span class="text-slate-200">${a.details}</span>
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-mono whitespace-nowrap ml-2">${a.timestamp}</div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const battleContainer = document.getElementById('owner-battle-history-list');
+            const filteredBattles = filterDate ? battleHistoryLog.filter(h => h.date === filterDate) : battleHistoryLog;
+            if (battleContainer) {
+                if (filteredBattles.length === 0) {
+                    battleContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged.</div>';
+                } else {
+                    battleContainer.innerHTML = filteredBattles.map(h => `
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div>
+                                <span class="font-bold text-white">${h.nickname} vs ${h.opponent}</span>
+                                <div class="text-[10px] text-slate-400">Result: <span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span> | Stake: ₱${h.bet} | Date: ${h.date}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const resetContainer = document.getElementById('owner-reset-list');
+            if(resetContainer) {
+                if(pendingResets.length === 0) {
+                    resetContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>';
+                } else {
+                    resetContainer.innerHTML = pendingResets.map(r => `
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div><span class="font-bold text-amber-400">Reset Request: ${r.name}</span><div class="text-[10px] text-slate-400">Email: ${r.email}</div></div>
+                            <div class="space-x-1">
+                                <button onclick="window.approveReset(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
+                                <button onclick="window.rejectReset(${r.id})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const filteredDeposits = filterDate ? pendingDeposits.filter(d => d.date === filterDate) : pendingDeposits;
+            const depContainer = document.getElementById('owner-deposit-list');
+            if(depContainer) {
+                if(filteredDeposits.length === 0) {
+                    depContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>';
+                } else {
+                    depContainer.innerHTML = filteredDeposits.map(d => `
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div><span class="font-bold text-emerald-400">+₱${d.amount.toFixed(2)} (${d.nickname})</span><div class="text-[10px] text-slate-400">Ref: ${d.ref} | Date: ${d.date}</div></div>
+                            <div class="space-x-1 flex items-center">
+                                <button onclick="window.viewReceipt('${d.receipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px]">Receipt</button>
+                                <button onclick="window.approveDeposit(${d.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
+                                <button onclick="window.rejectDeposit(${d.id})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const filteredWithdrawals = filterDate ? pendingWithdrawals.filter(w => w.date === filterDate) : pendingWithdrawals;
+            const witContainer = document.getElementById('owner-withdraw-list');
+            if(witContainer) {
+                if(filteredWithdrawals.length === 0) {
+                    witContainer.innerHTML = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>';
+                } else {
+                    witContainer.innerHTML = filteredWithdrawals.map(w => `
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div><span class="font-bold text-amber-400">-₱${w.amount.toFixed(2)} (${w.method}) - ${w.nickname} (Zero Fee)</span><div class="text-[10px] text-slate-400">To: ${w.account} (${w.name}) | Date: ${w.date}</div></div>
+                            <div class="space-x-1">
+                                <button onclick="window.approveWithdrawal(${w.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px]">Approve</button>
+                                <button onclick="window.rejectWithdrawal(${w.id}, '${w.email}', ${w.amount})" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-[11px]">Reject</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const totalDep = (filterDate ? approvedDepositsLog.filter(d => d.date === filterDate) : approvedDepositsLog).reduce((sum, item) => sum + item.amount, 0);
+            const totalWit = (filterDate ? approvedWithdrawalsLog.filter(w => w.date === filterDate) : approvedWithdrawalsLog).reduce((sum, item) => sum + item.amount, 0);
+
+            const mDep = document.getElementById('metric-total-deposits');
+            const mWit = document.getElementById('metric-total-withdrawals');
+            if(mDep) mDep.innerText = '₱' + totalDep.toLocaleString('en-US', {minimumFractionDigits: 2});
+            if(mWit) mWit.innerText = '₱' + totalWit.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+        window.renderOwnerQueues = renderOwnerQueues;
+
+        async function approveRegistration(email) {
+            if (!supabaseClient) return;
+            await supabaseClient.from('profiles').update({ approved: true }).eq('email', email);
+            logSystemActivity('Registration Approved', `Owner approved registration for player (${email}).`);
+            persistLocalStorage();
+            renderOwnerQueues();
+            alert('Registration approved successfully! Player can now sign in.');
+        }
+        window.approveRegistration = approveRegistration;
+
+        async function rejectRegistration(email) {
+            if (!supabaseClient) return;
+            await supabaseClient.from('profiles').delete().eq('email', email);
+            logSystemActivity('Registration Rejected', `Owner rejected and deleted registration for player (${email}).`);
+            persistLocalStorage();
+            renderOwnerQueues();
+            alert('Registration rejected and account removed.');
+        }
+        window.rejectRegistration = rejectRegistration;
+
+        function approveReset(id) {
+            const resetItem = pendingResets.find(r => r.id === id);
+            pendingResets = pendingResets.filter(r => r.id !== id);
+            logSystemActivity('Password Reset Approved', `Owner approved password reset for ${resetItem ? resetItem.email : 'player'}.`);
+            persistLocalStorage();
+            renderOwnerQueues();
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification("Aetheris Duel Arena", {
+                        body: `Password Reset Approved! Your reset request has been verified by the owner. Please enter your new password now.`,
+                        icon: "image_114c6025.jpg"
+                    });
+                } catch(e) {}
+            }
+
+            alert('Password reset request approved! Device push notification sent to player.');
+            const vOwner = document.getElementById('view-owner');
+            const vAuth = document.getElementById('view-auth');
+            const vForce = document.getElementById('view-force-reset');
+            if(vOwner) vOwner.classList.add('hidden');
+            if(vAuth) vAuth.classList.add('hidden');
+            if(vForce) vForce.classList.remove('hidden');
+            if (resetItem) {
+                const fEmail = document.getElementById('force-email');
+                if(fEmail) fEmail.value = resetItem.email;
+            }
+        }
+        window.approveReset = approveReset;
+
+        function rejectReset(id) {
+            pendingResets = pendingResets.filter(r => r.id !== id);
+            logSystemActivity('Password Reset Rejected', `Owner rejected password reset request.`);
+            persistLocalStorage();
+            renderOwnerQueues();
+            alert('Password reset request rejected.');
+        }
+        window.rejectReset = rejectReset;
+
+        async function approveDeposit(id) {
+            if (!supabaseClient) return;
+            const idx = pendingDeposits.findIndex(d => d.id === id);
+            if(idx > -1) {
+                const item = pendingDeposits[idx];
+                
+                const { data: targetUser } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('email', item.email)
+                    .single();
+                
+                if(targetUser) {
+                    const newBal = targetUser.balance + item.amount;
+                    await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', item.email);
+
+                    if(currentUser && currentUser.email.toLowerCase() === item.email.toLowerCase()) {
+                        currentUser.balance = newBal;
+                        updateWalletDisplay();
+                    }
+                }
+                
+                approvedDepositsLog.push(item);
+                pendingDeposits.splice(idx, 1);
+                logSystemActivity('Deposit Approved', `Owner approved deposit of ₱${item.amount.toFixed(2)} for ${item.nickname}. Credited directly to wallet.`);
+                persistLocalStorage();
+                renderOwnerQueues();
+                alert(`Deposit of ₱${item.amount.toFixed(2)} approved and credited directly to ${item.nickname}'s wallet!`);
+            }
+        }
+        window.approveDeposit = approveDeposit;
+
+        function rejectDeposit(id) {
+            const item = pendingDeposits.find(d => d.id === id);
+            if (item) {
+                logSystemActivity('Deposit Rejected', `Owner rejected deposit of ₱${item.amount.toFixed(2)} for ${item.nickname}.`);
+            }
+            pendingDeposits = pendingDeposits.filter(d => d.id !== id);
+            persistLocalStorage();
+            renderOwnerQueues();
+            alert('Deposit rejected.');
+        }
+        window.rejectDeposit = rejectDeposit;
+
+        function approveWithdrawal(id) {
+            const idx = pendingWithdrawals.findIndex(w => w.id === id);
+            if(idx > -1) {
+                const item = pendingWithdrawals[idx];
+                approvedWithdrawalsLog.push(item);
+                pendingWithdrawals.splice(idx, 1);
+                logSystemActivity('Withdrawal Approved', `Owner approved withdrawal of ₱${item.amount.toFixed(2)} for ${item.nickname} via ${item.method}.`);
+                persistLocalStorage();
+                renderOwnerQueues();
+                alert('Withdrawal approved (Zero Fee)!');
+            }
+        }
+        window.approveWithdrawal = approveWithdrawal;
+
+        async function rejectWithdrawal(id, email, amt) {
+            if (!supabaseClient) return;
+            const { data: targetUser } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('email', email)
+                .single();
+
+            if(targetUser) {
+                const newBal = targetUser.balance + amt;
+                await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', email);
+
+                if(currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
+                    currentUser.balance = newBal;
+                    updateWalletDisplay();
+                }
+            }
+            pendingWithdrawals = pendingWithdrawals.filter(w => w.id !== id);
+            logSystemActivity('Withdrawal Rejected', `Owner rejected withdrawal of ₱${amt.toFixed(2)} for ${email} and refunded to wallet.`);
+            persistLocalStorage();
+            renderOwnerQueues();
+            alert('Withdrawal rejected and refunded.');
+        }
+        window.rejectWithdrawal = rejectWithdrawal;
+    </script>
+</body>
+</html>
