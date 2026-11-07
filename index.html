@@ -47,7 +47,7 @@
 
             <!-- Header Right: Nickname & Wallet Beside Each Other -->
             <div class="flex items-center space-x-1.5">
-                <button id="btn-install-pwa" onclick="window.installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow transition">
+                <button id="btn-install-pwa" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow transition">
                     <span>Install</span>
                 </button>
                 
@@ -94,7 +94,7 @@
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
                 <div class="flex items-center justify-between">
                     <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
-                    <button id="auth-install-btn" onclick="window.installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition">
+                    <button id="auth-install-btn" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition">
                         <span>Install App</span>
                     </button>
                 </div>
@@ -770,14 +770,14 @@
         });
 
         async function installPWA() {
-            if (!deferredPrompt) {
-                alert('PWA installation ready! You can also install this app directly from your browser menu.');
-                return;
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') console.log('User accepted install');
+                deferredPrompt = null;
+            } else {
+                alert('To install Aetheris Arena:\n\n• On Mobile (Chrome/Safari): Tap your browser menu (3 dots or Share icon) and select "Add to Home Screen" or "Install App".\n• On Desktop (Chrome/Edge): Click the install icon in the right side of your browser address bar.');
             }
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') console.log('User accepted install');
-            deferredPrompt = null;
         }
         window.installPWA = installPWA;
 
@@ -1988,41 +1988,13 @@
                 duelState.playerHp = Math.max(0, duelState.playerHp - duelState.playerPoison);
             }
 
-            if (duelState.enemyHp < 60 && !duelState.apexSpecialTriggered) {
+            // Fixed Apex Predator recovery threshold check so it only triggers once safely
+            if (duelState.enemyHp < 60 && duelState.enemyHp > 0 && !duelState.apexSpecialTriggered) {
                 duelState.apexSpecialTriggered = true;
-                
-                const healPool = [40, 50, 55];
-                const dmgPool = [20, 25, 30];
-                const statusPool = [10, 15, 17];
-                const armorPool = [15, 20, 25];
-
-                const randomHeal = healPool[Math.floor(Math.random() * healPool.length)];
-                const randomDmg = dmgPool[Math.floor(Math.random() * dmgPool.length)];
-                const randomStatus = statusPool[Math.floor(Math.random() * statusPool.length)];
-                const randomArmor = armorPool[Math.floor(Math.random() * armorPool.length)];
-                
-                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + randomHeal);
-                duelState.enemyArmor += randomArmor;
-                duelState.enemyPoison = 0;
-                duelState.enemyDebuff = 'None';
-                
-                let specialDmg = randomDmg;
-                if (duelState.playerArmor >= specialDmg) {
-                    duelState.playerArmor -= specialDmg;
-                    specialDmg = 0;
-                } else {
-                    specialDmg -= duelState.playerArmor;
-                    duelState.playerArmor = 0;
-                }
-                duelState.playerHp = Math.max(0, duelState.playerHp - specialDmg);
-                duelState.playerPoison = (duelState.playerPoison || 0) + randomStatus;
-
-                logDuel(`[${duelState.currentOpponentName}]: Used recovery surge.`);
+                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + 30); // Balanced recovery
+                duelState.enemyArmor += 15;
+                logDuel(`[${duelState.currentOpponentName}]: Triggered recovery surge! (+30 HP)`);
                 updateDuelUI();
-
-                if (duelState.playerHp <= 0) {
-                    handleDefeat();
-                }
                 return;
             }
 
@@ -2062,7 +2034,7 @@
             }
 
             duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
-            logDuel(`Played ${card.name}! Dealt damage to opponent.`);
+            logDuel(`Played ${card.name}! Dealt ${dmg} damage to opponent.`);
             updateDuelUI();
 
             if (duelState.enemyHp <= 0) { handleVictory(); return; }
@@ -2687,7 +2659,6 @@
                 return;
             }
 
-            // Deduct immediately upon submission
             currentUser.balance -= amt;
             await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
             persistLocalStorage();
@@ -2706,7 +2677,6 @@
 
             const { error } = await supabaseClient.from('withdrawal_requests').insert([payload]);
             if (error) {
-                // Refund if insert fails
                 currentUser.balance += amt;
                 await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
                 persistLocalStorage();
@@ -2738,11 +2708,9 @@
             const { data: dbWithdraws } = await supabaseClient.from('withdrawal_requests').select('*');
             const allWithdraws = dbWithdraws || [];
 
-            // Filter by date if selected
             const filteredTopups = filterDate ? allTopups.filter(t => t.date === filterDate) : allTopups;
             const filteredWithdraws = filterDate ? allWithdraws.filter(w => w.date === filterDate) : allWithdraws;
 
-            // Calculate totals for approved transactions
             const totalDeposits = filteredTopups
                 .filter(t => t.status === 'approved')
                 .reduce((sum, t) => sum + Number(t.amount), 0);
@@ -2754,7 +2722,6 @@
             document.getElementById('metric-total-deposits').innerText = `₱${totalDeposits.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
             document.getElementById('metric-total-withdrawals').innerText = `₱${totalWithdrawals.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
 
-            // Render Separate Deposit History
             const depHistoryEl = document.getElementById('owner-deposit-history-list');
             const historicalDeposits = allTopups.filter(t => t.status !== 'pending');
             if (depHistoryEl) {
@@ -2769,7 +2736,6 @@
                 `).join('') : '<div class="text-[11px] text-slate-500 text-center py-2">No deposit history yet.</div>';
             }
 
-            // Render Separate Withdrawal History
             const witHistoryEl = document.getElementById('owner-withdraw-history-list');
             const historicalWithdraws = allWithdraws.filter(w => w.status !== 'pending');
             if (witHistoryEl) {
