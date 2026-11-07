@@ -441,9 +441,9 @@
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
                         <div id="fs-enemy-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-1 text-[9px] text-slate-300">
-                        <span>Status: <strong id="fs-enemy-status" class="text-emerald-400">🟢 Connected</strong></span>
-                        <span>Armor: <strong id="fs-enemy-armor" class="text-blue-400">0</strong></span>
+                    <div class="flex items-center justify-between text-[9px] text-slate-300 pt-1 border-t border-slate-800" id="fs-enemy-status-badges">
+                        <span class="text-blue-400">Armor: <strong id="fs-enemy-armor">0</strong></span>
+                        <span class="text-orange-400">Burn/Poison: <strong>0</strong></span>
                     </div>
                 </div>
                 <div id="fs-enemy-sprite" class="w-20 h-20 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.2)] p-1">
@@ -471,8 +471,11 @@
                     <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
                         <div id="fs-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
                     </div>
-                    <div class="grid grid-cols-3 gap-1 text-[9px] text-slate-300 text-center">
-                        <span>Armor: <strong id="fs-player-armor" class="text-blue-400">0</strong></span>
+                    <div class="flex items-center justify-between text-[9px] text-slate-300 pt-1 border-t border-slate-800" id="fs-player-status-badges">
+                        <span class="text-blue-400">Armor: <strong id="fs-player-armor">0</strong></span>
+                        <span class="text-orange-400">Burn/Poison: <strong>0</strong></span>
+                    </div>
+                    <div class="flex justify-between text-[9px] text-slate-300 text-center pt-0.5">
                         <span>AP: <strong id="fs-player-ap" class="text-amber-400">3</strong>/3</span>
                         <span>Timer: <strong id="fs-turn-timer" class="text-amber-400 font-bold">30s</strong></span>
                     </div>
@@ -1777,6 +1780,22 @@
             document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
             document.getElementById('fs-enemy-hp-bar').style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
             document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
+
+            const pBadges = document.getElementById('fs-player-status-badges');
+            if (pBadges) {
+                pBadges.innerHTML = `
+                    <span class="text-blue-400">Armor: <strong>${duelState.playerArmor}</strong></span>
+                    <span class="text-orange-400">Burn/Poison: <strong>${duelState.playerPoison || 0}</strong></span>
+                `;
+            }
+
+            const eBadges = document.getElementById('fs-enemy-status-badges');
+            if (eBadges) {
+                eBadges.innerHTML = `
+                    <span class="text-blue-400">Armor: <strong>${duelState.enemyArmor}</strong></span>
+                    <span class="text-orange-400">Burn/Poison: <strong>${duelState.enemyPoison || 0}</strong></span>
+                `;
+            }
         }
 
         function logDuel(msg) {
@@ -1825,16 +1844,33 @@
         }
 
         function executeBotCombatTurn() {
-            // Custom Threshold Skill for Boss / Fallback Bot: Triggered if HP is below 60
+            if (duelState.enemyPoison > 0) {
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
+            }
+            if (duelState.playerPoison > 0) {
+                duelState.playerHp = Math.max(0, duelState.playerHp - duelState.playerPoison);
+            }
+
+            // Custom Threshold Skill for Bot: Triggered silently if HP is below 60 with randomized stats
             if (duelState.enemyHp < 60 && !duelState.apexSpecialTriggered) {
                 duelState.apexSpecialTriggered = true;
                 
-                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + 30);
-                duelState.enemyArmor += 20;
+                const healPool = [40, 50, 55];
+                const dmgPool = [20, 25, 30];
+                const statusPool = [10, 15, 17];
+                const armorPool = [15, 20, 25];
+
+                const randomHeal = healPool[Math.floor(Math.random() * healPool.length)];
+                const randomDmg = dmgPool[Math.floor(Math.random() * dmgPool.length)];
+                const randomStatus = statusPool[Math.floor(Math.random() * statusPool.length)];
+                const randomArmor = armorPool[Math.floor(Math.random() * armorPool.length)];
+                
+                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + randomHeal);
+                duelState.enemyArmor += randomArmor;
                 duelState.enemyPoison = 0;
                 duelState.enemyDebuff = 'None';
                 
-                let specialDmg = 20;
+                let specialDmg = randomDmg;
                 if (duelState.playerArmor >= specialDmg) {
                     duelState.playerArmor -= specialDmg;
                     specialDmg = 0;
@@ -1843,9 +1879,9 @@
                     duelState.playerArmor = 0;
                 }
                 duelState.playerHp = Math.max(0, duelState.playerHp - specialDmg);
-                duelState.playerPoison += 10;
+                duelState.playerPoison = (duelState.playerPoison || 0) + randomStatus;
 
-                logDuel(`[${duelState.currentOpponentName} SUPREME SURGE]: Triggered <60 HP Recovery! Healed 30 HP, gained 20 Armor, cleansed debuffs, dealt 20 damage & applied 10 Burn/Poison stacks!`);
+                logDuel(`[${duelState.currentOpponentName}]: Used recovery surge.`);
                 updateDuelUI();
 
                 if (duelState.playerHp <= 0) {
@@ -1864,7 +1900,7 @@
             }
             
             duelState.playerHp = Math.max(0, duelState.playerHp - botDmg);
-            logDuel(`[${duelState.currentOpponentName}]: Struck for ${botDmg} damage!`);
+            logDuel(`[${duelState.currentOpponentName}]: Attacked for ${botDmg} damage.`);
             updateDuelUI();
 
             if (duelState.playerHp <= 0) {
