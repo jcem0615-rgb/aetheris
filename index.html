@@ -111,27 +111,27 @@
             </div>
 
             <!-- Register Box -->
-            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2.5 glow-box hidden">
+            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
                 <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced.</p>
                 
-                <div class="space-y-1 bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px]">
-                    <p class="text-[10px] text-amber-400 font-bold">Official Payment Channels for ₱50 Fee:</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="p-1 border-r border-slate-800 flex flex-col items-center text-center space-y-0.5">
-                            <div id="reg-gcash-qr" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                <div class="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
+                    <p class="text-[11px] text-amber-400 font-bold text-center">Official Payment Channels (Scan QR to Pay ₱50):</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2">
+                            <div id="reg-gcash-qr" class="w-32 h-32 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                             <div>
-                                <span class="font-bold text-blue-400 block text-[10px]">GCash</span>
-                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-[9px]">0992-397-8537</span>
-                                <span id="reg-name-gcash" class="text-slate-400 text-[8px]">John Carlo E.</span>
+                                <span class="font-bold text-blue-400 block text-xs">GCash Account</span>
+                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-xs">0992-397-8537</span>
+                                <span id="reg-name-gcash" class="text-slate-400 text-[10px] block">John Carlo E.</span>
                             </div>
                         </div>
-                        <div class="p-1 flex flex-col items-center text-center space-y-0.5">
-                            <div id="reg-maya-qr" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                        <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2">
+                            <div id="reg-maya-qr" class="w-32 h-32 bg-slate-950 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                             <div>
-                                <span class="font-bold text-teal-400 block text-[10px]">Maya</span>
-                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-[9px]">0930-160-1780</span>
-                                <span id="reg-name-maya" class="text-slate-400 text-[8px]">FMCM IT Solutions</span>
+                                <span class="font-bold text-teal-400 block text-xs">Maya Account</span>
+                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-xs">0930-160-1780</span>
+                                <span id="reg-name-maya" class="text-slate-400 text-[10px] block">FMCM IT Solutions</span>
                             </div>
                         </div>
                     </div>
@@ -260,27 +260,27 @@
                 </div>
             </div>
 
-            <!-- Owner Payment QR Banner for Players -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-2">
-                <div>
-                    <h3 class="font-cinzel font-bold text-amber-400 text-xs">OFFICIAL OWNER PAYMENT CHANNELS</h3>
-                    <p class="text-[10px] text-slate-400 mt-0.5">Scan or send funds to the official e-wallet accounts below before top-up request.</p>
+            <!-- Owner Payment QR Banner for Players (Large Scannable QRs) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="text-center">
+                    <h3 class="font-cinzel font-bold text-amber-400 text-sm">OFFICIAL OWNER PAYMENT CHANNELS</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Scan the QR codes below or send funds to the official e-wallets before top-up request.</p>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center space-x-3">
-                        <div id="player-gcash-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[9px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
-                        <div class="min-w-0">
-                            <span class="text-[11px] font-bold text-blue-400 block">GCASH PAYMENT</span>
-                            <span id="display-gcash-num" class="text-[10px] font-mono font-bold text-white block truncate">0992-397-8537</span>
-                            <span id="display-gcash-name" class="text-[9px] text-slate-400 block truncate">John Carlo E.</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex flex-col items-center text-center space-y-2">
+                        <div id="player-gcash-qr" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <div class="w-full">
+                            <span class="text-xs font-bold text-blue-400 block">GCASH PAYMENT</span>
+                            <span id="display-gcash-num" class="text-xs font-mono font-bold text-white block truncate">0992-397-8537</span>
+                            <span id="display-gcash-name" class="text-[10px] text-slate-400 block truncate">John Carlo E.</span>
                         </div>
                     </div>
-                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center space-x-3">
-                        <div id="player-maya-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-center text-[9px] text-slate-500 overflow-hidden flex-shrink-0">No QR</div>
-                        <div class="min-w-0">
-                            <span class="text-[11px] font-bold text-teal-400 block">MAYA PAYMENT</span>
-                            <span id="display-maya-num" class="text-[10px] font-mono font-bold text-white block truncate">0930-160-1780</span>
-                            <span id="display-maya-name" class="text-[9px] text-slate-400 block truncate">FMCM IT Solutions</span>
+                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex flex-col items-center text-center space-y-2">
+                        <div id="player-maya-qr" class="w-36 h-36 bg-slate-900 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <div class="w-full">
+                            <span class="text-xs font-bold text-teal-400 block">MAYA PAYMENT</span>
+                            <span id="display-maya-num" class="text-xs font-mono font-bold text-white block truncate">0930-160-1780</span>
+                            <span id="display-maya-name" class="text-[10px] text-slate-400 block truncate">FMCM IT Solutions</span>
                         </div>
                     </div>
                 </div>
@@ -360,28 +360,25 @@
                     </div>
                 </div>
 
+                <!-- Merchant E-Wallet Credentials & Large Scannable QRs -->
                 <div class="space-y-2">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Merchant E-Wallet Credentials & QR Codes</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[11px] font-bold text-blue-400">GCash Account & QR Setup</span>
-                                <div id="owner-gcash-qr-preview" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
-                            </div>
-                            <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
-                            <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
+                    <h3 class="font-cinzel text-xs font-bold text-amber-400">Merchant E-Wallet Credentials & Scannable QR Codes</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
+                            <span class="text-xs font-bold text-blue-400 self-start">GCash Account & QR</span>
+                            <div id="owner-gcash-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                            <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="file" id="input-gcash-qr" accept="image/*" onchange="window.handleQRUpload(event, 'gcash')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
-                            <button onclick="window.saveOwnerDetails()" class="w-full py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Save GCash</button>
+                            <button onclick="window.saveOwnerDetails()" class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow">Save GCash</button>
                         </div>
-                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[11px] font-bold text-teal-400">Maya Account & QR Setup</span>
-                                <div id="owner-maya-qr-preview" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
-                            </div>
-                            <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
-                            <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
+                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
+                            <span class="text-xs font-bold text-teal-400 self-start">Maya Account & QR</span>
+                            <div id="owner-maya-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                            <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="file" id="input-maya-qr" accept="image/*" onchange="window.handleQRUpload(event, 'maya')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
-                            <button onclick="window.saveOwnerDetails()" class="w-full py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg">Save Maya</button>
+                            <button onclick="window.saveOwnerDetails()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg shadow">Save Maya</button>
                         </div>
                     </div>
                 </div>
@@ -497,29 +494,29 @@
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
         <!-- Top-up Modal -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">Submit Top-Up Request</h3>
+            <h3 class="font-cinzel text-base font-bold text-amber-400 text-center">Submit Top-Up Request</h3>
             
-            <div class="space-y-1.5">
-                <p class="text-[11px] text-slate-400">1. Scan or send payment to one of our official merchant channels below:</p>
-                <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px]">
-                    <div class="p-1 border-r border-slate-800 flex flex-col items-center text-center space-y-1">
-                        <div id="topup-gcash-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+            <div class="space-y-2">
+                <p class="text-[11px] text-slate-400 text-center">1. Scan QR code or send funds to our official merchant channels:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-1.5">
+                        <div id="topup-gcash-qr" class="w-32 h-32 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                         <div>
-                            <span class="font-bold text-blue-400 block text-[10px]">GCash</span>
-                            <span id="topup-opt-gcash" class="text-white font-mono font-bold text-[9px]">0992-397-8537</span>
+                            <span class="font-bold text-blue-400 block text-xs">GCash</span>
+                            <span id="topup-opt-gcash" class="text-white font-mono font-bold text-xs">0992-397-8537</span>
                         </div>
                     </div>
-                    <div class="p-1 flex flex-col items-center text-center space-y-1">
-                        <div id="topup-maya-qr" class="w-12 h-12 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                    <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-1.5">
+                        <div id="topup-maya-qr" class="w-32 h-32 bg-slate-950 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                         <div>
-                            <span class="font-bold text-teal-400 block text-[10px]">Maya</span>
-                            <span id="topup-opt-maya" class="text-white font-mono font-bold text-[9px]">0930-160-1780</span>
+                            <span class="font-bold text-teal-400 block text-xs">Maya</span>
+                            <span id="topup-opt-maya" class="text-white font-mono font-bold text-xs">0930-160-1780</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <p class="text-[11px] text-slate-400">2. Enter transaction reference and upload your receipt screenshot:</p>
+            <p class="text-[11px] text-slate-400 text-center">2. Enter transaction reference and upload your receipt screenshot:</p>
             <div class="space-y-2.5">
                 <input type="number" id="topup-amount" placeholder="Amount Sent (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
@@ -529,7 +526,7 @@
                 </div>
             </div>
             <div class="flex space-x-2 pt-1">
-                <button onclick="window.submitTopUp()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl">Submit Request</button>
+                <button onclick="window.submitTopUp()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow">Submit Request</button>
                 <button onclick="window.closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
             </div>
         </div>
@@ -1109,7 +1106,7 @@
             if (loginBox) loginBox.classList.add('hidden');
             if (registerBox) registerBox.classList.add('hidden');
             if (forgotBox) forgotBox.classList.add('hidden');
-            if(mode === 'login' && loginBox) loginBox.classList.remove('loginBox');
+            if(mode === 'login' && loginBox) loginBox.classList.remove('hidden');
             if(mode === 'register' && registerBox) {
                 registerBox.classList.remove('hidden');
                 updateMerchantPaymentDisplay();
@@ -1961,10 +1958,9 @@
                 .select('*')
                 .eq('role', 'player')
                 .neq('email', EXCLUSIVE_OWNER_EMAIL)
-                .neq('nickname', 'carlo')
                 .order('xp', { ascending: false });
 
-            const top10 = (allProfiles || []).filter(p => p.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase() && p.nickname.toLowerCase() !== 'carlo').slice(0, 10);
+            const top10 = (allProfiles || []).filter(p => p.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()).slice(0, 10);
 
             let lbHtml = top10.length === 0 ? '<div class="text-slate-500 text-xs text-center py-4 bg-slate-950 rounded-xl">No players ranked yet.</div>' : top10.map((p, idx) => {
                 const expLvl = Math.floor((p.xp || 0) / 100) + 1;
