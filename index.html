@@ -1328,7 +1328,7 @@
                 } else if (isUnlocked) {
                     actionBtn = `<button onclick="window.switchActiveHero('${h.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow">Equip</button>`;
                 } else if (h.isStarter) {
-                    actionBtn = `<div class="text-right space-y-0.5"><button onclick="window.buyHero('${h.id}', ${h.price})" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-lg shadow block mb-0.5">Buy ₱${h.price}</button><span class="text-[9px] text-amber-400 font-mono block">Starter Market</span></div>`;
+                    actionBtn = `<div class="text-right space-y-0.5"><button onclick="window.buyHero('${h.id}', 200)" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-lg shadow block mb-0.5">Buy ₱200</button><span class="text-[9px] text-amber-400 font-mono block">Starter Market</span></div>`;
                 } else if (meetsReqs) {
                     actionBtn = `<button onclick="window.claimRankedHero('${h.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow">Unlock</button>`;
                 } else {
@@ -1374,7 +1374,7 @@
                     if (!ownsHero) {
                         actionBtn = `<span class="text-[10px] text-red-400 font-bold bg-red-950/40 px-2.5 py-1 rounded-lg border border-red-500/35">Locked</span>`;
                     } else if (alreadyOwned) {
-                        actionBtn = `<span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-500/35">Owned</span>`;
+                        actionBtn = `<span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-red-500/35">Owned</span>`;
                     } else {
                         const isSuper = skill.cost === 500;
                         actionBtn = `<button onclick="window.buyHeroSkill('${h.id}', '${skill.id}', ${skill.cost})" class="px-3 py-1.5 ${isSuper ? 'bg-gradient-to-r from-amber-600 to-yellow-600' : 'bg-amber-600 hover:bg-amber-500'} text-white font-bold text-xs rounded-xl shadow">Buy (₱${skill.cost})</button>`;
