@@ -1520,4 +1520,517 @@
 
         function getActiveHeroDeck() {
             const activeId = currentUser.active_hero || currentUser.activeHero || 'pyra';
-            const h = heroes.find(item => item.
+            const h = heroes.find(item => item.id === activeId);
+            let deck = h ? [...h.baseSkills] : [...heroes[0].baseSkills];
+            const availableShopSkills = shopSkillsMap[activeId] || [];
+            availableShopSkills.forEach(skill => {
+                const skillsMap = currentUser.unlocked_skills || currentUser.unlockedSkills || {};
+                if (skillsMap[skill.id]) deck.push(skill);
+            });
+            return deck;
+        }
+
+        function shuffleAndDrawHand() {
+            let deckCopy = [...getActiveHeroDeck()];
+            for (let i = deckCopy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deckCopy[i], deckCopy[j]] = [deckCopy[j], deckCopy[i]];
+            }
+            currentHand = deckCopy.slice(0, 4);
+            renderHandCards();
+            startTurnTimer();
+        }
+
+        function renderHandCards() {
+            const container = document.getElementById('shuffled-hand-container');
+            if(!container) return;
+            container.innerHTML = currentHand.map((card, idx) => `
+                <div onclick="window.playCard(${idx})" class="bg-slate-900 border ${card.cost === 500 ? 'border-amber-500' : 'border-slate-700'} rounded-xl p-2 cursor-pointer card-hover space-y-0.5">
+                    <div class="flex justify-between text-[10px] font-bold text-amber-300">
+                        <span class="truncate">${card.name}</span><span>${card.ap}AP</span>
+                    </div>
+                    <p class="text-[9px] text-slate-400 leading-tight">${card.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        async function startRankedMatchmaking(amount) {
+            if (!currentUser || !supabaseClient) return;
+            if (currentUser.frozen) { alert('Account frozen.'); closeModal(); return; }
+            if (currentUser.balance < amount) { alert('Insufficient wallet balance!'); closeModal(); return; }
+
+            currentUser.balance -= amount;
+            currentDuelBet = amount;
+            await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
+            persistLocalStorage();
+            updateWalletDisplay();
+            closeModal();
+
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-matchmaking').classList.remove('hidden');
+
+            matchmakingTimeout = setTimeout(() => {
+                closeModal();
+                document.getElementById('modal-backdrop').classList.remove('hidden');
+                document.getElementById('modal-cointoss').classList.remove('hidden');
+            }, 2000);
+        }
+        window.startRankedMatchmaking = startRankedMatchmaking;
+
+        function executeCoinToss(playerChoice) {
+            const outcome = Math.random() < 0.5 ? 'Heads' : 'Tails';
+            const playerWonToss = (playerChoice === outcome);
+            alert(`🪙 Coin Toss: ${outcome}! You chose ${playerChoice}.\n${playerWonToss ? '🎉 You move first!' : '⚠️ Opponent moves first!'}`);
+            closeModal();
+            launchDisguisedBotMatch(currentDuelBet, playerWonToss, outcome);
+        }
+        window.executeCoinToss = executeCoinToss;
+
+        async function cancelMatchmakingQueue() {
+            if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
+            if (currentUser && supabaseClient) {
+                currentUser.balance += currentDuelBet;
+                await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
+                persistLocalStorage();
+                updateWalletDisplay();
+            }
+            closeModal();
+            alert('Matchmaking cancelled. Stake refunded.');
+        }
+        window.cancelMatchmakingQueue = cancelMatchmakingQueue;
+
+        function launchDisguisedBotMatch(amount, playerWonToss, tossOutcome) {
+            duelState.currentOpponentName = 'ApexPredator';
+            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
+            document.getElementById('fs-enemy-title').innerText = `ApexPredator`;
+            document.getElementById('fs-enemy-name-label').innerText = `APEX`;
+            document.getElementById('fs-enemy-img-el').src = "image_1d431b92.jpg";
+
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
+            duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
+            duelState.isFirstMatchBot = true;
+            duelState.isPlayerTurn = playerWonToss;
+            
+            shuffleAndDrawHand();
+            if (!playerWonToss) {
+                setTimeout(() => { executeBotCombatTurn(); }, 1000);
+            }
+            updateDuelUI();
+
+            ['main-header', 'view-hub', 'view-shop', 'view-select', 'view-starter-select'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById('view-duel-fullscreen').classList.remove('hidden');
+        }
+
+        function startTurnTimer() {
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            duelState.turnTimeRemaining = 30;
+            const timerEl = document.getElementById('fs-turn-timer');
+            if (timerEl) timerEl.innerText = `${duelState.turnTimeRemaining}s`;
+
+            duelState.turnTimerInterval = setInterval(() => {
+                duelState.turnTimeRemaining--;
+                if (timerEl) timerEl.innerText = `${duelState.turnTimeRemaining}s`;
+                if (duelState.turnTimeRemaining <= 0) {
+                    clearInterval(duelState.turnTimerInterval);
+                    endDuelTurn();
+                }
+            }, 1000);
+        }
+
+        function surrenderDuel() {
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            const now = new Date();
+            battleHistoryLog.unshift({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, opponent: duelState.currentOpponentName, bet: currentDuelBet, result: 'Defeat (Surrendered)', date: now.toISOString().split('T')[0] });
+            persistLocalStorage();
+
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            switchTab('hub');
+        }
+        window.surrenderDuel = surrenderDuel;
+
+        function updateDuelUI() {
+            document.getElementById('fs-player-hp-text').innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
+            document.getElementById('fs-player-hp-bar').style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
+            document.getElementById('fs-player-ap').innerText = duelState.playerAp;
+            document.getElementById('fs-player-armor').innerText = duelState.playerArmor;
+
+            document.getElementById('fs-enemy-hp-text').innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
+            document.getElementById('fs-enemy-hp-bar').style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
+            document.getElementById('fs-enemy-armor').innerText = duelState.enemyArmor;
+        }
+
+        function logDuel(msg) {
+            const logEl = document.getElementById('fs-battle-log');
+            if(logEl) logEl.innerText = msg;
+        }
+
+        async function handleVictory() {
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            if (duelState.isFirstMatchBot && supabaseClient) {
+                currentUser.first_match_completed = true;
+                await supabaseClient.from('profiles').update({ first_match_completed: true }).eq('email', currentUser.email);
+            }
+            const netReward = currentDuelBet * 2 * 0.95;
+            currentUser.balance += netReward;
+            currentUser.wins += 1;
+            currentUser.xp += 50;
+
+            await evaluateRankAndUnlocks();
+            updateWalletDisplay();
+            battleHistoryLog.unshift({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, opponent: duelState.currentOpponentName, bet: currentDuelBet, result: `Victory (+₱${netReward.toFixed(2)})`, date: new Date().toISOString().split('T')[0] });
+            persistLocalStorage();
+
+            alert(`Victory! Won ₱${netReward.toFixed(2)} net prize & +50 XP.`);
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            switchTab('hub');
+        }
+
+        async function handleDefeat() {
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            if (duelState.isFirstMatchBot && supabaseClient) {
+                currentUser.first_match_completed = true;
+                await supabaseClient.from('profiles').update({ first_match_completed: true }).eq('email', currentUser.email);
+            }
+            currentUser.xp += 15;
+            await evaluateRankAndUnlocks();
+            updateWalletDisplay();
+            battleHistoryLog.unshift({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, opponent: duelState.currentOpponentName, bet: currentDuelBet, result: `Defeat (-₱${currentDuelBet})`, date: new Date().toISOString().split('T')[0] });
+            persistLocalStorage();
+
+            alert(`Defeat! Lost ₱${currentDuelBet} wager (+15 XP).`);
+            document.getElementById('view-duel-fullscreen').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            switchTab('hub');
+        }
+
+        function executeBotCombatTurn() {
+            if (!duelState.isFirstMatchBot) return;
+            let botDmg = 16;
+            if (duelState.playerArmor >= botDmg) { duelState.playerArmor -= botDmg; botDmg = 0; }
+            else { botDmg -= duelState.playerArmor; duelState.playerArmor = 0; }
+            duelState.playerHp = Math.max(0, duelState.playerHp - botDmg);
+            logDuel(`[ApexPredator]: Struck for ${botDmg} damage!`);
+            updateDuelUI();
+            if (duelState.playerHp <= 0) handleDefeat();
+        }
+
+        function playCard(index) {
+            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
+            const card = currentHand[index];
+            if (!card) return;
+            if (duelState.playerAp < card.ap) { logDuel(`Not enough AP!`); return; }
+
+            duelState.playerAp -= card.ap;
+            let dmg = card.cost === 500 ? 75 : 22;
+            duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
+            logDuel(`Played ${card.name}! Dealt ${dmg} damage.`);
+            updateDuelUI();
+
+            if (duelState.enemyHp <= 0) { handleVictory(); return; }
+            currentHand.splice(index, 1);
+            renderHandCards();
+        }
+        window.playCard = playCard;
+
+        function endDuelTurn() {
+            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            executeBotCombatTurn();
+            if (duelState.playerHp > 0 && duelState.enemyHp > 0) {
+                duelState.playerAp = 3;
+                shuffleAndDrawHand();
+                updateDuelUI();
+            }
+        }
+        window.endDuelTurn = endDuelTurn;
+
+        function handleQRUpload(event, type) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if(type === 'gcash') uploadedGcashQR = e.target.result;
+                    if(type === 'maya') uploadedMayaQR = e.target.result;
+                    persistLocalStorage();
+                    updateTopupModalQRs();
+                    alert(type.toUpperCase() + ' QR uploaded successfully!');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+        window.handleQRUpload = handleQRUpload;
+
+        function updateTopupModalQRs() {
+            if(uploadedGcashQR) document.getElementById('topup-gcash-qr').innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
+            if(uploadedMayaQR) document.getElementById('topup-maya-qr').innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+        }
+
+        function saveOwnerDetails() {
+            persistLocalStorage();
+            alert('Owner merchant credentials saved!');
+        }
+        window.saveOwnerDetails = saveOwnerDetails;
+
+        function openModal(type) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'].forEach(m => {
+                document.getElementById(m).classList.add('hidden');
+            });
+            if(type === 'topup') { document.getElementById('modal-topup').classList.remove('hidden'); updateTopupModalQRs(); }
+            if(type === 'withdraw' && currentUser) {
+                document.getElementById('withdraw-account').value = currentUser.phone;
+                document.getElementById('withdraw-name').value = currentUser.name;
+                document.getElementById('modal-withdraw').classList.remove('hidden');
+            }
+            if(type === 'bet') document.getElementById('modal-bet').classList.remove('hidden');
+        }
+        window.openModal = openModal;
+
+        function openPlayerProfileModal() {
+            if (!currentUser) return;
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-leaderboard'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            document.getElementById('modal-player-profile').classList.remove('hidden');
+
+            document.getElementById('profile-modal-rank').innerText = currentUser.rank;
+            const myHistory = battleHistoryLog.filter(h => h.email === currentUser.email);
+            const historyHtml = myHistory.length ? myHistory.map(h => `
+                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 space-y-0.5">
+                    <div class="flex justify-between items-center"><span class="font-bold text-white">Vs ${h.opponent}</span><span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span></div>
+                    <div class="text-[9px] text-slate-400 flex justify-between"><span>Stake: ₱${h.bet}</span><span>${h.date}</span></div>
+                </div>
+            `).join('') : '<div class="text-slate-500 text-xs text-center py-4 bg-slate-950 rounded-xl">No battle history yet.</div>';
+
+            document.getElementById('player-profile-content').innerHTML = `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                    <div class="flex justify-between"><span><strong>Name:</strong></span> <span class="text-white">${currentUser.name}</span></div>
+                    <div class="flex justify-between"><span><strong>Username:</strong></span> <span class="text-amber-400">${currentUser.nickname}</span></div>
+                    <div class="flex justify-between"><span><strong>Balance:</strong></span> <span class="text-emerald-400 font-bold">₱${currentUser.balance.toFixed(2)}</span></div>
+                    <div class="flex justify-between"><span><strong>Rank:</strong></span> <span class="text-amber-400 font-bold">${currentUser.rank}</span></div>
+                    <div class="flex justify-between"><span><strong>Wins:</strong></span> <span class="text-blue-400 font-bold">${currentUser.wins}</span></div>
+                </div>
+                <div class="space-y-1.5 pt-1">
+                    <h4 class="font-cinzel text-xs font-bold text-amber-400">Battle History</h4>
+                    <div class="space-y-1 max-h-36 overflow-y-auto pr-1">${historyHtml}</div>
+                </div>
+            `;
+        }
+        window.openPlayerProfileModal = openPlayerProfileModal;
+
+        async function openLeaderboardModal() {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            document.getElementById('modal-leaderboard').classList.remove('hidden');
+
+            if (!supabaseClient) return;
+            const { data: allProfiles } = await supabaseClient.from('profiles').select('*').eq('role', 'player').neq('email', EXCLUSIVE_OWNER_EMAIL).order('xp', { ascending: false });
+            const top10 = (allProfiles || []).slice(0, 10);
+
+            let lbHtml = top10.length === 0 ? '<div class="text-slate-500 text-xs text-center py-4 bg-slate-950 rounded-xl">No players ranked yet.</div>' : top10.map((p, idx) => `
+                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-sm w-5 text-center">#${idx + 1}</span>
+                        <div><span class="font-bold text-amber-400">${p.nickname}</span><div class="text-[9px] text-slate-400">${p.rank}</div></div>
+                    </div>
+                    <div class="text-right"><span class="font-bold text-emerald-400 block">${p.xp || 0} XP</span><span class="text-[9px] text-blue-400">${p.wins || 0} Wins</span></div>
+                </div>
+            `).join('');
+            document.getElementById('leaderboard-list-content').innerHTML = lbHtml;
+        }
+        window.openLeaderboardModal = openLeaderboardModal;
+
+        function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
+        window.closeModal = closeModal;
+
+        function viewReceipt(dataUrl) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            document.getElementById('modal-receipt').classList.remove('hidden');
+            document.getElementById('receipt-preview-container').innerHTML = `<img src="${dataUrl}" class="max-h-60 rounded object-contain">`;
+        }
+        window.viewReceipt = viewReceipt;
+
+        async function inspectPlayer(email) {
+            if (!supabaseClient) return;
+            const { data: player } = await supabaseClient.from('profiles').select('*').eq('email', email).single();
+            if (!player) return;
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-player-details').classList.remove('hidden');
+
+            document.getElementById('player-inspection-content').innerHTML = `
+                <div class="space-y-1">
+                    <div><strong>Name:</strong> ${player.name}</div>
+                    <div><strong>Email:</strong> ${player.email}</div>
+                    <div><strong>Phone:</strong> ${player.phone}</div>
+                    <div><strong>Balance:</strong> ₱${player.balance.toFixed(2)}</div>
+                    <div><strong>Rank:</strong> ${player.rank} | Wins: ${player.wins}</div>
+                </div>
+            `;
+        }
+        window.inspectPlayer = inspectPlayer;
+
+        async function toggleFreezePlayer(email) {
+            if (!supabaseClient) return;
+            const { data: player } = await supabaseClient.from('profiles').select('*').eq('email', email).single();
+            if (!player) return;
+            const newFrozen = !player.frozen;
+            await supabaseClient.from('profiles').update({ frozen: newFrozen }).eq('email', email);
+            renderOwnerQueues();
+            alert(`Player ${player.nickname} frozen state: ${newFrozen}`);
+        }
+        window.toggleFreezePlayer = toggleFreezePlayer;
+
+        async function deletePlayerAccount(email) {
+            if (!supabaseClient) return;
+            if (confirm(`Delete player account ${email}?`)) {
+                await supabaseClient.from('profiles').delete().eq('email', email);
+                renderOwnerQueues();
+                alert('Account deleted.');
+            }
+        }
+        window.deletePlayerAccount = deletePlayerAccount;
+
+        function submitTopUp() {
+            const amt = parseFloat(document.getElementById('topup-amount').value);
+            const ref = document.getElementById('topup-ref').value;
+            const receiptFile = document.getElementById('topup-receipt').files[0];
+            if(!amt || !ref || !receiptFile) { alert('Fill in all fields and upload receipt.'); return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: new Date().toISOString().split('T')[0] });
+                persistLocalStorage();
+                alert('Top-up request submitted!');
+                closeModal();
+            };
+            reader.readAsDataURL(receiptFile);
+        }
+        window.submitTopUp = submitTopUp;
+
+        async function submitWithdrawal() {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value);
+            if(!amt || amt > currentUser.balance) { alert('Invalid amount or insufficient balance.'); return; }
+            
+            currentUser.balance -= amt;
+            await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
+            persistLocalStorage();
+            updateWalletDisplay();
+
+            pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: document.getElementById('withdraw-method').value, account: currentUser.phone, name: currentUser.name, date: new Date().toISOString().split('T')[0] });
+            persistLocalStorage();
+            alert('Withdrawal request submitted (0 Fee)!');
+            closeModal();
+        }
+        window.submitWithdrawal = submitWithdrawal;
+
+        function updateWalletDisplay() {
+            const navWallet = document.getElementById('nav-wallet');
+            if(currentUser && navWallet) navWallet.innerText = '₱' + currentUser.balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        async function renderOwnerQueues() {
+            if (!supabaseClient) return;
+            const filterDate = document.getElementById('filter-date')?.value || '';
+            const { data: allProfiles } = await supabaseClient.from('profiles').select('*').neq('email', EXCLUSIVE_OWNER_EMAIL);
+            const accounts = allProfiles || [];
+
+            const playersContainer = document.getElementById('owner-players-list');
+            const filteredPlayers = accounts.filter(acc => acc.role === 'player' && acc.approved === true);
+            if (playersContainer) {
+                playersContainer.innerHTML = filteredPlayers.length ? filteredPlayers.map(p => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div class="truncate pr-2"><span class="font-bold text-amber-400">${p.nickname}</span><div class="text-[9px] text-slate-400 truncate">₱${p.balance.toFixed(2)} | ${p.phone}</div></div>
+                        <div class="space-x-1 flex items-center flex-shrink-0">
+                            <button onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[9px]">Inspect</button>
+                            <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[9px]">Delete</button>
+                        </div>
+                    </div>
+                `).join('') : '<div class="text-xs text-slate-500 text-center py-2">No players.</div>';
+            }
+
+            const regContainer = document.getElementById('owner-registration-list');
+            const pendingRegs = accounts.filter(acc => acc.approved === false);
+            if(regContainer) {
+                regContainer.innerHTML = pendingRegs.length ? pendingRegs.map(r => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-amber-400">${r.nickname}</span><div class="text-[9px] text-slate-400">Ref: ${r.ref}</div></div>
+                        <div class="space-x-1 flex items-center">
+                            <button onclick="window.viewReceipt('${r.receipt}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[9px]">Receipt</button>
+                            <button onclick="window.approveRegistration('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[9px]">Approve</button>
+                        </div>
+                    </div>
+                `).join('') : '<div class="text-xs text-slate-500 text-center py-2">No pending registrations.</div>';
+            }
+
+            const depContainer = document.getElementById('owner-deposit-list');
+            if(depContainer) {
+                depContainer.innerHTML = pendingDeposits.length ? pendingDeposits.map(d => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-emerald-400">+₱${d.amount} (${d.nickname})</span></div>
+                        <div class="space-x-1"><button onclick="window.approveDeposit(${d.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[9px]">Approve</button></div>
+                    </div>
+                `).join('') : '<div class="text-xs text-slate-500 text-center py-2">No pending deposits.</div>';
+            }
+
+            const witContainer = document.getElementById('owner-withdraw-list');
+            if(witContainer) {
+                witContainer.innerHTML = pendingWithdrawals.length ? pendingWithdrawals.map(w => `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div><span class="font-bold text-amber-400">-₱${w.amount} (${w.nickname})</span></div>
+                        <div class="space-x-1"><button onclick="window.approveWithdrawal(${w.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[9px]">Approve</button></div>
+                    </div>
+                `).join('') : '<div class="text-xs text-slate-500 text-center py-2">No pending withdrawals.</div>';
+            }
+        }
+        window.renderOwnerQueues = renderOwnerQueues;
+
+        async function approveRegistration(email) {
+            if (!supabaseClient) return;
+            await supabaseClient.from('profiles').update({ approved: true }).eq('email', email);
+            renderOwnerQueues();
+            alert('Registration approved!');
+        }
+        window.approveRegistration = approveRegistration;
+
+        async function approveDeposit(id) {
+            if (!supabaseClient) return;
+            const idx = pendingDeposits.findIndex(d => d.id === id);
+            if(idx > -1) {
+                const item = pendingDeposits[idx];
+                const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', item.email).single();
+                if(targetUser) {
+                    const newBal = targetUser.balance + item.amount;
+                    await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', item.email);
+                    if(currentUser && currentUser.email.toLowerCase() === item.email.toLowerCase()) {
+                        currentUser.balance = newBal;
+                        updateWalletDisplay();
+                    }
+                }
+                approvedDepositsLog.push(item);
+                pendingDeposits.splice(idx, 1);
+                persistLocalStorage();
+                renderOwnerQueues();
+                alert('Deposit approved and credited!');
+            }
+        }
+        window.approveDeposit = approveDeposit;
+
+        function approveWithdrawal(id) {
+            const idx = pendingWithdrawals.findIndex(w => w.id === id);
+            if(idx > -1) {
+                approvedWithdrawalsLog.push(pendingWithdrawals[idx]);
+                pendingWithdrawals.splice(idx, 1);
+                persistLocalStorage();
+                renderOwnerQueues();
+                alert('Withdrawal approved!');
+            }
+        }
+        window.approveWithdrawal = approveWithdrawal;
+    </script>
+</body>
+</html>
