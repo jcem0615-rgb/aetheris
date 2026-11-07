@@ -364,14 +364,20 @@
                     <h3 class="font-cinzel text-xs font-bold text-white">Merchant E-Wallet Credentials & QR Codes</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-                            <span class="text-[11px] font-bold text-blue-400 block">GCash Account & QR Setup</span>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-blue-400">GCash Account & QR Setup</span>
+                                <div id="owner-gcash-qr-preview" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                            </div>
                             <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="file" id="input-gcash-qr" accept="image/*" onchange="window.handleQRUpload(event, 'gcash')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
                             <button onclick="window.saveOwnerDetails()" class="w-full py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Save GCash</button>
                         </div>
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
-                            <span class="text-[11px] font-bold text-teal-400 block">Maya Account & QR Setup</span>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-teal-400">Maya Account & QR Setup</span>
+                                <div id="owner-maya-qr-preview" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
+                            </div>
                             <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="file" id="input-maya-qr" accept="image/*" onchange="window.handleQRUpload(event, 'maya')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
@@ -1103,7 +1109,7 @@
             if (loginBox) loginBox.classList.add('hidden');
             if (registerBox) registerBox.classList.add('hidden');
             if (forgotBox) forgotBox.classList.add('hidden');
-            if(mode === 'login' && loginBox) loginBox.classList.remove('hidden');
+            if(mode === 'login' && loginBox) loginBox.classList.remove('loginBox');
             if(mode === 'register' && registerBox) {
                 registerBox.classList.remove('hidden');
                 updateMerchantPaymentDisplay();
@@ -1851,6 +1857,18 @@
                 if (merchantConfig.mayaQR) topupMayaQr.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover">`;
                 else topupMayaQr.innerText = 'No QR';
             }
+
+            // Owner Portal Previews
+            const ownerGcashQr = document.getElementById('owner-gcash-qr-preview');
+            const ownerMayaQr = document.getElementById('owner-maya-qr-preview');
+            if (ownerGcashQr) {
+                if (merchantConfig.gcashQR) ownerGcashQr.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover">`;
+                else ownerGcashQr.innerText = 'No QR';
+            }
+            if (ownerMayaQr) {
+                if (merchantConfig.mayaQR) ownerMayaQr.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover">`;
+                else ownerMayaQr.innerText = 'No QR';
+            }
         }
 
         function loadOwnerInputs() {
@@ -1863,6 +1881,7 @@
             if (inGcashName) inGcashName.value = merchantConfig.gcashName;
             if (inMayaNum) inMayaNum.value = merchantConfig.mayaNum;
             if (inMayaName) inMayaName.value = merchantConfig.mayaName;
+            updateMerchantPaymentDisplay();
         }
 
         function saveOwnerDetails() {
