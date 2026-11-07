@@ -44,10 +44,18 @@
                 </div>
             </div>
 
+            <!-- Header Right: Nickname & Wallet Beside Each Other (Uneditable Nickname) -->
             <div class="flex items-center space-x-1.5">
                 <button id="btn-install-pwa" onclick="window.installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow transition">
                     <span>Install</span>
                 </button>
+                
+                <!-- Uneditable Player Nickname Badge -->
+                <div id="nav-nickname-container" class="hidden items-center bg-slate-900 border border-amber-500/40 rounded-full px-2.5 py-0.5">
+                    <span id="nav-header-nickname" class="text-xs font-bold font-cinzel text-amber-400 truncate max-w-[90px]">PLAYER</span>
+                </div>
+
+                <!-- Wallet Container -->
                 <div id="nav-wallet-container" class="hidden items-center space-x-1 bg-slate-900 border border-slate-700 rounded-full px-2.5 py-0.5">
                     <span class="text-[10px] text-slate-400">Bal:</span>
                     <span id="nav-wallet" class="text-xs font-bold text-emerald-400">₱0.00</span>
@@ -205,7 +213,7 @@
         <div id="view-select" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
-                <p class="text-slate-400 text-xs">Inspect all champions across tiers. Starter heroes cost ₱200; ranked heroes require wins/EXP or purchase!</p>
+                <p class="text-slate-400 text-xs">Inspect all champions across tiers. Starter heroes are free; ranked heroes require wins/EXP or purchase!</p>
                 <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl p-3 text-xs space-y-1.5 w-full">
                     <div class="flex items-center justify-between space-x-2">
                         <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
@@ -603,14 +611,17 @@
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Profile</button>
         </div>
 
-        <!-- Top 10 Leaderboard Modal -->
+        <!-- Top 10 Leaderboard Modal (Matching Second Screenshot Style) -->
         <div id="modal-leaderboard" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-cinzel text-base font-bold text-amber-400">🏆 TOP 10 LEADERBOARD</h3>
-                <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Live Season</span>
+                <h3 class="font-cinzel text-base font-bold text-amber-400 flex items-center space-x-1.5">
+                    <span>🏆</span><span>TOP 10 RANKED LEADERBOARD</span>
+                </h3>
+                <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">Live Season</span>
             </div>
-            <div id="leaderboard-list-content" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
-            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
+            <p class="text-slate-400 text-[11px]">Global ranking based on total EXP level, rank tier, and ranked match victories.</p>
+            <div id="leaderboard-list-content" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+            <button onclick="window.closeModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Leaderboard</button>
         </div>
     </div>
 
@@ -732,7 +743,7 @@
             id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER (Basic)',
             desc: 'Fire-elemental spellcaster with explosive burn damage.',
             bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', iconImg: 'image_b2781538.jpg',
-            price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
+            price: 0, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
               { id: 'pyra-1', type: 'strike', name: 'FLAME DART', ap: 1, color: 'red', desc: 'Deal 15 Fire damage.' },
               { id: 'pyra-2', type: 'defend', name: 'FIRE SHIELD', ap: 1, color: 'red', desc: 'Gain 10 Armor block.' },
@@ -744,7 +755,7 @@
             id: 'sylph', name: 'SYLPH', role: 'Wind Ranger', rarity: 'STARTER (Basic)',
             desc: 'Agile archer with high movement and gale evasion.',
             bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', iconImg: 'image_e51741b7.jpg',
-            price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
+            price: 0, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
               { id: 'sylph-1', type: 'strike', name: 'GALE SLASH', ap: 1, color: 'emerald', desc: 'Deal 16 Wind damage.' },
               { id: 'sylph-2', type: 'defend', name: 'WIND STEP', ap: 1, color: 'emerald', desc: 'Gain 12 Armor block.' },
@@ -756,7 +767,7 @@
             id: 'valen', name: 'VALEN', role: 'Iron Guardian', rarity: 'STARTER (Basic)',
             desc: 'Holy tank with impenetrable defense and holy barrier.',
             bg: 'from-blue-950 to-slate-950', border: 'border-blue-500/50', iconImg: 'image_4b6fe95a.jpg',
-            price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
+            price: 0, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
               { id: 'valen-1', type: 'strike', name: 'SHIELD BASH', ap: 1, color: 'blue', desc: 'Deal 12 Physical damage.' },
               { id: 'valen-2', type: 'defend', name: 'IRON BASTION', ap: 1, color: 'blue', desc: 'Gain 15 Armor block.' },
@@ -768,7 +779,7 @@
             id: 'nyx', name: 'NYX', role: 'Shadow Assassin', rarity: 'STARTER (Basic)',
             desc: 'Deadly operative with stealth and shadow-strike bursts.',
             bg: 'from-purple-950 to-slate-950', border: 'border-purple-500/50', iconImg: 'image_a9978665.jpg',
-            price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
+            price: 0, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
               { id: 'nyx-1', type: 'strike', name: 'SHADOW STAB', ap: 1, color: 'purple', desc: 'Deal 17 Dark damage.' },
               { id: 'nyx-2', type: 'defend', name: 'SMOKE CLOAK', ap: 1, color: 'purple', desc: 'Gain 10 Armor block.' },
@@ -924,7 +935,7 @@
                             currentUser.role = 'owner';
                         }
                         if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
-                        if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [currentUser.active_hero || 'pyra'];
+                        if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = ['pyra', 'sylph', 'valen', 'nyx'];
                         restoreUserSession();
                     } else {
                         currentUser = null;
@@ -945,10 +956,12 @@
                     currentUser.role = 'owner';
                     const mainHeader = document.getElementById('main-header');
                     const navWallet = document.getElementById('nav-wallet-container');
+                    const navNick = document.getElementById('nav-nickname-container');
                     const navMenu = document.getElementById('nav-menu');
                     const btnOwner = document.getElementById('btn-owner');
                     if (mainHeader) mainHeader.classList.remove('hidden');
                     if (navWallet) navWallet.classList.remove('hidden');
+                    if (navNick) navNick.classList.remove('hidden');
                     if (navMenu) navMenu.classList.remove('hidden');
                     const btnHub = document.getElementById('btn-hub');
                     const btnRoster = document.getElementById('btn-roster');
@@ -961,6 +974,7 @@
                     if (btnProfile) btnProfile.classList.add('hidden');
                     if (btnLeaderboard) btnLeaderboard.classList.add('hidden');
                     if (btnOwner) btnOwner.classList.remove('hidden');
+                    updateHeaderUserInfo();
                     switchTab('owner');
                     return;
                 }
@@ -977,18 +991,14 @@
 
                 const mainHeader = document.getElementById('main-header');
                 const navWallet = document.getElementById('nav-wallet-container');
+                const navNick = document.getElementById('nav-nickname-container');
                 const navMenu = document.getElementById('nav-menu');
                 if (mainHeader) mainHeader.classList.remove('hidden');
                 if (navWallet) navWallet.classList.remove('hidden');
+                if (navNick) navNick.classList.remove('hidden');
                 if (navMenu) navMenu.classList.remove('hidden');
                 
-                const nickBadge = document.getElementById('player-nickname-badge');
-                const fsPlayerName = document.getElementById('fs-player-name');
-                const fsPlayerAvatar = document.getElementById('fs-player-avatar-username');
-                if (nickBadge) nickBadge.innerText = currentUser.nickname;
-                if (fsPlayerName) fsPlayerName.innerText = currentUser.nickname.toUpperCase();
-                if (fsPlayerAvatar) fsPlayerAvatar.innerText = currentUser.nickname.toUpperCase();
-                
+                updateHeaderUserInfo();
                 updateWalletDisplay();
                 setActiveHeroUI(activeHero);
 
@@ -1012,6 +1022,20 @@
             } catch(err) {
                 console.error("restoreUserSession error:", err);
             }
+        }
+
+        function updateHeaderUserInfo() {
+            if (!currentUser) return;
+            const nickText = currentUser.nickname || 'PLAYER';
+            const navHeaderNick = document.getElementById('nav-header-nickname');
+            if (navHeaderNick) navHeaderNick.innerText = nickText;
+
+            const nickBadge = document.getElementById('player-nickname-badge');
+            const fsPlayerName = document.getElementById('fs-player-name');
+            const fsPlayerAvatar = document.getElementById('fs-player-avatar-username');
+            if (nickBadge) nickBadge.innerText = nickText;
+            if (fsPlayerName) fsPlayerName.innerText = nickText.toUpperCase();
+            if (fsPlayerAvatar) fsPlayerAvatar.innerText = nickText.toUpperCase();
         }
 
         function renderStarterHeroesSelection() {
@@ -1039,8 +1063,7 @@
             if (!currentUser || !supabaseClient) return;
             currentUser.active_hero = heroId;
             currentUser.activeHero = heroId;
-            // Only unlock the chosen starter for free
-            currentUser.unlocked_heroes = [heroId];
+            currentUser.unlocked_heroes = ['pyra', 'sylph', 'valen', 'nyx'];
 
             await supabaseClient.from('profiles').update({
                 active_hero: heroId,
@@ -1112,7 +1135,7 @@
                 reader.onload = async function(e) {
                     const { error } = await supabaseClient.from('profiles').insert([{
                         email, pass_hash: passHash, name, nickname, phone, bday,
-                        role: 'player', balance: 0.00, unlocked_heroes: [], active_hero: null,
+                        role: 'player', balance: 0.00, unlocked_heroes: ['pyra', 'sylph', 'valen', 'nyx'], active_hero: 'pyra',
                         unlocked_skills: {}, wins: 0, xp: 0, rank: 'Bronze I', first_match_completed: false,
                         approved: false, frozen: false, receipt: e.target.result, ref: refNum, date: dateStr
                     }]);
@@ -1164,8 +1187,8 @@
 
                 currentUser = user;
                 if(!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
-                if(!currentUser.unlocked_heroes) currentUser.unlocked_heroes = currentUser.unlockedHeroes || [currentUser.active_hero || 'pyra'];
-                if(!currentUser.activeHero) currentUser.activeHero = currentUser.active_hero || null;
+                if(!currentUser.unlocked_heroes) currentUser.unlocked_heroes = ['pyra', 'sylph', 'valen', 'nyx'];
+                if(!currentUser.activeHero) currentUser.activeHero = currentUser.active_hero || 'pyra';
                 
                 logSystemActivity('User Login', `User ${currentUser.nickname} signed in.`);
                 localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
@@ -1183,7 +1206,7 @@
             currentUser = null;
             localStorage.removeItem('aetheris_current_user');
 
-            ['nav-wallet-container', 'nav-menu', 'view-hub', 'view-shop', 'view-owner', 'view-select', 'view-starter-select', 'view-duel-fullscreen', 'main-header', 'view-force-reset'].forEach(id => {
+            ['nav-wallet-container', 'nav-nickname-container', 'nav-menu', 'view-hub', 'view-shop', 'view-owner', 'view-select', 'view-starter-select', 'view-duel-fullscreen', 'main-header', 'view-force-reset'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.classList.add('hidden');
             });
@@ -1252,7 +1275,7 @@
             else if (currentUser.xp >= 150) currentUser.rank = 'Silver I';
             else currentUser.rank = 'Bronze I';
 
-            const unlockedList = currentUser.unlocked_heroes || currentUser.unlockedHeroes || [];
+            const unlockedList = currentUser.unlocked_heroes || ['pyra', 'sylph', 'valen', 'nyx'];
             heroes.forEach(h => {
                 if (!h.isStarter && !unlockedList.includes(h.id)) {
                     if (currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp) {
@@ -1294,8 +1317,8 @@
             document.getElementById('player-xp-bar').style.width = `${xpPercent}%`;
 
             document.getElementById('hero-cards-container').innerHTML = heroes.map(h => {
-                const unlockedList = currentUser.unlocked_heroes || currentUser.unlockedHeroes || [];
-                const isUnlocked = unlockedList.includes(h.id);
+                const unlockedList = currentUser.unlocked_heroes || ['pyra', 'sylph', 'valen', 'nyx'];
+                const isUnlocked = h.isStarter || unlockedList.includes(h.id);
                 const activeId = currentUser.active_hero || currentUser.activeHero;
                 const isActive = activeId === h.id;
                 const meetsReqs = currentUser.wins >= h.requiredWins && currentUser.xp >= h.requiredXp;
@@ -1305,8 +1328,6 @@
                     actionBtn = `<span class="px-3 py-1.5 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/45">Active</span>`;
                 } else if (isUnlocked) {
                     actionBtn = `<button onclick="window.switchActiveHero('${h.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow">Equip</button>`;
-                } else if (h.isStarter) {
-                    actionBtn = `<button onclick="window.buyHero('${h.id}', ${h.price})" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow">Buy ₱${h.price}</button>`;
                 } else if (meetsReqs) {
                     actionBtn = `<button onclick="window.claimRankedHero('${h.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow">Unlock</button>`;
                 } else {
@@ -1340,8 +1361,8 @@
 
             let shopHtml = '';
             heroes.forEach(h => {
-                const unlockedList = currentUser.unlocked_heroes || currentUser.unlockedHeroes || [];
-                const ownsHero = unlockedList.includes(h.id);
+                const unlockedList = currentUser.unlocked_heroes || ['pyra', 'sylph', 'valen', 'nyx'];
+                const ownsHero = h.isStarter || unlockedList.includes(h.id);
                 const roleSkills = shopSkillsMap[h.id] || [];
 
                 roleSkills.forEach(skill => {
@@ -1413,7 +1434,7 @@
             if (!currentUser || !supabaseClient) return;
             if (currentUser.balance < price) { alert('Insufficient wallet balance!'); return; }
             currentUser.balance -= price;
-            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = currentUser.unlockedHeroes || [];
+            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = ['pyra', 'sylph', 'valen', 'nyx'];
             if (!currentUser.unlocked_heroes.includes(id)) currentUser.unlocked_heroes.push(id);
             currentUser.active_hero = id;
             currentUser.activeHero = id;
@@ -1433,7 +1454,7 @@
             if (!currentUser || !supabaseClient) return;
             const h = heroes.find(item => item.id === id);
             if (!h || currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) { alert('Rank requirements not met!'); return; }
-            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = currentUser.unlockedHeroes || [];
+            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = ['pyra', 'sylph', 'valen', 'nyx'];
             if (!currentUser.unlocked_heroes.includes(id)) currentUser.unlocked_heroes.push(id);
             currentUser.active_hero = id;
             currentUser.activeHero = id;
@@ -1817,18 +1838,27 @@
             document.getElementById('modal-leaderboard').classList.remove('hidden');
 
             if (!supabaseClient) return;
-            const { data: allProfiles } = await supabaseClient.from('profiles').select('*').eq('role', 'player').neq('email', EXCLUSIVE_OWNER_EMAIL).order('xp', { ascending: false });
+            const { data: allProfiles } = await supabaseClient.from('profiles').select('*').eq('role', 'player').order('xp', { ascending: false });
             const top10 = (allProfiles || []).slice(0, 10);
 
-            let lbHtml = top10.length === 0 ? '<div class="text-slate-500 text-xs text-center py-4 bg-slate-950 rounded-xl">No players ranked yet.</div>' : top10.map((p, idx) => `
-                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                    <div class="flex items-center space-x-2">
-                        <span class="font-bold text-sm w-5 text-center">#${idx + 1}</span>
-                        <div><span class="font-bold text-amber-400">${p.nickname}</span><div class="text-[9px] text-slate-400">${p.rank}</div></div>
+            let lbHtml = top10.length === 0 ? '<div class="text-slate-500 text-xs text-center py-4 bg-slate-950 rounded-xl">No players ranked yet.</div>' : top10.map((p, idx) => {
+                const expLvl = Math.floor((p.xp || 0) / 100) + 1;
+                return `
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="font-bold text-sm w-6 text-center text-amber-400">#${idx + 1}</span>
+                            <div>
+                                <span class="font-bold text-white text-sm">${p.nickname}</span>
+                                <div class="text-[10px] text-slate-400">Rank: ${p.rank || 'Bronze I'} | Level ${expLvl}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-emerald-400 block text-sm">${p.xp || 0} XP</span>
+                            <span class="text-[10px] text-blue-400">${p.wins || 0} Wins</span>
+                        </div>
                     </div>
-                    <div class="text-right"><span class="font-bold text-emerald-400 block">${p.xp || 0} XP</span><span class="text-[9px] text-blue-400">${p.wins || 0} Wins</span></div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             document.getElementById('leaderboard-list-content').innerHTML = lbHtml;
         }
         window.openLeaderboardModal = openLeaderboardModal;
