@@ -575,7 +575,7 @@
             <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING P2P NETWORK</h3>
             <div class="py-3 space-y-3">
                 <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p id="matchmaking-status" class="text-xs text-slate-300">Searching online lobby for peer player match...</p>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching online lobby for peer player match (up to 20s)...</p>
             </div>
             <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund</button>
         </div>
@@ -1215,7 +1215,7 @@
         function logoutPlayer() {
             if (currentUser) { logSystemActivity('User Logout', `${currentUser.nickname} signed out.`); }
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-            if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
+            if (matchmakingTimeout) clearInterval(matchmakingTimeout);
             currentUser = null;
             localStorage.removeItem('aetheris_current_user');
 
@@ -1610,7 +1610,6 @@
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-matchmaking').classList.remove('hidden');
 
-            // Determine if this is the player's first match
             const isFirstMatch = !currentUser.first_match_completed;
 
             if (isFirstMatch) {
@@ -1621,10 +1620,12 @@
                     document.getElementById('modal-cointoss').classList.remove('hidden');
                 }, 2000);
             } else {
-                // Subsequent matches: P2P Matchmaking based on rank and wager
-                matchmakingTimeout = setTimeout(async () => {
-                    closeModal();
-                    // Query Supabase for another player matching rank & wager tier
+                // Subsequent matches: Search real online players for up to 20 seconds
+                let secondsElapsed = 0;
+                
+                const searchInterval = setInterval(async () => {
+                    secondsElapsed += 2;
+                    
                     const { data: onlinePlayers } = await supabaseClient
                         .from('profiles')
                         .select('*')
@@ -1636,18 +1637,32 @@
                     const validPeers = (onlinePlayers || []).filter(p => p.balance >= amount);
 
                     if (validPeers.length > 0) {
-                        // Match with real peer player
+                        clearInterval(searchInterval);
+                        clearTimeout(matchmakingTimeout);
+                        closeModal();
                         const matchedPeer = validPeers[Math.floor(Math.random() * validPeers.length)];
                         const playerWonToss = Math.random() < 0.5;
                         alert(`Found P2P Opponent: ${matchedPeer.nickname} (${matchedPeer.rank})!`);
                         launchP2PMatch(currentDuelBet, matchedPeer, playerWonToss);
-                    } else {
-                        // Fallback fallback AI bot if no online peer available at exact rank/wager
+                    } else if (secondsElapsed >= 20) {
+                        clearInterval(searchInterval);
+                        clearTimeout(matchmakingTimeout);
+                        closeModal();
+                        
+                        const humanNames = [
+                            'Mark_Estrada', 'Carlo_Morales', 'Jm_Tech', 'Aero_Knight', 
+                            'Sky_Rider', 'Lexi_Vance', 'Kaelen_Cross', 'Dante_Solis', 
+                            'Roxanne_Blaze', 'Vince_Stark', 'Nico_Vanguard'
+                        ];
+                        const randomHumanName = humanNames[Math.floor(Math.random() * humanNames.length)];
                         const playerWonToss = Math.random() < 0.5;
-                        alert(`Matched with ranked tier opponent in lobby!`);
-                        launchDisguisedBotMatch(currentDuelBet, playerWonToss, 'TacticalRival');
+                        
+                        alert(`Match found! Connected with opponent: ${randomHumanName}`);
+                        launchDisguisedBotMatch(currentDuelBet, playerWonToss, randomHumanName);
                     }
-                }, 2500);
+                }, 2000);
+
+                matchmakingTimeout = searchInterval;
             }
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
@@ -1657,8 +1672,6 @@
             const playerWonToss = (playerChoice === outcome);
             alert(`🪙 Coin Toss: ${outcome}! You chose ${playerChoice}.\n${playerWonToss ? '🎉 You move first!' : '⚠️ Opponent moves first!'}`);
             closeModal();
-            
-            // First match is strictly against Apex Predator
             launchDisguisedBotMatch(currentDuelBet, playerWonToss, 'ApexPredator');
         }
         window.executeCoinToss = executeCoinToss;
@@ -1680,14 +1693,14 @@
             duelState.currentOpponentName = botName;
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
             document.getElementById('fs-enemy-title').innerText = botName;
-            document.getElementById('fs-enemy-name-label').innerText = botName === 'ApexPredator' ? 'APEX' : 'RIVAL';
+            document.getElementById('fs-enemy-name-label').innerText = botName.length > 6 ? botName.slice(0, 6).toUpperCase() : botName.toUpperCase();
             document.getElementById('fs-enemy-img-el').src = "image_1d431b92.jpg";
 
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
             duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
             duelState.isBotMatch = true;
-            duelState.apexSpecialTriggered = false; // Reset threshold trigger for the new match
+            duelState.apexSpecialTriggered = false;
             duelState.isPlayerTurn = playerWonToss;
             
             shuffleAndDrawHand();
@@ -1712,7 +1725,7 @@
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
             duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
-            duelState.isBotMatch = false; // Real Peer-to-Peer asynchronous/simulated match
+            duelState.isBotMatch = false;
             duelState.isPlayerTurn = playerWonToss;
             
             shuffleAndDrawHand();
@@ -1812,19 +1825,15 @@
         }
 
         function executeBotCombatTurn() {
-            // Apex Predator Special Threshold Skill: Triggered if HP is below 60 and opponent is ApexPredator
-            if (duelState.currentOpponentName === 'ApexPredator' && duelState.enemyHp < 60 && !duelState.apexSpecialTriggered) {
-                duelState.apexSpecialTriggered = true; // Ensures it triggers once per match
+            // Custom Threshold Skill for Boss / Fallback Bot: Triggered if HP is below 60
+            if (duelState.enemyHp < 60 && !duelState.apexSpecialTriggered) {
+                duelState.apexSpecialTriggered = true;
                 
-                // Bot gains 30 HP (capped at max HP) and 20 Armor
                 duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + 30);
                 duelState.enemyArmor += 20;
-                
-                // Cleanses any existing Burn or Poison (debuffs)
                 duelState.enemyPoison = 0;
                 duelState.enemyDebuff = 'None';
                 
-                // Deals 20 direct damage to the player
                 let specialDmg = 20;
                 if (duelState.playerArmor >= specialDmg) {
                     duelState.playerArmor -= specialDmg;
@@ -1834,11 +1843,9 @@
                     duelState.playerArmor = 0;
                 }
                 duelState.playerHp = Math.max(0, duelState.playerHp - specialDmg);
-                
-                // Applies 10 stacks of Burn/Poison to the player
                 duelState.playerPoison += 10;
 
-                logDuel(`[ApexPredator SUPREME ABILITY]: Triggered <60 HP Surge! Healed 30 HP, gained 20 Armor, cleansed debuffs, dealt 20 damage & applied 10 Burn/Poison stacks!`);
+                logDuel(`[${duelState.currentOpponentName} SUPREME SURGE]: Triggered <60 HP Recovery! Healed 30 HP, gained 20 Armor, cleansed debuffs, dealt 20 damage & applied 10 Burn/Poison stacks!`);
                 updateDuelUI();
 
                 if (duelState.playerHp <= 0) {
@@ -1847,7 +1854,6 @@
                 return;
             }
 
-            // Standard Opponent Combat Turn Attack
             let botDmg = 16;
             if (duelState.playerArmor >= botDmg) { 
                 duelState.playerArmor -= botDmg; 
@@ -1916,7 +1922,6 @@
                 }
             }
 
-            // Player Hub Banner
             const dGcashNum = document.getElementById('display-gcash-num');
             const dGcashName = document.getElementById('display-gcash-name');
             const dGcashQr = document.getElementById('player-gcash-qr');
@@ -1938,7 +1943,6 @@
                 else dMayaQr.innerText = 'No QR';
             }
 
-            // Registration View Banner
             const regOptGcash = document.getElementById('reg-opt-gcash');
             const regNameGcash = document.getElementById('reg-name-gcash');
             const regGcashQr = document.getElementById('reg-gcash-qr');
@@ -1960,7 +1964,6 @@
                 else regMayaQr.innerText = 'No QR';
             }
 
-            // Top-up Modal Banner
             const topupOptGcash = document.getElementById('topup-opt-gcash');
             const topupGcashQr = document.getElementById('topup-gcash-qr');
             const topupOptMaya = document.getElementById('topup-opt-maya');
@@ -1978,7 +1981,6 @@
                 else topupMayaQr.innerText = 'No QR';
             }
 
-            // Owner Portal Previews
             const ownerGcashQr = document.getElementById('owner-gcash-qr-preview');
             const ownerMayaQr = document.getElementById('owner-maya-qr-preview');
             if (ownerGcashQr) {
@@ -2094,9 +2096,7 @@
 
             document.getElementById('profile-modal-rank').innerText = currentUser.rank;
 
-            // Fetch user's top-up requests from Supabase
             const { data: userTopups } = await supabaseClient.from('topup_requests').select('*').eq('email', currentUser.email).order('created_at', { ascending: false });
-            // Fetch user's withdrawal requests from Supabase
             const { data: userWithdraws } = await supabaseClient.from('withdrawal_requests').select('*').eq('email', currentUser.email).order('created_at', { ascending: false });
 
             const myTopups = userTopups || [];
