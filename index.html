@@ -70,6 +70,7 @@
             <button onclick="window.switchTab('shop')" id="btn-shop" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Shop</button>
             <button onclick="window.openPlayerProfileModal()" id="btn-profile" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-amber-400 hover:bg-amber-500/10 whitespace-nowrap transition">Profile</button>
             <button onclick="window.openLeaderboardModal()" id="btn-leaderboard" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10 whitespace-nowrap transition">Rankings</button>
+            <button onclick="window.openChatModal()" id="btn-support-chat" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-blue-400 hover:bg-blue-500/10 whitespace-nowrap transition">Support Chat</button>
             <button onclick="window.switchTab('owner')" id="btn-owner" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition hidden">Owner</button>
             <button onclick="window.logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition ml-auto">Logout</button>
         </nav>
@@ -334,6 +335,37 @@
                     </div>
                 </div>
 
+                <!-- EMERGENCY MANUAL WALLET ADDER -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/40 space-y-2">
+                    <h3 class="font-cinzel text-xs font-bold text-amber-400">⚡ Emergency Manual Wallet Balance Adder</h3>
+                    <p class="text-[10px] text-slate-400">Add or adjust a player's wallet balance manually for emergency support purposes.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input type="email" id="manual-wallet-email" placeholder="Player Email Address" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <input type="number" id="manual-wallet-amount" placeholder="Amount (e.g. 500 or -100)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <button onclick="window.executeManualWalletAdjustment()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg py-1.5 shadow">Apply Balance</button>
+                    </div>
+                </div>
+
+                <!-- CUSTOMER SERVICE CHAT PORTAL -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-blue-500/40 space-y-2">
+                    <h3 class="font-cinzel text-xs font-bold text-blue-400">💬 Customer Service Support Tickets</h3>
+                    <p class="text-[10px] text-slate-400">Select an active player ticket to review messages and reply in real-time.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div id="owner-chat-threads-list" class="space-y-1 max-h-48 overflow-y-auto pr-1 bg-slate-900 p-2 rounded-lg border border-slate-800">
+                            <div class="text-xs text-slate-500 text-center py-4">No support chats.</div>
+                        </div>
+                        <div class="sm:col-span-2 bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex flex-col justify-between h-48">
+                            <div id="owner-active-chat-box" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs text-slate-300">
+                                <div class="text-center text-slate-500 py-10">Select a player ticket on the left to start chatting.</div>
+                            </div>
+                            <div class="flex space-x-2 pt-2 border-t border-slate-800">
+                                <input type="text" id="owner-chat-input" placeholder="Type reply as Owner..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                                <button onclick="window.sendOwnerChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- PLAYER ACCOUNTS DIRECTORY -->
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory</h3>
@@ -593,6 +625,21 @@
             </div>
         </div>
 
+        <!-- Customer Service Chat Modal (Player View) -->
+        <div id="modal-support-chat" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden flex flex-col h-[420px]">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-blue-400">💬 Customer Service Support</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div id="player-chat-messages-box" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <div class="text-slate-400 text-center py-2">Loading support messages...</div>
+            </div>
+            <div class="flex space-x-2 pt-1">
+                <input type="text" id="player-chat-input" placeholder="Type your message to support..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <button onclick="window.sendPlayerChatMessage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow">Send</button>
+            </div>
+        </div>
+
         <!-- Receipt Preview Modal -->
         <div id="modal-receipt" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Payment Receipt</h3>
@@ -725,6 +772,7 @@
 
         let currentHand = [];
         let matchmakingTimeout = null;
+        let selectedOwnerChatEmail = null;
 
         function logSystemActivity(action, details) {
             const now = new Date();
@@ -982,11 +1030,13 @@
                     const btnShop = document.getElementById('btn-shop');
                     const btnProfile = document.getElementById('btn-profile');
                     const btnLeaderboard = document.getElementById('btn-leaderboard');
+                    const btnChat = document.getElementById('btn-support-chat');
                     if (btnHub) btnHub.classList.add('hidden');
                     if (btnRoster) btnRoster.classList.add('hidden');
                     if (btnShop) btnShop.classList.add('hidden');
                     if (btnProfile) btnProfile.classList.add('hidden');
                     if (btnLeaderboard) btnLeaderboard.classList.add('hidden');
+                    if (btnChat) btnChat.classList.add('hidden');
                     if (btnOwner) btnOwner.classList.remove('hidden');
                     updateHeaderUserInfo();
                     switchTab('owner');
@@ -1026,12 +1076,14 @@
                 const btnShop = document.getElementById('btn-shop');
                 const btnProfile = document.getElementById('btn-profile');
                 const btnLeaderboard = document.getElementById('btn-leaderboard');
+                const btnChat = document.getElementById('btn-support-chat');
                 if (btnOwner) btnOwner.classList.add('hidden');
                 if (btnHub) btnHub.classList.remove('hidden');
                 if (btnRoster) btnRoster.classList.remove('hidden');
                 if (btnShop) btnShop.classList.remove('hidden');
                 if (btnProfile) btnProfile.classList.remove('hidden');
                 if (btnLeaderboard) btnLeaderboard.classList.remove('hidden');
+                if (btnChat) btnChat.classList.remove('hidden');
                 switchTab('hub');
             } catch(err) {
                 console.error('restoreUserSession error:', err);
@@ -1553,6 +1605,7 @@
                 if(b) { b.classList.add('bg-blue-600', 'text-white'); b.classList.remove('text-slate-400'); }
                 loadOwnerInputs();
                 renderOwnerQueues();
+                renderOwnerChatThreads();
             }
         }
         window.switchTab = switchTab;
@@ -1616,14 +1669,12 @@
             const isFirstMatch = !currentUser.first_match_completed;
 
             if (isFirstMatch) {
-                // First match is strictly against Apex Predator
                 matchmakingTimeout = setTimeout(() => {
                     closeModal();
                     document.getElementById('modal-backdrop').classList.remove('hidden');
                     document.getElementById('modal-cointoss').classList.remove('hidden');
                 }, 2000);
             } else {
-                // Subsequent matches: Search real online players for up to 20 seconds
                 let secondsElapsed = 0;
                 
                 const searchInterval = setInterval(async () => {
@@ -1851,7 +1902,6 @@
                 duelState.playerHp = Math.max(0, duelState.playerHp - duelState.playerPoison);
             }
 
-            // Custom Threshold Skill for Bot: Triggered silently if HP is below 60 with randomized stats
             if (duelState.enemyHp < 60 && !duelState.apexSpecialTriggered) {
                 duelState.apexSpecialTriggered = true;
                 
@@ -1917,7 +1967,6 @@
             duelState.playerAp -= card.ap;
             let dmg = card.cost === 500 ? 75 : 24;
             
-            // Deduct damage from enemy armor first if armor > 0
             if (duelState.enemyArmor >= dmg) {
                 duelState.enemyArmor -= dmg;
                 dmg = 0;
@@ -1947,6 +1996,211 @@
             }
         }
         window.endDuelTurn = endDuelTurn;
+
+        // ================= CUSTOMER SERVICE CHAT LOGIC =================
+        async function openChatModal() {
+            if (!currentUser || !supabaseClient) return;
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            document.getElementById('modal-support-chat').classList.remove('hidden');
+            await loadPlayerChatMessages();
+        }
+        window.openChatModal = openChatModal;
+
+        async function loadPlayerChatMessages() {
+            if (!supabaseClient || !currentUser) return;
+            const { data: messages, error } = await supabaseClient
+                .from('support_messages')
+                .select('*')
+                .eq('email', currentUser.email)
+                .order('created_at', { ascending: true });
+
+            const box = document.getElementById('player-chat-messages-box');
+            if (!box) return;
+
+            if (error || !messages || messages.length === 0) {
+                box.innerHTML = `<div class="text-slate-400 text-center py-4">No messages yet. Send a message to contact Owner support!</div>`;
+                return;
+            }
+
+            box.innerHTML = messages.map(m => {
+                const isOwner = m.sender === 'owner';
+                return `
+                    <div class="flex flex-col ${isOwner ? 'items-start' : 'items-end'}">
+                        <div class="max-w-[80%] p-2.5 rounded-xl ${isOwner ? 'bg-slate-800 text-white border border-slate-700' : 'bg-blue-600 text-white'}">
+                            <span class="text-[9px] opacity-75 block font-bold">${isOwner ? 'Owner Support' : currentUser.nickname}</span>
+                            <p class="text-xs mt-0.5">${m.message}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function sendPlayerChatMessage() {
+            const input = document.getElementById('player-chat-input');
+            const msg = input.value.trim();
+            if (!msg || !currentUser || !supabaseClient) return;
+
+            const { error } = await supabaseClient.from('support_messages').insert([{
+                email: currentUser.email,
+                nickname: currentUser.nickname,
+                sender: 'player',
+                message: msg,
+                created_at: new Date()
+            }]);
+
+            if (error) {
+                alert('Failed to send message: ' + error.message);
+                return;
+            }
+
+            input.value = '';
+            await loadPlayerChatMessages();
+        }
+        window.sendPlayerChatMessage = sendPlayerChatMessage;
+
+        async function renderOwnerChatThreads() {
+            if (!supabaseClient) return;
+            const { data: allMsgs, error } = await supabaseClient
+                .from('support_messages')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error || !allMsgs) return;
+
+            const threadsMap = {};
+            allMsgs.forEach(m => {
+                if (!threadsMap[m.email]) {
+                    threadsMap[m.email] = { nickname: m.nickname, lastMsg: m.message, email: m.email };
+                }
+            });
+
+            const threadsListEl = document.getElementById('owner-chat-threads-list');
+            const threadsArray = Object.values(threadsMap);
+
+            if (threadsArray.length === 0) {
+                threadsListEl.innerHTML = `<div class="text-xs text-slate-500 text-center py-4">No support chats.</div>`;
+                return;
+            }
+
+            threadsListEl.innerHTML = threadsArray.map(t => `
+                <div onclick="window.selectOwnerChatThread('${t.email}')" class="p-2 rounded-lg bg-slate-950 border ${selectedOwnerChatEmail === t.email ? 'border-blue-500' : 'border-slate-800'} cursor-pointer hover:bg-slate-900 transition text-xs">
+                    <span class="font-bold text-amber-400 block">${t.nickname}</span>
+                    <span class="text-[10px] text-slate-400 truncate block">${t.lastMsg}</span>
+                </div>
+            `).join('');
+        }
+        window.renderOwnerChatThreads = renderOwnerChatThreads;
+
+        async function selectOwnerChatThread(email) {
+            selectedOwnerChatEmail = email;
+            renderOwnerChatThreads();
+            await loadOwnerActiveChatBox();
+        }
+        window.selectOwnerChatThread = selectOwnerChatThread;
+
+        async function loadOwnerActiveChatBox() {
+            if (!selectedOwnerChatEmail || !supabaseClient) return;
+            const { data: messages, error } = await supabaseClient
+                .from('support_messages')
+                .select('*')
+                .eq('email', selectedOwnerChatEmail)
+                .order('created_at', { ascending: true });
+
+            const box = document.getElementById('owner-active-chat-box');
+            if (!box) return;
+
+            if (error || !messages || messages.length === 0) {
+                box.innerHTML = `<div class="text-slate-500 text-center py-10">No messages in this chat.</div>`;
+                return;
+            }
+
+            box.innerHTML = messages.map(m => {
+                const isOwner = m.sender === 'owner';
+                return `
+                    <div class="flex flex-col ${isOwner ? 'items-end' : 'items-start'}">
+                        <div class="max-w-[80%] p-2 rounded-lg ${isOwner ? 'bg-blue-600 text-white' : 'bg-slate-800 text-white border border-slate-700'}">
+                            <span class="text-[9px] opacity-75 block font-bold">${isOwner ? 'Owner' : m.nickname}</span>
+                            <p class="text-xs mt-0.5">${m.message}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function sendOwnerChatMessage() {
+            const input = document.getElementById('owner-chat-input');
+            const msg = input.value.trim();
+            if (!msg || !selectedOwnerChatEmail || !supabaseClient) {
+                alert('Please select a player chat thread first.');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('support_messages').insert([{
+                email: selectedOwnerChatEmail,
+                nickname: 'Owner',
+                sender: 'owner',
+                message: msg,
+                created_at: new Date()
+            }]);
+
+            if (error) {
+                alert('Failed to send reply: ' + error.message);
+                return;
+            }
+
+            input.value = '';
+            await loadOwnerActiveChatBox();
+            await renderOwnerChatThreads();
+        }
+        window.sendOwnerChatMessage = sendOwnerChatMessage;
+
+        // ================= EMERGENCY MANUAL WALLET ADDER =================
+        async function executeManualWalletAdjustment() {
+            const email = document.getElementById('manual-wallet-email').value.trim();
+            const amount = parseFloat(document.getElementById('manual-wallet-amount').value);
+
+            if (!email || isNaN(amount)) {
+                alert('Please enter a valid player email and amount.');
+                return;
+            }
+            if (!supabaseClient) {
+                alert('Database client not connected.');
+                return;
+            }
+
+            const { data: targetUser, error: fetchErr } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('email', email)
+                .single();
+
+            if (fetchErr || !targetUser) {
+                alert('Player account not found with this email.');
+                return;
+            }
+
+            const newBalance = targetUser.balance + amount;
+            const { error: updateErr } = await supabaseClient
+                .from('profiles')
+                .update({ balance: newBalance })
+                .eq('email', email);
+
+            if (updateErr) {
+                alert('Failed to update balance: ' + updateErr.message);
+                return;
+            }
+
+            logSystemActivity('Manual Wallet Adjustment', `Owner adjusted wallet for ${email} by ₱${amount}. New balance: ₱${newBalance}`);
+            alert(`Successfully adjusted wallet for ${email} by ₱${amount}. New balance is ₱${newBalance.toFixed(2)}.`);
+            
+            document.getElementById('manual-wallet-email').value = '';
+            document.getElementById('manual-wallet-amount').value = '';
+            renderOwnerQueues();
+        }
+        window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
         async function updateMerchantPaymentDisplay() {
             if (supabaseClient) {
@@ -2118,7 +2372,7 @@
 
         function openModal(type) {
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'].forEach(m => {
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat'].forEach(m => {
                 document.getElementById(m).classList.add('hidden');
             });
             if(type === 'topup') { 
@@ -2137,7 +2391,7 @@
         async function openPlayerProfileModal() {
             if (!currentUser || !supabaseClient) return;
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-leaderboard'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-leaderboard', 'modal-support-chat'].forEach(m => document.getElementById(m).classList.add('hidden'));
             document.getElementById('modal-player-profile').classList.remove('hidden');
 
             document.getElementById('profile-modal-rank').innerText = currentUser.rank;
@@ -2210,7 +2464,7 @@
 
         async function openLeaderboardModal() {
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-support-chat'].forEach(m => document.getElementById(m).classList.add('hidden'));
             document.getElementById('modal-leaderboard').classList.remove('hidden');
 
             if (!supabaseClient) return;
@@ -2250,7 +2504,7 @@
 
         function viewReceipt(dataUrl) {
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat'].forEach(m => document.getElementById(m).classList.add('hidden'));
             document.getElementById('modal-receipt').classList.remove('hidden');
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${dataUrl}" class="max-h-60 rounded object-contain">`;
         }
