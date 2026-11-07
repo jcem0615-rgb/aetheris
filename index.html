@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <!-- Header Right: Nickname & Wallet Beside Each Other (Uneditable Nickname) -->
+            <!-- Header Right: Nickname & Wallet Beside Each Other -->
             <div class="flex items-center space-x-1.5">
                 <button id="btn-install-pwa" onclick="window.installPWA()" class="hidden items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow transition">
                     <span>Install</span>
@@ -213,7 +213,7 @@
         <div id="view-select" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
-                <p class="text-slate-400 text-xs">Inspect all champions. Unchosen starter heroes cost ₱200; ranked heroes require wins/EXP or purchase!</p>
+                <p class="text-slate-400 text-xs">Inspect all champions. Ranked/Advanced heroes strictly require meeting Win & EXP thresholds before purchase!</p>
                 <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl p-3 text-xs space-y-1.5 w-full">
                     <div class="flex items-center justify-between space-x-2">
                         <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
@@ -962,7 +962,7 @@
                     }
                 }
             } catch (err) {
-                console.error("Init session check error:", err);
+                console.error('Init session check error:', err);
             }
         });
 
@@ -1039,7 +1039,7 @@
                 if (btnLeaderboard) btnLeaderboard.classList.remove('hidden');
                 switchTab('hub');
             } catch(err) {
-                console.error("restoreUserSession error:", err);
+                console.error('restoreUserSession error:', err);
             }
         }
 
@@ -1095,7 +1095,7 @@
             const starterSelect = document.getElementById('view-starter-select');
             if (starterSelect) starterSelect.classList.add('hidden');
             restoreUserSession();
-            alert(`Free starter champion selected successfully! Remaining starters are now for sale in the market.`);
+            alert('Free starter champion selected successfully! Remaining starters are now for sale in the market.');
         }
         window.chooseStarterHero = chooseStarterHero;
 
@@ -1349,12 +1349,13 @@
                     actionBtn = `<span class="px-3 py-1.5 bg-emerald-600/20 text-emerald-400 font-bold text-xs rounded-xl border border-emerald-500/45">Active</span>`;
                 } else if (isUnlocked) {
                     actionBtn = `<button onclick="window.switchActiveHero('${h.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow">Equip</button>`;
+                } else if (!meetsReqs) {
+                    // STREricly blocked if requirements are not met, even if they have money!
+                    actionBtn = `<div class="text-right space-y-0.5"><span class="px-2.5 py-1 bg-slate-800 text-slate-400 font-bold text-[10px] rounded-lg block mb-0.5 border border-slate-700">Locked</span><span class="text-[9px] text-red-400 font-mono block">Req: ${h.requiredWins}W / ${h.requiredXp}XP</span></div>`;
                 } else if (h.isStarter) {
                     actionBtn = `<div class="text-right space-y-0.5"><button onclick="window.buyHero('${h.id}', 200)" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-lg shadow block mb-0.5">Buy ₱200</button><span class="text-[9px] text-amber-400 font-mono block">Starter Market</span></div>`;
-                } else if (meetsReqs) {
-                    actionBtn = `<button onclick="window.claimRankedHero('${h.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow">Unlock</button>`;
                 } else {
-                    actionBtn = `<div class="text-right space-y-0.5"><button onclick="window.buyHero('${h.id}', ${h.price})" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-lg shadow block mb-0.5">Buy ₱${h.price}</button><span class="text-[9px] text-amber-400 font-mono block">Req: ${h.requiredWins}W / ${h.requiredXp}XP</span></div>`;
+                    actionBtn = `<div class="text-right space-y-0.5"><button onclick="window.buyHero('${h.id}', ${h.price})" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-lg shadow block mb-0.5">Buy ₱${h.price}</button><span class="text-[9px] text-emerald-400 font-mono block">Req Met ✓</span></div>`;
                 }
 
                 return `
@@ -1369,6 +1370,7 @@
                                     <span class="text-[9px] bg-blue-600/20 text-blue-400 px-2 py-0.2 rounded-full border border-blue-500/30">${h.rarity}</span>
                                 </div>
                                 <p class="text-[11px] text-slate-400 max-w-xs">${h.desc}</p>
+                                <span class="text-[10px] text-slate-400 font-mono mt-0.5 block">Req: ${h.requiredWins}W / ${h.requiredXp}XP</span>
                             </div>
                         </div>
                         <div>${actionBtn}</div>
@@ -1455,6 +1457,15 @@
 
         async function buyHero(id, price) {
             if (!currentUser || !supabaseClient) return;
+            const h = heroes.find(item => item.id === id);
+            if (!h) return;
+            
+            // Strictly enforce requirement check prior to purchase!
+            if (currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) {
+                alert(`Cannot purchase! Requirement not met: Requires ${h.requiredWins} Wins and ${h.requiredXp} XP.`);
+                return;
+            }
+
             if (currentUser.balance < price) { alert('Insufficient wallet balance!'); return; }
             currentUser.balance -= price;
             if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [];
