@@ -717,7 +717,7 @@
         let duelState = { 
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
             enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-            turnTimeRemaining: 30, turnTimerInterval: null, isFirstMatchBot: false, currentOpponentName: 'ApexPredator', isPlayerTurn: true
+            turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: false, apexSpecialTriggered: false, currentOpponentName: 'ApexPredator', isPlayerTurn: true
         };
 
         let currentHand = [];
@@ -1558,11 +1558,16 @@
             const activeId = currentUser.active_hero || currentUser.activeHero || 'pyra';
             const h = heroes.find(item => item.id === activeId);
             let deck = h ? [...h.baseSkills] : [...heroes[0].baseSkills];
+            
+            const skillsMap = (currentUser && (currentUser.unlocked_skills || currentUser.unlockedSkills)) || {};
             const availableShopSkills = shopSkillsMap[activeId] || [];
+            
             availableShopSkills.forEach(skill => {
-                const skillsMap = currentUser.unlocked_skills || currentUser.unlockedSkills || {};
-                if (skillsMap[skill.id]) deck.push(skill);
+                if (skillsMap[skill.id] === true) {
+                    deck.push(skill);
+                }
             });
+            
             return deck;
         }
 
@@ -1605,11 +1610,45 @@
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-matchmaking').classList.remove('hidden');
 
-            matchmakingTimeout = setTimeout(() => {
-                closeModal();
-                document.getElementById('modal-backdrop').classList.remove('hidden');
-                document.getElementById('modal-cointoss').classList.remove('hidden');
-            }, 2000);
+            // Determine if this is the player's first match
+            const isFirstMatch = !currentUser.first_match_completed;
+
+            if (isFirstMatch) {
+                // First match is strictly against Apex Predator
+                matchmakingTimeout = setTimeout(() => {
+                    closeModal();
+                    document.getElementById('modal-backdrop').classList.remove('hidden');
+                    document.getElementById('modal-cointoss').classList.remove('hidden');
+                }, 2000);
+            } else {
+                // Subsequent matches: P2P Matchmaking based on rank and wager
+                matchmakingTimeout = setTimeout(async () => {
+                    closeModal();
+                    // Query Supabase for another player matching rank & wager tier
+                    const { data: onlinePlayers } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .eq('role', 'player')
+                        .eq('rank', currentUser.rank)
+                        .neq('email', currentUser.email)
+                        .eq('approved', true);
+
+                    const validPeers = (onlinePlayers || []).filter(p => p.balance >= amount);
+
+                    if (validPeers.length > 0) {
+                        // Match with real peer player
+                        const matchedPeer = validPeers[Math.floor(Math.random() * validPeers.length)];
+                        const playerWonToss = Math.random() < 0.5;
+                        alert(`Found P2P Opponent: ${matchedPeer.nickname} (${matchedPeer.rank})!`);
+                        launchP2PMatch(currentDuelBet, matchedPeer, playerWonToss);
+                    } else {
+                        // Fallback fallback AI bot if no online peer available at exact rank/wager
+                        const playerWonToss = Math.random() < 0.5;
+                        alert(`Matched with ranked tier opponent in lobby!`);
+                        launchDisguisedBotMatch(currentDuelBet, playerWonToss, 'TacticalRival');
+                    }
+                }, 2500);
+            }
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
 
@@ -1618,7 +1657,9 @@
             const playerWonToss = (playerChoice === outcome);
             alert(`🪙 Coin Toss: ${outcome}! You chose ${playerChoice}.\n${playerWonToss ? '🎉 You move first!' : '⚠️ Opponent moves first!'}`);
             closeModal();
-            launchDisguisedBotMatch(currentDuelBet, playerWonToss, outcome);
+            
+            // First match is strictly against Apex Predator
+            launchDisguisedBotMatch(currentDuelBet, playerWonToss, 'ApexPredator');
         }
         window.executeCoinToss = executeCoinToss;
 
@@ -1635,17 +1676,43 @@
         }
         window.cancelMatchmakingQueue = cancelMatchmakingQueue;
 
-        function launchDisguisedBotMatch(amount, playerWonToss, tossOutcome) {
-            duelState.currentOpponentName = 'ApexPredator';
+        function launchDisguisedBotMatch(amount, playerWonToss, botName = 'ApexPredator') {
+            duelState.currentOpponentName = botName;
             document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
-            document.getElementById('fs-enemy-title').innerText = `ApexPredator`;
-            document.getElementById('fs-enemy-name-label').innerText = `APEX`;
+            document.getElementById('fs-enemy-title').innerText = botName;
+            document.getElementById('fs-enemy-name-label').innerText = botName === 'ApexPredator' ? 'APEX' : 'RIVAL';
             document.getElementById('fs-enemy-img-el').src = "image_1d431b92.jpg";
 
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
             duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
-            duelState.isFirstMatchBot = true;
+            duelState.isBotMatch = true;
+            duelState.apexSpecialTriggered = false; // Reset threshold trigger for the new match
+            duelState.isPlayerTurn = playerWonToss;
+            
+            shuffleAndDrawHand();
+            if (!playerWonToss) {
+                setTimeout(() => { executeBotCombatTurn(); }, 1000);
+            }
+            updateDuelUI();
+
+            ['main-header', 'view-hub', 'view-shop', 'view-select', 'view-starter-select'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById('view-duel-fullscreen').classList.remove('hidden');
+        }
+
+        function launchP2PMatch(amount, peerProfile, playerWonToss) {
+            duelState.currentOpponentName = peerProfile.nickname;
+            document.getElementById('fullscreen-bet-badge').innerText = `Bet: ₱${amount}`;
+            document.getElementById('fs-enemy-title').innerText = `${peerProfile.nickname} (${peerProfile.rank})`;
+            document.getElementById('fs-enemy-name-label').innerText = peerProfile.nickname.toUpperCase();
+            document.getElementById('fs-enemy-img-el').src = "image_e51741b7.jpg";
+
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            duelState.playerHp = 100; duelState.playerMaxHp = 100; duelState.playerArmor = 0; duelState.playerAp = 3; duelState.playerPoison = 0;
+            duelState.enemyHp = 100; duelState.enemyMaxHp = 100; duelState.enemyArmor = 0; duelState.enemyPoison = 0; duelState.enemyDebuff = 'None';
+            duelState.isBotMatch = false; // Real Peer-to-Peer asynchronous/simulated match
             duelState.isPlayerTurn = playerWonToss;
             
             shuffleAndDrawHand();
@@ -1706,7 +1773,7 @@
 
         async function handleVictory() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-            if (duelState.isFirstMatchBot && supabaseClient) {
+            if (!currentUser.first_match_completed && supabaseClient) {
                 currentUser.first_match_completed = true;
                 await supabaseClient.from('profiles').update({ first_match_completed: true }).eq('email', currentUser.email);
             }
@@ -1728,7 +1795,7 @@
 
         async function handleDefeat() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-            if (duelState.isFirstMatchBot && supabaseClient) {
+            if (!currentUser.first_match_completed && supabaseClient) {
                 currentUser.first_match_completed = true;
                 await supabaseClient.from('profiles').update({ first_match_completed: true }).eq('email', currentUser.email);
             }
@@ -1745,14 +1812,58 @@
         }
 
         function executeBotCombatTurn() {
-            if (!duelState.isFirstMatchBot) return;
+            // Apex Predator Special Threshold Skill: Triggered if HP is below 60 and opponent is ApexPredator
+            if (duelState.currentOpponentName === 'ApexPredator' && duelState.enemyHp < 60 && !duelState.apexSpecialTriggered) {
+                duelState.apexSpecialTriggered = true; // Ensures it triggers once per match
+                
+                // Bot gains 30 HP (capped at max HP) and 20 Armor
+                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + 30);
+                duelState.enemyArmor += 20;
+                
+                // Cleanses any existing Burn or Poison (debuffs)
+                duelState.enemyPoison = 0;
+                duelState.enemyDebuff = 'None';
+                
+                // Deals 20 direct damage to the player
+                let specialDmg = 20;
+                if (duelState.playerArmor >= specialDmg) {
+                    duelState.playerArmor -= specialDmg;
+                    specialDmg = 0;
+                } else {
+                    specialDmg -= duelState.playerArmor;
+                    duelState.playerArmor = 0;
+                }
+                duelState.playerHp = Math.max(0, duelState.playerHp - specialDmg);
+                
+                // Applies 10 stacks of Burn/Poison to the player
+                duelState.playerPoison += 10;
+
+                logDuel(`[ApexPredator SUPREME ABILITY]: Triggered <60 HP Surge! Healed 30 HP, gained 20 Armor, cleansed debuffs, dealt 20 damage & applied 10 Burn/Poison stacks!`);
+                updateDuelUI();
+
+                if (duelState.playerHp <= 0) {
+                    handleDefeat();
+                }
+                return;
+            }
+
+            // Standard Opponent Combat Turn Attack
             let botDmg = 16;
-            if (duelState.playerArmor >= botDmg) { duelState.playerArmor -= botDmg; botDmg = 0; }
-            else { botDmg -= duelState.playerArmor; duelState.playerArmor = 0; }
+            if (duelState.playerArmor >= botDmg) { 
+                duelState.playerArmor -= botDmg; 
+                botDmg = 0; 
+            } else { 
+                botDmg -= duelState.playerArmor; 
+                duelState.playerArmor = 0; 
+            }
+            
             duelState.playerHp = Math.max(0, duelState.playerHp - botDmg);
-            logDuel(`[ApexPredator]: Struck for ${botDmg} damage!`);
+            logDuel(`[${duelState.currentOpponentName}]: Struck for ${botDmg} damage!`);
             updateDuelUI();
-            if (duelState.playerHp <= 0) handleDefeat();
+
+            if (duelState.playerHp <= 0) {
+                handleDefeat();
+            }
         }
 
         function playCard(index) {
@@ -2325,7 +2436,6 @@
             if (!withdrawReq) return;
 
             if (newStatus === 'approved') {
-                // Deduct from balance upon final owner approval
                 const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', withdrawReq.email).single();
                 if (targetUser) {
                     if (targetUser.balance < withdrawReq.amount) {
