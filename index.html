@@ -551,7 +551,7 @@
                 </div>
             </div>
             <div class="flex space-x-2 pt-1">
-                <button onclick="window.submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl">Submit Withdrawal</button>
+                <button onclick="window.submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl">Submit Withdrawal</button>
                 <button onclick="window.closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
             </div>
         </div>
@@ -691,7 +691,6 @@
 
         let currentDuelBet = 50;
 
-        let pendingDeposits = JSON.parse(localStorage.getItem('aetheris_pending_deposits')) || [];
         let pendingWithdrawals = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
         let approvedDepositsLog = JSON.parse(localStorage.getItem('aetheris_approved_deposits')) || [];
         let approvedWithdrawalsLog = JSON.parse(localStorage.getItem('aetheris_approved_withdrawals')) || [];
@@ -747,7 +746,6 @@
             } else {
                 localStorage.removeItem('aetheris_current_user');
             }
-            localStorage.setItem('aetheris_pending_deposits', JSON.stringify(pendingDeposits));
             localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(pendingWithdrawals));
             localStorage.setItem('aetheris_approved_deposits', JSON.stringify(approvedDepositsLog));
             localStorage.setItem('aetheris_approved_withdrawals', JSON.stringify(approvedWithdrawalsLog));
@@ -1350,7 +1348,6 @@
                 } else if (isUnlocked) {
                     actionBtn = `<button onclick="window.switchActiveHero('${h.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow">Equip</button>`;
                 } else if (!meetsReqs) {
-                    // STREricly blocked if requirements are not met, even if they have money!
                     actionBtn = `<div class="text-right space-y-0.5"><span class="px-2.5 py-1 bg-slate-800 text-slate-400 font-bold text-[10px] rounded-lg block mb-0.5 border border-slate-700">Locked</span><span class="text-[9px] text-red-400 font-mono block">Req: ${h.requiredWins}W / ${h.requiredXp}XP</span></div>`;
                 } else if (h.isStarter) {
                     actionBtn = `<div class="text-right space-y-0.5"><button onclick="window.buyHero('${h.id}', 200)" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-lg shadow block mb-0.5">Buy ₱200</button><span class="text-[9px] text-amber-400 font-mono block">Starter Market</span></div>`;
@@ -1460,7 +1457,6 @@
             const h = heroes.find(item => item.id === id);
             if (!h) return;
             
-            // Strictly enforce requirement check prior to purchase!
             if (currentUser.wins < h.requiredWins || currentUser.xp < h.requiredXp) {
                 alert(`Cannot purchase! Requirement not met: Requires ${h.requiredWins} Wins and ${h.requiredXp} XP.`);
                 return;
@@ -2104,17 +2100,39 @@
         }
         window.deletePlayerAccount = deletePlayerAccount;
 
-        function submitTopUp() {
+        async function submitTopUp() {
             const amt = parseFloat(document.getElementById('topup-amount').value);
             const ref = document.getElementById('topup-ref').value;
             const receiptFile = document.getElementById('topup-receipt').files[0];
-            if(!amt || !ref || !receiptFile) { alert('Fill in all fields and upload receipt.'); return; }
+            
+            if (!amt || !ref || !receiptFile) { 
+                alert('Please fill in all fields and upload your receipt.'); 
+                return; 
+            }
+            if (!supabaseClient) { 
+                alert('Database client not connected.'); 
+                return; 
+            }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
-                pendingDeposits.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, ref: ref, receipt: e.target.result, date: new Date().toISOString().split('T')[0] });
-                persistLocalStorage();
-                alert('Top-up request submitted!');
+            reader.onload = async function(e) {
+                const payload = {
+                    email: currentUser.email,
+                    nickname: currentUser.nickname,
+                    amount: amt,
+                    ref: ref,
+                    receipt: e.target.result,
+                    status: 'pending',
+                    date: new Date().toISOString().split('T')[0]
+                };
+
+                const { error } = await supabaseClient.from('topup_requests').insert([payload]);
+                if (error) {
+                    alert('Top-up submission failed: ' + error.message);
+                    return;
+                }
+
+                alert('Top-up request submitted successfully! Awaiting owner review.');
                 closeModal();
             };
             reader.readAsDataURL(receiptFile);
@@ -2147,6 +2165,9 @@
             const { data: allProfiles } = await supabaseClient.from('profiles').select('*').neq('email', EXCLUSIVE_OWNER_EMAIL);
             const accounts = allProfiles || [];
 
+            const { data: dbTopups } = await supabaseClient.from('topup_requests').select('*').eq('status', 'pending');
+            const pendingTopupList = dbTopups || [];
+
             const playersContainer = document.getElementById('owner-players-list');
             const filteredPlayers = accounts.filter(acc => acc.role === 'player' && acc.approved === true);
             if (playersContainer) {
@@ -2177,12 +2198,15 @@
 
             const depContainer = document.getElementById('owner-deposit-list');
             if(depContainer) {
-                depContainer.innerHTML = pendingDeposits.length ? pendingDeposits.map(d => `
+                depContainer.innerHTML = pendingTopupList.length ? pendingTopupList.map(d => `
                     <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-emerald-400">+₱${d.amount} (${d.nickname})</span></div>
-                        <div class="space-x-1"><button onclick="window.approveDeposit(${d.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[9px]">Approve</button></div>
+                        <div><span class="font-bold text-emerald-400">+₱${d.amount} (${d.nickname})</span><div class="text-[9px] text-slate-400">Ref: ${d.ref}</div></div>
+                        <div class="space-x-1 flex items-center">
+                            <button onclick="window.viewReceipt('${d.receipt}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[9px]">Receipt</button>
+                            <button onclick="window.approveDeposit('${d.id}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[9px]">Approve</button>
+                        </div>
                     </div>
-                `).join('') : '<div class="text-xs text-slate-500 text-center py-2">No pending deposits.</div>';
+                `).join('') : '<div class="text-xs text-slate-500 text-center py-2">No pending top-up requests.</div>';
             }
 
             const witContainer = document.getElementById('owner-withdraw-list');
@@ -2207,24 +2231,24 @@
 
         async function approveDeposit(id) {
             if (!supabaseClient) return;
-            const idx = pendingDeposits.findIndex(d => d.id === id);
-            if(idx > -1) {
-                const item = pendingDeposits[idx];
-                const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', item.email).single();
-                if(targetUser) {
-                    const newBal = targetUser.balance + item.amount;
-                    await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', item.email);
-                    if(currentUser && currentUser.email.toLowerCase() === item.email.toLowerCase()) {
-                        currentUser.balance = newBal;
-                        updateWalletDisplay();
-                    }
+            
+            const { data: topupReq } = await supabaseClient.from('topup_requests').select('*').eq('id', id).single();
+            if (!topupReq) return;
+
+            const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', topupReq.email).single();
+            if (targetUser) {
+                const newBal = targetUser.balance + topupReq.amount;
+                await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', topupReq.email);
+                
+                if (currentUser && currentUser.email.toLowerCase() === topupReq.email.toLowerCase()) {
+                    currentUser.balance = newBal;
+                    updateWalletDisplay();
                 }
-                approvedDepositsLog.push(item);
-                pendingDeposits.splice(idx, 1);
-                persistLocalStorage();
-                renderOwnerQueues();
-                alert('Deposit approved and credited!');
             }
+
+            await supabaseClient.from('topup_requests').update({ status: 'approved' }).eq('id', id);
+            renderOwnerQueues();
+            alert('Top-up approved and credited to player balance!');
         }
         window.approveDeposit = approveDeposit;
 
