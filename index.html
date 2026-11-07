@@ -21,6 +21,7 @@
         .card-hover { transition: all 0.2s ease; }
         .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3); }
         .fantasy-frame { border: 2px solid #64748b; box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.6); }
+        .legal-modal-content { max-height: 60vh; overflow-y: auto; }
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-6px); }
@@ -157,6 +158,23 @@
                         <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
                     </div>
                 </div>
+
+                <!-- Mandatory Checkboxes for Registration -->
+                <div class="space-y-2 pt-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px]">
+                    <label class="flex items-start space-x-2 cursor-pointer">
+                        <input type="checkbox" id="reg-check-terms" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
+                        <span class="text-slate-300 text-[10px]">
+                            I agree to the <button type="button" onclick="window.openLegalModal('terms')" class="text-amber-400 underline hover:text-amber-300">Terms and Conditions</button>, including the strict prohibition of bots, AI agents, and automated scripts.
+                        </span>
+                    </label>
+                    <label class="flex items-start space-x-2 cursor-pointer">
+                        <input type="checkbox" id="reg-check-privacy" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
+                        <span class="text-slate-300 text-[10px]">
+                            I have read and accept the <button type="button" onclick="window.openLegalModal('privacy')" class="text-amber-400 underline hover:text-amber-300">Privacy Policy</button> regarding data security and anti-fraud monitoring.
+                        </span>
+                    </label>
+                </div>
+
                 <div class="flex items-center justify-between text-xs pt-1">
                     <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
                 </div>
@@ -654,6 +672,37 @@
                 <input type="text" id="player-chat-input" placeholder="Type your message to support..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <button onclick="window.sendPlayerChatMessage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow">Send</button>
             </div>
+        </div>
+
+        <!-- Terms and Conditions Modal -->
+        <div id="modal-terms" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Terms and Conditions</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div class="legal-modal-content space-y-2 text-[11px] text-slate-300 pr-1">
+                <p><strong>1. Acceptance of Terms:</strong> By registering, accessing, or playing on Aetheris Arena, you agree to be bound by these Terms and Conditions.</p>
+                <p><strong>2. Anti-Bot, Anti-Cheat, and Security Policy:</strong> To ensure a fair competitive P2P environment, <strong>the use of any automated scripts, bots, AI agents, macro tools, web scrapers, or unauthorized third-party software is strictly prohibited</strong>. Any detection of automated access, artificial intelligence scraping, bot manipulation, or programmatic wagering will result in immediate account termination, forfeiture of wallet balances, and permanent device blacklisting.</p>
+                <p><strong>3. Account Registration & P50 Fee:</strong> Accounts require accurate legal identification and a verified ₱50.00 registration fee receipt. Multiple accounts per individual are strictly forbidden.</p>
+                <p><strong>4. P2P Wagers & Platform Fees:</strong> Ranked duels involve peer-to-peer wagers. The platform deducts a standard 5% operational fee from the total prize pool upon match settlement.</p>
+                <p><strong>5. Financial Transactions:</strong> Top-ups and withdrawals are processed through verified official merchant channels. Withdrawals require matching registered phone numbers and legal names.</p>
+            </div>
+            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
+        </div>
+
+        <!-- Privacy Policy Modal -->
+        <div id="modal-privacy" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Privacy Policy</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div class="legal-modal-content space-y-2 text-[11px] text-slate-300 pr-1">
+                <p><strong>1. Information Collection:</strong> We collect personal details provided during registration, including your legal name, email address, phone number, birthday, transaction reference numbers, and payment receipt proofs.</p>
+                <p><strong>2. Security & Anti-Fraud Monitoring:</strong> We monitor platform traffic, login patterns, and gameplay sessions to detect and block bots, AI scrapers, automated scripts, and fraudulent activities. Technical telemetry and device fingerprints may be logged for platform security.</p>
+                <p><strong>3. Data Usage:</strong> Your data is used exclusively to manage your player profile, process secure peer-to-peer wagers, verify top-up/withdrawal transactions, and provide customer support.</p>
+                <p><strong>4. Data Protection:</strong> We employ robust encryption and security protocols to safeguard your personal information against unauthorized access or breaches.</p>
+            </div>
+            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
 
         <!-- Receipt Preview Modal -->
@@ -1186,8 +1235,29 @@
         }
         window.showAuthMode = showAuthMode;
 
+        function openLegalModal(type) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat', 'modal-terms', 'modal-privacy'].forEach(m => {
+                document.getElementById(m).classList.add('hidden');
+            });
+            if (type === 'terms') {
+                document.getElementById('modal-terms').classList.remove('hidden');
+            } else if (type === 'privacy') {
+                document.getElementById('modal-privacy').classList.remove('hidden');
+            }
+        }
+        window.openLegalModal = openLegalModal;
+
         async function handleRegister() {
             try {
+                const termsChecked = document.getElementById('reg-check-terms').checked;
+                const privacyChecked = document.getElementById('reg-check-privacy').checked;
+
+                if (!termsChecked || !privacyChecked) {
+                    alert('You must review and agree to both the Terms and Conditions (Anti-Bot Policy) and Privacy Policy before registering.');
+                    return;
+                }
+
                 const nameEl = document.getElementById('reg-name');
                 const nickEl = document.getElementById('reg-nickname');
                 const phoneEl = document.getElementById('reg-phone');
@@ -2017,7 +2087,7 @@
         async function openChatModal() {
             if (!currentUser || !supabaseClient) return;
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat', 'modal-terms', 'modal-privacy'].forEach(m => document.getElementById(m).classList.add('hidden'));
             document.getElementById('modal-support-chat').classList.remove('hidden');
             await loadPlayerChatMessages();
         }
@@ -2388,7 +2458,7 @@
 
         function openModal(type) {
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat'].forEach(m => {
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat', 'modal-terms', 'modal-privacy'].forEach(m => {
                 document.getElementById(m).classList.add('hidden');
             });
             if(type === 'topup') { 
@@ -2407,7 +2477,7 @@
         async function openPlayerProfileModal() {
             if (!currentUser || !supabaseClient) return;
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-leaderboard', 'modal-support-chat'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-leaderboard', 'modal-support-chat', 'modal-terms', 'modal-privacy'].forEach(m => document.getElementById(m).classList.add('hidden'));
             document.getElementById('modal-player-profile').classList.remove('hidden');
 
             document.getElementById('profile-modal-rank').innerText = currentUser.rank;
@@ -2480,7 +2550,7 @@
 
         async function openLeaderboardModal() {
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-support-chat'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-support-chat', 'modal-terms', 'modal-privacy'].forEach(m => document.getElementById(m).classList.add('hidden'));
             document.getElementById('modal-leaderboard').classList.remove('hidden');
 
             if (!supabaseClient) return;
@@ -2520,7 +2590,7 @@
 
         function viewReceipt(dataUrl) {
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat', 'modal-terms', 'modal-privacy'].forEach(m => document.getElementById(m).classList.add('hidden'));
             document.getElementById('modal-receipt').classList.remove('hidden');
             document.getElementById('receipt-preview-container').innerHTML = `<img src="${dataUrl}" class="max-h-60 rounded object-contain">`;
         }
