@@ -122,16 +122,16 @@
                             <div id="reg-gcash-qr" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                             <div>
                                 <span class="font-bold text-blue-400 block text-[10px]">GCash</span>
-                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-[9px]">0992-***-6789</span>
-                                <span class="text-slate-400 text-[8px]">J*** C**** M.</span>
+                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-[9px]">0992-397-8537</span>
+                                <span id="reg-name-gcash" class="text-slate-400 text-[8px]">John Carlo E.</span>
                             </div>
                         </div>
                         <div class="p-1 flex flex-col items-center text-center space-y-0.5">
                             <div id="reg-maya-qr" class="w-10 h-10 bg-slate-900 border border-slate-700 rounded flex items-center justify-center text-[9px] text-slate-500 overflow-hidden">No QR</div>
                             <div>
                                 <span class="font-bold text-teal-400 block text-[10px]">Maya</span>
-                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-[9px]">0918-***-6543</span>
-                                <span class="text-slate-400 text-[8px]">L****** Hub</span>
+                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-[9px]">0930-160-1780</span>
+                                <span id="reg-name-maya" class="text-slate-400 text-[8px]">FMCM IT Solutions</span>
                             </div>
                         </div>
                     </div>
@@ -365,15 +365,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
                             <span class="text-[11px] font-bold text-blue-400 block">GCash Account & QR Setup</span>
-                            <input type="text" id="input-gcash-num" placeholder="Account Number" value="09923978537" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
-                            <input type="text" id="input-gcash-name" placeholder="Account Name" value="John Carlo Estrada Morales" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
+                            <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
+                            <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="file" id="input-gcash-qr" accept="image/*" onchange="window.handleQRUpload(event, 'gcash')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
                             <button onclick="window.saveOwnerDetails()" class="w-full py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Save GCash</button>
                         </div>
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
                             <span class="text-[11px] font-bold text-teal-400 block">Maya Account & QR Setup</span>
-                            <input type="text" id="input-maya-num" placeholder="Account Number" value="09301601780" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
-                            <input type="text" id="input-maya-name" placeholder="Account Name" value="FMCM IT Solutions" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
+                            <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
+                            <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white">
                             <input type="file" id="input-maya-qr" accept="image/*" onchange="window.handleQRUpload(event, 'maya')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
                             <button onclick="window.saveOwnerDetails()" class="w-full py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg">Save Maya</button>
                         </div>
@@ -695,8 +695,16 @@
         let battleHistoryLog = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
         let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
         let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
-        let uploadedGcashQR = localStorage.getItem('aetheris_gcash_qr') || null;
-        let uploadedMayaQR = localStorage.getItem('aetheris_maya_qr') || null;
+        
+        // Merchant Config State
+        let merchantConfig = JSON.parse(localStorage.getItem('aetheris_merchant_config')) || {
+            gcashNum: '09923978537',
+            gcashName: 'John Carlo Estrada Morales',
+            gcashQR: null,
+            mayaNum: '09301601780',
+            mayaName: 'FMCM IT Solutions',
+            mayaQR: null
+        };
 
         let duelState = { 
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
@@ -734,8 +742,7 @@
             localStorage.setItem('aetheris_battle_history', JSON.stringify(battleHistoryLog));
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
-            if(uploadedGcashQR) localStorage.setItem('aetheris_gcash_qr', uploadedGcashQR);
-            if(uploadedMayaQR) localStorage.setItem('aetheris_maya_qr', uploadedMayaQR);
+            localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
         }
 
         const heroes = [
@@ -945,6 +952,7 @@
             } catch (err) {
                 console.error("Init session check error:", err);
             }
+            updateMerchantPaymentDisplay();
         });
 
         function restoreUserSession() {
@@ -1096,7 +1104,10 @@
             if (registerBox) registerBox.classList.add('hidden');
             if (forgotBox) forgotBox.classList.add('hidden');
             if(mode === 'login' && loginBox) loginBox.classList.remove('hidden');
-            if(mode === 'register' && registerBox) registerBox.classList.remove('hidden');
+            if(mode === 'register' && registerBox) {
+                registerBox.classList.remove('hidden');
+                updateMerchantPaymentDisplay();
+            }
             if(mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
         }
         window.showAuthMode = showAuthMode;
@@ -1160,7 +1171,7 @@
                 const email = emailEl.value.trim();
                 const pass = passEl.value;
                 
-                if(!email || !pass) { alert('Please enter email and password.'); return; }
+                if(!email || !pass) { alert('Enter email and password.'); return; }
                 if (!supabaseClient) { alert('Supabase client not initialized.'); return; }
 
                 const inputHash = await hashPassword(pass);
@@ -1508,6 +1519,7 @@
 
             if(tab === 'hub') {
                 document.getElementById('view-hub').classList.remove('hidden');
+                updateMerchantPaymentDisplay();
                 const b = document.getElementById('btn-hub');
                 if(b) { b.classList.add('bg-blue-600', 'text-white'); b.classList.remove('text-slate-400'); }
             } else if(tab === 'select') {
@@ -1524,6 +1536,7 @@
                 document.getElementById('view-owner').classList.remove('hidden');
                 const b = document.getElementById('btn-owner');
                 if(b) { b.classList.add('bg-blue-600', 'text-white'); b.classList.remove('text-slate-400'); }
+                loadOwnerInputs();
                 renderOwnerQueues();
             }
         }
@@ -1765,10 +1778,10 @@
             if(file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    if(type === 'gcash') uploadedGcashQR = e.target.result;
-                    if(type === 'maya') uploadedMayaQR = e.target.result;
+                    if(type === 'gcash') merchantConfig.gcashQR = e.target.result;
+                    if(type === 'maya') merchantConfig.mayaQR = e.target.result;
                     persistLocalStorage();
-                    updateTopupModalQRs();
+                    updateMerchantPaymentDisplay();
                     alert(type.toUpperCase() + ' QR uploaded successfully!');
                 }
                 reader.readAsDataURL(file);
@@ -1776,14 +1789,96 @@
         }
         window.handleQRUpload = handleQRUpload;
 
-        function updateTopupModalQRs() {
-            if(uploadedGcashQR) document.getElementById('topup-gcash-qr').innerHTML = `<img src="${uploadedGcashQR}" class="w-full h-full object-cover">`;
-            if(uploadedMayaQR) document.getElementById('topup-maya-qr').innerHTML = `<img src="${uploadedMayaQR}" class="w-full h-full object-cover">`;
+        function updateMerchantPaymentDisplay() {
+            // Player Hub Banner
+            const dGcashNum = document.getElementById('display-gcash-num');
+            const dGcashName = document.getElementById('display-gcash-name');
+            const dGcashQr = document.getElementById('player-gcash-qr');
+            const dMayaNum = document.getElementById('display-maya-num');
+            const dMayaName = document.getElementById('display-maya-name');
+            const dMayaQr = document.getElementById('player-maya-qr');
+
+            if (dGcashNum) dGcashNum.innerText = merchantConfig.gcashNum;
+            if (dGcashName) dGcashName.innerText = merchantConfig.gcashName;
+            if (dGcashQr) {
+                if (merchantConfig.gcashQR) dGcashQr.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover">`;
+                else dGcashQr.innerText = 'No QR';
+            }
+
+            if (dMayaNum) dMayaNum.innerText = merchantConfig.mayaNum;
+            if (dMayaName) dMayaName.innerText = merchantConfig.mayaName;
+            if (dMayaQr) {
+                if (merchantConfig.mayaQR) dMayaQr.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover">`;
+                else dMayaQr.innerText = 'No QR';
+            }
+
+            // Registration View Banner
+            const regOptGcash = document.getElementById('reg-opt-gcash');
+            const regNameGcash = document.getElementById('reg-name-gcash');
+            const regGcashQr = document.getElementById('reg-gcash-qr');
+            const regOptMaya = document.getElementById('reg-opt-maya');
+            const regNameMaya = document.getElementById('reg-name-maya');
+            const regMayaQr = document.getElementById('reg-maya-qr');
+
+            if (regOptGcash) regOptGcash.innerText = merchantConfig.gcashNum;
+            if (regNameGcash) regNameGcash.innerText = merchantConfig.gcashName;
+            if (regGcashQr) {
+                if (merchantConfig.gcashQR) regGcashQr.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover">`;
+                else regGcashQr.innerText = 'No QR';
+            }
+
+            if (regOptMaya) regOptMaya.innerText = merchantConfig.mayaNum;
+            if (regNameMaya) regNameMaya.innerText = merchantConfig.mayaName;
+            if (regMayaQr) {
+                if (merchantConfig.mayaQR) regMayaQr.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover">`;
+                else regMayaQr.innerText = 'No QR';
+            }
+
+            // Top-up Modal Banner
+            const topupOptGcash = document.getElementById('topup-opt-gcash');
+            const topupGcashQr = document.getElementById('topup-gcash-qr');
+            const topupOptMaya = document.getElementById('topup-opt-maya');
+            const topupMayaQr = document.getElementById('topup-maya-qr');
+
+            if (topupOptGcash) topupOptGcash.innerText = merchantConfig.gcashNum;
+            if (topupGcashQr) {
+                if (merchantConfig.gcashQR) topupGcashQr.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover">`;
+                else topupGcashQr.innerText = 'No QR';
+            }
+
+            if (topupOptMaya) topupOptMaya.innerText = merchantConfig.mayaNum;
+            if (topupMayaQr) {
+                if (merchantConfig.mayaQR) topupMayaQr.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover">`;
+                else topupMayaQr.innerText = 'No QR';
+            }
+        }
+
+        function loadOwnerInputs() {
+            const inGcashNum = document.getElementById('input-gcash-num');
+            const inGcashName = document.getElementById('input-gcash-name');
+            const inMayaNum = document.getElementById('input-maya-num');
+            const inMayaName = document.getElementById('input-maya-name');
+
+            if (inGcashNum) inGcashNum.value = merchantConfig.gcashNum;
+            if (inGcashName) inGcashName.value = merchantConfig.gcashName;
+            if (inMayaNum) inMayaNum.value = merchantConfig.mayaNum;
+            if (inMayaName) inMayaName.value = merchantConfig.mayaName;
         }
 
         function saveOwnerDetails() {
+            const inGcashNum = document.getElementById('input-gcash-num');
+            const inGcashName = document.getElementById('input-gcash-name');
+            const inMayaNum = document.getElementById('input-maya-num');
+            const inMayaName = document.getElementById('input-maya-name');
+
+            if (inGcashNum) merchantConfig.gcashNum = inGcashNum.value.trim();
+            if (inGcashName) merchantConfig.gcashName = inGcashName.value.trim();
+            if (inMayaNum) merchantConfig.mayaNum = inMayaNum.value.trim();
+            if (inMayaName) merchantConfig.mayaName = inMayaName.value.trim();
+
             persistLocalStorage();
-            alert('Owner merchant credentials saved!');
+            updateMerchantPaymentDisplay();
+            alert('Owner merchant credentials saved and synchronized to player accounts & registration views!');
         }
         window.saveOwnerDetails = saveOwnerDetails;
 
@@ -1792,7 +1887,10 @@
             ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'].forEach(m => {
                 document.getElementById(m).classList.add('hidden');
             });
-            if(type === 'topup') { document.getElementById('modal-topup').classList.remove('hidden'); updateTopupModalQRs(); }
+            if(type === 'topup') { 
+                document.getElementById('modal-topup').classList.remove('hidden'); 
+                updateMerchantPaymentDisplay(); 
+            }
             if(type === 'withdraw' && currentUser) {
                 document.getElementById('withdraw-account').value = currentUser.phone;
                 document.getElementById('withdraw-name').value = currentUser.name;
