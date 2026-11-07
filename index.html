@@ -1916,8 +1916,18 @@
 
             duelState.playerAp -= card.ap;
             let dmg = card.cost === 500 ? 75 : 24;
+            
+            // Deduct damage from enemy armor first if armor > 0
+            if (duelState.enemyArmor >= dmg) {
+                duelState.enemyArmor -= dmg;
+                dmg = 0;
+            } else {
+                dmg -= duelState.enemyArmor;
+                duelState.enemyArmor = 0;
+            }
+
             duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
-            logDuel(`Played ${card.name}! Dealt ${dmg} damage.`);
+            logDuel(`Played ${card.name}! Dealt damage to opponent.`);
             updateDuelUI();
 
             if (duelState.enemyHp <= 0) { handleVictory(); return; }
@@ -2471,6 +2481,11 @@
             const { data: withdrawReq } = await supabaseClient.from('withdrawal_requests').select('*').eq('id', id).single();
             if (!withdrawReq) return;
 
+            if (withdrawReq.status !== 'pending') {
+                alert(`This request has already been ${withdrawReq.status}.`);
+                return;
+            }
+
             if (newStatus === 'approved') {
                 const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', withdrawReq.email).single();
                 if (targetUser) {
@@ -2483,6 +2498,18 @@
 
                     if (currentUser && currentUser.email.toLowerCase() === withdrawReq.email.toLowerCase()) {
                         currentUser.balance = newBal;
+                        updateWalletDisplay();
+                    }
+                }
+            } 
+            else if (newStatus === 'declined') {
+                const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', withdrawReq.email).single();
+                if (targetUser) {
+                    const refundedBalance = targetUser.balance + withdrawReq.amount;
+                    await supabaseClient.from('profiles').update({ balance: refundedBalance }).eq('email', withdrawReq.email);
+
+                    if (currentUser && currentUser.email.toLowerCase() === withdrawReq.email.toLowerCase()) {
+                        currentUser.balance = refundedBalance;
                         updateWalletDisplay();
                     }
                 }
