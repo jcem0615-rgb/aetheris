@@ -766,7 +766,7 @@
             const installBtn = document.getElementById('btn-install-pwa');
             const authInstallBtn = document.getElementById('auth-install-btn');
             if (installBtn) { installBtn.classList.remove('hidden'); installBtn.classList.add('flex'); }
-            if (authInstallBtn) { authInstallBtn.classList.add('flex'); }
+            if (authInstallBtn) { authInstallBtn.classList.remove('hidden'); authInstallBtn.classList.add('flex'); }
         });
 
         async function installPWA() {
