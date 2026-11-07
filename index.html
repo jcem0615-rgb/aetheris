@@ -335,6 +335,22 @@
                     </div>
                 </div>
 
+                <!-- SEPARATE DEPOSIT & WITHDRAWAL HISTORY -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">📥 Deposit History</h3>
+                        <div id="owner-deposit-history-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                            <div class="text-[11px] text-slate-500 text-center py-2">No deposit history yet.</div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">📤 Withdrawal History</h3>
+                        <div id="owner-withdraw-history-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                            <div class="text-[11px] text-slate-500 text-center py-2">No withdrawal history yet.</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- EMERGENCY MANUAL WALLET ADDER -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/40 space-y-2">
                     <h3 class="font-cinzel text-xs font-bold text-amber-400">⚡ Emergency Manual Wallet Balance Adder</h3>
@@ -2001,7 +2017,7 @@
         async function openChatModal() {
             if (!currentUser || !supabaseClient) return;
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-player-profile', 'modal-leaderboard', 'modal-support-chat'].forEach(m => document.getElementById(m).classList.add('hidden'));
             document.getElementById('modal-support-chat').classList.remove('hidden');
             await loadPlayerChatMessages();
         }
@@ -2630,14 +2646,65 @@
 
         async function renderOwnerQueues() {
             if (!supabaseClient) return;
+            const filterDate = document.getElementById('filter-date').value;
+
             const { data: allProfiles } = await supabaseClient.from('profiles').select('*').neq('email', EXCLUSIVE_OWNER_EMAIL);
             const accounts = allProfiles || [];
 
-            const { data: dbTopups } = await supabaseClient.from('topup_requests').select('*').eq('status', 'pending');
-            const pendingTopupList = dbTopups || [];
+            const { data: dbTopups } = await supabaseClient.from('topup_requests').select('*');
+            const allTopups = dbTopups || [];
 
-            const { data: dbWithdraws } = await supabaseClient.from('withdrawal_requests').select('*').eq('status', 'pending');
-            const pendingWithdrawList = dbWithdraws || [];
+            const { data: dbWithdraws } = await supabaseClient.from('withdrawal_requests').select('*');
+            const allWithdraws = dbWithdraws || [];
+
+            // Filter by date if selected
+            const filteredTopups = filterDate ? allTopups.filter(t => t.date === filterDate) : allTopups;
+            const filteredWithdraws = filterDate ? allWithdraws.filter(w => w.date === filterDate) : allWithdraws;
+
+            // Calculate totals for approved transactions
+            const totalDeposits = filteredTopups
+                .filter(t => t.status === 'approved')
+                .reduce((sum, t) => sum + Number(t.amount), 0);
+
+            const totalWithdrawals = filteredWithdraws
+                .filter(w => w.status === 'approved')
+                .reduce((sum, w) => sum + Number(w.amount), 0);
+
+            document.getElementById('metric-total-deposits').innerText = `₱${totalDeposits.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('metric-total-withdrawals').innerText = `₱${totalWithdrawals.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+            // Render Separate Deposit History
+            const depHistoryEl = document.getElementById('owner-deposit-history-list');
+            const historicalDeposits = allTopups.filter(t => t.status !== 'pending');
+            if (depHistoryEl) {
+                depHistoryEl.innerHTML = historicalDeposits.length ? historicalDeposits.map(t => `
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-emerald-400">+₱${t.amount} (${t.nickname})</span>
+                            <div class="text-[9px] text-slate-400">Ref: ${t.ref} | ${t.date}</div>
+                        </div>
+                        <span class="${t.status === 'approved' ? 'text-emerald-400' : 'text-red-400'} font-bold uppercase text-[9px]">${t.status}</span>
+                    </div>
+                `).join('') : '<div class="text-[11px] text-slate-500 text-center py-2">No deposit history yet.</div>';
+            }
+
+            // Render Separate Withdrawal History
+            const witHistoryEl = document.getElementById('owner-withdraw-history-list');
+            const historicalWithdraws = allWithdraws.filter(w => w.status !== 'pending');
+            if (witHistoryEl) {
+                witHistoryEl.innerHTML = historicalWithdraws.length ? historicalWithdraws.map(w => `
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-amber-400">-₱${w.amount} (${w.nickname} - ${w.method})</span>
+                            <div class="text-[9px] text-slate-400">Acc: ${w.account} | ${w.date}</div>
+                        </div>
+                        <span class="${w.status === 'approved' ? 'text-emerald-400' : 'text-red-400'} font-bold uppercase text-[9px]">${w.status}</span>
+                    </div>
+                `).join('') : '<div class="text-[11px] text-slate-500 text-center py-2">No withdrawal history yet.</div>';
+            }
+
+            const pendingTopupList = allTopups.filter(t => t.status === 'pending');
+            const pendingWithdrawList = allWithdraws.filter(w => w.status === 'pending');
 
             const playersContainer = document.getElementById('owner-players-list');
             const filteredPlayers = accounts.filter(acc => acc.role === 'player' && acc.approved === true);
