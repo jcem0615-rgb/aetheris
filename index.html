@@ -1988,13 +1988,45 @@
                 duelState.playerHp = Math.max(0, duelState.playerHp - duelState.playerPoison);
             }
 
-            // Fixed Apex Predator recovery threshold check so it only triggers once safely
+            // Apex Predator & Bot Below 60 HP Special Logic (Randomized Heal, Armor, Damage, & Poison/Burn)
             if (duelState.enemyHp < 60 && duelState.enemyHp > 0 && !duelState.apexSpecialTriggered) {
                 duelState.apexSpecialTriggered = true;
-                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + 30); // Balanced recovery
-                duelState.enemyArmor += 15;
-                logDuel(`[${duelState.currentOpponentName}]: Triggered recovery surge! (+30 HP)`);
+
+                // Randomized Heal (40, 45, or 50)
+                const possibleHeals = [40, 45, 50];
+                const healAmount = possibleHeals[Math.floor(Math.random() * possibleHeals.length)];
+                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmount);
+
+                // Randomized Armor (20, 25, or 30)
+                const possibleArmors = [20, 25, 30];
+                const armorAmount = possibleArmors[Math.floor(Math.random() * possibleArmors.length)];
+                duelState.enemyArmor += armorAmount;
+
+                // Randomized Attack Damage (20, 25, or 30)
+                const possibleDmgs = [20, 25, 30];
+                let botDmg = possibleDmgs[Math.floor(Math.random() * possibleDmgs.length)];
+
+                // Randomized Poison/Burn (10, 15, or 20)
+                const possiblePoisons = [10, 15, 20];
+                const poisonAmount = possiblePoisons[Math.floor(Math.random() * possiblePoisons.length)];
+                duelState.playerPoison += poisonAmount;
+
+                // Apply damage calculation against player armor & HP
+                if (duelState.playerArmor >= botDmg) { 
+                    duelState.playerArmor -= botDmg; 
+                    botDmg = 0; 
+                } else { 
+                    botDmg -= duelState.playerArmor; 
+                    duelState.playerArmor = 0; 
+                }
+                duelState.playerHp = Math.max(0, duelState.playerHp - botDmg);
+
+                logDuel(`[${duelState.currentOpponentName}]: Below 60HP Surge! Healed +${healAmount} HP, Gained +${armorAmount} Armor, Dealt ${botDmg} Dmg & Applied ${poisonAmount} Burn!`);
                 updateDuelUI();
+
+                if (duelState.playerHp <= 0) {
+                    handleDefeat();
+                }
                 return;
             }
 
