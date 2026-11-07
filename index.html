@@ -699,8 +699,7 @@
         let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
         let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
         
-        // Merchant Config State (Synced via LocalStorage + Supabase metadata fallback)
-        let merchantConfig = JSON.parse(localStorage.getItem('aetheris_merchant_config')) || {
+        let merchantConfig = {
             gcashNum: '09923978537',
             gcashName: 'John Carlo Estrada Morales',
             gcashQR: null,
@@ -745,7 +744,6 @@
             localStorage.setItem('aetheris_battle_history', JSON.stringify(battleHistoryLog));
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
-            localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
         }
 
         const heroes = [
@@ -931,6 +929,7 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
+            await updateMerchantPaymentDisplay();
             try {
                 if (currentUser && currentUser.email && supabaseClient) {
                     const { data, error } = await supabaseClient
@@ -955,7 +954,6 @@
             } catch (err) {
                 console.error("Init session check error:", err);
             }
-            updateMerchantPaymentDisplay();
         });
 
         function restoreUserSession() {
@@ -1503,7 +1501,8 @@
             }
         }
 
-        function switchTab(tab) {
+        async function switchTab(tab) {
+            await updateMerchantPaymentDisplay();
             if (currentUser && currentUser.role === 'owner' && tab !== 'owner') {
                 switchTab('owner');
                 return;
@@ -1522,7 +1521,6 @@
 
             if(tab === 'hub') {
                 document.getElementById('view-hub').classList.remove('hidden');
-                updateMerchantPaymentDisplay();
                 const b = document.getElementById('btn-hub');
                 if(b) { b.classList.add('bg-blue-600', 'text-white'); b.classList.remove('text-slate-400'); }
             } else if(tab === 'select') {
@@ -1776,7 +1774,26 @@
         }
         window.endDuelTurn = endDuelTurn;
 
-        function updateMerchantPaymentDisplay() {
+        async function updateMerchantPaymentDisplay() {
+            if (supabaseClient) {
+                const { data, error } = await supabaseClient
+                    .from('merchant_settings')
+                    .select('*')
+                    .eq('id', 1)
+                    .single();
+                
+                if (data && !error) {
+                    merchantConfig = {
+                        gcashNum: data.gcash_num || '09923978537',
+                        gcashName: data.gcash_name || 'John Carlo Estrada Morales',
+                        gcashQR: data.gcash_qr || null,
+                        mayaNum: data.maya_num || '09301601780',
+                        mayaName: data.maya_name || 'FMCM IT Solutions',
+                        mayaQR: data.maya_qr || null
+                    };
+                }
+            }
+
             // Player Hub Banner
             const dGcashNum = document.getElementById('display-gcash-num');
             const dGcashName = document.getElementById('display-gcash-name');
@@ -1874,16 +1891,29 @@
             const inMayaName = document.getElementById('input-maya-name').value.trim();
             const mayaFile = document.getElementById('input-maya-qr').files[0];
 
-            merchantConfig.gcashNum = inGcashNum || merchantConfig.gcashNum;
-            merchantConfig.gcashName = inGcashName || merchantConfig.gcashName;
-            merchantConfig.mayaNum = inMayaNum || merchantConfig.mayaNum;
-            merchantConfig.mayaName = inMayaName || merchantConfig.mayaName;
+            let updatePayload = {
+                gcash_num: inGcashNum || merchantConfig.gcashNum,
+                gcash_name: inGcashName || merchantConfig.gcashName,
+                maya_num: inMayaNum || merchantConfig.mayaNum,
+                maya_name: inMayaName || merchantConfig.mayaName,
+                updated_at: new Date()
+            };
 
-            const processSave = () => {
+            const processSupabaseSave = async () => {
+                if (supabaseClient) {
+                    const { error } = await supabaseClient
+                        .from('merchant_settings')
+                        .update(updatePayload)
+                        .eq('id', 1);
+                    
+                    if (error) {
+                        alert('Error saving to database: ' + error.message);
+                        return;
+                    }
+                }
                 persistLocalStorage();
-                updateMerchantPaymentDisplay();
-                loadOwnerInputs();
-                alert('Owner merchant credentials & QR codes saved and synchronized successfully!');
+                await updateMerchantPaymentDisplay();
+                alert('Owner merchant credentials & QR codes saved to database and synchronized successfully!');
             };
 
             if (gcashFile || mayaFile) {
@@ -1892,24 +1922,26 @@
 
                 if (gcashFile) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = async function(e) {
+                        updatePayload.gcash_qr = e.target.result;
                         merchantConfig.gcashQR = e.target.result;
                         loadedCount++;
-                        if (loadedCount === totalToLoad) processSave();
+                        if (loadedCount === totalToLoad) await processSupabaseSave();
                     };
                     reader.readAsDataURL(gcashFile);
                 }
                 if (mayaFile) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = async function(e) {
+                        updatePayload.maya_qr = e.target.result;
                         merchantConfig.mayaQR = e.target.result;
                         loadedCount++;
-                        if (loadedCount === totalToLoad) processSave();
+                        if (loadedCount === totalToLoad) await processSupabaseSave();
                     };
                     reader.readAsDataURL(mayaFile);
                 }
             } else {
-                processSave();
+                await processSupabaseSave();
             }
         }
         window.saveOwnerDetails = saveOwnerDetails;
