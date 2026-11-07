@@ -2617,6 +2617,12 @@
                 return;
             }
 
+            // Deduct immediately upon submission
+            currentUser.balance -= amt;
+            await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
+            persistLocalStorage();
+            updateWalletDisplay();
+
             const payload = {
                 email: currentUser.email,
                 nickname: currentUser.nickname,
@@ -2630,11 +2636,16 @@
 
             const { error } = await supabaseClient.from('withdrawal_requests').insert([payload]);
             if (error) {
+                // Refund if insert fails
+                currentUser.balance += amt;
+                await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
+                persistLocalStorage();
+                updateWalletDisplay();
                 alert('Withdrawal request failed: ' + error.message);
                 return;
             }
 
-            alert('Withdrawal request submitted successfully! Status: Waiting for approval.');
+            alert('Withdrawal request submitted successfully! Amount deducted pending approval.');
             closeModal();
         }
         window.submitWithdrawal = submitWithdrawal;
@@ -2807,26 +2818,10 @@
                 return;
             }
 
-            if (newStatus === 'approved') {
+            if (newStatus === 'declined') {
                 const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', withdrawReq.email).single();
                 if (targetUser) {
-                    if (targetUser.balance < withdrawReq.amount) {
-                        alert('Error: Player has insufficient balance for this withdrawal anymore.');
-                        return;
-                    }
-                    const newBal = targetUser.balance - withdrawReq.amount;
-                    await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', withdrawReq.email);
-
-                    if (currentUser && currentUser.email.toLowerCase() === withdrawReq.email.toLowerCase()) {
-                        currentUser.balance = newBal;
-                        updateWalletDisplay();
-                    }
-                }
-            } 
-            else if (newStatus === 'declined') {
-                const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', withdrawReq.email).single();
-                if (targetUser) {
-                    const refundedBalance = targetUser.balance + withdrawReq.amount;
+                    const refundedBalance = targetUser.balance + Number(withdrawReq.amount);
                     await supabaseClient.from('profiles').update({ balance: refundedBalance }).eq('email', withdrawReq.email);
 
                     if (currentUser && currentUser.email.toLowerCase() === withdrawReq.email.toLowerCase()) {
@@ -2838,7 +2833,7 @@
 
             await supabaseClient.from('withdrawal_requests').update({ status: newStatus }).eq('id', id);
             renderOwnerQueues();
-            alert(`Withdrawal request marked as ${newStatus}!`);
+            alert(`Withdrawal request marked as ${newStatus}! ${newStatus === 'declined' ? 'Amount successfully refunded to player.' : ''}`);
         }
         window.updateWithdrawStatus = updateWithdrawStatus;
     </script>
