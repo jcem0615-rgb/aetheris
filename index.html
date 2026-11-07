@@ -1981,11 +1981,18 @@
         }
 
         function executeBotCombatTurn() {
+            if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
+
             if (duelState.enemyPoison > 0) {
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
             }
             if (duelState.playerPoison > 0) {
                 duelState.playerHp = Math.max(0, duelState.playerHp - duelState.playerPoison);
+                updateDuelUI();
+                if (duelState.playerHp <= 0) {
+                    handleDefeat();
+                    return;
+                }
             }
 
             // Apex Predator & Bot Below 60 HP Special Logic (Randomized Heal, Armor, Damage, & Poison/Burn)
@@ -2026,26 +2033,32 @@
 
                 if (duelState.playerHp <= 0) {
                     handleDefeat();
+                    return;
                 }
-                return;
+            } else {
+                let botDmg = 18;
+                if (duelState.playerArmor >= botDmg) { 
+                    duelState.playerArmor -= botDmg; 
+                    botDmg = 0; 
+                } else { 
+                    botDmg -= duelState.playerArmor; 
+                    duelState.playerArmor = 0; 
+                }
+                
+                duelState.playerHp = Math.max(0, duelState.playerHp - botDmg);
+                logDuel(`[${duelState.currentOpponentName}]: Attacked for ${botDmg} damage.`);
+                updateDuelUI();
+
+                if (duelState.playerHp <= 0) {
+                    handleDefeat();
+                    return;
+                }
             }
 
-            let botDmg = 16;
-            if (duelState.playerArmor >= botDmg) { 
-                duelState.playerArmor -= botDmg; 
-                botDmg = 0; 
-            } else { 
-                botDmg -= duelState.playerArmor; 
-                duelState.playerArmor = 0; 
-            }
-            
-            duelState.playerHp = Math.max(0, duelState.playerHp - botDmg);
-            logDuel(`[${duelState.currentOpponentName}]: Attacked for ${botDmg} damage.`);
+            // Reset player AP and draw new hand for next turn
+            duelState.playerAp = 3;
+            shuffleAndDrawHand();
             updateDuelUI();
-
-            if (duelState.playerHp <= 0) {
-                handleDefeat();
-            }
         }
 
         function playCard(index) {
@@ -2055,21 +2068,52 @@
             if (duelState.playerAp < card.ap) { logDuel(`Not enough AP!`); return; }
 
             duelState.playerAp -= card.ap;
-            let dmg = card.cost === 500 ? 75 : 24;
-            
-            if (duelState.enemyArmor >= dmg) {
-                duelState.enemyArmor -= dmg;
-                dmg = 0;
-            } else {
-                dmg -= duelState.enemyArmor;
-                duelState.enemyArmor = 0;
+
+            // Handle card effect properly based on card type
+            if (card.type === 'strike') {
+                let dmg = card.cost === 3 ? 70 : (card.cost === 2 ? 30 : 18);
+                if (duelState.enemyArmor >= dmg) {
+                    duelState.enemyArmor -= dmg;
+                    dmg = 0;
+                } else {
+                    dmg -= duelState.enemyArmor;
+                    duelState.enemyArmor = 0;
+                }
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
+                logDuel(`Played ${card.name}! Dealt ${dmg} damage to ${duelState.currentOpponentName}.`);
+            } 
+            else if (card.type === 'defend') {
+                const armorGain = card.cost === 2 ? 22 : 14;
+                duelState.playerArmor += armorGain;
+                logDuel(`Played ${card.name}! Gained +${armorGain} Armor.`);
+            } 
+            else if (card.type === 'heal') {
+                const healGain = card.cost === 2 ? 22 : 14;
+                duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + healGain);
+                logDuel(`Played ${card.name}! Restored +${healGain} HP.`);
+            } 
+            else if (card.type === 'poison' || card.type === 'debuff') {
+                let dmg = card.cost === 2 ? 25 : 20;
+                let burnStack = card.cost === 3 ? 15 : 8;
+                if (duelState.enemyArmor >= dmg) {
+                    duelState.enemyArmor -= dmg;
+                    dmg = 0;
+                } else {
+                    dmg -= duelState.enemyArmor;
+                    duelState.enemyArmor = 0;
+                }
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
+                duelState.enemyPoison = (duelState.enemyPoison || 0) + burnStack;
+                logDuel(`Played ${card.name}! Dealt ${dmg} damage & applied ${burnStack} burn/poison.`);
             }
 
-            duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
-            logDuel(`Played ${card.name}! Dealt ${dmg} damage to opponent.`);
             updateDuelUI();
 
-            if (duelState.enemyHp <= 0) { handleVictory(); return; }
+            if (duelState.enemyHp <= 0) { 
+                handleVictory(); 
+                return; 
+            }
+
             currentHand.splice(index, 1);
             renderHandCards();
         }
@@ -2079,11 +2123,6 @@
             if (duelState.enemyHp <= 0 || duelState.playerHp <= 0) return;
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             executeBotCombatTurn();
-            if (duelState.playerHp > 0 && duelState.enemyHp > 0) {
-                duelState.playerAp = 3;
-                shuffleAndDrawHand();
-                updateDuelUI();
-            }
         }
         window.endDuelTurn = endDuelTurn;
 
