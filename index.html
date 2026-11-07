@@ -254,9 +254,9 @@
                         <p class="text-[10px] text-slate-400">Active Champion • Ready for P2P</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                    <button onclick="window.openModal('topup')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">+ Top-Up</button>
-                    <button onclick="window.openModal('withdraw')" class="flex-1 sm:flex-none px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">Withdraw (0 Fee)</button>
+                <div class="flex items-center space-x-2 w-full sm:w-auto justify-end flex-wrap gap-y-1">
+                    <button onclick="window.openModal('topup')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">+ Top-Up (Min ₱50)</button>
+                    <button onclick="window.openModal('withdraw')" class="flex-1 sm:flex-none px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">Withdraw (Min ₱100)</button>
                 </div>
             </div>
 
@@ -398,14 +398,14 @@
                 </div>
 
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals (Min ₱50)</h3>
                     <div id="owner-deposit-list" class="space-y-1.5">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>
                     </div>
                 </div>
 
                 <div class="space-y-1.5 pb-2">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals (Zero Cash-Out Fee)</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals (Min ₱100 • Zero Fee)</h3>
                     <div id="owner-withdraw-list" class="space-y-1.5">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>
                     </div>
@@ -494,7 +494,7 @@
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
         <!-- Top-up Modal -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
-            <h3 class="font-cinzel text-base font-bold text-amber-400 text-center">Submit Top-Up Request</h3>
+            <h3 class="font-cinzel text-base font-bold text-amber-400 text-center">Submit Top-Up Request (Min ₱50)</h3>
             
             <div class="space-y-2">
                 <p class="text-[11px] text-slate-400 text-center">1. Scan QR code or send funds to our official merchant channels:</p>
@@ -516,9 +516,9 @@
                 </div>
             </div>
 
-            <p class="text-[11px] text-slate-400 text-center">2. Enter transaction reference and upload your receipt screenshot:</p>
+            <p class="text-[11px] text-slate-400 text-center">2. Enter amount (Minimum ₱50), reference number & upload receipt:</p>
             <div class="space-y-2.5">
-                <input type="number" id="topup-amount" placeholder="Amount Sent (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="number" id="topup-amount" placeholder="Amount Sent (₱50 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <div class="space-y-1">
                     <label class="text-[10px] text-slate-400 block">Upload Receipt Screenshot:</label>
@@ -526,17 +526,17 @@
                 </div>
             </div>
             <div class="flex space-x-2 pt-1">
-                <button onclick="window.submitTopUp()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow">Submit Request</button>
+                <button onclick="window.submitTopUp()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow">Submit Top-Up</button>
                 <button onclick="window.closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
             </div>
         </div>
 
-        <!-- Withdrawal Modal (Zero Fee) -->
+        <!-- Withdrawal Modal (Min ₱100 • Zero Fee) -->
         <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">Withdrawal Request (Zero Fee)</h3>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">Withdrawal Request (Min ₱100 • Zero Fee)</h3>
             <p class="text-xs text-slate-400">Payouts are locked strictly to your registered phone number and legal name.</p>
             <div class="space-y-2.5">
-                <input type="number" id="withdraw-amount" placeholder="Amount (₱)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="number" id="withdraw-amount" placeholder="Amount (₱100 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <select id="withdraw-method" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <option value="GCash">GCash</option>
                     <option value="Maya">Maya</option>
@@ -551,7 +551,7 @@
                 </div>
             </div>
             <div class="flex space-x-2 pt-1">
-                <button onclick="window.submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl">Submit Withdrawal</button>
+                <button onclick="window.submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl">Submit Withdrawal</button>
                 <button onclick="window.closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
             </div>
         </div>
@@ -604,13 +604,13 @@
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
 
-        <!-- Player Profile & Battle History Modal -->
+        <!-- Player Profile & History Modal -->
         <div id="modal-player-profile" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-cinzel text-base font-bold text-amber-400">PLAYER PROFILE</h3>
+                <h3 class="font-cinzel text-base font-bold text-amber-400">PLAYER PROFILE & HISTORY</h3>
                 <span id="profile-modal-rank" class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
             </div>
-            <div id="player-profile-content" class="space-y-2.5 text-xs text-slate-300 max-h-80 overflow-y-auto pr-1"></div>
+            <div id="player-profile-content" class="space-y-3 text-xs text-slate-300 max-h-80 overflow-y-auto pr-1"></div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Profile</button>
         </div>
 
@@ -691,9 +691,6 @@
 
         let currentDuelBet = 50;
 
-        let pendingWithdrawals = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
-        let approvedDepositsLog = JSON.parse(localStorage.getItem('aetheris_approved_deposits')) || [];
-        let approvedWithdrawalsLog = JSON.parse(localStorage.getItem('aetheris_approved_withdrawals')) || [];
         let battleHistoryLog = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
         let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
         let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
@@ -746,9 +743,6 @@
             } else {
                 localStorage.removeItem('aetheris_current_user');
             }
-            localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(pendingWithdrawals));
-            localStorage.setItem('aetheris_approved_deposits', JSON.stringify(approvedDepositsLog));
-            localStorage.setItem('aetheris_approved_withdrawals', JSON.stringify(approvedWithdrawalsLog));
             localStorage.setItem('aetheris_battle_history', JSON.stringify(battleHistoryLog));
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
@@ -1981,20 +1975,57 @@
         }
         window.openModal = openModal;
 
-        function openPlayerProfileModal() {
-            if (!currentUser) return;
+        async function openPlayerProfileModal() {
+            if (!currentUser || !supabaseClient) return;
             document.getElementById('modal-backdrop').classList.remove('hidden');
             ['modal-topup', 'modal-withdraw', 'modal-receipt', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-player-details', 'modal-leaderboard'].forEach(m => document.getElementById(m).classList.add('hidden'));
             document.getElementById('modal-player-profile').classList.remove('hidden');
 
             document.getElementById('profile-modal-rank').innerText = currentUser.rank;
+
+            // Fetch user's top-up requests from Supabase
+            const { data: userTopups } = await supabaseClient.from('topup_requests').select('*').eq('email', currentUser.email).order('created_at', { ascending: false });
+            // Fetch user's withdrawal requests from Supabase
+            const { data: userWithdraws } = await supabaseClient.from('withdrawal_requests').select('*').eq('email', currentUser.email).order('created_at', { ascending: false });
+
+            const myTopups = userTopups || [];
+            const myWithdraws = userWithdraws || [];
             const myHistory = battleHistoryLog.filter(h => h.email === currentUser.email);
+
+            const topupHtml = myTopups.length ? myTopups.map(t => {
+                let statusBadge = '';
+                if (t.status === 'approved') statusBadge = '<span class="text-emerald-400 font-bold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">Approved</span>';
+                else if (t.status === 'declined') statusBadge = '<span class="text-red-400 font-bold bg-red-950/40 px-2 py-0.5 rounded border border-red-500/30">Declined</span>';
+                else statusBadge = '<span class="text-amber-400 font-bold bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30">Waiting for approval</span>';
+
+                return `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 space-y-0.5">
+                        <div class="flex justify-between items-center"><span class="font-bold text-emerald-400">+₱${t.amount}</span><span>${statusBadge}</span></div>
+                        <div class="text-[9px] text-slate-400 flex justify-between"><span>Ref: ${t.ref}</span><span>${t.date}</span></div>
+                    </div>
+                `;
+            }).join('') : '<div class="text-slate-500 text-xs text-center py-2 bg-slate-950 rounded-xl">No top-up history yet.</div>';
+
+            const withdrawHtml = myWithdraws.length ? myWithdraws.map(w => {
+                let statusBadge = '';
+                if (w.status === 'approved') statusBadge = '<span class="text-emerald-400 font-bold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">Approved</span>';
+                else if (w.status === 'declined') statusBadge = '<span class="text-red-400 font-bold bg-red-950/40 px-2 py-0.5 rounded border border-red-500/30">Declined</span>';
+                else statusBadge = '<span class="text-amber-400 font-bold bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30">Waiting for approval</span>';
+
+                return `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 space-y-0.5">
+                        <div class="flex justify-between items-center"><span class="font-bold text-amber-400">-₱${w.amount} (${w.method})</span><span>${statusBadge}</span></div>
+                        <div class="text-[9px] text-slate-400 flex justify-between"><span>Acc: ${w.account}</span><span>${w.date}</span></div>
+                    </div>
+                `;
+            }).join('') : '<div class="text-slate-500 text-xs text-center py-2 bg-slate-950 rounded-xl">No withdrawal history yet.</div>';
+
             const historyHtml = myHistory.length ? myHistory.map(h => `
                 <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 space-y-0.5">
                     <div class="flex justify-between items-center"><span class="font-bold text-white">Vs ${h.opponent}</span><span class="${h.result.includes('Victory') ? 'text-emerald-400' : 'text-red-400'} font-bold">${h.result}</span></div>
                     <div class="text-[9px] text-slate-400 flex justify-between"><span>Stake: ₱${h.bet}</span><span>${h.date}</span></div>
                 </div>
-            `).join('') : '<div class="text-slate-500 text-xs text-center py-4 bg-slate-950 rounded-xl">No battle history yet.</div>';
+            `).join('') : '<div class="text-slate-500 text-xs text-center py-2 bg-slate-950 rounded-xl">No battle history yet.</div>';
 
             document.getElementById('player-profile-content').innerHTML = `
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
@@ -2005,8 +2036,16 @@
                     <div class="flex justify-between"><span><strong>Wins:</strong></span> <span class="text-blue-400 font-bold">${currentUser.wins}</span></div>
                 </div>
                 <div class="space-y-1.5 pt-1">
-                    <h4 class="font-cinzel text-xs font-bold text-amber-400">Battle History</h4>
-                    <div class="space-y-1 max-h-36 overflow-y-auto pr-1">${historyHtml}</div>
+                    <h4 class="font-cinzel text-xs font-bold text-emerald-400">Top-Up History</h4>
+                    <div class="space-y-1 max-h-28 overflow-y-auto pr-1">${topupHtml}</div>
+                </div>
+                <div class="space-y-1.5 pt-1">
+                    <h4 class="font-cinzel text-xs font-bold text-amber-400">Withdrawal History</h4>
+                    <div class="space-y-1 max-h-28 overflow-y-auto pr-1">${withdrawHtml}</div>
+                </div>
+                <div class="space-y-1.5 pt-1">
+                    <h4 class="font-cinzel text-xs font-bold text-blue-400">Battle History</h4>
+                    <div class="space-y-1 max-h-28 overflow-y-auto pr-1">${historyHtml}</div>
                 </div>
             `;
         }
@@ -2079,17 +2118,6 @@
         }
         window.inspectPlayer = inspectPlayer;
 
-        async function toggleFreezePlayer(email) {
-            if (!supabaseClient) return;
-            const { data: player } = await supabaseClient.from('profiles').select('*').eq('email', email).single();
-            if (!player) return;
-            const newFrozen = !player.frozen;
-            await supabaseClient.from('profiles').update({ frozen: newFrozen }).eq('email', email);
-            renderOwnerQueues();
-            alert(`Player ${player.nickname} frozen state: ${newFrozen}`);
-        }
-        window.toggleFreezePlayer = toggleFreezePlayer;
-
         async function deletePlayerAccount(email) {
             if (!supabaseClient) return;
             if (confirm(`Delete player account ${email}?`)) {
@@ -2108,6 +2136,10 @@
             if (!amt || !ref || !receiptFile) { 
                 alert('Please fill in all fields and upload your receipt.'); 
                 return; 
+            }
+            if (amt < 50) {
+                alert('Minimum top-up amount is ₱50.');
+                return;
             }
             if (!supabaseClient) { 
                 alert('Database client not connected.'); 
@@ -2132,7 +2164,7 @@
                     return;
                 }
 
-                alert('Top-up request submitted successfully! Awaiting owner review.');
+                alert('Top-up request submitted successfully! Status: Waiting for approval.');
                 closeModal();
             };
             reader.readAsDataURL(receiptFile);
@@ -2141,16 +2173,41 @@
 
         async function submitWithdrawal() {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
-            if(!amt || amt > currentUser.balance) { alert('Invalid amount or insufficient balance.'); return; }
-            
-            currentUser.balance -= amt;
-            await supabaseClient.from('profiles').update({ balance: currentUser.balance }).eq('email', currentUser.email);
-            persistLocalStorage();
-            updateWalletDisplay();
+            if (!amt || isNaN(amt)) {
+                alert('Please enter a valid withdrawal amount.');
+                return;
+            }
+            if (amt < 100) {
+                alert('Minimum withdrawal amount is ₱100.');
+                return;
+            }
+            if (amt > currentUser.balance) {
+                alert('Insufficient wallet balance for this withdrawal.');
+                return;
+            }
+            if (!supabaseClient) {
+                alert('Database client not connected.');
+                return;
+            }
 
-            pendingWithdrawals.push({ id: Date.now(), email: currentUser.email, nickname: currentUser.nickname, amount: amt, method: document.getElementById('withdraw-method').value, account: currentUser.phone, name: currentUser.name, date: new Date().toISOString().split('T')[0] });
-            persistLocalStorage();
-            alert('Withdrawal request submitted (0 Fee)!');
+            const payload = {
+                email: currentUser.email,
+                nickname: currentUser.nickname,
+                amount: amt,
+                method: document.getElementById('withdraw-method').value,
+                account: currentUser.phone,
+                name: currentUser.name,
+                status: 'pending',
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            const { error } = await supabaseClient.from('withdrawal_requests').insert([payload]);
+            if (error) {
+                alert('Withdrawal request failed: ' + error.message);
+                return;
+            }
+
+            alert('Withdrawal request submitted successfully! Status: Waiting for approval.');
             closeModal();
         }
         window.submitWithdrawal = submitWithdrawal;
@@ -2167,6 +2224,9 @@
 
             const { data: dbTopups } = await supabaseClient.from('topup_requests').select('*').eq('status', 'pending');
             const pendingTopupList = dbTopups || [];
+
+            const { data: dbWithdraws } = await supabaseClient.from('withdrawal_requests').select('*').eq('status', 'pending');
+            const pendingWithdrawList = dbWithdraws || [];
 
             const playersContainer = document.getElementById('owner-players-list');
             const filteredPlayers = accounts.filter(acc => acc.role === 'player' && acc.approved === true);
@@ -2203,7 +2263,8 @@
                         <div><span class="font-bold text-emerald-400">+₱${d.amount} (${d.nickname})</span><div class="text-[9px] text-slate-400">Ref: ${d.ref}</div></div>
                         <div class="space-x-1 flex items-center">
                             <button onclick="window.viewReceipt('${d.receipt}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[9px]">Receipt</button>
-                            <button onclick="window.approveDeposit('${d.id}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[9px]">Approve</button>
+                            <button onclick="window.updateTopupStatus(${d.id}, 'approved')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[9px]">Approve</button>
+                            <button onclick="window.updateTopupStatus(${d.id}, 'declined')" class="px-2 py-1 bg-red-600 text-white rounded text-[9px]">Decline</button>
                         </div>
                     </div>
                 `).join('') : '<div class="text-xs text-slate-500 text-center py-2">No pending top-up requests.</div>';
@@ -2211,10 +2272,13 @@
 
             const witContainer = document.getElementById('owner-withdraw-list');
             if(witContainer) {
-                witContainer.innerHTML = pendingWithdrawals.length ? pendingWithdrawals.map(w => `
+                witContainer.innerHTML = pendingWithdrawList.length ? pendingWithdrawList.map(w => `
                     <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div><span class="font-bold text-amber-400">-₱${w.amount} (${w.nickname})</span></div>
-                        <div class="space-x-1"><button onclick="window.approveWithdrawal(${w.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[9px]">Approve</button></div>
+                        <div><span class="font-bold text-amber-400">-₱${w.amount} (${w.nickname} - ${w.method})</span></div>
+                        <div class="space-x-1 flex items-center">
+                            <button onclick="window.updateWithdrawStatus(${w.id}, 'approved')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[9px]">Approve</button>
+                            <button onclick="window.updateWithdrawStatus(${w.id}, 'declined')" class="px-2 py-1 bg-red-600 text-white rounded text-[9px]">Decline</button>
+                        </div>
                     </div>
                 `).join('') : '<div class="text-xs text-slate-500 text-center py-2">No pending withdrawals.</div>';
             }
@@ -2229,40 +2293,60 @@
         }
         window.approveRegistration = approveRegistration;
 
-        async function approveDeposit(id) {
+        async function updateTopupStatus(id, newStatus) {
             if (!supabaseClient) return;
             
             const { data: topupReq } = await supabaseClient.from('topup_requests').select('*').eq('id', id).single();
             if (!topupReq) return;
 
-            const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', topupReq.email).single();
-            if (targetUser) {
-                const newBal = targetUser.balance + topupReq.amount;
-                await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', topupReq.email);
-                
-                if (currentUser && currentUser.email.toLowerCase() === topupReq.email.toLowerCase()) {
-                    currentUser.balance = newBal;
-                    updateWalletDisplay();
+            if (newStatus === 'approved') {
+                const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', topupReq.email).single();
+                if (targetUser) {
+                    const newBal = targetUser.balance + topupReq.amount;
+                    await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', topupReq.email);
+                    
+                    if (currentUser && currentUser.email.toLowerCase() === topupReq.email.toLowerCase()) {
+                        currentUser.balance = newBal;
+                        updateWalletDisplay();
+                    }
                 }
             }
 
-            await supabaseClient.from('topup_requests').update({ status: 'approved' }).eq('id', id);
+            await supabaseClient.from('topup_requests').update({ status: newStatus }).eq('id', id);
             renderOwnerQueues();
-            alert('Top-up approved and credited to player balance!');
+            alert(`Top-up request marked as ${newStatus}!`);
         }
-        window.approveDeposit = approveDeposit;
+        window.updateTopupStatus = updateTopupStatus;
 
-        function approveWithdrawal(id) {
-            const idx = pendingWithdrawals.findIndex(w => w.id === id);
-            if(idx > -1) {
-                approvedWithdrawalsLog.push(pendingWithdrawals[idx]);
-                pendingWithdrawals.splice(idx, 1);
-                persistLocalStorage();
-                renderOwnerQueues();
-                alert('Withdrawal approved!');
+        async function updateWithdrawStatus(id, newStatus) {
+            if (!supabaseClient) return;
+
+            const { data: withdrawReq } = await supabaseClient.from('withdrawal_requests').select('*').eq('id', id).single();
+            if (!withdrawReq) return;
+
+            if (newStatus === 'approved') {
+                // Deduct from balance upon final owner approval
+                const { data: targetUser } = await supabaseClient.from('profiles').select('*').eq('email', withdrawReq.email).single();
+                if (targetUser) {
+                    if (targetUser.balance < withdrawReq.amount) {
+                        alert('Error: Player has insufficient balance for this withdrawal anymore.');
+                        return;
+                    }
+                    const newBal = targetUser.balance - withdrawReq.amount;
+                    await supabaseClient.from('profiles').update({ balance: newBal }).eq('email', withdrawReq.email);
+
+                    if (currentUser && currentUser.email.toLowerCase() === withdrawReq.email.toLowerCase()) {
+                        currentUser.balance = newBal;
+                        updateWalletDisplay();
+                    }
+                }
             }
+
+            await supabaseClient.from('withdrawal_requests').update({ status: newStatus }).eq('id', id);
+            renderOwnerQueues();
+            alert(`Withdrawal request marked as ${newStatus}!`);
         }
-        window.approveWithdrawal = approveWithdrawal;
+        window.updateWithdrawStatus = updateWithdrawStatus;
     </script>
 </body>
 </html>
