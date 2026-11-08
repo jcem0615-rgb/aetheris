@@ -871,10 +871,10 @@
             bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', iconImg: 'image_b2781538.jpg',
             price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
-              { id: 'pyra-1', type: 'strike', name: 'FLAME DART', ap: 1, color: 'red', desc: 'Deal 15 Fire damage.' },
-              { id: 'pyra-2', type: 'defend', name: 'FIRE SHIELD', ap: 1, color: 'red', desc: 'Gain 10 Armor block.' },
-              { id: 'pyra-3', type: 'poison', name: 'SCORCH', ap: 2, color: 'orange', desc: 'Deal 22 damage & apply 6 Burn stacks.' },
-              { id: 'pyra-4', type: 'heal', name: 'BLAZING HEAL', ap: 2, color: 'emerald', desc: 'Restore 15 HP.' }
+              { id: 'pyra-1', type: 'strike', name: 'FLAME DART', ap: 1, color: 'red', damage: 28, desc: 'Deal 28 Fire damage (Armor piercing).' },
+              { id: 'pyra-2', type: 'defend', name: 'FIRE SHIELD', ap: 1, color: 'red', armor: 14, desc: 'Gain 14 Armor block.' },
+              { id: 'pyra-3', type: 'poison', name: 'SCORCH', ap: 2, color: 'orange', damage: 32, poison: 10, desc: 'Deal 32 damage & apply 10 Burn stacks.' },
+              { id: 'pyra-4', type: 'heal', name: 'BLAZING HEAL', ap: 2, color: 'emerald', heal: 20, desc: 'Restore 20 HP.' }
             ]
           },
           {
@@ -883,10 +883,10 @@
             bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', iconImg: 'image_e51741b7.jpg',
             price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
-              { id: 'sylph-1', type: 'strike', name: 'GALE SLASH', ap: 1, color: 'emerald', desc: 'Deal 16 Wind damage.' },
-              { id: 'sylph-2', type: 'defend', name: 'WIND STEP', ap: 1, color: 'emerald', desc: 'Gain 12 Armor block.' },
-              { id: 'sylph-3', type: 'poison', name: 'GALE ARROW', ap: 2, color: 'teal', desc: 'Deal 20 damage & apply 7 Poison.' },
-              { id: 'sylph-4', type: 'heal', name: 'WIND MEND', ap: 2, color: 'emerald', desc: 'Restore 14 HP.' }
+              { id: 'sylph-1', type: 'strike', name: 'GALE SLASH', ap: 1, color: 'emerald', damage: 28, desc: 'Deal 28 Wind damage.' },
+              { id: 'sylph-2', type: 'defend', name: 'WIND STEP', ap: 1, color: 'emerald', armor: 15, desc: 'Gain 15 Armor block.' },
+              { id: 'sylph-3', type: 'poison', name: 'GALE ARROW', ap: 2, color: 'teal', damage: 32, poison: 10, desc: 'Deal 32 damage & apply 10 Poison.' },
+              { id: 'sylph-4', type: 'heal', name: 'WIND MEND', ap: 2, color: 'emerald', heal: 20, desc: 'Restore 20 HP.' }
             ]
           },
           {
@@ -895,10 +895,10 @@
             bg: 'from-blue-950 to-slate-950', border: 'border-blue-500/50', iconImg: 'image_4b6fe95a.jpg',
             price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
-              { id: 'valen-1', type: 'strike', name: 'SHIELD BASH', ap: 1, color: 'blue', desc: 'Deal 12 Physical damage.' },
-              { id: 'valen-2', type: 'defend', name: 'IRON BASTION', ap: 1, color: 'blue', desc: 'Gain 15 Armor block.' },
-              { id: 'valen-3', type: 'debuff', name: 'HEAVY SLAM', ap: 2, color: 'indigo', desc: 'Deal 24 damage & break armor.' },
-              { id: 'valen-4', type: 'heal', name: 'FORTIFY', ap: 2, color: 'emerald', desc: 'Gain 10 Armor & restore 12 HP.' }
+              { id: 'valen-1', type: 'strike', name: 'SHIELD BASH', ap: 1, color: 'blue', damage: 26, desc: 'Deal 26 Physical damage.' },
+              { id: 'valen-2', type: 'defend', name: 'IRON BASTION', ap: 1, color: 'blue', armor: 18, desc: 'Gain 18 Armor block.' },
+              { id: 'valen-3', type: 'debuff', name: 'HEAVY SLAM', ap: 2, color: 'indigo', damage: 35, desc: 'Deal 35 damage & shatter defenses.' },
+              { id: 'valen-4', type: 'heal', name: 'FORTIFY', ap: 2, color: 'emerald', armor: 12, heal: 15, desc: 'Gain 12 Armor & restore 15 HP.' }
             ]
           },
           {
@@ -907,10 +907,10 @@
             bg: 'from-purple-950 to-slate-950', border: 'border-purple-500/50', iconImg: 'image_a9978665.jpg',
             price: 200, requiredWins: 0, requiredXp: 0, isStarter: true,
             baseSkills: [
-              { id: 'nyx-1', type: 'strike', name: 'SHADOW STAB', ap: 1, color: 'purple', desc: 'Deal 17 Dark damage.' },
-              { id: 'nyx-2', type: 'defend', name: 'SMOKE CLOAK', ap: 1, color: 'purple', desc: 'Gain 10 Armor block.' },
-              { id: 'nyx-3', type: 'poison', name: 'VENOM BLADE', ap: 2, color: 'purple', desc: 'Deal 22 damage & apply 8 Poison.' },
-              { id: 'nyx-4', type: 'heal', name: 'LIFE SIPHON', ap: 2, color: 'emerald', desc: 'Deal 12 damage & restore 12 HP.' }
+              { id: 'nyx-1', type: 'strike', name: 'SHADOW STAB', ap: 1, color: 'purple', damage: 30, desc: 'Deal 30 Dark damage.' },
+              { id: 'nyx-2', type: 'defend', name: 'SMOKE CLOAK', ap: 1, color: 'purple', armor: 14, desc: 'Gain 14 Armor block.' },
+              { id: 'nyx-3', type: 'poison', name: 'VENOM BLADE', ap: 2, color: 'purple', damage: 32, poison: 12, desc: 'Deal 32 damage & apply 12 Poison.' },
+              { id: 'nyx-4', type: 'heal', name: 'LIFE SIPHON', ap: 2, color: 'emerald', damage: 20, heal: 18, desc: 'Deal 20 damage & restore 18 HP.' }
             ]
           },
           {
@@ -919,10 +919,10 @@
             bg: 'from-amber-950 to-slate-950', border: 'border-amber-500/50', iconImg: 'image_d3c262a5.jpg',
             price: 350, requiredWins: 2, requiredXp: 150, isStarter: false,
             baseSkills: [
-              { id: 'storm-1', type: 'strike', name: 'SPARK STRIKE', ap: 1, color: 'amber', desc: 'Deal 22 Electric damage.' },
-              { id: 'storm-2', type: 'defend', name: 'STATIC GUARD', ap: 1, color: 'amber', desc: 'Gain 16 Armor block.' },
-              { id: 'storm-3', type: 'debuff', name: 'LIGHTNING BOLT', ap: 2, color: 'yellow', desc: 'Deal 35 damage & shock target.' },
-              { id: 'storm-4', type: 'heal', name: 'ELECTRO MEND', ap: 2, color: 'emerald', desc: 'Restore 20 HP.' }
+              { id: 'storm-1', type: 'strike', name: 'SPARK STRIKE', ap: 1, color: 'amber', damage: 34, desc: 'Deal 34 Electric damage.' },
+              { id: 'storm-2', type: 'defend', name: 'STATIC GUARD', ap: 1, color: 'amber', armor: 20, desc: 'Gain 20 Armor block.' },
+              { id: 'storm-3', type: 'debuff', name: 'LIGHTNING BOLT', ap: 2, color: 'yellow', damage: 45, desc: 'Deal 45 damage & shock target.' },
+              { id: 'storm-4', type: 'heal', name: 'ELECTRO MEND', ap: 2, color: 'emerald', heal: 25, desc: 'Restore 25 HP.' }
             ]
           },
           {
@@ -931,10 +931,10 @@
             bg: 'from-stone-950 to-slate-950', border: 'border-stone-500/50', iconImg: 'image_e1196f4d.jpg',
             price: 500, requiredWins: 4, requiredXp: 350, isStarter: false,
             baseSkills: [
-              { id: 'titan-1', type: 'strike', name: 'STONE SMASH', ap: 1, color: 'stone', desc: 'Deal 24 Earth damage.' },
-              { id: 'titan-2', type: 'defend', name: 'TECTONIC BLOCK', ap: 1, color: 'stone', desc: 'Gain 22 Armor block.' },
-              { id: 'titan-3', type: 'debuff', name: 'EARTHQUAKE', ap: 2, color: 'stone', desc: 'Deal 40 damage & shatter defenses.' },
-              { id: 'titan-4', type: 'heal', name: 'TITAN MEND', ap: 2, color: 'emerald', desc: 'Restore 22 HP & 12 Armor.' }
+              { id: 'titan-1', type: 'strike', name: 'STONE SMASH', ap: 1, color: 'stone', damage: 36, desc: 'Deal 36 Earth damage.' },
+              { id: 'titan-2', type: 'defend', name: 'TECTONIC BLOCK', ap: 1, color: 'stone', armor: 25, desc: 'Gain 25 Armor block.' },
+              { id: 'titan-3', type: 'debuff', name: 'EARTHQUAKE', ap: 2, color: 'stone', damage: 50, desc: 'Deal 50 damage & shatter defenses.' },
+              { id: 'titan-4', type: 'heal', name: 'TITAN MEND', ap: 2, color: 'emerald', heal: 25, armor: 15, desc: 'Restore 25 HP & 15 Armor.' }
             ]
           },
           {
@@ -943,10 +943,10 @@
             bg: 'from-yellow-950 to-slate-950', border: 'border-yellow-500/50', iconImg: 'image_a4f1655c.jpg',
             price: 750, requiredWins: 7, requiredXp: 600, isStarter: false,
             baseSkills: [
-              { id: 'chrono-1', type: 'strike', name: 'TIME SLASH', ap: 1, color: 'yellow', desc: 'Deal 28 Temporal damage.' },
-              { id: 'chrono-2', type: 'defend', name: 'TEMPORAL WARD', ap: 1, color: 'yellow', desc: 'Gain 18 Armor block.' },
-              { id: 'chrono-3', type: 'debuff', name: 'TIME WARP', ap: 2, color: 'amber', desc: 'Deal 45 damage & inflict Armor-Break.' },
-              { id: 'chrono-4', type: 'heal', name: 'HOURGLASS HEAL', ap: 2, color: 'emerald', desc: 'Restore 26 HP.' }
+              { id: 'chrono-1', type: 'strike', name: 'TIME SLASH', ap: 1, color: 'yellow', damage: 38, desc: 'Deal 38 Temporal damage.' },
+              { id: 'chrono-2', type: 'defend', name: 'TEMPORAL WARD', ap: 1, color: 'yellow', armor: 22, desc: 'Gain 22 Armor block.' },
+              { id: 'chrono-3', type: 'debuff', name: 'TIME WARP', ap: 2, color: 'amber', damage: 55, desc: 'Deal 55 damage & inflict Armor-Break.' },
+              { id: 'chrono-4', type: 'heal', name: 'HOURGLASS HEAL', ap: 2, color: 'emerald', heal: 30, desc: 'Restore 30 HP.' }
             ]
           },
           {
@@ -955,10 +955,10 @@
             bg: 'from-orange-950 to-slate-950', border: 'border-orange-500/50', iconImg: 'image_9b984ce7.jpg',
             price: 1000, requiredWins: 10, requiredXp: 950, isStarter: false,
             baseSkills: [
-              { id: 'valkyrie-1', type: 'strike', name: 'HOLY SPEAR', ap: 1, color: 'orange', desc: 'Deal 30 Light damage.' },
-              { id: 'valkyrie-2', type: 'defend', name: 'RADIANT SHIELD', ap: 1, color: 'orange', desc: 'Gain 20 Armor block.' },
-              { id: 'valkyrie-3', type: 'debuff', name: 'CELESTIAL STRIKE', ap: 2, color: 'amber', desc: 'Deal 50 holy judgment damage.' },
-              { id: 'valkyrie-4', type: 'heal', name: 'DIVINE MEND', ap: 2, color: 'emerald', desc: 'Restore 30 HP.' }
+              { id: 'valkyrie-1', type: 'strike', name: 'HOLY SPEAR', ap: 1, color: 'orange', damage: 40, desc: 'Deal 40 Light damage.' },
+              { id: 'valkyrie-2', type: 'defend', name: 'RADIANT SHIELD', ap: 1, color: 'orange', armor: 24, desc: 'Gain 24 Armor block.' },
+              { id: 'valkyrie-3', type: 'debuff', name: 'CELESTIAL STRIKE', ap: 2, color: 'amber', damage: 60, desc: 'Deal 60 holy judgment damage.' },
+              { id: 'valkyrie-4', type: 'heal', name: 'DIVINE MEND', ap: 2, color: 'emerald', heal: 35, desc: 'Restore 35 HP.' }
             ]
           },
           {
@@ -967,10 +967,10 @@
             bg: 'from-violet-950 to-slate-950', border: 'border-violet-500/50', iconImg: 'image_42205d6.jpg',
             price: 1500, requiredWins: 15, requiredXp: 1400, isStarter: false,
             baseSkills: [
-              { id: 'void-1', type: 'strike', name: 'DARK BOLT', ap: 1, color: 'violet', desc: 'Deal 34 Void damage.' },
-              { id: 'void-2', type: 'defend', name: 'SOUL BARRIER', ap: 1, color: 'violet', desc: 'Gain 20 Armor block.' },
-              { id: 'void-3', type: 'poison', name: 'PLAGUE WAVE', ap: 2, color: 'purple', desc: 'Deal 32 damage & apply 15 Poison.' },
-              { id: 'void-4', type: 'heal', name: 'ABYSSAL DRAIN', ap: 2, color: 'emerald', desc: 'Deal 42 damage & restore 22 HP.' }
+              { id: 'void-1', type: 'strike', name: 'DARK BOLT', ap: 1, color: 'violet', damage: 42, desc: 'Deal 42 Void damage.' },
+              { id: 'void-2', type: 'defend', name: 'SOUL BARRIER', ap: 1, color: 'violet', armor: 25, desc: 'Gain 25 Armor block.' },
+              { id: 'void-3', type: 'poison', name: 'PLAGUE WAVE', ap: 2, color: 'purple', damage: 45, poison: 18, desc: 'Deal 45 damage & apply 18 Poison.' },
+              { id: 'void-4', type: 'heal', name: 'ABYSSAL DRAIN', ap: 2, color: 'emerald', damage: 45, heal: 25, desc: 'Deal 45 damage & restore 25 HP.' }
             ]
           },
           {
@@ -979,10 +979,10 @@
             bg: 'from-rose-950 to-slate-950', border: 'border-rose-500/50', iconImg: 'image_2e90c1d9.jpg',
             price: 2500, requiredWins: 25, requiredXp: 2500, isStarter: false,
             baseSkills: [
-              { id: 'berserk-1', type: 'strike', name: 'BLOOD AXE', ap: 1, color: 'rose', desc: 'Deal 40 Physical damage.' },
-              { id: 'berserk-2', type: 'defend', name: 'FRENZIED BLOCK', ap: 1, color: 'rose', desc: 'Gain 18 Armor block.' },
-              { id: 'berserk-3', type: 'debuff', name: 'BLOODY RAMPAGE', ap: 2, color: 'red', desc: 'Deal 60 brutal damage.' },
-              { id: 'berserk-4', type: 'heal', name: 'BLOOD FEAST', ap: 2, color: 'emerald', desc: 'Deal 28 damage & restore 32 HP.' }
+              { id: 'berserk-1', type: 'strike', name: 'BLOOD AXE', ap: 1, color: 'rose', damage: 46, desc: 'Deal 46 Physical damage.' },
+              { id: 'berserk-2', type: 'defend', name: 'FRENZIED BLOCK', ap: 1, color: 'rose', armor: 22, desc: 'Gain 22 Armor block.' },
+              { id: 'berserk-3', type: 'debuff', name: 'BLOODY RAMPAGE', ap: 2, color: 'red', damage: 65, desc: 'Deal 65 brutal damage.' },
+              { id: 'berserk-4', type: 'heal', name: 'BLOOD FEAST', ap: 2, color: 'emerald', damage: 35, heal: 35, desc: 'Deal 35 damage & restore 35 HP.' }
             ]
           },
           {
@@ -991,58 +991,58 @@
             bg: 'from-indigo-950 to-slate-950', border: 'border-indigo-500/50', iconImg: 'image_1d431b92.jpg',
             price: 3500, requiredWins: 30, requiredXp: 3200, isStarter: false,
             baseSkills: [
-              { id: 'astral-1', type: 'strike', name: 'STELLAR RAY', ap: 1, color: 'indigo', desc: 'Deal 44 Cosmic damage.' },
-              { id: 'astral-2', type: 'defend', name: 'COSMIC BARRIER', ap: 1, color: 'indigo', desc: 'Gain 25 Armor block.' },
-              { id: 'astral-3', type: 'debuff', name: 'SUPERNOVA', ap: 2, color: 'blue', desc: 'Deal 68 cosmic cataclysm damage.' },
-              { id: 'astral-4', type: 'heal', name: 'ASTRAL MEND', ap: 2, color: 'emerald', desc: 'Restore 35 HP.' }
+              { id: 'astral-1', type: 'strike', name: 'STELLAR RAY', ap: 1, color: 'indigo', damage: 50, desc: 'Deal 50 Cosmic damage.' },
+              { id: 'astral-2', type: 'defend', name: 'COSMIC BARRIER', ap: 1, color: 'indigo', armor: 30, desc: 'Gain 30 Armor block.' },
+              { id: 'astral-3', type: 'debuff', name: 'SUPERNOVA', ap: 2, color: 'blue', damage: 75, desc: 'Deal 75 cosmic cataclysm damage.' },
+              { id: 'astral-4', type: 'heal', name: 'ASTRAL MEND', ap: 2, color: 'emerald', heal: 40, desc: 'Restore 40 HP.' }
             ]
           }
         ];
 
         const shopSkillsMap = {
             'pyra': [
-                { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 2, color: 'red', cost: 150, desc: 'Tier-2 Elite: Deal 35 Fire damage & apply 12 Burn stacks.' },
-                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 3, color: 'red', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to deal 75 solar fire damage!' }
+                { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 2, color: 'red', damage: 55, poison: 15, cost: 150, desc: 'Tier-2 Elite: Deal 55 Fire damage & apply 15 Burn stacks.' },
+                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 3, color: 'red', damage: 95, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to deal 95 solar fire damage!' }
             ],
             'sylph': [
-                { id: 'shop-sylph-2', name: 'HURRICANE BARRAGE', type: 'strike', ap: 2, color: 'emerald', cost: 150, desc: 'Tier-2 Elite: Unleash rapid wind strikes totaling 38 damage.' },
-                { id: 'shop-sylph-3', name: 'HURRICANE APOCALYPSE', type: 'strike', ap: 3, color: 'emerald', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 70 wind damage!' }
+                { id: 'shop-sylph-2', name: 'HURRICANE BARRAGE', type: 'strike', ap: 2, color: 'emerald', damage: 58, cost: 150, desc: 'Tier-2 Elite: Unleash rapid wind strikes totaling 58 damage.' },
+                { id: 'shop-sylph-3', name: 'HURRICANE APOCALYPSE', type: 'strike', ap: 3, color: 'emerald', damage: 90, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 90 wind damage!' }
             ],
             'valen': [
-                { id: 'shop-valen-2', name: 'AEGIS FORTRESS', type: 'heal', ap: 2, color: 'blue', cost: 150, desc: 'Tier-2 Elite: Fortify stance with 25 Armor block & restore 15 HP.' },
-                { id: 'shop-valen-3', name: 'DIVINE INVINCIBILITY', type: 'heal', ap: 3, color: 'blue', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to gain 45 Armor block!' }
+                { id: 'shop-valen-2', name: 'AEGIS FORTRESS', type: 'heal', ap: 2, color: 'blue', armor: 35, heal: 20, cost: 150, desc: 'Tier-2 Elite: Fortify stance with 35 Armor block & restore 20 HP.' },
+                { id: 'shop-valen-3', name: 'DIVINE INVINCIBILITY', type: 'heal', ap: 3, color: 'blue', armor: 60, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to gain 60 Armor block!' }
             ],
             'nyx': [
-                { id: 'shop-nyx-2', name: 'SHADOW ASSASSINATION', type: 'strike', ap: 2, color: 'purple', cost: 150, desc: 'Tier-2 Elite: Strike from the shadows for 42 critical dark damage.' },
-                { id: 'shop-nyx-3', name: 'ABSOLUTE SHADOW ECLIPSE', type: 'poison', ap: 3, color: 'purple', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 75 lethal dark damage!' }
+                { id: 'shop-nyx-2', name: 'SHADOW ASSASSINATION', type: 'strike', ap: 2, color: 'purple', damage: 62, cost: 150, desc: 'Tier-2 Elite: Strike from the shadows for 62 critical dark damage.' },
+                { id: 'shop-nyx-3', name: 'ABSOLUTE SHADOW ECLIPSE', type: 'poison', ap: 3, color: 'purple', damage: 95, poison: 20, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 95 lethal dark damage!' }
             ],
             'storm-knight': [
-                { id: 'shop-storm-2', name: 'THUNDER GODS WRATH', type: 'debuff', ap: 2, color: 'amber', cost: 200, desc: 'Tier-2 Elite: Summon divine lightning for 45 damage & shock.' },
-                { id: 'shop-storm-3', name: 'ZEUS THUNDERSTORM', type: 'debuff', ap: 3, color: 'amber', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to strike with 78 electrical damage!' }
+                { id: 'shop-storm-2', name: 'THUNDER GODS WRATH', type: 'debuff', ap: 2, color: 'amber', damage: 65, cost: 200, desc: 'Tier-2 Elite: Summon divine lightning for 65 damage & shock.' },
+                { id: 'shop-storm-3', name: 'ZEUS THUNDERSTORM', type: 'debuff', ap: 3, color: 'amber', damage: 100, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to strike with 100 electrical damage!' }
             ],
             'ironclad-titan': [
-                { id: 'shop-titan-2', name: 'CONTINENTAL CRUSH', type: 'strike', ap: 2, color: 'stone', cost: 200, desc: 'Tier-2 Elite: Crush target with tectonic force for 45 earth damage.' },
-                { id: 'shop-titan-3', name: 'WORLD SHATTERING METEOR', type: 'strike', ap: 3, color: 'stone', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to drop a colossal meteor!' }
+                { id: 'shop-titan-2', name: 'CONTINENTAL CRUSH', type: 'strike', ap: 2, color: 'stone', damage: 68, cost: 200, desc: 'Tier-2 Elite: Crush target with tectonic force for 68 earth damage.' },
+                { id: 'shop-titan-3', name: 'WORLD SHATTERING METEOR', type: 'strike', ap: 3, color: 'stone', damage: 105, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to drop a colossal meteor!' }
             ],
             'chrono-warden': [
-                { id: 'shop-chrono-2', name: 'TEMPORAL REWIND', type: 'heal', ap: 2, color: 'yellow', cost: 250, desc: 'Tier-2 Elite: Rewind timeline to restore 30 HP & cleanse debuffs.' },
-                { id: 'shop-chrono-3', name: 'ETERNAL TIME COLLAPSE', type: 'heal', ap: 3, color: 'yellow', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to restore 55 HP!' }
+                { id: 'shop-chrono-2', name: 'TEMPORAL REWIND', type: 'heal', ap: 2, color: 'yellow', heal: 45, cost: 250, desc: 'Tier-2 Elite: Rewind timeline to restore 45 HP & cleanse debuffs.' },
+                { id: 'shop-chrono-3', name: 'ETERNAL TIME COLLAPSE', type: 'heal', ap: 3, color: 'yellow', heal: 75, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to restore 75 HP!' }
             ],
             'sky-valkyrie': [
-                { id: 'shop-valkyrie-2', name: 'DIVINE JUDGMENT', type: 'debuff', ap: 2, color: 'orange', cost: 250, desc: 'Tier-2 Elite: Bring celestial judgment dealing 50 holy damage.' },
-                { id: 'shop-valkyrie-3', name: 'HEAVENLY RAGNAROK', type: 'debuff', ap: 3, color: 'orange', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 78 holy destruction!' }
+                { id: 'shop-valkyrie-2', name: 'DIVINE JUDGMENT', type: 'debuff', ap: 2, color: 'orange', damage: 70, cost: 250, desc: 'Tier-2 Elite: Bring celestial judgment dealing 70 holy damage.' },
+                { id: 'shop-valkyrie-3', name: 'HEAVENLY RAGNAROK', type: 'debuff', ap: 3, color: 'orange', damage: 105, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 105 holy destruction!' }
             ],
             'void-necromancer': [
-                { id: 'shop-void-2', name: 'SOUL HARVEST', type: 'poison', ap: 2, color: 'violet', cost: 300, desc: 'Tier-2 Elite: Harvest life force for 40 damage & 15 HP drain.' },
-                { id: 'shop-void-3', name: 'VOID REALM ANNIHILATION', type: 'poison', ap: 3, color: 'violet', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 80 dark damage!' }
+                { id: 'shop-void-2', name: 'SOUL HARVEST', type: 'poison', ap: 2, color: 'violet', damage: 65, heal: 25, cost: 300, desc: 'Tier-2 Elite: Harvest life force for 65 damage & 25 HP drain.' },
+                { id: 'shop-void-3', name: 'VOID REALM ANNIHILATION', type: 'poison', ap: 3, color: 'violet', damage: 110, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 110 dark damage!' }
             ],
             'blood-berserker': [
-                { id: 'shop-berserk-2', name: 'APOCALYPSE FRENZY', type: 'strike', ap: 2, color: 'rose', cost: 300, desc: 'Tier-2 Elite: Berserk rampage dealing 55 brutal physical damage.' },
-                { id: 'shop-berserk-3', name: 'RAGING BLOOD GOD RAMPAGE', type: 'strike', ap: 3, color: 'rose', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 85 blood fury damage!' }
+                { id: 'shop-berserk-2', name: 'APOCALYPSE FRENZY', type: 'strike', ap: 2, color: 'rose', damage: 75, cost: 300, desc: 'Tier-2 Elite: Berserk rampage dealing 75 brutal physical damage.' },
+                { id: 'shop-berserk-3', name: 'RAGING BLOOD GOD RAMPAGE', type: 'strike', ap: 3, color: 'rose', damage: 115, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 115 blood fury damage!' }
             ],
             'astral-archmage': [
-                { id: 'shop-astral-2', name: 'GALAXY COLLAPSE', type: 'debuff', ap: 2, color: 'indigo', cost: 350, desc: 'Tier-2 Elite: Collapse cosmic orbits for 60 cosmic damage.' },
-                { id: 'shop-astral-3', name: 'BIG BANG UNIVERSE STRIKE', type: 'debuff', ap: 3, color: 'indigo', cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to unleash Big Bang!' }
+                { id: 'shop-astral-2', name: 'GALAXY COLLAPSE', type: 'debuff', ap: 2, color: 'indigo', damage: 80, cost: 350, desc: 'Tier-2 Elite: Collapse cosmic orbits for 80 cosmic damage.' },
+                { id: 'shop-astral-3', name: 'BIG BANG UNIVERSE STRIKE', type: 'debuff', ap: 3, color: 'indigo', damage: 120, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to unleash Big Bang!' }
             ]
         };
 
@@ -1984,18 +1984,18 @@
         function triggerEnemyBelow60Surge() {
             duelState.apexSpecialTriggered = true;
 
-            const possibleHeals = [40, 45, 50];
+            const possibleHeals = [30, 35, 40];
             const healAmount = possibleHeals[Math.floor(Math.random() * possibleHeals.length)];
             duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmount);
 
-            const possibleArmors = [20, 25, 30];
+            const possibleArmors = [15, 20, 25];
             const armorAmount = possibleArmors[Math.floor(Math.random() * possibleArmors.length)];
             duelState.enemyArmor += armorAmount;
 
-            const possibleDmgs = [20, 25, 30];
+            const possibleDmgs = [18, 22, 26];
             let botDmg = possibleDmgs[Math.floor(Math.random() * possibleDmgs.length)];
 
-            const possiblePoisons = [10, 15, 20];
+            const possiblePoisons = [8, 12, 16];
             const poisonAmount = possiblePoisons[Math.floor(Math.random() * possiblePoisons.length)];
             duelState.playerPoison += poisonAmount;
 
@@ -2057,7 +2057,7 @@
                 }
             }
 
-            // Reset AP and start new turn
+            // Always Reset AP and start new player turn
             duelState.playerAp = 3;
             shuffleAndDrawHand();
             updateDuelUI();
@@ -2072,36 +2072,41 @@
             duelState.playerAp -= card.ap;
 
             if (card.type === 'strike') {
-                let dmg = card.cost === 3 ? 70 : (card.cost === 2 ? 30 : 18);
-                if (duelState.enemyArmor >= dmg) {
-                    duelState.enemyArmor -= dmg;
-                    dmg = 0;
-                } else {
-                    dmg -= duelState.enemyArmor;
-                    duelState.enemyArmor = 0;
+                let dmg = card.damage || 30;
+                // Armor piercing calculation (50% pierces through enemy armor directly)
+                if (duelState.enemyArmor > 0) {
+                    if (duelState.enemyArmor >= dmg) {
+                        duelState.enemyArmor -= Math.floor(dmg / 2);
+                        dmg = Math.floor(dmg / 2);
+                    } else {
+                        dmg -= duelState.enemyArmor;
+                        duelState.enemyArmor = 0;
+                    }
                 }
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
                 logDuel(`Played ${card.name}! Dealt ${dmg} damage to ${duelState.currentOpponentName}.`);
             } 
             else if (card.type === 'defend') {
-                const armorGain = card.cost === 2 ? 22 : 14;
+                const armorGain = card.armor || 15;
                 duelState.playerArmor += armorGain;
                 logDuel(`Played ${card.name}! Gained +${armorGain} Armor.`);
             } 
             else if (card.type === 'heal') {
-                const healGain = card.cost === 2 ? 22 : 14;
+                const healGain = card.heal || 20;
                 duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + healGain);
                 logDuel(`Played ${card.name}! Restored +${healGain} HP.`);
             } 
             else if (card.type === 'poison' || card.type === 'debuff') {
-                let dmg = card.cost === 2 ? 25 : 20;
-                let burnStack = card.cost === 3 ? 15 : 8;
-                if (duelState.enemyArmor >= dmg) {
-                    duelState.enemyArmor -= dmg;
-                    dmg = 0;
-                } else {
-                    dmg -= duelState.enemyArmor;
-                    duelState.enemyArmor = 0;
+                let dmg = card.damage || 35;
+                let burnStack = card.poison || 12;
+                if (duelState.enemyArmor > 0) {
+                    if (duelState.enemyArmor >= dmg) {
+                        duelState.enemyArmor -= Math.floor(dmg / 2);
+                        dmg = Math.floor(dmg / 2);
+                    } else {
+                        dmg -= duelState.enemyArmor;
+                        duelState.enemyArmor = 0;
+                    }
                 }
                 duelState.enemyHp = Math.max(0, duelState.enemyHp - dmg);
                 duelState.enemyPoison = (duelState.enemyPoison || 0) + burnStack;
