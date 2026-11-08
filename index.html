@@ -2472,7 +2472,12 @@
             setTimeout(() => {
                 let enemyActionText = '';
 
-                if (duelState.enemyHp < 60) {
+                // NEW REQUIREMENT: If bot HP is below 20, heal 60 HP using a normal skill name and end turn
+                if (duelState.enemyHp < 20) {
+                    const healAmt = 60;
+                    duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmt);
+                    enemyActionText = `[${duelState.currentOpponentName}] casts **REVITALIZE** and restores ${healAmt} HP!`;
+                } else if (duelState.enemyHp < 60) {
                     let specDmg1 = 35;
                     let specDmg2 = 30;
                     let specHeal = 20;
