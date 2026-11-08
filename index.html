@@ -950,7 +950,9 @@
             turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, currentOpponentName: 'Juan_Cruz', enemyHero: null, enemyDeck: [], isPlayerTurn: true
         };
 
-        let currentHand = [];
+        let playerDeck = [];
+        let playerHand = [];
+        let playerDiscard = [];
         let matchmakingTimeout = null;
 
         function logSystemActivity(action, details, actor = 'System') {
@@ -2106,7 +2108,7 @@
         }
         window.executeCoinToss = executeCoinToss;
 
-        function shufflePlayerHand() {
+        function initPlayerDeck() {
             const heroId = currentUser.active_hero || 'pyra';
             const hero = heroes.find(h => h.id === heroId) || heroes[0];
             let availableSkills = [...hero.baseSkills];
@@ -2116,7 +2118,23 @@
                     if (currentUser.unlockedSkills[s.id]) availableSkills.push(s);
                 });
             }
-            currentHand = availableSkills.sort(() => 0.5 - Math.random()).slice(0, 4);
+            playerDeck = [...availableSkills].sort(() => 0.5 - Math.random());
+            playerHand = [];
+            playerDiscard = [];
+            drawPlayerCards(4);
+        }
+
+        function drawPlayerCards(num) {
+            for (let i = 0; i < num; i++) {
+                if (playerDeck.length === 0) {
+                    if (playerDiscard.length === 0) break;
+                    playerDeck = [...playerDiscard].sort(() => 0.5 - Math.random());
+                    playerDiscard = [];
+                }
+                if (playerDeck.length > 0) {
+                    playerHand.push(playerDeck.pop());
+                }
+            }
         }
 
         function startDuelFullscreen() {
@@ -2145,7 +2163,7 @@
                 enemyImg.src = duelState.enemyHero.iconImg;
             }
 
-            shufflePlayerHand();
+            initPlayerDeck();
             renderDuelUI();
             startTurnTimer();
         }
@@ -2175,7 +2193,7 @@
 
             const handContainer = document.getElementById('shuffled-hand-container');
             if (handContainer) {
-                handContainer.innerHTML = currentHand.map((skill, index) => `
+                handContainer.innerHTML = playerHand.map((skill, index) => `
                     <button onclick="window.useDuelSkill(${index})" class="bg-slate-900 border border-slate-700 hover:border-amber-500 rounded-xl p-2 text-left space-y-1 transition card-hover">
                         <div class="flex justify-between items-center text-[9px] font-bold">
                             <span class="text-amber-400">${skill.name}</span>
@@ -2192,7 +2210,6 @@
             const timerEl = document.getElementById('fs-turn-timer');
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
-            shufflePlayerHand();
             renderDuelUI();
 
             duelState.turnTimerInterval = setInterval(() => {
@@ -2232,7 +2249,7 @@
         }
 
         function useDuelSkill(index) {
-            const skill = currentHand[index];
+            const skill = playerHand[index];
             if (!skill) return;
             if (duelState.playerAp < skill.ap) {
                 alert('Not enough Action Points (AP)!');
@@ -2252,6 +2269,10 @@
             if (skill.poison) {
                 duelState.enemyPoison += skill.poison;
             }
+
+            // Remove from hand, put in discard pile
+            playerHand.splice(index, 1);
+            playerDiscard.push(skill);
 
             renderDuelUI();
             checkDuelConclusion();
@@ -2278,29 +2299,30 @@
             setTimeout(() => {
                 let enemyActionText = '';
 
+                // Bot attack logic: Special attack if below 60 HP, else normal attack 25 damage
                 if (duelState.enemyHp < 60) {
                     let specDmg1 = 35;
                     let specDmg2 = 30;
-                    let specHeal = 40;
-                    let specPoison = 20;
+                    let specHeal = 20;
+                    let specPoison = 15;
 
                     applyArmorBlockedDamage('player', specDmg1);
                     applyArmorBlockedDamage('player', specDmg2);
                     duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + specHeal);
                     duelState.playerPoison += specPoison;
 
-                    enemyActionText = `[${duelState.currentOpponentName}] HP < 60! FRENZY UNLIMITED SPECIAL SKILLS: Double strike (${specDmg1} & ${specDmg2}), heals ${specHeal} HP, & applies ${specPoison} poison!`;
+                    enemyActionText = `[${duelState.currentOpponentName}] unleashes Special Attack! Deals ${specDmg1} & ${specDmg2} damage, heals ${specHeal} HP, & applies ${specPoison} poison.`;
                 } else {
-                    let standardDmg = 20;
-                    let standardPoison = 15;
-
-                    applyArmorBlockedDamage('player', standardDmg);
-                    duelState.playerPoison += standardPoison;
-
-                    enemyActionText = `[${duelState.currentOpponentName}] attacks: deals ${standardDmg} damage & applies ${standardPoison} poison stacks.`;
+                    let normalDmg = 25;
+                    applyArmorBlockedDamage('player', normalDmg);
+                    enemyActionText = `[${duelState.currentOpponentName}] attacks for ${normalDmg} normal damage.`;
                 }
 
                 duelState.playerAp = 3;
+                
+                // Replenish player hand back up to 4 cards, retaining unplayed cards from previous round
+                drawPlayerCards(4 - playerHand.length);
+
                 renderDuelUI();
                 if (log) log.innerText = enemyActionText;
 
@@ -2441,7 +2463,7 @@
                 const emails = Object.keys(supportChats);
                 chatThreadsList.innerHTML = emails.length === 0 ? '<div class="text-xs text-slate-500 text-center py-4">No support chats.</div>' :
                     emails.map(email => `
-                        <div onclick="window.selectOwnerChatThread('${email}')" class="p-2 rounded bg-slate-950 border border-slate-800 cursor-pointer hover:border-blue-500 text-xs">
+                        <div onclick="window.selectOwnerChatThread('${email}')" class="p-2 rounded bg-slate-950 border border-slate-800 cursor-pointer hover:border-blue-500 text-xs ${activeOwnerChatEmail === email ? 'border-blue-500 bg-slate-900' : ''}">
                             <span class="text-amber-400 font-bold block truncate">${email}</span>
                             <span class="text-[10px] text-slate-400">Click to reply</span>
                         </div>
@@ -2527,6 +2549,7 @@
         function selectOwnerChatThread(email) {
             activeOwnerChatEmail = email;
             renderOwnerActiveChat();
+            renderOwnerQueues();
         }
         window.selectOwnerChatThread = selectOwnerChatThread;
 
@@ -2562,8 +2585,9 @@
         function renderPlayerChatMessages(isBackgroundPoll = false) {
             const box = document.getElementById('player-chat-messages-box');
             if (!box || !currentUser) return;
+            const playerKey = currentUser.email || currentUser.nickname || 'test_player';
             let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
-            let messages = supportChats[currentUser.email] || [];
+            let messages = supportChats[playerKey] || [];
             
             const content = messages.length === 0 ? '<div class="text-slate-400 text-center py-2">Support ticket open. How can we help you today?</div>' :
                 messages.map(m => `
@@ -2584,9 +2608,10 @@
             const input = document.getElementById('player-chat-input');
             if (!input || !input.value.trim() || !currentUser) return;
             const text = input.value.trim();
+            const playerKey = currentUser.email || currentUser.nickname || 'test_player';
             let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
-            if (!supportChats[currentUser.email]) supportChats[currentUser.email] = [];
-            supportChats[currentUser.email].push({ sender: currentUser.nickname || currentUser.email, text, time: new Date().toLocaleTimeString() });
+            if (!supportChats[playerKey]) supportChats[playerKey] = [];
+            supportChats[playerKey].push({ sender: currentUser.nickname || currentUser.email || 'Player', text, time: new Date().toLocaleTimeString() });
             localStorage.setItem('aetheris_support_chats', JSON.stringify(supportChats));
             input.value = '';
             renderPlayerChatMessages();
