@@ -898,6 +898,28 @@
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
         }
 
+        // INSTANT SUPABASE PROFILE & WALLET SYNC (Fixes balance reverting on reload)
+        async function syncUserToSupabase() {
+            if (!currentUser || !currentUser.email || !supabaseClient) return;
+            try {
+                await supabaseClient.from('profiles').upsert([{
+                    email: currentUser.email,
+                    name: currentUser.name || 'Player',
+                    nickname: currentUser.nickname || 'PLAYER',
+                    phone: currentUser.phone || '',
+                    wallet: currentUser.wallet || 0,
+                    wins: currentUser.wins || 0,
+                    xp: currentUser.xp || 0,
+                    active_hero: currentUser.active_hero || 'pyra',
+                    unlocked_heroes: currentUser.unlocked_heroes || ['pyra'],
+                    unlocked_skills: currentUser.unlockedSkills || {},
+                    status: currentUser.status || 'active'
+                }], { onConflict: 'email' });
+            } catch(e) {
+                console.error('Supabase sync user error:', e);
+            }
+        }
+
         let merchantConfig = {
             gcashNum: '09923978537',
             gcashName: 'John Carlo Estrada Morales',
@@ -1305,9 +1327,7 @@
             currentUser.active_hero = heroId;
             currentUser.unlocked_heroes = [heroId];
             persistLocalStorage();
-            if (supabaseClient) {
-                await supabaseClient.from('profiles').update({ active_hero: heroId, unlocked_heroes: [heroId] }).eq('email', currentUser.email);
-            }
+            await syncUserToSupabase();
             const viewStarter = document.getElementById('view-starter-select');
             if (viewStarter) viewStarter.classList.add('hidden');
             restoreUserSession();
@@ -1657,7 +1677,7 @@
                         }
                         if (data.password_hash === hashed || data.password === pass) {
                             currentUser = data;
-                            if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
+                            if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
                             persistLocalStorage();
                             restoreUserSession();
                             return;
@@ -1875,15 +1895,16 @@
             }).join('');
         }
 
-        function setActiveHero(heroId) {
+        async function setActiveHero(heroId) {
             currentUser.active_hero = heroId;
             persistLocalStorage();
+            await syncUserToSupabase();
             restoreUserSession();
             renderHeroRoster();
         }
         window.setActiveHero = setActiveHero;
 
-        function unlockHero(heroId, price) {
+        async function unlockHero(heroId, price) {
             const bal = currentUser.wallet || currentUser.balance || 0;
             if (bal < price) {
                 alert('Insufficient wallet balance to purchase this champion.');
@@ -1894,6 +1915,7 @@
             currentUser.unlocked_heroes.push(heroId);
             currentUser.active_hero = heroId;
             persistLocalStorage();
+            await syncUserToSupabase();
             restoreUserSession();
             renderHeroRoster();
         }
@@ -1926,7 +1948,7 @@
             }).join('');
         }
 
-        function buyShopSkill(skillId, cost) {
+        async function buyShopSkill(skillId, cost) {
             const bal = currentUser.wallet || currentUser.balance || 0;
             if (bal < cost) {
                 alert('Insufficient balance.');
@@ -1936,6 +1958,7 @@
             if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
             currentUser.unlockedSkills[skillId] = true;
             persistLocalStorage();
+            await syncUserToSupabase();
             updateWalletDisplay();
             renderShopSkills();
             alert('Skill purchased successfully!');
@@ -1999,6 +2022,7 @@
 
             currentUser.wallet = bal - amt;
             persistLocalStorage();
+            await syncUserToSupabase();
             updateWalletDisplay();
 
             const now = new Date();
@@ -2027,7 +2051,7 @@
         window.submitWithdrawal = submitWithdrawal;
 
         // ================= MATCHMAKING & FIRST FIGHT LOGIC =================
-        function startRankedMatchmaking(stake) {
+        async function startRankedMatchmaking(stake) {
             const bal = currentUser.wallet || currentUser.balance || 0;
             if (bal < stake) {
                 alert('Insufficient wallet balance for this stake.');
@@ -2036,6 +2060,7 @@
             currentUser.wallet = bal - stake;
             currentDuelBet = stake;
             persistLocalStorage();
+            await syncUserToSupabase(); // Permanently deduct wager in database immediately
             updateWalletDisplay();
             closeModal();
             openModal('matchmaking');
@@ -2049,6 +2074,7 @@
                     closeModal();
                     currentUser.first_fight_done = true;
                     persistLocalStorage();
+                    syncUserToSupabase();
                     initBotMatch();
                 }, 3000);
             } else {
@@ -2087,10 +2113,11 @@
             openModal('cointoss');
         }
 
-        function cancelMatchmakingQueue() {
+        async function cancelMatchmakingQueue() {
             if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
             currentUser.wallet = (currentUser.wallet || 0) + currentDuelBet;
             persistLocalStorage();
+            await syncUserToSupabase();
             updateWalletDisplay();
             closeModal();
             alert('Matchmaking cancelled. Wager refunded.');
@@ -2338,7 +2365,7 @@
         }
         window.endDuelTurn = endDuelTurn;
 
-        function checkDuelConclusion() {
+        async function checkDuelConclusion() {
             if (duelState.enemyHp <= 0) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
                 const prize = currentDuelBet * 2 * 0.95;
@@ -2346,20 +2373,26 @@
                 currentUser.wins = (currentUser.wins || 0) + 1;
                 currentUser.xp = (currentUser.xp || 0) + 50;
                 persistLocalStorage();
+                await syncUserToSupabase();
                 updateWalletDisplay();
                 alert(`VICTORY! You won the duel against ${duelState.currentOpponentName} and earned ₱${prize.toFixed(2)}!`);
                 closeDuelFullscreen();
             } else if (duelState.playerHp <= 0) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
                 persistLocalStorage();
+                await syncUserToSupabase();
                 alert(`DEFEAT! You were vanquished by ${duelState.currentOpponentName}. Better luck next time.`);
                 closeDuelFullscreen();
             }
         }
 
-        function surrenderDuel() {
+        async function surrenderDuel() {
             if (confirm('Are you sure you want to surrender? You will forfeit your wager.')) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+                if (currentUser) {
+                    persistLocalStorage();
+                    await syncUserToSupabase();
+                }
                 closeDuelFullscreen();
             }
         }
@@ -2726,6 +2759,7 @@
                     if (currentUser && currentUser.email === t.email) {
                         currentUser.wallet = (currentUser.wallet || 0) + t.amount;
                         persistLocalStorage();
+                        syncUserToSupabase();
                         updateWalletDisplay();
                     }
                     registeredPlayersList = registeredPlayersList.map(p => {
@@ -2798,6 +2832,7 @@
                     if (currentUser && currentUser.email === w.email) {
                         currentUser.wallet = (currentUser.wallet || 0) + w.amount;
                         persistLocalStorage();
+                        syncUserToSupabase();
                         updateWalletDisplay();
                     }
                     registeredPlayersList = registeredPlayersList.map(p => {
@@ -2851,6 +2886,7 @@
             if (currentUser && currentUser.email === email) {
                 currentUser.wallet = (currentUser.wallet || 0) + amt;
                 persistLocalStorage();
+                syncUserToSupabase();
                 updateWalletDisplay();
             }
 
