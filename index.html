@@ -820,10 +820,52 @@
         let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
         let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
         let balanceAdderHistory = JSON.parse(localStorage.getItem('aetheris_balance_adder_history')) || [];
-        let registeredPlayersList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [
-            { id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner' }
-        ];
         
+        let registeredPlayersList = [];
+        function syncAllRegisteredPlayers() {
+            let playersMap = new Map();
+            
+            // Always include owner
+            playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
+                id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
+            });
+
+            // Pull from registered players db
+            try {
+                let db = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                db.forEach(p => { if (p && p.email) playersMap.set(p.email.toLowerCase(), p); });
+            } catch(e) {}
+
+            // Pull from pending/approved registrations
+            try {
+                let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+                regs.forEach(r => {
+                    if (r && r.email) {
+                        playersMap.set(r.email.toLowerCase(), {
+                            id: r.id, email: r.email, name: r.name, nickname: r.nickname, phone: r.phone, wallet: r.wallet || 0, status: r.status === 'approved' ? 'active' : (r.status || 'pending_registration')
+                        });
+                    }
+                });
+            } catch(e) {}
+
+            // Pull from registered users
+            try {
+                let users = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+                users.forEach(u => {
+                    if (u && u.email) {
+                        playersMap.set(u.email.toLowerCase(), {
+                            id: u.id, email: u.email, name: u.name, nickname: u.nickname, phone: u.phone, wallet: u.wallet || 0, status: u.status || 'active'
+                        });
+                    }
+                });
+            } catch(e) {}
+
+            registeredPlayersList = Array.from(playersMap.values());
+            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+        }
+
+        syncAllRegisteredPlayers();
+
         let merchantConfig = JSON.parse(localStorage.getItem('aetheris_merchant_config')) || {
             gcashNum: '09301601783',
             gcashName: 'John Carlo Morales',
@@ -872,7 +914,7 @@
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
             localStorage.setItem('aetheris_balance_adder_history', JSON.stringify(balanceAdderHistory));
-            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+            syncAllRegisteredPlayers();
             persistMerchantConfig();
         }
 
@@ -1267,6 +1309,7 @@
                 if (own) own.classList.remove('hidden');
                 if (btnOwner) { btnOwner.classList.add('bg-blue-600', 'text-white'); btnOwner.classList.remove('text-slate-400'); }
                 loadMerchantConfig();
+                syncAllRegisteredPlayers();
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
             }
@@ -2236,6 +2279,7 @@
 
         // ================= OWNER PORTAL MANAGEMENT & HISTORY FUNCTIONS =================
         function renderOwnerQueues() {
+            syncAllRegisteredPlayers();
             const depositHistoryList = document.getElementById('owner-deposit-history-list');
             const withdrawHistoryList = document.getElementById('owner-withdraw-history-list');
             const balanceAdderHistoryList = document.getElementById('owner-balance-adder-history');
@@ -2307,7 +2351,7 @@
                     registeredPlayersList.map(p => `
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
-                                <strong class="text-amber-400">${p.nickname}</strong> (${p.email})<br>
+                                <strong class="text-amber-400">${p.nickname || 'Player'}</strong> (${p.email})<br>
                                 <span class="text-slate-400 text-[10px]">Bal: ₱${p.wallet || 0} | Status: <strong class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'}">${p.status || 'active'}</strong></span>
                             </div>
                             <div class="space-x-1">
@@ -2455,15 +2499,19 @@
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
 
             if (approvedUser) {
-                registeredPlayersList.push({
-                    id: approvedUser.id,
-                    email: approvedUser.email,
-                    name: approvedUser.name,
-                    nickname: approvedUser.nickname,
-                    phone: approvedUser.phone,
-                    wallet: 0,
-                    status: 'active'
-                });
+                let existingDb = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                if (!existingDb.some(p => p.email === approvedUser.email)) {
+                    existingDb.push({
+                        id: approvedUser.id,
+                        email: approvedUser.email,
+                        name: approvedUser.name,
+                        nickname: approvedUser.nickname,
+                        phone: approvedUser.phone,
+                        wallet: 0,
+                        status: 'active'
+                    });
+                    localStorage.setItem('aetheris_registered_players_db', JSON.stringify(existingDb));
+                }
                 persistLocalStorage();
                 sendPushNotificationToPlayer(email, 'Registration Approved!', 'Your Aetheris Arena account registration has been approved by the owner. You can now login!');
             }
