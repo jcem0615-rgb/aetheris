@@ -2339,7 +2339,39 @@
 
             initPlayerDeck();
             renderDuelUI();
-            startTurnTimer();
+
+            // CHECK COIN TOSS INITIATIVE
+            if (!duelState.isPlayerTurn) {
+                const log = document.getElementById('fs-battle-log');
+                if (log) log.innerText = `[${duelState.currentOpponentName}] won the toss and strikes first!`;
+                setTimeout(() => {
+                    executeBotOpeningTurn();
+                }, 1200);
+            } else {
+                const log = document.getElementById('fs-battle-log');
+                if (log) log.innerText = `[Arena]: Your turn! Choose tactical skills.`;
+                startTurnTimer();
+            }
+        }
+
+        function executeBotOpeningTurn() {
+            const log = document.getElementById('fs-battle-log');
+            let enemyActionText = '';
+
+            let normalDmg = 25;
+            applyArmorBlockedDamage('player', normalDmg);
+            enemyActionText = `[${duelState.currentOpponentName}] attacks for ${normalDmg} damage!`;
+
+            renderDuelUI();
+            if (log) log.innerText = enemyActionText;
+            checkDuelConclusion();
+
+            if (duelState.playerHp > 0 && duelState.enemyHp > 0) {
+                setTimeout(() => {
+                    if (log) log.innerText = '[Arena]: Your turn!';
+                    startTurnTimer();
+                }, 1500);
+            }
         }
 
         function renderDuelUI() {
@@ -2472,11 +2504,11 @@
             setTimeout(() => {
                 let enemyActionText = '';
 
-                // NEW REQUIREMENT: If bot HP is below 20, heal 60 HP using a normal skill name and end turn
+                // Bot HP below 20 triggers REVITALIZE heal of 60 HP and ends turn
                 if (duelState.enemyHp < 20) {
                     const healAmt = 60;
                     duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmt);
-                    enemyActionText = `[${duelState.currentOpponentName}] casts **REVITALIZE** and restores ${healAmt} HP!`;
+                    enemyActionText = `[${duelState.currentOpponentName}] casts REVITALIZE and restores ${healAmt} HP!`;
                 } else if (duelState.enemyHp < 60) {
                     let specDmg1 = 35;
                     let specDmg2 = 30;
