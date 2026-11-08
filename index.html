@@ -131,8 +131,8 @@
                         <div id="reg-active-qr" class="w-32 h-32 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                         <div>
                             <span id="reg-active-channel-title" class="font-bold text-blue-400 block text-xs">GCash Account</span>
-                            <span id="reg-active-num" class="text-white font-mono font-bold text-xs">09301601783</span>
-                            <span id="reg-active-name" class="text-slate-400 text-[10px] block">John Carlo Morales</span>
+                            <span id="reg-active-num" class="text-white font-mono font-bold text-xs">09923978537</span>
+                            <span id="reg-active-name" class="text-slate-400 text-[10px] block">John Carlo Estrada Morales</span>
                         </div>
                     </div>
                 </div>
@@ -301,8 +301,8 @@
                     <div id="player-active-qr" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                     <div class="w-full">
                         <span id="player-hub-title" class="text-xs font-bold text-blue-400 block">GCASH PAYMENT</span>
-                        <span id="player-hub-num" class="text-xs font-mono font-bold text-white block truncate">09301601783</span>
-                        <span id="player-hub-name" class="text-[10px] text-slate-400 block truncate">John Carlo Morales</span>
+                        <span id="player-hub-num" class="text-xs font-mono font-bold text-white block truncate">09923978537</span>
+                        <span id="player-hub-name" class="text-[10px] text-slate-400 block truncate">John Carlo Estrada Morales</span>
                     </div>
                 </div>
             </div>
@@ -331,7 +331,10 @@
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                     <h2 class="font-cinzel text-base font-bold text-amber-400">OWNER ADMIN PORTAL</h2>
-                    <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
+                    <div class="space-x-2">
+                        <button onclick="window.forceSyncOwnerPortal()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shadow">Force Sync Data</button>
+                        <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
+                    </div>
                 </div>
 
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
@@ -587,8 +590,8 @@
                     <div id="topup-active-qr" class="w-32 h-32 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                     <div>
                         <span id="topup-active-title" class="font-bold text-blue-400 block text-xs">GCash Account</span>
-                        <span id="topup-active-num" class="text-white font-mono font-bold text-xs">09301601783</span>
-                        <span id="topup-active-name" class="text-slate-400 text-[10px] block">John Carlo Morales</span>
+                        <span id="topup-active-num" class="text-white font-mono font-bold text-xs">09923978537</span>
+                        <span id="topup-active-name" class="text-slate-400 text-[10px] block">John Carlo Estrada Morales</span>
                     </div>
                 </div>
             </div>
@@ -822,61 +825,103 @@
         let balanceAdderHistory = JSON.parse(localStorage.getItem('aetheris_balance_adder_history')) || [];
         
         let registeredPlayersList = [];
-        function syncAllRegisteredPlayers() {
+        
+        // ROBUST CLOUD + LOCAL PLAYER SYNC
+        async function syncAllRegisteredPlayers() {
             let playersMap = new Map();
             
             // Always include owner
             playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
-                id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
+                id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
             });
 
-            // Pull from registered players db
-            try {
-                let db = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                db.forEach(p => { if (p && p.email) playersMap.set(p.email.toLowerCase(), p); });
-            } catch(e) {}
-
-            // Pull from pending/approved registrations
-            try {
-                let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-                regs.forEach(r => {
-                    if (r && r.email) {
-                        playersMap.set(r.email.toLowerCase(), {
-                            id: r.id, email: r.email, name: r.name, nickname: r.nickname, phone: r.phone, wallet: r.wallet || 0, status: r.status === 'approved' ? 'active' : (r.status || 'pending_registration')
+            // 1. Pull from Supabase profiles table
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from('profiles').select('*');
+                    if (data && !error) {
+                        data.forEach(p => {
+                            if (p && p.email) {
+                                playersMap.set(p.email.toLowerCase(), {
+                                    id: p.id || Date.now(),
+                                    email: p.email,
+                                    name: p.name || p.fullName || 'Player',
+                                    nickname: p.nickname || p.username || 'PLAYER',
+                                    phone: p.phone || '',
+                                    wallet: p.wallet || p.balance || 0,
+                                    status: p.status || 'active'
+                                });
+                            }
                         });
                     }
-                });
-            } catch(e) {}
+                } catch(e) {
+                    console.error('Supabase sync profiles error:', e);
+                }
+            }
 
-            // Pull from registered users
-            try {
-                let users = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
-                users.forEach(u => {
-                    if (u && u.email) {
-                        playersMap.set(u.email.toLowerCase(), {
-                            id: u.id, email: u.email, name: u.name, nickname: u.nickname, phone: u.phone, wallet: u.wallet || 0, status: u.status || 'active'
-                        });
-                    }
-                });
-            } catch(e) {}
+            // 2. Pull from local storage keys
+            ['aetheris_registered_players_db', 'aetheris_registered_users', 'aetheris_pending_registrations'].forEach(key => {
+                try {
+                    let list = JSON.parse(localStorage.getItem(key)) || [];
+                    list.forEach(item => {
+                        if (item && item.email) {
+                            playersMap.set(item.email.toLowerCase(), {
+                                id: item.id || Date.now(),
+                                email: item.email,
+                                name: item.name || 'Player',
+                                nickname: item.nickname || 'PLAYER',
+                                phone: item.phone || '',
+                                wallet: item.wallet || item.balance || 0,
+                                status: item.status === 'approved' ? 'active' : (item.status || 'active')
+                            });
+                        }
+                    });
+                } catch(e) {}
+            });
 
             registeredPlayersList = Array.from(playersMap.values());
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
         }
 
-        syncAllRegisteredPlayers();
-
-        let merchantConfig = JSON.parse(localStorage.getItem('aetheris_merchant_config')) || {
-            gcashNum: '09301601783',
-            gcashName: 'John Carlo Morales',
+        let merchantConfig = {
+            gcashNum: '09923978537',
+            gcashName: 'John Carlo Estrada Morales',
             gcashQR: null,
-            mayaNum: '09301601780',
-            mayaName: 'John Carlo Morales',
+            mayaNum: '09923978537',
+            mayaName: 'John Carlo Estrada Morales',
             mayaQR: null
         };
 
-        function persistMerchantConfig() {
+        async function loadMerchantConfig() {
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from('app_settings').select('*').eq('key', 'merchant_config').single();
+                    if (data && data.value) {
+                        merchantConfig = data.value;
+                        localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
+                        return;
+                    }
+                } catch(e) {}
+            }
+            try {
+                const stored = localStorage.getItem('aetheris_merchant_config');
+                if (stored) {
+                    merchantConfig = JSON.parse(stored);
+                }
+            } catch(e) {}
+        }
+
+        async function persistMerchantConfig() {
             localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('app_settings').upsert([
+                        { key: 'merchant_config', value: merchantConfig }
+                    ], { onConflict: 'key' });
+                } catch(e) {
+                    console.error('Supabase merchant config sync error:', e);
+                }
+            }
         }
 
         const humanBotNames = ['Juan_Cruz', 'Maria_Santos', 'Carlo_Garcia', 'Aria_Vanguard', 'Miguel_Reyes', 'Bea_Alonzo', 'Marco_Polo', 'Elena_Gilbert', 'Kian_Roxas', 'Sofia_Cruz'];
@@ -1069,7 +1114,8 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
-            loadMerchantConfig();
+            await loadMerchantConfig();
+            await syncAllRegisteredPlayers();
             await updateMerchantPaymentDisplay();
             try {
                 if (currentUser && currentUser.email && supabaseClient) {
@@ -1109,17 +1155,6 @@
                 console.error('Init session check error:', err);
             }
         });
-
-        function loadMerchantConfig() {
-            try {
-                const stored = localStorage.getItem('aetheris_merchant_config');
-                if (stored) {
-                    merchantConfig = JSON.parse(stored);
-                }
-            } catch(e) {
-                console.error('Load merchant config error:', e);
-            }
-        }
 
         function restoreUserSession() {
             try {
@@ -1269,7 +1304,7 @@
             if (fsPlayerImg) fsPlayerImg.src = hero.iconImg;
         }
 
-        function switchTab(tabName) {
+        async function switchTab(tabName) {
             const views = ['view-hub', 'view-select', 'view-shop', 'view-owner', 'view-auth', 'view-starter-select'];
             views.forEach(v => {
                 const el = document.getElementById(v);
@@ -1292,7 +1327,7 @@
                 const hub = document.getElementById('view-hub');
                 if (hub) hub.classList.remove('hidden');
                 if (btnHub) { btnHub.classList.add('bg-blue-600', 'text-white'); btnHub.classList.remove('text-slate-400'); }
-                loadMerchantConfig();
+                await loadMerchantConfig();
                 switchPlayerHubPayment('gcash');
             } else if (tabName === 'select') {
                 const sel = document.getElementById('view-select');
@@ -1308,13 +1343,21 @@
                 const own = document.getElementById('view-owner');
                 if (own) own.classList.remove('hidden');
                 if (btnOwner) { btnOwner.classList.add('bg-blue-600', 'text-white'); btnOwner.classList.remove('text-slate-400'); }
-                loadMerchantConfig();
-                syncAllRegisteredPlayers();
+                await loadMerchantConfig();
+                await syncAllRegisteredPlayers();
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
             }
         }
         window.switchTab = switchTab;
+
+        async function forceSyncOwnerPortal() {
+            await syncAllRegisteredPlayers();
+            await loadMerchantConfig();
+            renderOwnerQueues();
+            alert('Owner Portal synced successfully with Supabase and local storage!');
+        }
+        window.forceSyncOwnerPortal = forceSyncOwnerPortal;
 
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
@@ -1329,7 +1372,7 @@
         }
         window.togglePass = togglePass;
 
-        function showAuthMode(mode) {
+        async function showAuthMode(mode) {
             const loginBox = document.getElementById('auth-login-box');
             const registerBox = document.getElementById('auth-register-box');
             const forgotBox = document.getElementById('auth-forgot-box');
@@ -1340,7 +1383,7 @@
             if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
             if (mode === 'register' && registerBox) {
                 registerBox.classList.remove('hidden');
-                loadMerchantConfig();
+                await loadMerchantConfig();
                 switchRegPaymentMethod('gcash');
             }
             if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
@@ -1349,9 +1392,9 @@
 
         // Interactive Payment Methods for Registration & Hub & Topup
         let currentRegMethod = 'gcash';
-        function switchRegPaymentMethod(method) {
+        async function switchRegPaymentMethod(method) {
             currentRegMethod = method;
-            loadMerchantConfig();
+            await loadMerchantConfig();
             const btnGcash = document.getElementById('btn-reg-gcash');
             const btnMaya = document.getElementById('btn-reg-maya');
             const qrBox = document.getElementById('reg-active-qr');
@@ -1386,9 +1429,9 @@
         window.switchRegPaymentMethod = switchRegPaymentMethod;
 
         let currentTopupMethod = 'gcash';
-        function switchTopUpPaymentMethod(method) {
+        async function switchTopUpPaymentMethod(method) {
             currentTopupMethod = method;
-            loadMerchantConfig();
+            await loadMerchantConfig();
             const btnGcash = document.getElementById('btn-topup-gcash');
             const btnMaya = document.getElementById('btn-topup-maya');
             const qrBox = document.getElementById('topup-active-qr');
@@ -1422,8 +1465,8 @@
         }
         window.switchTopUpPaymentMethod = switchTopUpPaymentMethod;
 
-        function switchPlayerHubPayment(method) {
-            loadMerchantConfig();
+        async function switchPlayerHubPayment(method) {
+            await loadMerchantConfig();
             const btnGcash = document.getElementById('btn-hub-gcash');
             const btnMaya = document.getElementById('btn-hub-maya');
             const qrBox = document.getElementById('player-active-qr');
@@ -1458,7 +1501,7 @@
         window.switchPlayerHubPayment = switchPlayerHubPayment;
 
         async function updateMerchantPaymentDisplay() {
-            loadMerchantConfig();
+            await loadMerchantConfig();
             const inputGcashNum = document.getElementById('input-gcash-num');
             const inputGcashName = document.getElementById('input-gcash-name');
             const inputMayaNum = document.getElementById('input-maya-num');
@@ -1494,17 +1537,17 @@
 
             if (fileInput && fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = async (e) => {
                     merchantConfig.gcashQR = e.target.result;
-                    persistMerchantConfig();
+                    await persistMerchantConfig();
                     updateMerchantPaymentDisplay();
-                    alert('GCash settings and QR saved successfully!');
+                    alert('GCash settings and QR saved & synced successfully!');
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
-                persistMerchantConfig();
+                await persistMerchantConfig();
                 updateMerchantPaymentDisplay();
-                alert('GCash settings saved successfully!');
+                alert('GCash settings saved & synced successfully!');
             }
         }
         window.saveGcashSettings = saveGcashSettings;
@@ -1519,17 +1562,17 @@
 
             if (fileInput && fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = async (e) => {
                     merchantConfig.mayaQR = e.target.result;
-                    persistMerchantConfig();
+                    await persistMerchantConfig();
                     updateMerchantPaymentDisplay();
-                    alert('Maya settings and QR saved successfully!');
+                    alert('Maya settings and QR saved & synced successfully!');
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
-                persistMerchantConfig();
+                await persistMerchantConfig();
                 updateMerchantPaymentDisplay();
-                alert('Maya settings saved successfully!');
+                alert('Maya settings saved & synced successfully!');
             }
         }
         window.saveMayaSettings = saveMayaSettings;
@@ -1546,7 +1589,7 @@
             if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                 currentUser = {
                     email: EXCLUSIVE_OWNER_EMAIL,
-                    name: 'John Carlo Morales',
+                    name: 'John Carlo Estrada Morales',
                     nickname: 'BOSS',
                     phone: '09923978537',
                     role: 'owner',
