@@ -114,26 +114,23 @@
                 <button onclick="window.handleLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
             </div>
 
-            <!-- Register Box with Payment Method Switcher -->
+            <!-- Register Box with Payment Method Switcher (QR Only) -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
                 <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced.</p>
                 
                 <!-- Payment Method Selector Tabs -->
                 <div class="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
-                    <p class="text-[11px] text-amber-400 font-bold text-center">Select Payment Channel to Pay ₱50 Fee:</p>
+                    <p class="text-[11px] text-amber-400 font-bold text-center">Select Payment Channel & Scan/Save QR to Pay ₱50 Fee:</p>
                     <div class="flex space-x-2">
                         <button type="button" onclick="window.switchRegPaymentMethod('gcash')" id="btn-reg-gcash" class="flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
                         <button type="button" onclick="window.switchRegPaymentMethod('maya')" id="btn-reg-maya" class="flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
                     </div>
 
+                    <!-- QR Display Box Only (No numbers or names) with Save Button -->
                     <div id="reg-payment-display-box" class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2 mt-2">
-                        <div id="reg-active-qr" class="w-32 h-32 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                        <div>
-                            <span id="reg-active-channel-title" class="font-bold text-blue-400 block text-xs">GCash Account</span>
-                            <span id="reg-active-num" class="text-white font-mono font-bold text-xs">0992 •••• 537</span>
-                            <span id="reg-active-name" class="text-slate-400 text-[10px] block">John C***** M******</span>
-                        </div>
+                        <div id="reg-active-qr" class="w-36 h-36 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <button type="button" onclick="window.saveQRCodeImage(currentRegMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code to Phone</button>
                     </div>
                 </div>
 
@@ -285,11 +282,11 @@
                 </div>
             </div>
 
-            <!-- Payment QR Banner for Players (Interactive Tabs) -->
+            <!-- Payment QR Banner for Players (QR Only with Save Button) -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="text-center">
                     <h3 class="font-cinzel font-bold text-amber-400 text-sm">OFFICIAL PAYMENT CHANNELS</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Select a payment method below to view the corresponding account details and scannable QR code.</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Select a payment method below to scan or save the QR code.</p>
                 </div>
                 
                 <div class="flex space-x-2 max-w-xs mx-auto">
@@ -299,11 +296,7 @@
 
                 <div class="max-w-xs mx-auto bg-slate-950 border border-slate-800 p-3 rounded-2xl flex flex-col items-center text-center space-y-2">
                     <div id="player-active-qr" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                    <div class="w-full">
-                        <span id="player-hub-title" class="text-xs font-bold text-blue-400 block">GCASH PAYMENT</span>
-                        <span id="player-hub-num" class="text-xs font-mono font-bold text-white block truncate">0992 •••• 537</span>
-                        <span id="player-hub-name" class="text-[10px] text-slate-400 block truncate">John C***** M******</span>
-                    </div>
+                    <button type="button" onclick="window.saveQRCodeImage(currentHubMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code to Phone</button>
                 </div>
             </div>
 
@@ -574,25 +567,21 @@
 
     <!-- Modals -->
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
-        <!-- Top-up Modal with Payment Tabs -->
+        <!-- Top-up Modal with Payment Tabs (QR Only) -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400 text-center">Submit Top-Up Request (Min ₱50)</h3>
             
             <div class="space-y-2">
-                <p class="text-[11px] text-slate-400 text-center">1. Select payment channel & scan QR / send funds:</p>
+                <p class="text-[11px] text-slate-400 text-center">1. Select payment channel & scan/save QR:</p>
                 
                 <div class="flex space-x-2 max-w-xs mx-auto">
                     <button type="button" onclick="window.switchTopUpPaymentMethod('gcash')" id="btn-topup-gcash" class="flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
                     <button type="button" onclick="window.switchTopUpPaymentMethod('maya')" id="btn-topup-maya" class="flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
                 </div>
 
-                <div class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-1.5">
+                <div class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2">
                     <div id="topup-active-qr" class="w-32 h-32 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                    <div>
-                        <span id="topup-active-title" class="font-bold text-blue-400 block text-xs">GCash Account</span>
-                        <span id="topup-active-num" class="text-white font-mono font-bold text-xs">0992 •••• 537</span>
-                        <span id="topup-active-name" class="text-slate-400 text-[10px] block">John C***** M******</span>
-                    </div>
+                    <button type="button" onclick="window.saveQRCodeImage(currentTopupMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code to Phone</button>
                 </div>
             </div>
 
@@ -829,7 +818,6 @@
         
         let registeredPlayersList = [];
         
-        // PRIVACY MASKING HELPERS
         function maskPhoneNumber(phone) {
             if (!phone || phone.length < 7) return '••••••••••';
             return phone.slice(0, 4) + ' •••• ' + phone.slice(-3);
@@ -844,16 +832,29 @@
             }).join(' ');
         }
 
-        // ROBUST CLOUD + LOCAL PLAYER SYNC
+        // SAVE QR CODE TO DEVICE FUNCTION
+        function saveQRCodeImage(method) {
+            let qrData = method === 'gcash' ? merchantConfig.gcashQR : merchantConfig.mayaQR;
+            if (!qrData) {
+                alert('No QR code image available for ' + method.toUpperCase() + ' yet.');
+                return;
+            }
+            const link = document.createElement('a');
+            link.href = qrData;
+            link.download = `${method.toUpperCase()}_Aetheris_QR.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        window.saveQRCodeImage = saveQRCodeImage;
+
         async function syncAllRegisteredPlayers() {
             let playersMap = new Map();
             
-            // Always include owner
             playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
                 id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
             });
 
-            // 1. Pull from Supabase profiles table
             if (supabaseClient) {
                 try {
                     const { data, error } = await supabaseClient.from('profiles').select('*');
@@ -877,7 +878,6 @@
                 }
             }
 
-            // 2. Pull from local storage keys
             ['aetheris_registered_players_db', 'aetheris_registered_users', 'aetheris_pending_registrations'].forEach(key => {
                 try {
                     let list = JSON.parse(localStorage.getItem(key)) || [];
@@ -901,7 +901,6 @@
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
         }
 
-        // INSTANT SUPABASE PROFILE & WALLET SYNC
         async function syncUserToSupabase() {
             if (!currentUser || !currentUser.email || !supabaseClient) return;
             try {
@@ -980,12 +979,15 @@
         let playerHand = [];
         let playerDiscard = [];
         
-        // MATCHMAKING CONTROL VARIABLES
         let matchmakingInterval = null;
         let matchmakingTimeoutTimer = null;
         let myQueueRecordId = null;
         let cointossTimerInterval = null;
         let cointossTimeRemaining = 5;
+
+        let currentRegMethod = 'gcash';
+        let currentHubMethod = 'gcash';
+        let currentTopupMethod = 'gcash';
 
         function logSystemActivity(action, details, actor = 'System') {
             const now = new Date();
@@ -1012,10 +1014,9 @@
             persistMerchantConfig();
         }
 
-        // ================= NOTIFICATION LOGIC =================
         async function requestRegistrationNotificationPermission() {
             if (!('Notification' in window)) {
-                alert('This browser does not support desktop/phone notifications.');
+                alert('This browser does not support notifications.');
                 return;
             }
             const permission = await Notification.requestPermission();
@@ -1027,9 +1028,9 @@
                     btn.classList.add('bg-emerald-600');
                 }
                 alert('Notification permission granted successfully!');
-                new Notification('Aetheris Arena', { body: 'Notifications enabled successfully! You will receive updates here.' });
+                new Notification('Aetheris Arena', { body: 'Notifications enabled successfully!' });
             } else {
-                alert('Notification permission was denied. You can enable it in your browser settings.');
+                alert('Notification permission denied.');
             }
         }
         window.requestRegistrationNotificationPermission = requestRegistrationNotificationPermission;
@@ -1201,7 +1202,7 @@
                     } else {
                         if (currentUser.email) {
                             if (currentUser.status === 'frozen') {
-                                alert('Your account has been frozen by the administration.');
+                                alert('Your account has been frozen.');
                                 logoutPlayer();
                                 return;
                             }
@@ -1216,7 +1217,6 @@
                 console.error('Init session check error:', err);
             }
 
-            // Real-time polling / background refresher for instant chat & portal updates
             setInterval(() => {
                 if (currentUser) {
                     const activeModal = document.getElementById('modal-support-chat');
@@ -1428,7 +1428,7 @@
             await syncAllRegisteredPlayers();
             await loadMerchantConfig();
             renderOwnerQueues();
-            alert('Owner Portal synced successfully with Supabase and local storage!');
+            alert('Owner Portal synced successfully!');
         }
         window.forceSyncOwnerPortal = forceSyncOwnerPortal;
 
@@ -1463,110 +1463,82 @@
         }
         window.showAuthMode = showAuthMode;
 
-        let currentRegMethod = 'gcash';
         async function switchRegPaymentMethod(method) {
             currentRegMethod = method;
             await loadMerchantConfig();
             const btnGcash = document.getElementById('btn-reg-gcash');
             const btnMaya = document.getElementById('btn-reg-maya');
             const qrBox = document.getElementById('reg-active-qr');
-            const titleEl = document.getElementById('reg-active-channel-title');
-            const numEl = document.getElementById('reg-active-num');
-            const nameEl = document.getElementById('reg-active-name');
 
             if (method === 'gcash') {
                 if (btnGcash) { btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition'; }
                 if (btnMaya) { btnMaya.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition'; }
-                if (titleEl) titleEl.innerText = 'GCash Account';
-                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.gcashNum);
-                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.gcashName);
                 if (merchantConfig.gcashQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
-                    qrBox.innerHTML = 'No QR';
+                    qrBox.innerHTML = 'No GCash QR';
                 }
             } else {
                 if (btnMaya) { btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition'; }
                 if (btnGcash) { btnGcash.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition'; }
-                if (titleEl) titleEl.innerText = 'Maya Account';
-                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.mayaNum);
-                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.mayaName);
                 if (merchantConfig.mayaQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
-                    qrBox.innerHTML = 'No QR';
+                    qrBox.innerHTML = 'No Maya QR';
                 }
             }
         }
         window.switchRegPaymentMethod = switchRegPaymentMethod;
 
-        let currentTopupMethod = 'gcash';
         async function switchTopUpPaymentMethod(method) {
             currentTopupMethod = method;
             await loadMerchantConfig();
             const btnGcash = document.getElementById('btn-topup-gcash');
             const btnMaya = document.getElementById('btn-topup-maya');
             const qrBox = document.getElementById('topup-active-qr');
-            const titleEl = document.getElementById('topup-active-title');
-            const numEl = document.getElementById('topup-active-num');
-            const nameEl = document.getElementById('topup-active-name');
 
             if (method === 'gcash') {
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (titleEl) titleEl.innerText = 'GCash Account';
-                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.gcashNum);
-                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.gcashName);
                 if (merchantConfig.gcashQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
-                    qrBox.innerHTML = 'No QR';
+                    qrBox.innerHTML = 'No GCash QR';
                 }
             } else {
                 if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (titleEl) titleEl.innerText = 'Maya Account';
-                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.mayaNum);
-                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.mayaName);
                 if (merchantConfig.mayaQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
-                    qrBox.innerHTML = 'No QR';
+                    qrBox.innerHTML = 'No Maya QR';
                 }
             }
         }
         window.switchTopUpPaymentMethod = switchTopUpPaymentMethod;
 
         async function switchPlayerHubPayment(method) {
+            currentHubMethod = method;
             await loadMerchantConfig();
             const btnGcash = document.getElementById('btn-hub-gcash');
             const btnMaya = document.getElementById('btn-hub-maya');
             const qrBox = document.getElementById('player-active-qr');
-            const titleEl = document.getElementById('player-hub-title');
-            const numEl = document.getElementById('player-hub-num');
-            const nameEl = document.getElementById('player-hub-name');
 
             if (method === 'gcash') {
                 if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (titleEl) titleEl.innerText = 'GCASH PAYMENT';
-                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.gcashNum);
-                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.gcashName);
                 if (merchantConfig.gcashQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
-                    qrBox.innerHTML = 'No QR';
+                    qrBox.innerHTML = 'No GCash QR';
                 }
             } else {
                 if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (titleEl) titleEl.innerText = 'MAYA PAYMENT';
-                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.mayaNum);
-                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.mayaName);
                 if (merchantConfig.mayaQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
-                    qrBox.innerHTML = 'No QR';
+                    qrBox.innerHTML = 'No Maya QR';
                 }
             }
         }
@@ -1951,7 +1923,7 @@
         async function unlockHero(heroId, price) {
             const bal = currentUser.wallet || currentUser.balance || 0;
             if (bal < price) {
-                alert('Insufficient wallet balance to purchase this champion.');
+                alert('Insufficient wallet balance.');
                 return;
             }
             currentUser.wallet = bal - price;
@@ -1971,7 +1943,7 @@
             const activeHeroId = currentUser.active_hero || 'pyra';
             const skills = shopSkillsMap[activeHeroId] || [];
             if (skills.length === 0) {
-                container.innerHTML = '<div class="text-center text-slate-400 py-6">No shop skills available for this champion.</div>';
+                container.innerHTML = '<div class="text-center text-slate-400 py-6">No shop skills available.</div>';
                 return;
             }
             container.innerHTML = skills.map(s => {
@@ -2094,11 +2066,10 @@
         }
         window.submitWithdrawal = submitWithdrawal;
 
-        // ================= SUPABASE REAL-TIME P2P MATCHMAKING & 20S BOT FALLBACK =================
         async function startRankedMatchmaking(stake) {
             const bal = currentUser.wallet || currentUser.balance || 0;
             if (bal < stake) {
-                alert('Insufficient wallet balance for this stake.');
+                alert('Insufficient wallet balance.');
                 return;
             }
             preBattleWallet = bal;
@@ -2117,7 +2088,6 @@
             let secondsLeft = 20;
             if (countdownEl) countdownEl.innerText = `Time left: ${secondsLeft}s`;
 
-            // 1. Insert our queue entry into Supabase matchmaking_queue table
             if (supabaseClient) {
                 try {
                     const { data, error } = await supabaseClient.from('matchmaking_queue').insert([{
@@ -2135,15 +2105,13 @@
                 }
             }
 
-            // 2. Poll Supabase queue every 2 seconds for a real human match
             if (matchmakingInterval) clearInterval(matchmakingInterval);
             if (matchmakingTimeoutTimer) clearTimeout(matchmakingTimeoutTimer);
 
             matchmakingInterval = setInterval(async () => {
                 if (supabaseClient) {
                     try {
-                        // Check if another player with the same stake is waiting
-                        const { data: waitingPlayers, error } = await supabaseClient
+                        const { data: waitingPlayers } = await supabaseClient
                             .from('matchmaking_queue')
                             .select('*')
                             .eq('stake', stake)
@@ -2154,7 +2122,6 @@
 
                         if (waitingPlayers && waitingPlayers.length > 0) {
                             const opponent = waitingPlayers[0];
-                            // Claim opponent's queue ticket
                             const { error: updateErr } = await supabaseClient
                                 .from('matchmaking_queue')
                                 .update({ status: 'matched', opponent_nickname: currentUser.nickname })
@@ -2168,7 +2135,6 @@
                             }
                         }
 
-                        // Also check if our own ticket was matched by someone else
                         if (myQueueRecordId) {
                             const { data: myTicket } = await supabaseClient
                                 .from('matchmaking_queue')
@@ -2189,7 +2155,6 @@
                 }
             }, 2000);
 
-            // 3. 20-Second Countdown & Bot Fallback Timer
             matchmakingTimeoutTimer = setInterval(() => {
                 secondsLeft--;
                 if (countdownEl) countdownEl.innerText = `Time left: ${secondsLeft}s`;
@@ -2197,7 +2162,6 @@
                 if (secondsLeft <= 0) {
                     cleanupMatchmaking();
                     closeModal();
-                    // Fallback to bot match if no real player joined in 20s
                     initBotMatch();
                 }
             }, 1000);
@@ -2206,7 +2170,7 @@
 
         async function cleanupMatchmaking() {
             if (matchmakingInterval) clearInterval(matchmakingInterval);
-            if (matchmakingTimeoutTimer) clearInterval(matchmakingTimeoutTimer);
+            if (matchmakingTimeoutTimer) clearTimeout(matchmakingTimeoutTimer);
             if (supabaseClient && myQueueRecordId) {
                 try {
                     await supabaseClient.from('matchmaking_queue').delete().eq('id', myQueueRecordId);
@@ -2421,7 +2385,7 @@
             const skill = playerHand[index];
             if (!skill) return;
             if (duelState.playerAp < skill.ap) {
-                alert('Not enough Action Points (AP)!');
+                alert('Not enough AP!');
                 return;
             }
             duelState.playerAp -= skill.ap;
@@ -2450,7 +2414,7 @@
         function endDuelTurn() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             const log = document.getElementById('fs-battle-log');
-            if (log) log.innerText = `[${duelState.currentOpponentName}]: Planning tactical move...`;
+            if (log) log.innerText = `[${duelState.currentOpponentName}]: Planning move...`;
 
             if (duelState.playerPoison > 0) {
                 duelState.playerHp = Math.max(0, duelState.playerHp - duelState.playerPoison);
@@ -2480,11 +2444,11 @@
                     duelState.enemyArmor += specArmor;
                     duelState.playerPoison += specPoison;
 
-                    enemyActionText = `[${duelState.currentOpponentName}] unleashes Special Attack! Deals ${specDmg1} & ${specDmg2} damage, gains ${specArmor} armor, heals ${specHeal} HP, & applies ${specPoison} poison.`;
+                    enemyActionText = `[${duelState.currentOpponentName}] attacks! Deals damage, gains armor, & applies poison.`;
                 } else {
                     let normalDmg = 25;
                     applyArmorBlockedDamage('player', normalDmg);
-                    enemyActionText = `[${duelState.currentOpponentName}] attacks for ${normalDmg} normal damage.`;
+                    enemyActionText = `[${duelState.currentOpponentName}] attacks for ${normalDmg} damage.`;
                 }
 
                 duelState.playerAp = 3;
@@ -2497,7 +2461,7 @@
 
                 if (duelState.playerHp > 0 && duelState.enemyHp > 0) {
                     setTimeout(() => {
-                        if (log) log.innerText = '[Arena]: Your turn! Choose tactical skills.';
+                        if (log) log.innerText = '[Arena]: Your turn!';
                         startTurnTimer();
                     }, 1200);
                 }
@@ -2534,7 +2498,7 @@
                 persistLocalStorage();
                 await syncUserToSupabase();
                 updateWalletDisplay();
-                alert(`VICTORY! You won the duel against ${duelState.currentOpponentName} and earned ₱${prize.toFixed(2)}!`);
+                alert(`VICTORY! You won ₱${prize.toFixed(2)}!`);
                 closeDuelFullscreen();
             } else if (duelState.playerHp <= 0) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
@@ -2553,19 +2517,19 @@
                     prize: 0,
                     date: now.toISOString().split('T')[0],
                     time: now.toLocaleTimeString(),
-                    summary: `${currentUser.nickname} lost to ${duelState.currentOpponentName} (Stake: ₱${currentDuelBet})`
+                    summary: `${currentUser.nickname} lost to ${duelState.currentOpponentName}`
                 };
                 battleHistoryLog.unshift(battleRecord);
 
                 persistLocalStorage();
                 await syncUserToSupabase();
-                alert(`DEFEAT! You were vanquished by ${duelState.currentOpponentName}. Better luck next time.`);
+                alert('DEFEAT! Better luck next time.');
                 closeDuelFullscreen();
             }
         }
 
         async function surrenderDuel() {
-            if (confirm('Are you sure you want to surrender? You will forfeit your wager.')) {
+            if (confirm('Are you sure you want to surrender?')) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
                 if (currentUser) {
                     const postWallet = currentUser.wallet || 0;
@@ -2582,7 +2546,7 @@
                         prize: 0,
                         date: now.toISOString().split('T')[0],
                         time: now.toLocaleTimeString(),
-                        summary: `${currentUser.nickname} surrendered against ${duelState.currentOpponentName}`
+                        summary: `${currentUser.nickname} surrendered`
                     });
                     persistLocalStorage();
                     await syncUserToSupabase();
@@ -2598,7 +2562,6 @@
             switchTab('hub');
         }
 
-        // ================= OWNER PORTAL MANAGEMENT & HISTORY FUNCTIONS =================
         function renderOwnerQueues() {
             syncAllRegisteredPlayers();
             const depositHistoryList = document.getElementById('owner-deposit-history-list');
@@ -2636,7 +2599,7 @@
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between items-center">
                             <div>
                                 <span class="font-bold text-white">${d.nickname} (${d.email})</span><br>
-                                <span class="text-[9px] text-slate-400">📅 ${d.date || 'N/A'} ⏰ ${d.time || 'N/A'} | Actor: <strong class="text-amber-400">${d.actor || 'Owner'}</strong></span>
+                                <span class="text-[9px] text-slate-400">📅 ${d.date || 'N/A'} ⏰ ${d.time || 'N/A'}</span>
                             </div>
                             <span class="text-emerald-400 font-bold">+₱${d.amount}</span>
                         </div>
@@ -2649,7 +2612,7 @@
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between items-center">
                             <div>
                                 <span class="font-bold text-white">${w.nickname} (${w.method})</span><br>
-                                <span class="text-[9px] text-slate-400">📅 ${w.date || 'N/A'} ⏰ ${w.time || 'N/A'} | Actor: <strong class="text-amber-400">${w.actor || 'Owner'}</strong></span>
+                                <span class="text-[9px] text-slate-400">📅 ${w.date || 'N/A'} ⏰ ${w.time || 'N/A'}</span>
                             </div>
                             <span class="text-amber-400 font-bold">-₱${w.amount}</span>
                         </div>
@@ -2662,7 +2625,7 @@
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[10px] flex justify-between items-center">
                             <div>
                                 <span class="text-white font-bold">${b.email}</span>: <span class="${b.amount >= 0 ? 'text-emerald-400' : 'text-red-400'} font-bold">${b.amount >= 0 ? '+' : ''}₱${b.amount}</span><br>
-                                <span class="text-[9px] text-slate-400">📅 ${b.date} ⏰ ${b.time} | Actor: <strong class="text-amber-400">${b.actor}</strong></span>
+                                <span class="text-[9px] text-slate-400">📅 ${b.date} ⏰ ${b.time}</span>
                             </div>
                         </div>
                     `).join('');
@@ -2679,7 +2642,7 @@
                             </div>
                             <div class="space-x-1">
                                 <button onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">Inspect</button>
-                                <button onclick="window.toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-orange-600'} hover:opacity-90 text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
+                                <button onclick="window.toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-orange-600'} text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
                                 <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px]">Delete</button>
                             </div>
                         </div>
@@ -2699,7 +2662,7 @@
 
             if (regList) {
                 let pendingRegs = regs.filter(r => r.status === 'pending_registration');
-                regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
+                regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registrations.</div>' :
                     pendingRegs.map(r => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
@@ -2716,7 +2679,7 @@
 
             if (depList) {
                 let pendingTopups = topups.filter(t => t.status === 'pending');
-                depList.innerHTML = pendingTopups.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>' :
+                depList.innerHTML = pendingTopups.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending top-ups.</div>' :
                     pendingTopups.map(t => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
@@ -2733,7 +2696,7 @@
 
             if (wdList) {
                 let pendingWds = withdraws.filter(w => w.status === 'pending');
-                wdList.innerHTML = pendingWds.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>' :
+                wdList.innerHTML = pendingWds.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawals.</div>' :
                     pendingWds.map(w => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
@@ -2749,25 +2712,25 @@
             }
 
             if (resetList) {
-                resetList.innerHTML = pendingResets.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>' :
+                resetList.innerHTML = pendingResets.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>' :
                     pendingResets.map((r, idx) => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
                                 <strong class="text-amber-400">${r.email}</strong><br>
                                 <span class="text-slate-400 text-[10px]">Birthday: ${r.birthday}</span>
                             </div>
-                            <button onclick="window.approvePasswordReset(${idx})" class="px-2 py-1 bg-amber-600 text-white rounded text-[10px]">Approve Reset</button>
+                            <button onclick="window.approvePasswordReset(${idx})" class="px-2 py-1 bg-amber-600 text-white rounded text-[10px]">Approve</button>
                         </div>
                     `).join('');
             }
 
             if (auditLog) {
-                auditLog.innerHTML = systemAuditLogs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>' :
-                    systemAuditLogs.map(l => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-300">[${l.timestamp}] Actor: <strong class="text-amber-400">${l.actor}</strong> | <strong>${l.action}</strong>: ${l.details}</div>`).join('');
+                auditLog.innerHTML = systemAuditLogs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded.</div>' :
+                    systemAuditLogs.map(l => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-300">[${l.timestamp}] <strong>${l.action}</strong>: ${l.details}</div>`).join('');
             }
             if (battleList) {
-                battleList.innerHTML = battleHistoryLog.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>' :
-                    battleHistoryLog.map(b => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">[${b.date} ${b.time}] <strong>${b.playerNickname}</strong> vs ${b.opponent} ➔ ${b.result} (Bal: ₱${b.preBalance} ➔ ₱${b.postBalance})</div>`).join('');
+                battleList.innerHTML = battleHistoryLog.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history.</div>' :
+                    battleHistoryLog.map(b => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">[${b.date} ${b.time}] <strong>${b.playerNickname}</strong> vs ${b.opponent} ➔ ${b.result}</div>`).join('');
             }
         }
         window.renderOwnerQueues = renderOwnerQueues;
@@ -2785,7 +2748,7 @@
             if (!box || !activeOwnerChatEmail) return;
             let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
             let messages = supportChats[activeOwnerChatEmail] || [];
-            box.innerHTML = messages.length === 0 ? '<div class="text-center text-slate-500 py-10">No messages in this chat.</div>' :
+            box.innerHTML = messages.length === 0 ? '<div class="text-center text-slate-500 py-10">No messages.</div>' :
                 messages.map(m => `
                     <div class="${m.sender === 'owner' ? 'text-right' : 'text-left'}">
                         <span class="${m.sender === 'owner' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-200'} px-2 py-1 rounded-lg inline-block text-[11px]">
@@ -2809,14 +2772,14 @@
         }
         window.sendOwnerChatMessage = sendOwnerChatMessage;
 
-        function renderPlayerChatMessages(isBackgroundPoll = false) {
+        function renderPlayerChatMessages() {
             const box = document.getElementById('player-chat-messages-box');
             if (!box || !currentUser) return;
             const playerKey = currentUser.email || currentUser.nickname || 'test_player';
             let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
             let messages = supportChats[playerKey] || [];
             
-            const content = messages.length === 0 ? '<div class="text-slate-400 text-center py-2">Support ticket open. How can we help you today?</div>' :
+            box.innerHTML = messages.length === 0 ? '<div class="text-slate-400 text-center py-2">Support ticket open. How can we help you?</div>' :
                 messages.map(m => `
                     <div class="${m.sender === 'owner' ? 'text-left' : 'text-right'}">
                         <span class="${m.sender === 'owner' ? 'bg-amber-600 text-white' : 'bg-blue-600 text-white'} px-2.5 py-1 rounded-lg inline-block">
@@ -2824,11 +2787,7 @@
                         </span>
                     </div>
                 `).join('');
-            
-            if (box.innerHTML !== content) {
-                box.innerHTML = content;
-                box.scrollTop = box.scrollHeight;
-            }
+            box.scrollTop = box.scrollHeight;
         }
 
         function sendPlayerChatMessage() {
@@ -2847,10 +2806,7 @@
 
         function inspectPlayer(email) {
             const player = registeredPlayersList.find(p => p.email === email);
-            if (!player) {
-                alert('Player record not found.');
-                return;
-            }
+            if (!player) return;
             openModal('player-details');
             const content = document.getElementById('player-inspection-content');
             if (content) {
@@ -2867,15 +2823,15 @@
                         </div>
                         <div class="border-t border-slate-800 pt-2 space-y-1.5">
                             <h4 class="font-cinzel text-amber-400 font-bold">Battle History (${playerBattles.length})</h4>
-                            ${playerBattles.length === 0 ? '<p class="text-slate-500">No battle history logged for this player.</p>' :
+                            ${playerBattles.length === 0 ? '<p class="text-slate-500">No battle history.</p>' :
                               playerBattles.map(b => `
                                 <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-[11px] space-y-1">
                                     <div class="flex justify-between items-center font-bold">
-                                        <span class="text-amber-400">Opponent: vs ${b.opponent}</span>
+                                        <span class="text-amber-400">vs ${b.opponent}</span>
                                         <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${b.result}</span>
                                     </div>
                                     <div class="text-slate-300 text-[10px]">
-                                        <div>Balance Before: ₱${b.preBalance} ➔ After: ₱${b.postBalance}</div>
+                                        <div>Balance: ₱${b.preBalance} ➔ ₱${b.postBalance}</div>
                                         <div class="text-slate-400">📅 ${b.date} ⏰ ${b.time}</div>
                                     </div>
                                 </div>
@@ -2897,17 +2853,17 @@
             });
             persistLocalStorage();
             renderOwnerQueues();
-            alert(`Player account status updated.`);
+            alert('Player account status updated.');
         }
         window.toggleFreezePlayer = toggleFreezePlayer;
 
         function deletePlayerAccount(email) {
-            if (confirm(`Are you sure you want to permanently delete player account ${email}?`)) {
+            if (confirm(`Delete player account ${email}?`)) {
                 registeredPlayersList = registeredPlayersList.filter(p => p.email !== email);
                 persistLocalStorage();
-                logSystemActivity('Account Deleted', `Deleted player account ${email}`, 'Owner');
+                logSystemActivity('Account Deleted', `Deleted player ${email}`, 'Owner');
                 renderOwnerQueues();
-                alert('Player account deleted successfully.');
+                alert('Account deleted.');
             }
         }
         window.deletePlayerAccount = deletePlayerAccount;
@@ -2939,11 +2895,11 @@
                     localStorage.setItem('aetheris_registered_players_db', JSON.stringify(existingDb));
                 }
                 persistLocalStorage();
-                sendPushNotificationToPlayer(email, 'Registration Approved!', 'Your Aetheris Arena account registration has been approved by the owner. You can now login!');
+                sendPushNotificationToPlayer(email, 'Registration Approved!', 'Your account has been approved. You can now login!');
             }
 
             logSystemActivity('Registration Approved', `Approved registration for ${email}`, 'Owner');
-            alert('Registration approved and player notified!');
+            alert('Registration approved!');
             renderOwnerQueues();
         }
         window.approveRegistration = approveRegistration;
@@ -2955,8 +2911,7 @@
                 return r;
             });
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
-            sendPushNotificationToPlayer(email, 'Registration Rejected', 'Your Aetheris Arena registration was rejected. Please contact support.');
-            logSystemActivity('Registration Rejected', `Rejected registration for ${email}`, 'Owner');
+            sendPushNotificationToPlayer(email, 'Registration Rejected', 'Your registration was rejected.');
             alert('Registration rejected.');
             renderOwnerQueues();
         }
@@ -2986,10 +2941,9 @@
             persistLocalStorage();
 
             if (targetTopup) {
-                sendPushNotificationToPlayer(targetTopup.email, 'Top-Up Approved!', `Your top-up of ₱${targetTopup.amount} has been approved and added to your wallet.`);
+                sendPushNotificationToPlayer(targetTopup.email, 'Top-Up Approved!', `Your top-up of ₱${targetTopup.amount} has been added to your wallet.`);
             }
 
-            logSystemActivity('Top-up Approved', `Approved top-up of ₱${targetTopup ? targetTopup.amount : ''} for ${targetTopup ? targetTopup.email : ''}`, 'Owner');
             alert('Top-up approved!');
             renderOwnerQueues();
         }
@@ -3007,9 +2961,8 @@
             });
             localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
             if (target) {
-                sendPushNotificationToPlayer(target.email, 'Top-Up Rejected', `Your top-up request of ₱${target.amount} was rejected.`);
+                sendPushNotificationToPlayer(target.email, 'Top-Up Rejected', `Your top-up of ₱${target.amount} was rejected.`);
             }
-            logSystemActivity('Top-up Rejected', `Rejected top-up for ID ${id}`, 'Owner');
             alert('Top-up rejected.');
             renderOwnerQueues();
         }
@@ -3027,9 +2980,8 @@
             });
             localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
             if (targetWd) {
-                sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Approved!', `Your withdrawal of ₱${targetWd.amount} via ${targetWd.method} has been processed and approved.`);
+                sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Approved!', `Your withdrawal of ₱${targetWd.amount} via ${targetWd.method} has been processed.`);
             }
-            logSystemActivity('Withdrawal Approved', `Approved withdrawal of ₱${targetWd ? targetWd.amount : ''} for ${targetWd ? targetWd.email : ''}`, 'Owner');
             alert('Withdrawal approved!');
             renderOwnerQueues();
         }
@@ -3059,9 +3011,8 @@
             persistLocalStorage();
 
             if (targetWd) {
-                sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Rejected & Refunded', `Your withdrawal of ₱${targetWd.amount} was rejected and refunded to your wallet.`);
+                sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Rejected & Refunded', `Your withdrawal of ₱${targetWd.amount} was rejected and refunded.`);
             }
-            logSystemActivity('Withdrawal Rejected', `Rejected withdrawal for ID ${id}`, 'Owner');
             alert('Withdrawal rejected and refunded.');
             renderOwnerQueues();
         }
@@ -3070,7 +3021,7 @@
         function approvePasswordReset(index) {
             pendingResets.splice(index, 1);
             persistLocalStorage();
-            alert('Password reset request approved.');
+            alert('Password reset approved.');
             renderOwnerQueues();
         }
         window.approvePasswordReset = approvePasswordReset;
@@ -3084,17 +3035,13 @@
             }
 
             const now = new Date();
-            const adjustmentRecord = {
+            balanceAdderHistory.unshift({
                 id: Date.now(),
                 email,
                 amount: amt,
                 date: now.toISOString().split('T')[0],
-                time: now.toLocaleTimeString(),
-                actor: currentUser ? currentUser.nickname : 'Owner',
-                timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
-            };
-
-            balanceAdderHistory.unshift(adjustmentRecord);
+                time: now.toLocaleTimeString()
+            });
 
             if (currentUser && currentUser.email === email) {
                 currentUser.wallet = (currentUser.wallet || 0) + amt;
@@ -3109,8 +3056,7 @@
             });
 
             persistLocalStorage();
-            logSystemActivity('Manual Wallet Adjustment', `Adjusted balance for ${email} by ₱${amt}`, currentUser ? currentUser.nickname : 'Owner');
-            alert(`Successfully adjusted wallet by ₱${amt}`);
+            alert(`Adjusted wallet by ₱${amt}`);
             renderOwnerQueues();
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
