@@ -644,7 +644,7 @@
             <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING REAL-TIME P2P LOBBY</h3>
             <div class="py-3 space-y-3">
                 <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p id="matchmaking-status" class="text-xs text-slate-300">Searching Supabase queue for real player...</p>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching queue for real player...</p>
                 <p id="matchmaking-countdown" class="text-[11px] text-amber-400 font-bold">Time left: 20s</p>
             </div>
             <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Wager</button>
@@ -2124,7 +2124,7 @@
 
             const statusEl = document.getElementById('matchmaking-status');
             const countdownEl = document.getElementById('matchmaking-countdown');
-            if (statusEl) statusEl.innerText = 'Searching Supabase queue for real player...';
+            if (statusEl) statusEl.innerText = 'Searching queue for real player...';
 
             let secondsLeft = 20;
             if (countdownEl) countdownEl.innerText = `Time left: ${secondsLeft}s`;
