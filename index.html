@@ -868,6 +868,9 @@
                                     nickname: p.nickname || p.username || 'PLAYER',
                                     phone: p.phone || '',
                                     wallet: p.wallet || p.balance || 0,
+                                    wins: p.wins || 0,
+                                    xp: p.xp || 0,
+                                    active_hero: p.active_hero || 'pyra',
                                     status: p.status || 'active'
                                 });
                             }
@@ -890,6 +893,9 @@
                                 nickname: item.nickname || 'PLAYER',
                                 phone: item.phone || '',
                                 wallet: item.wallet || item.balance || 0,
+                                wins: item.wins || 0,
+                                xp: item.xp || 0,
+                                active_hero: item.active_hero || 'pyra',
                                 status: item.status === 'approved' ? 'active' : (item.status || 'active')
                             });
                         }
@@ -1866,11 +1872,46 @@
         }
         window.openPlayerProfileModal = openPlayerProfileModal;
 
-        function openLeaderboardModal() {
+        async function openLeaderboardModal() {
             openModal('leaderboard');
             const list = document.getElementById('leaderboard-list-content');
             if (!list) return;
-            list.innerHTML = `<div class="text-center text-slate-400 py-4">1. ${currentUser ? currentUser.nickname : 'Player'} - Lv. 1 (Wins: ${currentUser ? currentUser.wins : 0})</div>`;
+
+            await syncAllRegisteredPlayers();
+            let sortedPlayers = [...registeredPlayersList].sort((a, b) => {
+                let xpA = a.xp || 0;
+                let xpB = b.xp || 0;
+                if (xpB !== xpA) return xpB - xpA;
+                return (b.wins || 0) - (a.wins || 0);
+            }).slice(0, 10);
+
+            if (sortedPlayers.length === 0 && currentUser) {
+                sortedPlayers = [currentUser];
+            }
+
+            list.innerHTML = sortedPlayers.map((p, idx) => {
+                let expLevel = Math.floor((p.xp || 0) / 100) + 1;
+                let heroId = p.active_hero || 'pyra';
+                let heroObj = heroes.find(h => h.id === heroId) || heroes[0];
+                let heroName = heroObj ? heroObj.name : 'Pyra';
+                let nick = p.nickname || p.name || 'PLAYER';
+
+                return `
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="font-bold text-amber-400 w-5">#${idx + 1}</span>
+                            <div>
+                                <span class="font-bold text-white uppercase">${nick}</span>
+                                <span class="text-[10px] text-slate-400 block">Hero Used Last: <strong class="text-amber-300">${heroName}</strong></span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-emerald-400 font-bold">Lv. ${expLevel}</span>
+                            <span class="text-[10px] text-blue-400 block">Wins: ${p.wins || 0}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
         window.openLeaderboardModal = openLeaderboardModal;
 
