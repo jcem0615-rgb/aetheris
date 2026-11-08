@@ -2504,14 +2504,12 @@
             setTimeout(() => {
                 let enemyActionText = '';
 
-                // 1. EMERGENCY HEAL: Checked first so it triggers when HP is < 20
+                // Bot HP below 20 triggers REVITALIZE heal of 60 HP and ends turn
                 if (duelState.enemyHp < 20) {
                     const healAmt = 60;
                     duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmt);
                     enemyActionText = `[${duelState.currentOpponentName}] casts REVITALIZE and restores ${healAmt} HP!`;
-                } 
-                // 2. HEAVY COUNTER: Checked second when HP is between 20 and 59
-                else if (duelState.enemyHp < 60) {
+                } else if (duelState.enemyHp < 60) {
                     let specDmg1 = 35;
                     let specDmg2 = 30;
                     let specHeal = 20;
@@ -2525,9 +2523,7 @@
                     duelState.playerPoison += specPoison;
 
                     enemyActionText = `[${duelState.currentOpponentName}] attacks! Deals damage, gains armor, & applies poison.`;
-                } 
-                // 3. STANDARD ATTACK: When HP is 60 or above
-                else {
+                } else {
                     let normalDmg = 25;
                     applyArmorBlockedDamage('player', normalDmg);
                     enemyActionText = `[${duelState.currentOpponentName}] attacks for ${normalDmg} damage.`;
