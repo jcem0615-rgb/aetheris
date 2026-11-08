@@ -833,7 +833,7 @@
         let duelState = { 
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
             enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-            turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: false, apexSpecialTriggered: false, currentOpponentName: 'ApexPredator', isPlayerTurn: true
+            turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, apexSpecialTriggered: false, currentOpponentName: 'ApexPredator', isPlayerTurn: true
         };
 
         let currentHand = [];
@@ -1678,10 +1678,19 @@
             closeModal();
             openModal('matchmaking');
 
+            const statusEl = document.getElementById('matchmaking-status');
+            if (statusEl) statusEl.innerText = 'Searching online lobby for peer player...';
+
             matchmakingTimeout = setTimeout(() => {
-                closeModal();
-                openModal('cointoss');
-            }, 3000);
+                if (statusEl) statusEl.innerText = 'No peer found. Matching with Apex Predator Bot...';
+                setTimeout(() => {
+                    closeModal();
+                    duelState.isBotMatch = true;
+                    duelState.currentOpponentName = 'ApexPredator';
+                    duelState.apexSpecialTriggered = false;
+                    openModal('cointoss');
+                }, 1500);
+            }, 2500);
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
 
@@ -1701,7 +1710,7 @@
             const outcome = isHeads ? 'Heads' : 'Tails';
             const playerWonToss = (choice === outcome);
             duelState.isPlayerTurn = playerWonToss;
-            alert(`Coin landed on ${outcome}! ${playerWonToss ? 'You won the toss and go first!' : 'Opponent goes first!'}`);
+            alert(`Coin landed on ${outcome}! ${playerWonToss ? 'You won the toss and go first!' : 'Apex Predator goes first!'}`);
             startDuelFullscreen();
         }
         window.executeCoinToss = executeCoinToss;
@@ -1721,6 +1730,11 @@
             duelState.enemyMaxHp = 100;
             duelState.enemyArmor = 0;
             duelState.enemyPoison = 0;
+
+            const enemyTitle = document.getElementById('fs-enemy-title');
+            const enemyNameLabel = document.getElementById('fs-enemy-name-label');
+            if (enemyTitle) enemyTitle.innerText = duelState.currentOpponentName;
+            if (enemyNameLabel) enemyNameLabel.innerText = duelState.currentOpponentName.toUpperCase();
 
             const heroId = currentUser.active_hero || 'pyra';
             const hero = heroes.find(h => h.id === heroId) || heroes[0];
@@ -1814,11 +1828,36 @@
         function endDuelTurn() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             const log = document.getElementById('fs-battle-log');
-            if (log) log.innerText = '[Arena]: Opponent is taking their turn...';
+            if (log) log.innerText = `[${duelState.currentOpponentName}]: Planning tactical move...`;
 
             setTimeout(() => {
-                // Enemy turn logic
-                const enemyDmg = 25;
+                let enemyActionText = '';
+                let enemyDmg = 0;
+                let enemyArmorGain = 0;
+
+                // Check for Apex Predator Special Ability (Triggered once when HP < 50%)
+                if (duelState.isBotMatch && duelState.enemyHp < (duelState.enemyMaxHp * 0.5) && !duelState.apexSpecialTriggered) {
+                    duelState.apexSpecialTriggered = true;
+                    enemyDmg = 45;
+                    enemyArmorGain = 20;
+                    duelState.enemyArmor += enemyArmorGain;
+                    enemyActionText = `🔥 APEX SPECIAL! Hellfire Slash deals ${enemyDmg} damage & grants ${enemyArmorGain} Armor!`;
+                } else {
+                    const roll = Math.random();
+                    if (roll < 0.4) {
+                        enemyDmg = 30;
+                        enemyActionText = `[Apex Predator] uses Void Strike, dealing ${enemyDmg} damage!`;
+                    } else if (roll < 0.7) {
+                        enemyDmg = 18;
+                        enemyArmorGain = 15;
+                        duelState.enemyArmor += enemyArmorGain;
+                        enemyActionText = `[Apex Predator] uses Shadow Guard, dealing ${enemyDmg} damage & bolstering armor by ${enemyArmorGain}!`;
+                    } else {
+                        enemyDmg = 22;
+                        enemyActionText = `[Apex Predator] executes Swift Claw for ${enemyDmg} damage!`;
+                    }
+                }
+
                 let finalDmg = enemyDmg;
                 if (duelState.playerArmor > 0) {
                     if (duelState.playerArmor >= finalDmg) {
@@ -1831,11 +1870,17 @@
                 }
                 duelState.playerHp = Math.max(0, duelState.playerHp - finalDmg);
                 duelState.playerAp = 3;
+
                 renderDuelUI();
+                if (log) log.innerText = enemyActionText;
+
                 checkDuelConclusion();
+
                 if (duelState.playerHp > 0 && duelState.enemyHp > 0) {
-                    if (log) log.innerText = '[Arena]: Your turn! Choose tactical skills.';
-                    startTurnTimer();
+                    setTimeout(() => {
+                        if (log) log.innerText = '[Arena]: Your turn! Choose tactical skills.';
+                        startTurnTimer();
+                    }, 1200);
                 }
             }, 1500);
         }
@@ -1850,12 +1895,12 @@
                 currentUser.xp = (currentUser.xp || 0) + 50;
                 persistLocalStorage();
                 updateWalletDisplay();
-                alert(`VICTORY! You won the duel and earned ₱${prize.toFixed(2)}!`);
+                alert(`VICTORY! You won the duel against ${duelState.currentOpponentName} and earned ₱${prize.toFixed(2)}!`);
                 closeDuelFullscreen();
             } else if (duelState.playerHp <= 0) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
                 persistLocalStorage();
-                alert('DEFEAT! Better luck next time.');
+                alert(`DEFEAT! You were vanquished by ${duelState.currentOpponentName}. Better luck next time.`);
                 closeDuelFullscreen();
             }
         }
@@ -1984,7 +2029,6 @@
             topups = topups.map(t => {
                 if (t.id === id) {
                     t.status = 'approved';
-                    // Credit user if local
                     if (currentUser && currentUser.email === t.email) {
                         currentUser.wallet = (currentUser.wallet || 0) + t.amount;
                         persistLocalStorage();
