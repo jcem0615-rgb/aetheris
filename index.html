@@ -527,7 +527,7 @@
                     </div>
                     <div class="flex items-center justify-between text-[9px] text-slate-300 pt-1 border-t border-slate-800" id="fs-enemy-status-badges">
                         <span class="text-blue-400">Armor: <strong id="fs-enemy-armor">0</strong></span>
-                        <span class="text-orange-400">Burn/Poison: <strong>0</strong></span>
+                        <span class="text-orange-400">Poison/Burn: <strong id="fs-enemy-poison">0</strong></span>
                     </div>
                 </div>
                 <div id="fs-enemy-sprite" class="w-20 h-20 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.2)] p-1">
@@ -557,7 +557,7 @@
                     </div>
                     <div class="flex items-center justify-between text-[9px] text-slate-300 pt-1 border-t border-slate-800" id="fs-player-status-badges">
                         <span class="text-blue-400">Armor: <strong id="fs-player-armor">0</strong></span>
-                        <span class="text-orange-400">Burn/Poison: <strong>0</strong></span>
+                        <span class="text-orange-400">Poison/Burn: <strong id="fs-player-poison">0</strong></span>
                     </div>
                     <div class="flex justify-between text-[9px] text-slate-300 text-center pt-0.5">
                         <span>AP: <strong id="fs-player-ap" class="text-amber-400">3</strong>/3</span>
@@ -843,20 +843,15 @@
             mayaQR: null
         };
 
-        function maskPhoneNumber(phone) {
-            if (!phone || phone.length < 8) return '0930****783';
-            return phone.slice(0, 4) + '****' + phone.slice(-3);
-        }
-
-        function maskName(name) {
-            if (!name) return 'J*** C*** M*****';
-            return name.split(' ').map(part => part.charAt(0) + '***').join(' ');
+        const humanBotNames = ['Juan_Cruz', 'Maria_Santos', 'Carlo_Garcia', 'Aria_Vanguard', 'Miguel_Reyes', 'Bea_Alonzo', 'Marco_Polo', 'Elena_Gilbert', 'Kian_Roxas', 'Sofia_Cruz'];
+        function getRandomHumanBotName() {
+            return humanBotNames[Math.floor(Math.random() * humanBotNames.length)];
         }
 
         let duelState = { 
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
             enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-            turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, currentOpponentName: 'ApexPredator', enemyHero: null, enemyDeck: [], isPlayerTurn: true
+            turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, currentOpponentName: 'Juan_Cruz', enemyHero: null, enemyDeck: [], isPlayerTurn: true
         };
 
         let currentHand = [];
@@ -909,7 +904,6 @@
         window.requestRegistrationNotificationPermission = requestRegistrationNotificationPermission;
 
         function sendPushNotificationToPlayer(playerEmail, title, body) {
-            // Simulated / Direct Browser Notification API for Player
             if (currentUser && currentUser.email === playerEmail && 'Notification' in window && Notification.permission === 'granted') {
                 new Notification(title, { body, icon: 'image_114c6025.jpg' });
             }
@@ -1381,7 +1375,6 @@
                 return;
             }
 
-            // Check if player is frozen in registered players list
             const foundPlayerRecord = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
             if (foundPlayerRecord && foundPlayerRecord.status === 'frozen') {
                 alert('Your account has been frozen by the administration.');
@@ -1476,6 +1469,7 @@
                 registration_ref: ref,
                 registration_receipt: receiptBase64,
                 status: 'pending_registration',
+                first_fight_done: false,
                 registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
             };
 
@@ -1483,7 +1477,6 @@
             pendingRegs.push(newUserData);
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
 
-            // Notify Owner
             notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request.`);
             logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref}.`, nickname);
 
@@ -1766,6 +1759,7 @@
         }
         window.submitWithdrawal = submitWithdrawal;
 
+        // ================= MATCHMAKING & FIRST FIGHT LOGIC =================
         function startRankedMatchmaking(stake) {
             const bal = currentUser.wallet || currentUser.balance || 0;
             if (bal < stake) {
@@ -1780,36 +1774,51 @@
             openModal('matchmaking');
 
             const statusEl = document.getElementById('matchmaking-status');
-            if (statusEl) statusEl.innerText = 'Searching online ranked lobby for peer players...';
+            const isFirstFight = !currentUser.first_fight_done;
 
-            const statusSteps = [
-                { time: 4000, text: `Matching stake (₱${stake}) and rank tier...` },
-                { time: 9000, text: 'Synchronizing peer connection and security handshake...' },
-                { time: 15000, text: 'Finding optimal opponent connection in regional server...' },
-                { time: 20000, text: 'Opponent found! Establishing secure duel arena...' }
-            ];
+            if (isFirstFight) {
+                if (statusEl) statusEl.innerText = 'First match! Initializing training bot opponent...';
+                matchmakingTimeout = setTimeout(() => {
+                    closeModal();
+                    currentUser.first_fight_done = true;
+                    persistLocalStorage();
+                    initBotMatch();
+                }, 3000);
+            } else {
+                if (statusEl) statusEl.innerText = 'Searching online ranked lobby for peer players...';
+                const statusSteps = [
+                    { time: 4000, text: `Matching stake (₱${stake}) and rank tier...` },
+                    { time: 9000, text: 'Synchronizing peer connection and security handshake...' },
+                    { time: 15000, text: 'Finding optimal opponent connection in regional server...' },
+                    { time: 20000, text: 'No real players found after 20s. Connecting with arena bot...' }
+                ];
 
-            statusSteps.forEach(step => {
-                setTimeout(() => {
-                    const matchmakingModal = document.getElementById('modal-matchmaking');
-                    if (matchmakingModal && matchmakingModal.classList.contains('hidden')) return;
-                    if (statusEl) statusEl.innerText = step.text;
-                }, step.time);
-            });
+                statusSteps.forEach(step => {
+                    setTimeout(() => {
+                        const matchmakingModal = document.getElementById('modal-matchmaking');
+                        if (matchmakingModal && matchmakingModal.classList.contains('hidden')) return;
+                        if (statusEl) statusEl.innerText = step.text;
+                    }, step.time);
+                });
 
-            matchmakingTimeout = setTimeout(() => {
-                closeModal();
-                duelState.isBotMatch = true;
-                duelState.currentOpponentName = 'ApexPredator';
-                
-                const randomHero = heroes[Math.floor(Math.random() * heroes.length)];
-                duelState.enemyHero = randomHero;
-                duelState.enemyDeck = [...randomHero.baseSkills, ...(shopSkillsMap[randomHero.id] || [])];
-
-                openModal('cointoss');
-            }, 20000);
+                matchmakingTimeout = setTimeout(() => {
+                    closeModal();
+                    initBotMatch();
+                }, 20000);
+            }
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
+
+        function initBotMatch() {
+            duelState.isBotMatch = true;
+            duelState.currentOpponentName = getRandomHumanBotName();
+            
+            const randomHero = heroes[Math.floor(Math.random() * heroes.length)];
+            duelState.enemyHero = randomHero;
+            duelState.enemyDeck = [...randomHero.baseSkills, ...(shopSkillsMap[randomHero.id] || [])];
+
+            openModal('cointoss');
+        }
 
         function cancelMatchmakingQueue() {
             if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
@@ -1881,19 +1890,23 @@
             const playerHpText = document.getElementById('fs-player-hp-text');
             const playerArmor = document.getElementById('fs-player-armor');
             const playerAp = document.getElementById('fs-player-ap');
+            const playerPoisonBadge = document.getElementById('fs-player-poison');
 
             const enemyHpBar = document.getElementById('fs-enemy-hp-bar');
             const enemyHpText = document.getElementById('fs-enemy-hp-text');
             const enemyArmor = document.getElementById('fs-enemy-armor');
+            const enemyPoisonBadge = document.getElementById('fs-enemy-poison');
 
             if (playerHpBar) playerHpBar.style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
             if (playerHpText) playerHpText.innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
             if (playerArmor) playerArmor.innerText = duelState.playerArmor;
             if (playerAp) playerAp.innerText = duelState.playerAp;
+            if (playerPoisonBadge) playerPoisonBadge.innerText = duelState.playerPoison;
 
             if (enemyHpBar) enemyHpBar.style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
             if (enemyHpText) enemyHpText.innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
             if (enemyArmor) enemyArmor.innerText = duelState.enemyArmor;
+            if (enemyPoisonBadge) enemyPoisonBadge.innerText = duelState.enemyPoison;
 
             const handContainer = document.getElementById('shuffled-hand-container');
             if (handContainer) {
@@ -1971,6 +1984,9 @@
             if (skill.heal) {
                 duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + skill.heal);
             }
+            if (skill.poison) {
+                duelState.enemyPoison += skill.poison;
+            }
 
             renderDuelUI();
             checkDuelConclusion();
@@ -1982,31 +1998,45 @@
             const log = document.getElementById('fs-battle-log');
             if (log) log.innerText = `[${duelState.currentOpponentName}]: Planning tactical move...`;
 
+            // Active Poison / Burn tick at start of turn
+            if (duelState.playerPoison > 0) {
+                duelState.playerHp = Math.max(0, duelState.playerHp - duelState.playerPoison);
+                duelState.playerPoison = Math.max(0, duelState.playerPoison - 3);
+            }
+            if (duelState.enemyPoison > 0) {
+                duelState.enemyHp = Math.max(0, duelState.enemyHp - duelState.enemyPoison);
+                duelState.enemyPoison = Math.max(0, duelState.enemyPoison - 3);
+            }
+            renderDuelUI();
+            checkDuelConclusion();
+            if (duelState.playerHp <= 0 || duelState.enemyHp <= 0) return;
+
             setTimeout(() => {
-                let botDeck = [...duelState.enemyDeck].sort(() => 0.5 - Math.random());
-                let chosenSkill = botDeck[0] || { name: 'Tactical Strike', damage: 25 };
-
-                const damageOptions = [20, 25, 30];
-                const armorOptions = [20, 25, 30];
-                const healOptions = [40, 45, 50];
-
-                let actionDmg = damageOptions[Math.floor(Math.random() * damageOptions.length)];
-                let actionArmor = armorOptions[Math.floor(Math.random() * armorOptions.length)];
-                let actionHeal = healOptions[Math.floor(Math.random() * healOptions.length)];
-
-                let actionType = Math.random();
                 let enemyActionText = '';
 
-                if (actionType < 0.45) {
-                    applyArmorBlockedDamage('player', actionDmg);
-                    enemyActionText = `[${duelState.currentOpponentName}] uses ${chosenSkill.name}, dealing ${actionDmg} damage!`;
-                } else if (actionType < 0.75) {
-                    duelState.enemyArmor += actionArmor;
-                    applyArmorBlockedDamage('player', actionDmg);
-                    enemyActionText = `[${duelState.currentOpponentName}] uses defensive stance, gaining ${actionArmor} Armor & counter-striking for ${actionDmg} damage!`;
+                // BOT SPECIAL SKILLS / HP LOGIC:
+                // If bot HP < 60: Unlimited special skills (combining heavy damage, healing, and poison every turn)
+                // If bot HP >= 60: Damage of 20 and 15 poison only
+                if (duelState.enemyHp < 60) {
+                    let specDmg1 = 35;
+                    let specDmg2 = 30;
+                    let specHeal = 40;
+                    let specPoison = 20;
+
+                    applyArmorBlockedDamage('player', specDmg1);
+                    applyArmorBlockedDamage('player', specDmg2);
+                    duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + specHeal);
+                    duelState.playerPoison += specPoison;
+
+                    enemyActionText = `[${duelState.currentOpponentName}] HP < 60! FRENZY UNLIMITED SPECIAL SKILLS: Double strike (${specDmg1} & ${specDmg2}), heals ${specHeal} HP, & applies ${specPoison} poison!`;
                 } else {
-                    duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + actionHeal);
-                    enemyActionText = `[${duelState.currentOpponentName}] channels tactical mending, restoring ${actionHeal} HP!`;
+                    let standardDmg = 20;
+                    let standardPoison = 15;
+
+                    applyArmorBlockedDamage('player', standardDmg);
+                    duelState.playerPoison += standardPoison;
+
+                    enemyActionText = `[${duelState.currentOpponentName}] attacks: deals ${standardDmg} damage & applies ${standardPoison} poison stacks.`;
                 }
 
                 duelState.playerAp = 3;
@@ -2087,7 +2117,6 @@
             if (totalDepositsMetric) totalDepositsMetric.innerText = `₱${totalDepSum.toFixed(2)}`;
             if (totalWithdrawalsMetric) totalWithdrawalsMetric.innerText = `₱${totalWdSum.toFixed(2)}`;
 
-            // Deposit History with Date, Time, and Actor
             if (depositHistoryList) {
                 depositHistoryList.innerHTML = approvedDeposits.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No deposit history yet.</div>' :
                     approvedDeposits.map(d => `
@@ -2101,7 +2130,6 @@
                     `).join('');
             }
 
-            // Withdrawal History with Date, Time, and Actor
             if (withdrawHistoryList) {
                 withdrawHistoryList.innerHTML = approvedWithdraws.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No withdrawal history yet.</div>' :
                     approvedWithdraws.map(w => `
@@ -2115,7 +2143,6 @@
                     `).join('');
             }
 
-            // Balance Adder History with Date, Time, and Actor
             if (balanceAdderHistoryList) {
                 balanceAdderHistoryList.innerHTML = balanceAdderHistory.length === 0 ? '<div class="text-[10px] text-slate-500 text-center py-1">No manual balance adjustments logged.</div>' :
                     balanceAdderHistory.map(b => `
@@ -2128,7 +2155,6 @@
                     `).join('');
             }
 
-            // Player List & Count
             if (playerCountBadge) playerCountBadge.innerText = registeredPlayersList.length;
             if (playersList) {
                 playersList.innerHTML = registeredPlayersList.length === 0 ? '<div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players.</div>' :
@@ -2222,7 +2248,6 @@
         }
         window.renderOwnerQueues = renderOwnerQueues;
 
-        // ================= PLAYER INSPECT, FREEZE & DELETE LOGIC =================
         function inspectPlayer(email) {
             const player = registeredPlayersList.find(p => p.email === email);
             if (!player) {
@@ -2271,7 +2296,6 @@
         }
         window.deletePlayerAccount = deletePlayerAccount;
 
-        // ================= APPROVAL & REJECTION ACTIONS WITH NOTIFICATIONS =================
         function approveRegistration(email) {
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
             let approvedUser = null;
@@ -2330,7 +2354,6 @@
                         persistLocalStorage();
                         updateWalletDisplay();
                     }
-                    // Also update in registered players list if present
                     registeredPlayersList = registeredPlayersList.map(p => {
                         if (p.email === t.email) p.wallet = (p.wallet || 0) + t.amount;
                         return p;
@@ -2398,7 +2421,6 @@
                 if (w.id === id) {
                     w.status = 'rejected';
                     targetWd = w;
-                    // Refund balance to player
                     if (currentUser && currentUser.email === w.email) {
                         currentUser.wallet = (currentUser.wallet || 0) + w.amount;
                         persistLocalStorage();
