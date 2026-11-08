@@ -114,29 +114,25 @@
                 <button onclick="window.handleLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
             </div>
 
-            <!-- Register Box -->
+            <!-- Register Box with Payment Method Switcher -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
                 <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced.</p>
                 
+                <!-- Payment Method Selector Tabs -->
                 <div class="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
-                    <p class="text-[11px] text-amber-400 font-bold text-center">Official Payment Channels (Scan QR to Pay ₱50):</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2">
-                            <div id="reg-gcash-qr" class="w-32 h-32 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                            <div>
-                                <span class="font-bold text-blue-400 block text-xs">GCash Account</span>
-                                <span id="reg-opt-gcash" class="text-white font-mono font-bold text-xs">0930****783</span>
-                                <span id="reg-name-gcash" class="text-slate-400 text-[10px] block">J*** C*** M*****</span>
-                            </div>
-                        </div>
-                        <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2">
-                            <div id="reg-maya-qr" class="w-32 h-32 bg-slate-950 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                            <div>
-                                <span class="font-bold text-teal-400 block text-xs">Maya Account</span>
-                                <span id="reg-opt-maya" class="text-white font-mono font-bold text-xs">0930****780</span>
-                                <span id="reg-name-maya" class="text-slate-400 text-[10px] block">J*** C*** M*****</span>
-                            </div>
+                    <p class="text-[11px] text-amber-400 font-bold text-center">Select Payment Channel to Pay ₱50 Fee:</p>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="window.switchRegPaymentMethod('gcash')" id="btn-reg-gcash" class="flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
+                        <button type="button" onclick="window.switchRegPaymentMethod('maya')" id="btn-reg-maya" class="flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
+                    </div>
+
+                    <div id="reg-payment-display-box" class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2 mt-2">
+                        <div id="reg-active-qr" class="w-32 h-32 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <div>
+                            <span id="reg-active-channel-title" class="font-bold text-blue-400 block text-xs">GCash Account</span>
+                            <span id="reg-active-num" class="text-white font-mono font-bold text-xs">09301601783</span>
+                            <span id="reg-active-name" class="text-slate-400 text-[10px] block">John Carlo Morales</span>
                         </div>
                     </div>
                 </div>
@@ -156,7 +152,7 @@
                     </div>
                     <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <div class="space-y-0.5">
-                        <label class="text-[10px] text-amber-400 block font-bold">Upload ₱50 Registration Fee Receipt:</label>
+                        <label class="text-[10px] text-amber-400 block font-bold">Upload Registration Fee Receipt:</label>
                         <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
                     </div>
                 </div>
@@ -289,28 +285,24 @@
                 </div>
             </div>
 
-            <!-- Payment QR Banner for Players (Masked Info & No 'Owner' text) -->
+            <!-- Payment QR Banner for Players (Interactive Tabs) -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="text-center">
                     <h3 class="font-cinzel font-bold text-amber-400 text-sm">OFFICIAL PAYMENT CHANNELS</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Scan the QR codes below or send funds to the official e-wallets before top-up request.</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Select a payment method below to view the corresponding account details and scannable QR code.</p>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex flex-col items-center text-center space-y-2">
-                        <div id="player-gcash-qr" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                        <div class="w-full">
-                            <span class="text-xs font-bold text-blue-400 block">GCASH PAYMENT</span>
-                            <span id="display-gcash-num" class="text-xs font-mono font-bold text-white block truncate">0930****783</span>
-                            <span id="display-gcash-name" class="text-[10px] text-slate-400 block truncate">J*** C*** M*****</span>
-                        </div>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex flex-col items-center text-center space-y-2">
-                        <div id="player-maya-qr" class="w-36 h-36 bg-slate-900 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                        <div class="w-full">
-                            <span class="text-xs font-bold text-teal-400 block">MAYA PAYMENT</span>
-                            <span id="display-maya-num" class="text-xs font-mono font-bold text-white block truncate">0930****780</span>
-                            <span id="display-maya-name" class="text-[10px] text-slate-400 block truncate">J*** C*** M*****</span>
-                        </div>
+                
+                <div class="flex space-x-2 max-w-xs mx-auto">
+                    <button onclick="window.switchPlayerHubPayment('gcash')" id="btn-hub-gcash" class="flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
+                    <button onclick="window.switchPlayerHubPayment('maya')" id="btn-hub-maya" class="flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
+                </div>
+
+                <div class="max-w-xs mx-auto bg-slate-950 border border-slate-800 p-3 rounded-2xl flex flex-col items-center text-center space-y-2">
+                    <div id="player-active-qr" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                    <div class="w-full">
+                        <span id="player-hub-title" class="text-xs font-bold text-blue-400 block">GCASH PAYMENT</span>
+                        <span id="player-hub-num" class="text-xs font-mono font-bold text-white block truncate">09301601783</span>
+                        <span id="player-hub-name" class="text-[10px] text-slate-400 block truncate">John Carlo Morales</span>
                     </div>
                 </div>
             </div>
@@ -454,7 +446,7 @@
                             <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="file" id="input-gcash-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
-                            <button onclick="window.saveOwnerDetails()" class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow">Save GCash Settings</button>
+                            <button onclick="window.saveGcashSettings()" class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow">Save GCash Settings</button>
                         </div>
                         <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
                             <span class="text-xs font-bold text-teal-400 self-start">Maya Account & QR</span>
@@ -462,7 +454,7 @@
                             <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="file" id="input-maya-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
-                            <button onclick="window.saveOwnerDetails()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg shadow">Save Maya Settings</button>
+                            <button onclick="window.saveMayaSettings()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg shadow">Save Maya Settings</button>
                         </div>
                     </div>
                 </div>
@@ -579,26 +571,24 @@
 
     <!-- Modals -->
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
-        <!-- Top-up Modal -->
+        <!-- Top-up Modal with Payment Tabs -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400 text-center">Submit Top-Up Request (Min ₱50)</h3>
             
             <div class="space-y-2">
-                <p class="text-[11px] text-slate-400 text-center">1. Scan QR code or send funds to our official merchant channels:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                    <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-1.5">
-                        <div id="topup-gcash-qr" class="w-32 h-32 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                        <div>
-                            <span class="font-bold text-blue-400 block text-xs">GCash</span>
-                            <span id="topup-opt-gcash" class="text-white font-mono font-bold text-xs">0930****783</span>
-                        </div>
-                    </div>
-                    <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-1.5">
-                        <div id="topup-maya-qr" class="w-32 h-32 bg-slate-950 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                        <div>
-                            <span class="font-bold text-teal-400 block text-xs">Maya</span>
-                            <span id="topup-opt-maya" class="text-white font-mono font-bold text-xs">0930****780</span>
-                        </div>
+                <p class="text-[11px] text-slate-400 text-center">1. Select payment channel & scan QR / send funds:</p>
+                
+                <div class="flex space-x-2 max-w-xs mx-auto">
+                    <button type="button" onclick="window.switchTopUpPaymentMethod('gcash')" id="btn-topup-gcash" class="flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
+                    <button type="button" onclick="window.switchTopUpPaymentMethod('maya')" id="btn-topup-maya" class="flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
+                </div>
+
+                <div class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-1.5">
+                    <div id="topup-active-qr" class="w-32 h-32 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                    <div>
+                        <span id="topup-active-title" class="font-bold text-blue-400 block text-xs">GCash Account</span>
+                        <span id="topup-active-num" class="text-white font-mono font-bold text-xs">09301601783</span>
+                        <span id="topup-active-name" class="text-slate-400 text-[10px] block">John Carlo Morales</span>
                     </div>
                 </div>
             </div>
@@ -834,14 +824,18 @@
             { id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner' }
         ];
         
-        let merchantConfig = {
-            gcashNum: '0930****783',
-            gcashName: 'J*** C*** M*****',
+        let merchantConfig = JSON.parse(localStorage.getItem('aetheris_merchant_config')) || {
+            gcashNum: '09301601783',
+            gcashName: 'John Carlo Morales',
             gcashQR: null,
-            mayaNum: '0930****780',
-            mayaName: 'J*** C*** M*****',
+            mayaNum: '09301601780',
+            mayaName: 'John Carlo Morales',
             mayaQR: null
         };
+
+        function persistMerchantConfig() {
+            localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
+        }
 
         const humanBotNames = ['Juan_Cruz', 'Maria_Santos', 'Carlo_Garcia', 'Aria_Vanguard', 'Miguel_Reyes', 'Bea_Alonzo', 'Marco_Polo', 'Elena_Gilbert', 'Kian_Roxas', 'Sofia_Cruz'];
         function getRandomHumanBotName() {
@@ -879,6 +873,7 @@
             localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
             localStorage.setItem('aetheris_balance_adder_history', JSON.stringify(balanceAdderHistory));
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+            persistMerchantConfig();
         }
 
         // ================= NOTIFICATION LOGIC =================
@@ -1243,6 +1238,7 @@
                 const hub = document.getElementById('view-hub');
                 if (hub) hub.classList.remove('hidden');
                 if (btnHub) { btnHub.classList.add('bg-blue-600', 'text-white'); btnHub.classList.remove('text-slate-400'); }
+                switchPlayerHubPayment('gcash');
             } else if (tabName === 'select') {
                 const sel = document.getElementById('view-select');
                 if (sel) sel.classList.remove('hidden');
@@ -1286,65 +1282,196 @@
             if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
             if (mode === 'register' && registerBox) {
                 registerBox.classList.remove('hidden');
-                renderRegQRs();
+                switchRegPaymentMethod('gcash');
             }
             if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
         }
         window.showAuthMode = showAuthMode;
 
-        function renderRegQRs() {
-            const gcashQR = document.getElementById('reg-gcash-qr');
-            const mayaQR = document.getElementById('reg-maya-qr');
-            const optGcash = document.getElementById('reg-opt-gcash');
-            const optMaya = document.getElementById('reg-opt-maya');
-            const nameGcash = document.getElementById('reg-name-gcash');
-            const nameMaya = document.getElementById('reg-name-maya');
+        // Interactive Payment Methods for Registration & Hub & Topup
+        let currentRegMethod = 'gcash';
+        function switchRegPaymentMethod(method) {
+            currentRegMethod = method;
+            const btnGcash = document.getElementById('btn-reg-gcash');
+            const btnMaya = document.getElementById('btn-reg-maya');
+            const qrBox = document.getElementById('reg-active-qr');
+            const titleEl = document.getElementById('reg-active-channel-title');
+            const numEl = document.getElementById('reg-active-num');
+            const nameEl = document.getElementById('reg-active-name');
 
-            if (optGcash) optGcash.innerText = merchantConfig.gcashNum;
-            if (optMaya) optMaya.innerText = merchantConfig.mayaNum;
-            if (nameGcash) nameGcash.innerText = merchantConfig.gcashName;
-            if (nameMaya) nameMaya.innerText = merchantConfig.mayaName;
-
-            if (merchantConfig.gcashQR && gcashQR) {
-                gcashQR.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
-            } else if (gcashQR) {
-                gcashQR.innerHTML = 'No QR';
-            }
-            if (merchantConfig.mayaQR && mayaQR) {
-                mayaQR.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
-            } else if (mayaQR) {
-                mayaQR.innerHTML = 'No QR';
+            if (method === 'gcash') {
+                if (btnGcash) { btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition'; }
+                if (btnMaya) { btnMaya.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition'; }
+                if (titleEl) titleEl.innerText = 'GCash Account';
+                if (numEl) numEl.innerText = merchantConfig.gcashNum;
+                if (nameEl) nameEl.innerText = merchantConfig.gcashName;
+                if (merchantConfig.gcashQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No QR';
+                }
+            } else {
+                if (btnMaya) { btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition'; }
+                if (btnGcash) { btnGcash.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition'; }
+                if (titleEl) titleEl.innerText = 'Maya Account';
+                if (numEl) numEl.innerText = merchantConfig.mayaNum;
+                if (nameEl) nameEl.innerText = merchantConfig.mayaName;
+                if (merchantConfig.mayaQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No QR';
+                }
             }
         }
+        window.switchRegPaymentMethod = switchRegPaymentMethod;
+
+        let currentTopupMethod = 'gcash';
+        function switchTopUpPaymentMethod(method) {
+            currentTopupMethod = method;
+            const btnGcash = document.getElementById('btn-topup-gcash');
+            const btnMaya = document.getElementById('btn-topup-maya');
+            const qrBox = document.getElementById('topup-active-qr');
+            const titleEl = document.getElementById('topup-active-title');
+            const numEl = document.getElementById('topup-active-num');
+            const nameEl = document.getElementById('topup-active-name');
+
+            if (method === 'gcash') {
+                if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (titleEl) titleEl.innerText = 'GCash Account';
+                if (numEl) numEl.innerText = merchantConfig.gcashNum;
+                if (nameEl) nameEl.innerText = merchantConfig.gcashName;
+                if (merchantConfig.gcashQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No QR';
+                }
+            } else {
+                if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (titleEl) titleEl.innerText = 'Maya Account';
+                if (numEl) numEl.innerText = merchantConfig.mayaNum;
+                if (nameEl) nameEl.innerText = merchantConfig.mayaName;
+                if (merchantConfig.mayaQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No QR';
+                }
+            }
+        }
+        window.switchTopUpPaymentMethod = switchTopUpPaymentMethod;
+
+        function switchPlayerHubPayment(method) {
+            const btnGcash = document.getElementById('btn-hub-gcash');
+            const btnMaya = document.getElementById('btn-hub-maya');
+            const qrBox = document.getElementById('player-active-qr');
+            const titleEl = document.getElementById('player-hub-title');
+            const numEl = document.getElementById('player-hub-num');
+            const nameEl = document.getElementById('player-hub-name');
+
+            if (method === 'gcash') {
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (titleEl) titleEl.innerText = 'GCASH PAYMENT';
+                if (numEl) numEl.innerText = merchantConfig.gcashNum;
+                if (nameEl) nameEl.innerText = merchantConfig.gcashName;
+                if (merchantConfig.gcashQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No QR';
+                }
+            } else {
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (titleEl) titleEl.innerText = 'MAYA PAYMENT';
+                if (numEl) numEl.innerText = merchantConfig.mayaNum;
+                if (nameEl) nameEl.innerText = merchantConfig.mayaName;
+                if (merchantConfig.mayaQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No QR';
+                }
+            }
+        }
+        window.switchPlayerHubPayment = switchPlayerHubPayment;
 
         async function updateMerchantPaymentDisplay() {
-            const dispGcashNum = document.getElementById('display-gcash-num');
-            const dispGcashName = document.getElementById('display-gcash-name');
-            const dispMayaNum = document.getElementById('display-maya-num');
-            const dispMayaName = document.getElementById('display-maya-name');
-            const playerGcashQr = document.getElementById('player-gcash-qr');
-            const playerMayaQr = document.getElementById('player-maya-qr');
-            const topupGcashQr = document.getElementById('topup-gcash-qr');
-            const topupMayaQr = document.getElementById('topup-maya-qr');
-            const topupOptGcash = document.getElementById('topup-opt-gcash');
-            const topupOptMaya = document.getElementById('topup-opt-maya');
+            const inputGcashNum = document.getElementById('input-gcash-num');
+            const inputGcashName = document.getElementById('input-gcash-name');
+            const inputMayaNum = document.getElementById('input-maya-num');
+            const inputMayaName = document.getElementById('input-maya-name');
+            const ownerGcashPreview = document.getElementById('owner-gcash-qr-preview');
+            const ownerMayaPreview = document.getElementById('owner-maya-qr-preview');
 
-            if (dispGcashNum) dispGcashNum.innerText = merchantConfig.gcashNum;
-            if (dispGcashName) dispGcashName.innerText = merchantConfig.gcashName;
-            if (dispMayaNum) dispMayaNum.innerText = merchantConfig.mayaNum;
-            if (dispMayaName) dispMayaName.innerText = merchantConfig.mayaName;
-            if (topupOptGcash) topupOptGcash.innerText = merchantConfig.gcashNum;
-            if (topupOptMaya) topupOptMaya.innerText = merchantConfig.mayaNum;
+            if (inputGcashNum) inputGcashNum.value = merchantConfig.gcashNum;
+            if (inputGcashName) inputGcashName.value = merchantConfig.gcashName;
+            if (inputMayaNum) inputMayaNum.value = merchantConfig.mayaNum;
+            if (inputMayaName) inputMayaName.value = merchantConfig.mayaName;
 
-            if (merchantConfig.gcashQR) {
-                if (playerGcashQr) playerGcashQr.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
-                if (topupGcashQr) topupGcashQr.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+            if (merchantConfig.gcashQR && ownerGcashPreview) {
+                ownerGcashPreview.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+            } else if (ownerGcashPreview) {
+                ownerGcashPreview.innerHTML = 'No QR';
             }
-            if (merchantConfig.mayaQR) {
-                if (playerMayaQr) playerMayaQr.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
-                if (topupMayaQr) topupMayaQr.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+
+            if (merchantConfig.mayaQR && ownerMayaPreview) {
+                ownerMayaPreview.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+            } else if (ownerMayaPreview) {
+                ownerMayaPreview.innerHTML = 'No QR';
+            }
+
+            switchPlayerHubPayment('gcash');
+        }
+
+        async function saveGcashSettings() {
+            const num = document.getElementById('input-gcash-num').value.trim();
+            const name = document.getElementById('input-gcash-name').value.trim();
+            const fileInput = document.getElementById('input-gcash-qr');
+
+            if (num) merchantConfig.gcashNum = num;
+            if (name) merchantConfig.gcashName = name;
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    merchantConfig.gcashQR = e.target.result;
+                    persistMerchantConfig();
+                    updateMerchantPaymentDisplay();
+                    alert('GCash settings and QR saved successfully!');
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                persistMerchantConfig();
+                updateMerchantPaymentDisplay();
+                alert('GCash settings saved successfully!');
             }
         }
+        window.saveGcashSettings = saveGcashSettings;
+
+        async function saveMayaSettings() {
+            const num = document.getElementById('input-maya-num').value.trim();
+            const name = document.getElementById('input-maya-name').value.trim();
+            const fileInput = document.getElementById('input-maya-qr');
+
+            if (num) merchantConfig.mayaNum = num;
+            if (name) merchantConfig.mayaName = name;
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    merchantConfig.mayaQR = e.target.result;
+                    persistMerchantConfig();
+                    updateMerchantPaymentDisplay();
+                    alert('Maya settings and QR saved successfully!');
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                persistMerchantConfig();
+                updateMerchantPaymentDisplay();
+                alert('Maya settings saved successfully!');
+            }
+        }
+        window.saveMayaSettings = saveMayaSettings;
 
         async function handleLogin() {
             const email = document.getElementById('login-email').value.trim();
@@ -1468,6 +1595,7 @@
                 unlockedSkills: {},
                 registration_ref: ref,
                 registration_receipt: receiptBase64,
+                payment_method: currentRegMethod,
                 status: 'pending_registration',
                 first_fight_done: false,
                 registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
@@ -1477,8 +1605,8 @@
             pendingRegs.push(newUserData);
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
 
-            notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request.`);
-            logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref}.`, nickname);
+            notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
+            logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref} via ${currentRegMethod}.`, nickname);
 
             if (supabaseClient) {
                 try {
@@ -1530,6 +1658,9 @@
             const target = document.getElementById(`modal-${type}`);
             if (target) target.classList.remove('hidden');
 
+            if (type === 'topup') {
+                switchTopUpPaymentMethod('gcash');
+            }
             if (type === 'support-chat') {
                 renderPlayerChatMessages();
             }
@@ -1699,6 +1830,7 @@
                 email: currentUser.email,
                 nickname: currentUser.nickname,
                 amount: amt,
+                method: currentTopupMethod,
                 reference: ref,
                 receipt: receiptBase64,
                 status: 'pending',
@@ -1708,8 +1840,8 @@
             });
             localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
 
-            notifyOwner('New Top-Up Request', `Player ${currentUser.nickname} submitted a top-up request of ₱${amt}.`);
-            logSystemActivity('Top-up Submitted', `Player ${currentUser.nickname} submitted top-up of ₱${amt}.`, currentUser.nickname);
+            notifyOwner('New Top-Up Request', `Player ${currentUser.nickname} submitted a top-up request of ₱${amt} via ${currentTopupMethod.toUpperCase()}.`);
+            logSystemActivity('Top-up Submitted', `Player ${currentUser.nickname} submitted top-up of ₱${amt} via ${currentTopupMethod}.`, currentUser.nickname);
 
             alert('Top-up request submitted successfully! Awaiting owner approval.');
             closeModal();
@@ -1998,7 +2130,6 @@
             const log = document.getElementById('fs-battle-log');
             if (log) log.innerText = `[${duelState.currentOpponentName}]: Planning tactical move...`;
 
-            // Active Poison / Burn tick at start of turn
             if (duelState.playerPoison > 0) {
                 duelState.playerHp = Math.max(0, duelState.playerHp - duelState.playerPoison);
                 duelState.playerPoison = Math.max(0, duelState.playerPoison - 3);
@@ -2014,9 +2145,6 @@
             setTimeout(() => {
                 let enemyActionText = '';
 
-                // BOT SPECIAL SKILLS / HP LOGIC:
-                // If bot HP < 60: Unlimited special skills (combining heavy damage, healing, and poison every turn)
-                // If bot HP >= 60: Damage of 20 and 15 poison only
                 if (duelState.enemyHp < 60) {
                     let specDmg1 = 35;
                     let specDmg2 = 30;
@@ -2180,7 +2308,7 @@
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
                                 <strong class="text-amber-400">${r.nickname}</strong> (${r.email})<br>
-                                <span class="text-slate-400 text-[10px]">Ref: ${r.registration_ref}</span>
+                                <span class="text-slate-400 text-[10px]">Method: <strong class="text-blue-400">${(r.payment_method || 'gcash').toUpperCase()}</strong> | Ref: ${r.registration_ref}</span>
                             </div>
                             <div class="space-x-1">
                                 <button onclick="window.approveRegistration('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
@@ -2196,7 +2324,7 @@
                     pendingTopups.map(t => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
-                                <strong class="text-emerald-400">${t.nickname}</strong> - ₱${t.amount}<br>
+                                <strong class="text-emerald-400">${t.nickname}</strong> - ₱${t.amount} (${(t.method || 'gcash').toUpperCase()})<br>
                                 <span class="text-slate-400 text-[10px]">Ref: ${t.reference}</span>
                             </div>
                             <div class="space-x-1">
@@ -2491,37 +2619,6 @@
             renderOwnerQueues();
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
-
-        function saveOwnerDetails() {
-            merchantConfig.gcashNum = document.getElementById('input-gcash-num').value.trim() || merchantConfig.gcashNum;
-            merchantConfig.gcashName = document.getElementById('input-gcash-name').value.trim() || merchantConfig.gcashName;
-            merchantConfig.mayaNum = document.getElementById('input-maya-num').value.trim() || merchantConfig.mayaNum;
-            merchantConfig.mayaName = document.getElementById('input-maya-name').value.trim() || merchantConfig.mayaName;
-
-            const gcashFile = document.getElementById('input-gcash-qr').files[0];
-            const mayaFile = document.getElementById('input-maya-qr').files[0];
-
-            if (gcashFile) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    merchantConfig.gcashQR = e.target.result;
-                    updateMerchantPaymentDisplay();
-                };
-                reader.readAsDataURL(gcashFile);
-            }
-            if (mayaFile) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    merchantConfig.mayaQR = e.target.result;
-                    updateMerchantPaymentDisplay();
-                };
-                reader.readAsDataURL(mayaFile);
-            }
-
-            alert('Merchant settings saved successfully!');
-            updateMerchantPaymentDisplay();
-        }
-        window.saveOwnerDetails = saveOwnerDetails;
 
         function renderPlayerChatMessages() {
             const box = document.getElementById('player-chat-messages-box');
