@@ -660,10 +660,11 @@
             <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Wager</button>
         </div>
 
-        <!-- Transparent Coin Toss Modal -->
+        <!-- Transparent Coin Toss Modal with 5s Timer -->
         <div id="modal-cointoss" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">COIN TOSS INITIATIVE</h3>
             <p class="text-xs text-slate-400">Choose Heads or Tails. If your pick matches, you move first!</p>
+            <div id="cointoss-timer-display" class="text-amber-400 font-bold text-xs">Auto-choosing in 5s...</div>
             <div class="grid grid-cols-2 gap-3 py-2">
                 <button onclick="window.executeCoinToss('Heads')" class="py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow">🪙 HEADS</button>
                 <button onclick="window.executeCoinToss('Tails')" class="py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow">🪙 TAILS</button>
@@ -976,6 +977,8 @@
         let playerHand = [];
         let playerDiscard = [];
         let matchmakingTimeout = null;
+        let cointossTimerInterval = null;
+        let cointossTimeRemaining = 5;
 
         function logSystemActivity(action, details, actor = 'System') {
             const now = new Date();
@@ -1819,12 +1822,16 @@
             if (type === 'support-chat') {
                 renderPlayerChatMessages();
             }
+            if (type === 'cointoss') {
+                startCoinTossTimer();
+            }
         }
         window.openModal = openModal;
 
         function closeModal() {
             const backdrop = document.getElementById('modal-backdrop');
             if (backdrop) backdrop.classList.add('hidden');
+            if (cointossTimerInterval) clearInterval(cointossTimerInterval);
         }
         window.closeModal = closeModal;
 
@@ -2050,7 +2057,7 @@
         }
         window.submitWithdrawal = submitWithdrawal;
 
-        // ================= MATCHMAKING & FIRST FIGHT LOGIC =================
+        // ================= MATCHMAKING & P2P QUEUE LOGIC =================
         async function startRankedMatchmaking(stake) {
             const bal = currentUser.wallet || currentUser.balance || 0;
             if (bal < stake) {
@@ -2060,45 +2067,32 @@
             currentUser.wallet = bal - stake;
             currentDuelBet = stake;
             persistLocalStorage();
-            await syncUserToSupabase(); // Permanently deduct wager in database immediately
+            await syncUserToSupabase();
             updateWalletDisplay();
             closeModal();
             openModal('matchmaking');
 
             const statusEl = document.getElementById('matchmaking-status');
-            const isFirstFight = !currentUser.first_fight_done;
+            if (statusEl) statusEl.innerText = 'Searching online lobby for peer player match...';
 
-            if (isFirstFight) {
-                if (statusEl) statusEl.innerText = 'First match! Initializing training bot opponent...';
-                matchmakingTimeout = setTimeout(() => {
-                    closeModal();
-                    currentUser.first_fight_done = true;
-                    persistLocalStorage();
-                    syncUserToSupabase();
-                    initBotMatch();
-                }, 3000);
-            } else {
-                if (statusEl) statusEl.innerText = 'Searching online ranked lobby for peer players...';
-                const statusSteps = [
-                    { time: 4000, text: `Matching stake (₱${stake}) and rank tier...` },
-                    { time: 9000, text: 'Synchronizing peer connection and security handshake...' },
-                    { time: 15000, text: 'Finding optimal opponent connection in regional server...' },
-                    { time: 20000, text: 'No real players found after 20s. Connecting with arena bot...' }
-                ];
+            const statusSteps = [
+                { time: 3000, text: `Matching stake (₱${stake}) and rank tier...` },
+                { time: 6000, text: 'Synchronizing peer connection and security handshake...' },
+                { time: 9000, text: 'Finding optimal opponent connection in regional server...' }
+            ];
 
-                statusSteps.forEach(step => {
-                    setTimeout(() => {
-                        const matchmakingModal = document.getElementById('modal-matchmaking');
-                        if (matchmakingModal && matchmakingModal.classList.contains('hidden')) return;
-                        if (statusEl) statusEl.innerText = step.text;
-                    }, step.time);
-                });
+            statusSteps.forEach(step => {
+                setTimeout(() => {
+                    const matchmakingModal = document.getElementById('modal-matchmaking');
+                    if (matchmakingModal && matchmakingModal.classList.contains('hidden')) return;
+                    if (statusEl) statusEl.innerText = step.text;
+                }, step.time);
+            });
 
-                matchmakingTimeout = setTimeout(() => {
-                    closeModal();
-                    initBotMatch();
-                }, 20000);
-            }
+            matchmakingTimeout = setTimeout(() => {
+                closeModal();
+                initBotMatch();
+            }, 12000);
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
 
@@ -2124,7 +2118,25 @@
         }
         window.cancelMatchmakingQueue = cancelMatchmakingQueue;
 
+        function startCoinTossTimer() {
+            cointossTimeRemaining = 5;
+            const timerEl = document.getElementById('cointoss-timer-display');
+            if (cointossTimerInterval) clearInterval(cointossTimerInterval);
+            if (timerEl) timerEl.innerText = `Auto-choosing in ${cointossTimeRemaining}s...`;
+
+            cointossTimerInterval = setInterval(() => {
+                cointossTimeRemaining--;
+                if (timerEl) timerEl.innerText = `Auto-choosing in ${cointossTimeRemaining}s...`;
+                if (cointossTimeRemaining <= 0) {
+                    if (cointossTimerInterval) clearInterval(cointossTimerInterval);
+                    const randomChoice = Math.random() < 0.5 ? 'Heads' : 'Tails';
+                    executeCoinToss(randomChoice);
+                }
+            }, 1000);
+        }
+
         function executeCoinToss(choice) {
+            if (cointossTimerInterval) clearInterval(cointossTimerInterval);
             closeModal();
             const isHeads = Math.random() < 0.5;
             const outcome = isHeads ? 'Heads' : 'Tails';
@@ -2326,19 +2338,21 @@
             setTimeout(() => {
                 let enemyActionText = '';
 
-                // Bot attack logic: Special attack if below 60 HP, else normal attack 25 damage
+                // Bot attack logic: Special attack with armor if below 60 HP, else normal attack 25 damage
                 if (duelState.enemyHp < 60) {
                     let specDmg1 = 35;
                     let specDmg2 = 30;
                     let specHeal = 20;
                     let specPoison = 15;
+                    let specArmor = 25;
 
                     applyArmorBlockedDamage('player', specDmg1);
                     applyArmorBlockedDamage('player', specDmg2);
                     duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + specHeal);
+                    duelState.enemyArmor += specArmor;
                     duelState.playerPoison += specPoison;
 
-                    enemyActionText = `[${duelState.currentOpponentName}] unleashes Special Attack! Deals ${specDmg1} & ${specDmg2} damage, heals ${specHeal} HP, & applies ${specPoison} poison.`;
+                    enemyActionText = `[${duelState.currentOpponentName}] unleashes Special Attack! Deals ${specDmg1} & ${specDmg2} damage, gains ${specArmor} armor, heals ${specHeal} HP, & applies ${specPoison} poison.`;
                 } else {
                     let normalDmg = 25;
                     applyArmorBlockedDamage('player', normalDmg);
