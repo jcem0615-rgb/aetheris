@@ -652,10 +652,11 @@
 
         <!-- P2P Matchmaking Loading Modal -->
         <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-4 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING P2P RANKED LOBBY</h3>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING REAL-TIME P2P LOBBY</h3>
             <div class="py-3 space-y-3">
                 <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p id="matchmaking-status" class="text-xs text-slate-300">Searching online lobby for player match...</p>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching Supabase queue for real player...</p>
+                <p id="matchmaking-countdown" class="text-[11px] text-amber-400 font-bold">Time left: 20s</p>
             </div>
             <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Wager</button>
         </div>
@@ -978,7 +979,11 @@
         let playerDeck = [];
         let playerHand = [];
         let playerDiscard = [];
-        let matchmakingTimeout = null;
+        
+        // MATCHMAKING CONTROL VARIABLES
+        let matchmakingInterval = null;
+        let matchmakingTimeoutTimer = null;
+        let myQueueRecordId = null;
         let cointossTimerInterval = null;
         let cointossTimeRemaining = 5;
 
@@ -1458,7 +1463,6 @@
         }
         window.showAuthMode = showAuthMode;
 
-        // Interactive Payment Methods with Masked Info for Registration & Hub & Topup
         let currentRegMethod = 'gcash';
         async function switchRegPaymentMethod(method) {
             currentRegMethod = method;
@@ -2090,7 +2094,7 @@
         }
         window.submitWithdrawal = submitWithdrawal;
 
-        // ================= MATCHMAKING & P2P QUEUE LOGIC =================
+        // ================= SUPABASE REAL-TIME P2P MATCHMAKING & 20S BOT FALLBACK =================
         async function startRankedMatchmaking(stake) {
             const bal = currentUser.wallet || currentUser.balance || 0;
             if (bal < stake) {
@@ -2107,28 +2111,120 @@
             openModal('matchmaking');
 
             const statusEl = document.getElementById('matchmaking-status');
-            if (statusEl) statusEl.innerText = 'Searching online lobby for player match...';
+            const countdownEl = document.getElementById('matchmaking-countdown');
+            if (statusEl) statusEl.innerText = 'Searching Supabase queue for real player...';
 
-            const statusSteps = [
-                { time: 3000, text: `Matching stake (₱${stake}) and rank tier...` },
-                { time: 6000, text: 'Synchronizing peer connection and security handshake...' },
-                { time: 9000, text: 'Finding optimal opponent connection in regional server...' }
-            ];
+            let secondsLeft = 20;
+            if (countdownEl) countdownEl.innerText = `Time left: ${secondsLeft}s`;
 
-            statusSteps.forEach(step => {
-                setTimeout(() => {
-                    const matchmakingModal = document.getElementById('modal-matchmaking');
-                    if (matchmakingModal && matchmakingModal.classList.contains('hidden')) return;
-                    if (statusEl) statusEl.innerText = step.text;
-                }, step.time);
-            });
+            // 1. Insert our queue entry into Supabase matchmaking_queue table
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from('matchmaking_queue').insert([{
+                        player_email: currentUser.email,
+                        player_nickname: currentUser.nickname,
+                        stake: stake,
+                        status: 'waiting'
+                    }]).select().single();
 
-            matchmakingTimeout = setTimeout(() => {
-                closeModal();
-                initBotMatch();
-            }, 12000);
+                    if (data && !error) {
+                        myQueueRecordId = data.id;
+                    }
+                } catch (e) {
+                    console.error('Queue insertion error:', e);
+                }
+            }
+
+            // 2. Poll Supabase queue every 2 seconds for a real human match
+            if (matchmakingInterval) clearInterval(matchmakingInterval);
+            if (matchmakingTimeoutTimer) clearTimeout(matchmakingTimeoutTimer);
+
+            matchmakingInterval = setInterval(async () => {
+                if (supabaseClient) {
+                    try {
+                        // Check if another player with the same stake is waiting
+                        const { data: waitingPlayers, error } = await supabaseClient
+                            .from('matchmaking_queue')
+                            .select('*')
+                            .eq('stake', stake)
+                            .eq('status', 'waiting')
+                            .neq('player_email', currentUser.email)
+                            .order('created_at', { ascending: true })
+                            .limit(1);
+
+                        if (waitingPlayers && waitingPlayers.length > 0) {
+                            const opponent = waitingPlayers[0];
+                            // Claim opponent's queue ticket
+                            const { error: updateErr } = await supabaseClient
+                                .from('matchmaking_queue')
+                                .update({ status: 'matched', opponent_nickname: currentUser.nickname })
+                                .eq('id', opponent.id);
+
+                            if (!updateErr) {
+                                cleanupMatchmaking();
+                                closeModal();
+                                initRealPlayerMatch(opponent.player_nickname);
+                                return;
+                            }
+                        }
+
+                        // Also check if our own ticket was matched by someone else
+                        if (myQueueRecordId) {
+                            const { data: myTicket } = await supabaseClient
+                                .from('matchmaking_queue')
+                                .select('*')
+                                .eq('id', myQueueRecordId)
+                                .single();
+
+                            if (myTicket && myTicket.status === 'matched') {
+                                cleanupMatchmaking();
+                                closeModal();
+                                initRealPlayerMatch(myTicket.opponent_nickname || 'Challenger');
+                                return;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Matchmaking poll error:', err);
+                    }
+                }
+            }, 2000);
+
+            // 3. 20-Second Countdown & Bot Fallback Timer
+            matchmakingTimeoutTimer = setInterval(() => {
+                secondsLeft--;
+                if (countdownEl) countdownEl.innerText = `Time left: ${secondsLeft}s`;
+
+                if (secondsLeft <= 0) {
+                    cleanupMatchmaking();
+                    closeModal();
+                    // Fallback to bot match if no real player joined in 20s
+                    initBotMatch();
+                }
+            }, 1000);
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
+
+        async function cleanupMatchmaking() {
+            if (matchmakingInterval) clearInterval(matchmakingInterval);
+            if (matchmakingTimeoutTimer) clearInterval(matchmakingTimeoutTimer);
+            if (supabaseClient && myQueueRecordId) {
+                try {
+                    await supabaseClient.from('matchmaking_queue').delete().eq('id', myQueueRecordId);
+                } catch(e) {}
+                myQueueRecordId = null;
+            }
+        }
+
+        function initRealPlayerMatch(opponentNickname) {
+            duelState.isBotMatch = false;
+            duelState.currentOpponentName = opponentNickname || 'Challenger';
+            
+            const randomHero = heroes[Math.floor(Math.random() * heroes.length)];
+            duelState.enemyHero = randomHero;
+            duelState.enemyDeck = [...randomHero.baseSkills, ...(shopSkillsMap[randomHero.id] || [])];
+
+            openModal('cointoss');
+        }
 
         function initBotMatch() {
             duelState.isBotMatch = true;
@@ -2142,7 +2238,7 @@
         }
 
         async function cancelMatchmakingQueue() {
-            if (matchmakingTimeout) clearTimeout(matchmakingTimeout);
+            await cleanupMatchmaking();
             currentUser.wallet = (currentUser.wallet || 0) + currentDuelBet;
             persistLocalStorage();
             await syncUserToSupabase();
@@ -2343,7 +2439,6 @@
                 duelState.enemyPoison += skill.poison;
             }
 
-            // Remove from hand, put in discard pile
             playerHand.splice(index, 1);
             playerDiscard.push(skill);
 
@@ -2372,7 +2467,6 @@
             setTimeout(() => {
                 let enemyActionText = '';
 
-                // Bot attack logic: Special attack with armor if below 60 HP, else normal attack 25 damage
                 if (duelState.enemyHp < 60) {
                     let specDmg1 = 35;
                     let specDmg2 = 30;
@@ -2394,8 +2488,6 @@
                 }
 
                 duelState.playerAp = 3;
-                
-                // Replenish player hand back up to 4 cards
                 drawPlayerCards(4 - playerHand.length);
 
                 renderDuelUI();
