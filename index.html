@@ -1027,6 +1027,7 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
+            loadMerchantConfig();
             await updateMerchantPaymentDisplay();
             try {
                 if (currentUser && currentUser.email && supabaseClient) {
@@ -1066,6 +1067,17 @@
                 console.error('Init session check error:', err);
             }
         });
+
+        function loadMerchantConfig() {
+            try {
+                const stored = localStorage.getItem('aetheris_merchant_config');
+                if (stored) {
+                    merchantConfig = JSON.parse(stored);
+                }
+            } catch(e) {
+                console.error('Load merchant config error:', e);
+            }
+        }
 
         function restoreUserSession() {
             try {
@@ -1238,6 +1250,7 @@
                 const hub = document.getElementById('view-hub');
                 if (hub) hub.classList.remove('hidden');
                 if (btnHub) { btnHub.classList.add('bg-blue-600', 'text-white'); btnHub.classList.remove('text-slate-400'); }
+                loadMerchantConfig();
                 switchPlayerHubPayment('gcash');
             } else if (tabName === 'select') {
                 const sel = document.getElementById('view-select');
@@ -1253,6 +1266,7 @@
                 const own = document.getElementById('view-owner');
                 if (own) own.classList.remove('hidden');
                 if (btnOwner) { btnOwner.classList.add('bg-blue-600', 'text-white'); btnOwner.classList.remove('text-slate-400'); }
+                loadMerchantConfig();
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
             }
@@ -1283,6 +1297,7 @@
             if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
             if (mode === 'register' && registerBox) {
                 registerBox.classList.remove('hidden');
+                loadMerchantConfig();
                 switchRegPaymentMethod('gcash');
             }
             if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
@@ -1293,6 +1308,7 @@
         let currentRegMethod = 'gcash';
         function switchRegPaymentMethod(method) {
             currentRegMethod = method;
+            loadMerchantConfig();
             const btnGcash = document.getElementById('btn-reg-gcash');
             const btnMaya = document.getElementById('btn-reg-maya');
             const qrBox = document.getElementById('reg-active-qr');
@@ -1329,6 +1345,7 @@
         let currentTopupMethod = 'gcash';
         function switchTopUpPaymentMethod(method) {
             currentTopupMethod = method;
+            loadMerchantConfig();
             const btnGcash = document.getElementById('btn-topup-gcash');
             const btnMaya = document.getElementById('btn-topup-maya');
             const qrBox = document.getElementById('topup-active-qr');
@@ -1363,6 +1380,7 @@
         window.switchTopUpPaymentMethod = switchTopUpPaymentMethod;
 
         function switchPlayerHubPayment(method) {
+            loadMerchantConfig();
             const btnGcash = document.getElementById('btn-hub-gcash');
             const btnMaya = document.getElementById('btn-hub-maya');
             const qrBox = document.getElementById('player-active-qr');
@@ -1397,6 +1415,7 @@
         window.switchPlayerHubPayment = switchPlayerHubPayment;
 
         async function updateMerchantPaymentDisplay() {
+            loadMerchantConfig();
             const inputGcashNum = document.getElementById('input-gcash-num');
             const inputGcashName = document.getElementById('input-gcash-name');
             const inputMayaNum = document.getElementById('input-maya-num');
@@ -1420,8 +1439,6 @@
             } else if (ownerMayaPreview) {
                 ownerMayaPreview.innerHTML = 'No QR';
             }
-
-            switchPlayerHubPayment('gcash');
         }
 
         async function saveGcashSettings() {
