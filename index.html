@@ -1841,7 +1841,7 @@
                     enemyDmg = 45;
                     enemyArmorGain = 20;
                     duelState.enemyArmor += enemyArmorGain;
-                    enemyActionText = `🔥 APEX SPECIAL! Hellfire Slash deals ${enemyDmg} damage & grants ${enemyArmorGain} Armor!`;
+                    enemyActionText = `🔥 APEX SPECIAL ACTIVATED! Apex Predator unleashes Hellfire Slash for ${enemyDmg} damage & gains ${enemyArmorGain} Armor!`;
                 } else {
                     const roll = Math.random();
                     if (roll < 0.4) {
@@ -1998,6 +1998,19 @@
                     `).join('');
             }
 
+            if (resetList) {
+                resetList.innerHTML = pendingResets.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>' :
+                    pendingResets.map((r, idx) => `
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div>
+                                <strong class="text-amber-400">${r.email}</strong><br>
+                                <span class="text-slate-400 text-[10px]">Birthday: ${r.birthday}</span>
+                            </div>
+                            <button onclick="window.approvePasswordReset(${idx})" class="px-2 py-1 bg-amber-600 text-white rounded text-[10px]">Approve Reset</button>
+                        </div>
+                    `).join('');
+            }
+
             if (playersList) {
                 playersList.innerHTML = `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">1. ${currentUser ? currentUser.nickname : 'Player'} (${currentUser ? currentUser.email : ''}) - ₱${currentUser ? currentUser.wallet : 0}</div>`;
             }
@@ -2054,6 +2067,14 @@
             renderOwnerQueues();
         }
         window.approveWithdrawal = approveWithdrawal;
+
+        function approvePasswordReset(index) {
+            pendingResets.splice(index, 1);
+            persistLocalStorage();
+            alert('Password reset request approved.');
+            renderOwnerQueues();
+        }
+        window.approvePasswordReset = approvePasswordReset;
 
         function executeManualWalletAdjustment() {
             const email = document.getElementById('manual-wallet-email').value.trim();
