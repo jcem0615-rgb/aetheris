@@ -724,13 +724,13 @@
             <button onclick="window.closeModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
 
-        <!-- Player Details Modal (Inspection) -->
-        <div id="modal-player-details" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
+        <!-- Player Details Modal (Inspection with Battle History, Balances, Opponent & Time) -->
+        <div id="modal-player-details" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection</h3>
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection & Battle History</h3>
                 <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
             </div>
-            <div id="player-inspection-content" class="space-y-2 text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
+            <div id="player-inspection-content" class="space-y-3 text-xs text-slate-300 max-h-96 overflow-y-auto pr-1 bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
 
@@ -820,6 +820,7 @@
         }
 
         let currentDuelBet = 50;
+        let preBattleWallet = 0;
         let battleHistoryLog = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
         let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
         let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
@@ -1173,7 +1174,6 @@
                         .single();
                     if (data && !error) {
                         currentUser = data;
-                        // Preserve local progress if remote data was stale
                         if (localWallet > (currentUser.wallet || 0) || localWins > (currentUser.wins || 0)) {
                             currentUser.wallet = Math.max(localWallet, currentUser.wallet || 0);
                             currentUser.wins = Math.max(localWins, currentUser.wins || 0);
@@ -1211,7 +1211,7 @@
                 console.error('Init session check error:', err);
             }
 
-            // Real-time polling / background refresher for instant chat updates
+            // Real-time polling / background refresher for instant chat & portal updates
             setInterval(() => {
                 if (currentUser) {
                     const activeModal = document.getElementById('modal-support-chat');
@@ -1858,14 +1858,33 @@
             openModal('player-profile');
             const content = document.getElementById('player-profile-content');
             if (!content || !currentUser) return;
+            const playerBattles = battleHistoryLog.filter(b => b.playerEmail === currentUser.email);
             content.innerHTML = `
-                <div class="space-y-2">
-                    <p><strong>Name:</strong> ${currentUser.name}</p>
-                    <p><strong>Username:</strong> ${currentUser.nickname}</p>
-                    <p><strong>Email:</strong> ${currentUser.email}</p>
-                    <p><strong>Phone:</strong> ${currentUser.phone}</p>
-                    <p><strong>Wins:</strong> ${currentUser.wins || 0}</p>
-                    <p><strong>EXP:</strong> ${currentUser.xp || 0}</p>
+                <div class="space-y-3">
+                    <div class="space-y-1">
+                        <p><strong>Name:</strong> ${currentUser.name}</p>
+                        <p><strong>Username:</strong> ${currentUser.nickname}</p>
+                        <p><strong>Email:</strong> ${currentUser.email}</p>
+                        <p><strong>Phone:</strong> ${currentUser.phone}</p>
+                        <p><strong>Wins:</strong> ${currentUser.wins || 0}</p>
+                        <p><strong>EXP:</strong> ${currentUser.xp || 0}</p>
+                    </div>
+                    <div class="border-t border-slate-800 pt-2 space-y-1.5">
+                        <h4 class="font-cinzel text-amber-400 font-bold">Your Battle History (${playerBattles.length})</h4>
+                        ${playerBattles.length === 0 ? '<p class="text-slate-500">No battles recorded yet.</p>' :
+                          playerBattles.map(b => `
+                            <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[11px] space-y-0.5">
+                                <div class="flex justify-between text-amber-400 font-bold">
+                                    <span>vs ${b.opponent}</span>
+                                    <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${b.result}</span>
+                                </div>
+                                <div class="text-slate-400 text-[10px]">
+                                    <span>Balance: ₱${b.preBalance} ➔ ₱${b.postBalance}</span><br>
+                                    <span>📅 ${b.date} ⏰ ${b.time}</span>
+                                </div>
+                            </div>
+                          `).join('')}
+                    </div>
                 </div>
             `;
         }
@@ -2078,6 +2097,7 @@
                 alert('Insufficient wallet balance for this stake.');
                 return;
             }
+            preBattleWallet = bal;
             currentUser.wallet = bal - stake;
             currentDuelBet = stake;
             persistLocalStorage();
@@ -2375,7 +2395,7 @@
 
                 duelState.playerAp = 3;
                 
-                // Replenish player hand back up to 4 cards, retaining unplayed cards from previous round
+                // Replenish player hand back up to 4 cards
                 drawPlayerCards(4 - playerHand.length);
 
                 renderDuelUI();
@@ -2397,9 +2417,28 @@
             if (duelState.enemyHp <= 0) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
                 const prize = currentDuelBet * 2 * 0.95;
-                currentUser.wallet = (currentUser.wallet || 0) + prize;
+                const postWallet = (currentUser.wallet || 0) + prize;
+                currentUser.wallet = postWallet;
                 currentUser.wins = (currentUser.wins || 0) + 1;
                 currentUser.xp = (currentUser.xp || 0) + 50;
+
+                const now = new Date();
+                const battleRecord = {
+                    id: Date.now(),
+                    playerEmail: currentUser.email,
+                    playerNickname: currentUser.nickname,
+                    opponent: duelState.currentOpponentName,
+                    result: 'VICTORY',
+                    preBalance: preBattleWallet,
+                    postBalance: postWallet,
+                    stake: currentDuelBet,
+                    prize: prize,
+                    date: now.toISOString().split('T')[0],
+                    time: now.toLocaleTimeString(),
+                    summary: `${currentUser.nickname} defeated ${duelState.currentOpponentName} (Prize: ₱${prize.toFixed(2)})`
+                };
+                battleHistoryLog.unshift(battleRecord);
+
                 persistLocalStorage();
                 await syncUserToSupabase();
                 updateWalletDisplay();
@@ -2407,6 +2446,25 @@
                 closeDuelFullscreen();
             } else if (duelState.playerHp <= 0) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+                const postWallet = currentUser.wallet || 0;
+
+                const now = new Date();
+                const battleRecord = {
+                    id: Date.now(),
+                    playerEmail: currentUser.email,
+                    playerNickname: currentUser.nickname,
+                    opponent: duelState.currentOpponentName,
+                    result: 'DEFEAT',
+                    preBalance: preBattleWallet,
+                    postBalance: postWallet,
+                    stake: currentDuelBet,
+                    prize: 0,
+                    date: now.toISOString().split('T')[0],
+                    time: now.toLocaleTimeString(),
+                    summary: `${currentUser.nickname} lost to ${duelState.currentOpponentName} (Stake: ₱${currentDuelBet})`
+                };
+                battleHistoryLog.unshift(battleRecord);
+
                 persistLocalStorage();
                 await syncUserToSupabase();
                 alert(`DEFEAT! You were vanquished by ${duelState.currentOpponentName}. Better luck next time.`);
@@ -2418,6 +2476,22 @@
             if (confirm('Are you sure you want to surrender? You will forfeit your wager.')) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
                 if (currentUser) {
+                    const postWallet = currentUser.wallet || 0;
+                    const now = new Date();
+                    battleHistoryLog.unshift({
+                        id: Date.now(),
+                        playerEmail: currentUser.email,
+                        playerNickname: currentUser.nickname,
+                        opponent: duelState.currentOpponentName,
+                        result: 'SURRENDER',
+                        preBalance: preBattleWallet,
+                        postBalance: postWallet,
+                        stake: currentDuelBet,
+                        prize: 0,
+                        date: now.toISOString().split('T')[0],
+                        time: now.toLocaleTimeString(),
+                        summary: `${currentUser.nickname} surrendered against ${duelState.currentOpponentName}`
+                    });
                     persistLocalStorage();
                     await syncUserToSupabase();
                 }
@@ -2601,7 +2675,7 @@
             }
             if (battleList) {
                 battleList.innerHTML = battleHistoryLog.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>' :
-                    battleHistoryLog.map(b => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">${b.summary}</div>`).join('');
+                    battleHistoryLog.map(b => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">[${b.date} ${b.time}] <strong>${b.playerNickname}</strong> vs ${b.opponent} ➔ ${b.result} (Bal: ₱${b.preBalance} ➔ ₱${b.postBalance})</div>`).join('');
             }
         }
         window.renderOwnerQueues = renderOwnerQueues;
@@ -2688,14 +2762,33 @@
             openModal('player-details');
             const content = document.getElementById('player-inspection-content');
             if (content) {
+                const playerBattles = battleHistoryLog.filter(b => b.playerEmail === email);
                 content.innerHTML = `
-                    <div class="space-y-1.5">
-                        <p><strong>Name:</strong> ${player.name || 'N/A'}</p>
-                        <p><strong>Nickname:</strong> ${player.nickname || 'N/A'}</p>
-                        <p><strong>Email:</strong> ${player.email}</p>
-                        <p><strong>Phone:</strong> ${player.phone || 'N/A'}</p>
-                        <p><strong>Wallet Balance:</strong> ₱${player.wallet || 0}</p>
-                        <p><strong>Status:</strong> <span class="${player.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${player.status || 'active'}</span></p>
+                    <div class="space-y-3">
+                        <div class="space-y-1">
+                            <p><strong>Name:</strong> ${player.name || 'N/A'}</p>
+                            <p><strong>Nickname:</strong> ${player.nickname || 'N/A'}</p>
+                            <p><strong>Email:</strong> ${player.email}</p>
+                            <p><strong>Phone:</strong> ${player.phone || 'N/A'}</p>
+                            <p><strong>Wallet Balance:</strong> ₱${player.wallet || 0}</p>
+                            <p><strong>Status:</strong> <span class="${player.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${player.status || 'active'}</span></p>
+                        </div>
+                        <div class="border-t border-slate-800 pt-2 space-y-1.5">
+                            <h4 class="font-cinzel text-amber-400 font-bold">Battle History (${playerBattles.length})</h4>
+                            ${playerBattles.length === 0 ? '<p class="text-slate-500">No battle history logged for this player.</p>' :
+                              playerBattles.map(b => `
+                                <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-[11px] space-y-1">
+                                    <div class="flex justify-between items-center font-bold">
+                                        <span class="text-amber-400">Opponent: vs ${b.opponent}</span>
+                                        <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${b.result}</span>
+                                    </div>
+                                    <div class="text-slate-300 text-[10px]">
+                                        <div>Balance Before: ₱${b.preBalance} ➔ After: ₱${b.postBalance}</div>
+                                        <div class="text-slate-400">📅 ${b.date} ⏰ ${b.time}</div>
+                                    </div>
+                                </div>
+                              `).join('')}
+                        </div>
                     </div>
                 `;
             }
