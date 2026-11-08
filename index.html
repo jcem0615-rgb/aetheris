@@ -655,7 +655,7 @@
             <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING P2P RANKED LOBBY</h3>
             <div class="py-3 space-y-3">
                 <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p id="matchmaking-status" class="text-xs text-slate-300">Searching online lobby for peer player match...</p>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching online lobby for player match...</p>
             </div>
             <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Wager</button>
         </div>
@@ -899,11 +899,11 @@
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
         }
 
-        // INSTANT SUPABASE PROFILE & WALLET SYNC (Fixes balance reverting on reload)
+        // INSTANT SUPABASE PROFILE & WALLET SYNC
         async function syncUserToSupabase() {
             if (!currentUser || !currentUser.email || !supabaseClient) return;
             try {
-                await supabaseClient.from('profiles').upsert([{
+                const { error } = await supabaseClient.from('profiles').upsert([{
                     email: currentUser.email,
                     name: currentUser.name || 'Player',
                     nickname: currentUser.nickname || 'PLAYER',
@@ -916,6 +916,7 @@
                     unlocked_skills: currentUser.unlockedSkills || {},
                     status: currentUser.status || 'active'
                 }], { onConflict: 'email' });
+                if (error) console.error('Supabase upsert error:', error);
             } catch(e) {
                 console.error('Supabase sync user error:', e);
             }
@@ -1161,6 +1162,10 @@
             await updateMerchantPaymentDisplay();
             try {
                 if (currentUser && currentUser.email && supabaseClient) {
+                    const localWallet = currentUser.wallet || 0;
+                    const localWins = currentUser.wins || 0;
+                    const localXp = currentUser.xp || 0;
+
                     const { data, error } = await supabaseClient
                         .from('profiles')
                         .select('*')
@@ -1168,6 +1173,15 @@
                         .single();
                     if (data && !error) {
                         currentUser = data;
+                        // Preserve local progress if remote data was stale
+                        if (localWallet > (currentUser.wallet || 0) || localWins > (currentUser.wins || 0)) {
+                            currentUser.wallet = Math.max(localWallet, currentUser.wallet || 0);
+                            currentUser.wins = Math.max(localWins, currentUser.wins || 0);
+                            currentUser.xp = Math.max(localXp, currentUser.xp || 0);
+                            persistLocalStorage();
+                            await syncUserToSupabase();
+                        }
+
                         if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                             currentUser.role = 'owner';
                         }
@@ -2073,7 +2087,7 @@
             openModal('matchmaking');
 
             const statusEl = document.getElementById('matchmaking-status');
-            if (statusEl) statusEl.innerText = 'Searching online lobby for peer player match...';
+            if (statusEl) statusEl.innerText = 'Searching online lobby for player match...';
 
             const statusSteps = [
                 { time: 3000, text: `Matching stake (₱${stake}) and rank tier...` },
