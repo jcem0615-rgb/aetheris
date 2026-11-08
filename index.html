@@ -161,8 +161,16 @@
                     </div>
                 </div>
 
-                <!-- Mandatory Checkboxes for Registration -->
-                <div class="space-y-2 pt-1 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px]">
+                <!-- Mandatory Notification Permission & Checkboxes for Registration -->
+                <div class="space-y-2.5 pt-1 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
+                    <div class="flex items-center justify-between bg-slate-900 p-2 rounded-lg border border-slate-800">
+                        <div>
+                            <span class="font-bold text-amber-400 block text-xs">Push Notification Setting (Required)</span>
+                            <span class="text-[10px] text-slate-400">Allow notifications to receive approval/rejection updates on your phone.</span>
+                        </div>
+                        <button type="button" onclick="window.requestRegistrationNotificationPermission()" id="btn-enable-notif" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Enable</button>
+                    </div>
+
                     <label class="flex items-start space-x-2 cursor-pointer">
                         <input type="checkbox" id="reg-check-terms" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
                         <span class="text-slate-300 text-[10px]">
@@ -355,23 +363,23 @@
                     </div>
                 </div>
 
-                <!-- SEPARATE DEPOSIT & WITHDRAWAL HISTORY -->
+                <!-- SEPARATE DEPOSIT & WITHDRAWAL HISTORY WITH DATE, TIME & ACTOR -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">📥 Deposit History</h3>
+                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">📥 Deposit History (With Date, Time & Actor)</h3>
                         <div id="owner-deposit-history-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                             <div class="text-[11px] text-slate-500 text-center py-2">No deposit history yet.</div>
                         </div>
                     </div>
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                        <h3 class="font-cinzel text-xs font-bold text-amber-400">📤 Withdrawal History</h3>
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">📤 Withdrawal History (With Date, Time & Actor)</h3>
                         <div id="owner-withdraw-history-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                             <div class="text-[11px] text-slate-500 text-center py-2">No withdrawal history yet.</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- EMERGENCY MANUAL WALLET ADDER -->
+                <!-- EMERGENCY MANUAL WALLET ADDER & HISTORY -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/40 space-y-2">
                     <h3 class="font-cinzel text-xs font-bold text-amber-400">⚡ Emergency Manual Wallet Balance Adder</h3>
                     <p class="text-[10px] text-slate-400">Add or adjust a player's wallet balance manually for emergency support purposes.</p>
@@ -379,6 +387,22 @@
                         <input type="email" id="manual-wallet-email" placeholder="Player Email Address" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                         <input type="number" id="manual-wallet-amount" placeholder="Amount (e.g. 500 or -100)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                         <button onclick="window.executeManualWalletAdjustment()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg py-1.5 shadow">Apply Balance</button>
+                    </div>
+                    <div class="pt-2">
+                        <span class="font-cinzel text-[10px] font-bold text-slate-400 block mb-1">Balance Adder History (Date, Time & Actor):</span>
+                        <div id="owner-balance-adder-history" class="space-y-1 max-h-32 overflow-y-auto pr-1">
+                            <div class="text-[10px] text-slate-500 text-center py-1">No manual balance adjustments logged.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PLAYER LIST & COUNT DIRECTORY -->
+                <div class="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory (<span id="owner-player-count" class="text-amber-400">0</span>)</h3>
+                    </div>
+                    <div id="owner-players-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Loading players directory...</div>
                     </div>
                 </div>
 
@@ -402,18 +426,10 @@
                     </div>
                 </div>
 
-                <!-- PLAYER ACCOUNTS DIRECTORY -->
-                <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory</h3>
-                    <div id="owner-players-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Loading players directory...</div>
-                    </div>
-                </div>
-
                 <!-- SYSTEM ACTIVITY & AUDIT LOG -->
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <h3 class="font-cinzel text-xs font-bold text-amber-400">System Activity & Audit Log</h3>
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">System Activity & Audit Log (With Date, Time & Actor)</h3>
                     </div>
                     <div id="owner-system-audit-log" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>
@@ -714,9 +730,12 @@
             <button onclick="window.closeModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
 
-        <!-- Player Details Modal -->
+        <!-- Player Details Modal (Inspection) -->
         <div id="modal-player-details" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection</h3>
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
             <div id="player-inspection-content" class="space-y-2 text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
@@ -810,6 +829,10 @@
         let battleHistoryLog = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
         let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
         let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
+        let balanceAdderHistory = JSON.parse(localStorage.getItem('aetheris_balance_adder_history')) || [];
+        let registeredPlayersList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [
+            { id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner' }
+        ];
         
         let merchantConfig = {
             gcashNum: '0930****783',
@@ -838,15 +861,14 @@
 
         let currentHand = [];
         let matchmakingTimeout = null;
-        let selectedOwnerChatEmail = null;
 
-        function logSystemActivity(action, details) {
+        function logSystemActivity(action, details, actor = 'System') {
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
             const timeStr = now.toLocaleTimeString();
             systemAuditLogs.unshift({
                 id: Date.now(),
-                timestamp: `${dateStr} ${timeStr}`, date: dateStr, action: action, details: details
+                timestamp: `${dateStr} ${timeStr}`, date: dateStr, time: timeStr, actor, action, details
             });
             persistLocalStorage();
         }
@@ -860,6 +882,43 @@
             localStorage.setItem('aetheris_battle_history', JSON.stringify(battleHistoryLog));
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
+            localStorage.setItem('aetheris_balance_adder_history', JSON.stringify(balanceAdderHistory));
+            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+        }
+
+        // ================= NOTIFICATION LOGIC =================
+        async function requestRegistrationNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('This browser does not support desktop/phone notifications.');
+                return;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const btn = document.getElementById('btn-enable-notif');
+                if (btn) {
+                    btn.innerText = 'Enabled ✓';
+                    btn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+                    btn.classList.add('bg-emerald-600');
+                }
+                alert('Notification permission granted successfully!');
+                new Notification('Aetheris Arena', { body: 'Notifications enabled successfully! You will receive updates here.' });
+            } else {
+                alert('Notification permission was denied. You can enable it in your browser settings.');
+            }
+        }
+        window.requestRegistrationNotificationPermission = requestRegistrationNotificationPermission;
+
+        function sendPushNotificationToPlayer(playerEmail, title, body) {
+            // Simulated / Direct Browser Notification API for Player
+            if (currentUser && currentUser.email === playerEmail && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: 'image_114c6025.jpg' });
+            }
+        }
+
+        function notifyOwner(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: 'image_114c6025.jpg' });
+            }
         }
 
         const heroes = [
@@ -992,11 +1051,21 @@
                         if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                             currentUser.role = 'owner';
                         }
+                        if (currentUser.status === 'frozen') {
+                            alert('Your account has been frozen by the administration.');
+                            logoutPlayer();
+                            return;
+                        }
                         if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
                         if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [];
                         restoreUserSession();
                     } else {
                         if (currentUser.email) {
+                            if (currentUser.status === 'frozen') {
+                                alert('Your account has been frozen by the administration.');
+                                logoutPlayer();
+                                return;
+                            }
                             restoreUserSession();
                         } else {
                             currentUser = null;
@@ -1299,6 +1368,7 @@
                     nickname: 'BOSS',
                     phone: '09923978537',
                     role: 'owner',
+                    status: 'active',
                     wallet: 999999,
                     wins: 999,
                     xp: 5000,
@@ -1311,6 +1381,13 @@
                 return;
             }
 
+            // Check if player is frozen in registered players list
+            const foundPlayerRecord = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (foundPlayerRecord && foundPlayerRecord.status === 'frozen') {
+                alert('Your account has been frozen by the administration.');
+                return;
+            }
+
             if (supabaseClient) {
                 try {
                     const { data, error } = await supabaseClient
@@ -1319,6 +1396,10 @@
                         .eq('email', email)
                         .single();
                     if (data && !error) {
+                        if (data.status === 'frozen') {
+                            alert('Your account has been frozen.');
+                            return;
+                        }
                         if (data.password_hash === hashed || data.password === pass) {
                             currentUser = data;
                             if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
@@ -1338,6 +1419,10 @@
             let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
             const found = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
             if (found && (found.password_hash === hashed || found.password === pass)) {
+                if (found.status === 'frozen') {
+                    alert('Your account has been frozen.');
+                    return;
+                }
                 currentUser = found;
                 if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
                 persistLocalStorage();
@@ -1379,6 +1464,7 @@
             }
 
             const hashedPassword = await hashPassword(pass);
+            const now = new Date();
             const newUserData = {
                 id: Date.now(),
                 name, nickname, phone, email, birthday: bday,
@@ -1389,12 +1475,17 @@
                 unlockedSkills: {},
                 registration_ref: ref,
                 registration_receipt: receiptBase64,
-                status: 'pending_registration'
+                status: 'pending_registration',
+                registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
             };
 
             let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
             pendingRegs.push(newUserData);
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
+
+            // Notify Owner
+            notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request.`);
+            logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref}.`, nickname);
 
             if (supabaseClient) {
                 try {
@@ -1404,8 +1495,7 @@
                 }
             }
 
-            logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration fee receipt.`);
-            alert('Registration submitted successfully! Your account is pending owner approval of your ₱50 registration fee receipt.');
+            alert('Registration submitted successfully! Your account is pending owner approval.');
             showAuthMode('login');
         }
         window.handleRegister = handleRegister;
@@ -1609,6 +1699,7 @@
                 reader.readAsDataURL(receiptFile);
             });
 
+            const now = new Date();
             let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
             topups.push({
                 id: Date.now(),
@@ -1618,10 +1709,15 @@
                 reference: ref,
                 receipt: receiptBase64,
                 status: 'pending',
-                date: new Date().toISOString()
+                date: now.toISOString().split('T')[0],
+                time: now.toLocaleTimeString(),
+                timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
             });
             localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
-            logSystemActivity('Top-up Submitted', `Player ${currentUser.nickname} submitted top-up of ₱${amt}.`);
+
+            notifyOwner('New Top-Up Request', `Player ${currentUser.nickname} submitted a top-up request of ₱${amt}.`);
+            logSystemActivity('Top-up Submitted', `Player ${currentUser.nickname} submitted top-up of ₱${amt}.`, currentUser.nickname);
+
             alert('Top-up request submitted successfully! Awaiting owner approval.');
             closeModal();
         }
@@ -1645,6 +1741,7 @@
             persistLocalStorage();
             updateWalletDisplay();
 
+            const now = new Date();
             let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
             withdraws.push({
                 id: Date.now(),
@@ -1655,10 +1752,15 @@
                 phone: currentUser.phone,
                 name: currentUser.name,
                 status: 'pending',
-                date: new Date().toISOString()
+                date: now.toISOString().split('T')[0],
+                time: now.toLocaleTimeString(),
+                timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
             });
             localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
-            logSystemActivity('Withdrawal Requested', `Player ${currentUser.nickname} requested withdrawal of ₱${amt} via ${method}.`);
+
+            notifyOwner('New Withdrawal Request', `Player ${currentUser.nickname} requested withdrawal of ₱${amt} via ${method}.`);
+            logSystemActivity('Withdrawal Requested', `Player ${currentUser.nickname} requested withdrawal of ₱${amt} via ${method}.`, currentUser.nickname);
+
             alert('Withdrawal request submitted successfully!');
             closeModal();
         }
@@ -1700,7 +1802,6 @@
                 duelState.isBotMatch = true;
                 duelState.currentOpponentName = 'ApexPredator';
                 
-                // Randomly assign a hero to Apex Predator so they have a valid portrait image & deck
                 const randomHero = heroes[Math.floor(Math.random() * heroes.length)];
                 duelState.enemyHero = randomHero;
                 duelState.enemyDeck = [...randomHero.baseSkills, ...(shopSkillsMap[randomHero.id] || [])];
@@ -1741,7 +1842,6 @@
                     if (currentUser.unlockedSkills[s.id]) availableSkills.push(s);
                 });
             }
-            // Shuffle and pick 4 skills for the hand
             currentHand = availableSkills.sort(() => 0.5 - Math.random()).slice(0, 4);
         }
 
@@ -1771,12 +1871,7 @@
                 enemyImg.src = duelState.enemyHero.iconImg;
             }
 
-            const heroId = currentUser.active_hero || 'pyra';
-            const hero = heroes.find(h => h.id === heroId) || heroes[0];
-            
-            // Set initial shuffled player hand
             shufflePlayerHand();
-
             renderDuelUI();
             startTurnTimer();
         }
@@ -1819,7 +1914,6 @@
             const timerEl = document.getElementById('fs-turn-timer');
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
 
-            // Shuffle player hand at the start of each turn as requested
             shufflePlayerHand();
             renderDuelUI();
 
@@ -1889,39 +1983,28 @@
             if (log) log.innerText = `[${duelState.currentOpponentName}]: Planning tactical move...`;
 
             setTimeout(() => {
-                // Shuffle bot deck each turn
                 let botDeck = [...duelState.enemyDeck].sort(() => 0.5 - Math.random());
                 let chosenSkill = botDeck[0] || { name: 'Tactical Strike', damage: 25 };
 
-                // Enforce exact stat ranges requested:
-                // Damage: 20, 25, or 30
-                // Armor: 20, 25, or 30
-                // Heal: 40, 45, or 50
-                // Burn/Poison: 10, 15, or 20 stacks
                 const damageOptions = [20, 25, 30];
                 const armorOptions = [20, 25, 30];
                 const healOptions = [40, 45, 50];
-                const poisonOptions = [10, 15, 20];
 
                 let actionDmg = damageOptions[Math.floor(Math.random() * damageOptions.length)];
                 let actionArmor = armorOptions[Math.floor(Math.random() * armorOptions.length)];
                 let actionHeal = healOptions[Math.floor(Math.random() * healOptions.length)];
-                let actionPoison = poisonOptions[Math.floor(Math.random() * poisonOptions.length)];
 
                 let actionType = Math.random();
                 let enemyActionText = '';
 
                 if (actionType < 0.45) {
-                    // Strike action
                     applyArmorBlockedDamage('player', actionDmg);
                     enemyActionText = `[${duelState.currentOpponentName}] uses ${chosenSkill.name}, dealing ${actionDmg} damage!`;
                 } else if (actionType < 0.75) {
-                    // Defend & strike action
                     duelState.enemyArmor += actionArmor;
                     applyArmorBlockedDamage('player', actionDmg);
                     enemyActionText = `[${duelState.currentOpponentName}] uses defensive stance, gaining ${actionArmor} Armor & counter-striking for ${actionDmg} damage!`;
                 } else {
-                    // Heal / Support action
                     duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + actionHeal);
                     enemyActionText = `[${duelState.currentOpponentName}] channels tactical mending, restoring ${actionHeal} HP!`;
                 }
@@ -1975,12 +2058,15 @@
             switchTab('hub');
         }
 
+        // ================= OWNER PORTAL MANAGEMENT & HISTORY FUNCTIONS =================
         function renderOwnerQueues() {
             const depositHistoryList = document.getElementById('owner-deposit-history-list');
             const withdrawHistoryList = document.getElementById('owner-withdraw-history-list');
+            const balanceAdderHistoryList = document.getElementById('owner-balance-adder-history');
             const totalDepositsMetric = document.getElementById('metric-total-deposits');
             const totalWithdrawalsMetric = document.getElementById('metric-total-withdrawals');
             const playersList = document.getElementById('owner-players-list');
+            const playerCountBadge = document.getElementById('owner-player-count');
             const auditLog = document.getElementById('owner-system-audit-log');
             const battleList = document.getElementById('owner-battle-history-list');
             const regList = document.getElementById('owner-registration-list');
@@ -2001,13 +2087,64 @@
             if (totalDepositsMetric) totalDepositsMetric.innerText = `₱${totalDepSum.toFixed(2)}`;
             if (totalWithdrawalsMetric) totalWithdrawalsMetric.innerText = `₱${totalWdSum.toFixed(2)}`;
 
+            // Deposit History with Date, Time, and Actor
             if (depositHistoryList) {
                 depositHistoryList.innerHTML = approvedDeposits.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No deposit history yet.</div>' :
-                    approvedDeposits.map(d => `<div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between"><span>${d.nickname} (${d.email})</span><span class="text-emerald-400">+₱${d.amount}</span></div>`).join('');
+                    approvedDeposits.map(d => `
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between items-center">
+                            <div>
+                                <span class="font-bold text-white">${d.nickname} (${d.email})</span><br>
+                                <span class="text-[9px] text-slate-400">📅 ${d.date || 'N/A'} ⏰ ${d.time || 'N/A'} | Actor: <strong class="text-amber-400">${d.actor || 'Owner'}</strong></span>
+                            </div>
+                            <span class="text-emerald-400 font-bold">+₱${d.amount}</span>
+                        </div>
+                    `).join('');
             }
+
+            // Withdrawal History with Date, Time, and Actor
             if (withdrawHistoryList) {
                 withdrawHistoryList.innerHTML = approvedWithdraws.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No withdrawal history yet.</div>' :
-                    approvedWithdraws.map(w => `<div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between"><span>${w.nickname} (${w.method})</span><span class="text-amber-400">-₱${w.amount}</span></div>`).join('');
+                    approvedWithdraws.map(w => `
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between items-center">
+                            <div>
+                                <span class="font-bold text-white">${w.nickname} (${w.method})</span><br>
+                                <span class="text-[9px] text-slate-400">📅 ${w.date || 'N/A'} ⏰ ${w.time || 'N/A'} | Actor: <strong class="text-amber-400">${w.actor || 'Owner'}</strong></span>
+                            </div>
+                            <span class="text-amber-400 font-bold">-₱${w.amount}</span>
+                        </div>
+                    `).join('');
+            }
+
+            // Balance Adder History with Date, Time, and Actor
+            if (balanceAdderHistoryList) {
+                balanceAdderHistoryList.innerHTML = balanceAdderHistory.length === 0 ? '<div class="text-[10px] text-slate-500 text-center py-1">No manual balance adjustments logged.</div>' :
+                    balanceAdderHistory.map(b => `
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[10px] flex justify-between items-center">
+                            <div>
+                                <span class="text-white font-bold">${b.email}</span>: <span class="${b.amount >= 0 ? 'text-emerald-400' : 'text-red-400'} font-bold">${b.amount >= 0 ? '+' : ''}₱${b.amount}</span><br>
+                                <span class="text-[9px] text-slate-400">📅 ${b.date} ⏰ ${b.time} | Actor: <strong class="text-amber-400">${b.actor}</strong></span>
+                            </div>
+                        </div>
+                    `).join('');
+            }
+
+            // Player List & Count
+            if (playerCountBadge) playerCountBadge.innerText = registeredPlayersList.length;
+            if (playersList) {
+                playersList.innerHTML = registeredPlayersList.length === 0 ? '<div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players.</div>' :
+                    registeredPlayersList.map(p => `
+                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div>
+                                <strong class="text-amber-400">${p.nickname}</strong> (${p.email})<br>
+                                <span class="text-slate-400 text-[10px]">Bal: ₱${p.wallet || 0} | Status: <strong class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'}">${p.status || 'active'}</strong></span>
+                            </div>
+                            <div class="space-x-1">
+                                <button onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">Inspect</button>
+                                <button onclick="window.toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-orange-600'} hover:opacity-90 text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
+                                <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px]">Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
             }
 
             if (regList) {
@@ -2021,6 +2158,7 @@
                             </div>
                             <div class="space-x-1">
                                 <button onclick="window.approveRegistration('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
+                                <button onclick="window.rejectRegistration('${r.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
                             </div>
                         </div>
                     `).join('');
@@ -2035,7 +2173,10 @@
                                 <strong class="text-emerald-400">${t.nickname}</strong> - ₱${t.amount}<br>
                                 <span class="text-slate-400 text-[10px]">Ref: ${t.reference}</span>
                             </div>
-                            <button onclick="window.approveTopUp(${t.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
+                            <div class="space-x-1">
+                                <button onclick="window.approveTopUp(${t.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
+                                <button onclick="window.rejectTopUp(${t.id})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
+                            </div>
                         </div>
                     `).join('');
             }
@@ -2049,7 +2190,10 @@
                                 <strong class="text-amber-400">${w.nickname}</strong> - ₱${w.amount} (${w.method})<br>
                                 <span class="text-slate-400 text-[10px]">Phone: ${w.phone}</span>
                             </div>
-                            <button onclick="window.approveWithdrawal(${w.id})" class="px-2 py-1 bg-amber-600 text-white rounded text-[10px]">Approve</button>
+                            <div class="space-x-1">
+                                <button onclick="window.approveWithdrawal(${w.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
+                                <button onclick="window.rejectWithdrawal(${w.id})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
+                            </div>
                         </div>
                     `).join('');
             }
@@ -2067,12 +2211,9 @@
                     `).join('');
             }
 
-            if (playersList) {
-                playersList.innerHTML = `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">1. ${currentUser ? currentUser.nickname : 'Player'} (${currentUser ? currentUser.email : ''}) - ₱${currentUser ? currentUser.wallet : 0}</div>`;
-            }
             if (auditLog) {
                 auditLog.innerHTML = systemAuditLogs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>' :
-                    systemAuditLogs.map(l => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-300">[${l.timestamp}] <strong>${l.action}</strong>: ${l.details}</div>`).join('');
+                    systemAuditLogs.map(l => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-300">[${l.timestamp}] Actor: <strong class="text-amber-400">${l.actor}</strong> | <strong>${l.action}</strong>: ${l.details}</div>`).join('');
             }
             if (battleList) {
                 battleList.innerHTML = battleHistoryLog.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>' :
@@ -2081,48 +2222,206 @@
         }
         window.renderOwnerQueues = renderOwnerQueues;
 
+        // ================= PLAYER INSPECT, FREEZE & DELETE LOGIC =================
+        function inspectPlayer(email) {
+            const player = registeredPlayersList.find(p => p.email === email);
+            if (!player) {
+                alert('Player record not found.');
+                return;
+            }
+            openModal('player-details');
+            const content = document.getElementById('player-inspection-content');
+            if (content) {
+                content.innerHTML = `
+                    <div class="space-y-1.5">
+                        <p><strong>Name:</strong> ${player.name || 'N/A'}</p>
+                        <p><strong>Nickname:</strong> ${player.nickname || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${player.email}</p>
+                        <p><strong>Phone:</strong> ${player.phone || 'N/A'}</p>
+                        <p><strong>Wallet Balance:</strong> ₱${player.wallet || 0}</p>
+                        <p><strong>Status:</strong> <span class="${player.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${player.status || 'active'}</span></p>
+                    </div>
+                `;
+            }
+        }
+        window.inspectPlayer = inspectPlayer;
+
+        function toggleFreezePlayer(email) {
+            registeredPlayersList = registeredPlayersList.map(p => {
+                if (p.email === email) {
+                    p.status = (p.status === 'frozen' ? 'active' : 'frozen');
+                    logSystemActivity('Account Status Change', `Account ${email} status changed to ${p.status}`, 'Owner');
+                }
+                return p;
+            });
+            persistLocalStorage();
+            renderOwnerQueues();
+            alert(`Player account status updated.`);
+        }
+        window.toggleFreezePlayer = toggleFreezePlayer;
+
+        function deletePlayerAccount(email) {
+            if (confirm(`Are you sure you want to permanently delete player account ${email}?`)) {
+                registeredPlayersList = registeredPlayersList.filter(p => p.email !== email);
+                persistLocalStorage();
+                logSystemActivity('Account Deleted', `Deleted player account ${email}`, 'Owner');
+                renderOwnerQueues();
+                alert('Player account deleted successfully.');
+            }
+        }
+        window.deletePlayerAccount = deletePlayerAccount;
+
+        // ================= APPROVAL & REJECTION ACTIONS WITH NOTIFICATIONS =================
         function approveRegistration(email) {
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            let approvedUser = null;
             regs = regs.map(r => {
-                if (r.email === email) r.status = 'approved';
+                if (r.email === email) {
+                    r.status = 'approved';
+                    approvedUser = r;
+                }
                 return r;
             });
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
-            alert('Registration approved!');
+
+            if (approvedUser) {
+                registeredPlayersList.push({
+                    id: approvedUser.id,
+                    email: approvedUser.email,
+                    name: approvedUser.name,
+                    nickname: approvedUser.nickname,
+                    phone: approvedUser.phone,
+                    wallet: 0,
+                    status: 'active'
+                });
+                persistLocalStorage();
+                sendPushNotificationToPlayer(email, 'Registration Approved!', 'Your Aetheris Arena account registration has been approved by the owner. You can now login!');
+            }
+
+            logSystemActivity('Registration Approved', `Approved registration for ${email}`, 'Owner');
+            alert('Registration approved and player notified!');
             renderOwnerQueues();
         }
         window.approveRegistration = approveRegistration;
 
+        function rejectRegistration(email) {
+            let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            regs = regs.map(r => {
+                if (r.email === email) r.status = 'rejected';
+                return r;
+            });
+            localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
+            sendPushNotificationToPlayer(email, 'Registration Rejected', 'Your Aetheris Arena registration was rejected. Please contact support.');
+            logSystemActivity('Registration Rejected', `Rejected registration for ${email}`, 'Owner');
+            alert('Registration rejected.');
+            renderOwnerQueues();
+        }
+        window.rejectRegistration = rejectRegistration;
+
         function approveTopUp(id) {
             let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
+            let targetTopup = null;
             topups = topups.map(t => {
                 if (t.id === id) {
                     t.status = 'approved';
+                    targetTopup = t;
                     if (currentUser && currentUser.email === t.email) {
                         currentUser.wallet = (currentUser.wallet || 0) + t.amount;
                         persistLocalStorage();
                         updateWalletDisplay();
                     }
+                    // Also update in registered players list if present
+                    registeredPlayersList = registeredPlayersList.map(p => {
+                        if (p.email === t.email) p.wallet = (p.wallet || 0) + t.amount;
+                        return p;
+                    });
                 }
                 return t;
             });
             localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
+            persistLocalStorage();
+
+            if (targetTopup) {
+                sendPushNotificationToPlayer(targetTopup.email, 'Top-Up Approved!', `Your top-up of ₱${targetTopup.amount} has been approved and added to your wallet.`);
+            }
+
+            logSystemActivity('Top-up Approved', `Approved top-up of ₱${targetTopup ? targetTopup.amount : ''} for ${targetTopup ? targetTopup.email : ''}`, 'Owner');
             alert('Top-up approved!');
             renderOwnerQueues();
         }
         window.approveTopUp = approveTopUp;
 
+        function rejectTopUp(id) {
+            let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
+            let target = null;
+            topups = topups.map(t => {
+                if (t.id === id) {
+                    t.status = 'rejected';
+                    target = t;
+                }
+                return t;
+            });
+            localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
+            if (target) {
+                sendPushNotificationToPlayer(target.email, 'Top-Up Rejected', `Your top-up request of ₱${target.amount} was rejected.`);
+            }
+            logSystemActivity('Top-up Rejected', `Rejected top-up for ID ${id}`, 'Owner');
+            alert('Top-up rejected.');
+            renderOwnerQueues();
+        }
+        window.rejectTopUp = rejectTopUp;
+
         function approveWithdrawal(id) {
             let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
+            let targetWd = null;
             withdraws = withdraws.map(w => {
-                if (w.id === id) w.status = 'approved';
+                if (w.id === id) {
+                    w.status = 'approved';
+                    targetWd = w;
+                }
                 return w;
             });
             localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
+            if (targetWd) {
+                sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Approved!', `Your withdrawal of ₱${targetWd.amount} via ${targetWd.method} has been processed and approved.`);
+            }
+            logSystemActivity('Withdrawal Approved', `Approved withdrawal of ₱${targetWd ? targetWd.amount : ''} for ${targetWd ? targetWd.email : ''}`, 'Owner');
             alert('Withdrawal approved!');
             renderOwnerQueues();
         }
         window.approveWithdrawal = approveWithdrawal;
+
+        function rejectWithdrawal(id) {
+            let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
+            let targetWd = null;
+            withdraws = withdraws.map(w => {
+                if (w.id === id) {
+                    w.status = 'rejected';
+                    targetWd = w;
+                    // Refund balance to player
+                    if (currentUser && currentUser.email === w.email) {
+                        currentUser.wallet = (currentUser.wallet || 0) + w.amount;
+                        persistLocalStorage();
+                        updateWalletDisplay();
+                    }
+                    registeredPlayersList = registeredPlayersList.map(p => {
+                        if (p.email === w.email) p.wallet = (p.wallet || 0) + w.amount;
+                        return p;
+                    });
+                }
+                return w;
+            });
+            localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
+            persistLocalStorage();
+
+            if (targetWd) {
+                sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Rejected & Refunded', `Your withdrawal of ₱${targetWd.amount} was rejected and refunded to your wallet.`);
+            }
+            logSystemActivity('Withdrawal Rejected', `Rejected withdrawal for ID ${id}`, 'Owner');
+            alert('Withdrawal rejected and refunded.');
+            renderOwnerQueues();
+        }
+        window.rejectWithdrawal = rejectWithdrawal;
 
         function approvePasswordReset(index) {
             pendingResets.splice(index, 1);
@@ -2139,14 +2438,35 @@
                 alert('Please enter a valid email and amount.');
                 return;
             }
+
+            const now = new Date();
+            const adjustmentRecord = {
+                id: Date.now(),
+                email,
+                amount: amt,
+                date: now.toISOString().split('T')[0],
+                time: now.toLocaleTimeString(),
+                actor: currentUser ? currentUser.nickname : 'Owner',
+                timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
+            };
+
+            balanceAdderHistory.unshift(adjustmentRecord);
+
             if (currentUser && currentUser.email === email) {
                 currentUser.wallet = (currentUser.wallet || 0) + amt;
                 persistLocalStorage();
                 updateWalletDisplay();
-                alert(`Successfully adjusted wallet by ₱${amt}`);
-            } else {
-                alert('Player email not found in active session.');
             }
+
+            registeredPlayersList = registeredPlayersList.map(p => {
+                if (p.email === email) p.wallet = (p.wallet || 0) + amt;
+                return p;
+            });
+
+            persistLocalStorage();
+            logSystemActivity('Manual Wallet Adjustment', `Adjusted balance for ${email} by ₱${amt}`, currentUser ? currentUser.nickname : 'Owner');
+            alert(`Successfully adjusted wallet by ₱${amt}`);
+            renderOwnerQueues();
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
