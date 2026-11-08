@@ -131,8 +131,8 @@
                         <div id="reg-active-qr" class="w-32 h-32 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                         <div>
                             <span id="reg-active-channel-title" class="font-bold text-blue-400 block text-xs">GCash Account</span>
-                            <span id="reg-active-num" class="text-white font-mono font-bold text-xs">09923978537</span>
-                            <span id="reg-active-name" class="text-slate-400 text-[10px] block">John Carlo Estrada Morales</span>
+                            <span id="reg-active-num" class="text-white font-mono font-bold text-xs">0992 •••• 537</span>
+                            <span id="reg-active-name" class="text-slate-400 text-[10px] block">John C***** M******</span>
                         </div>
                     </div>
                 </div>
@@ -301,8 +301,8 @@
                     <div id="player-active-qr" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                     <div class="w-full">
                         <span id="player-hub-title" class="text-xs font-bold text-blue-400 block">GCASH PAYMENT</span>
-                        <span id="player-hub-num" class="text-xs font-mono font-bold text-white block truncate">09923978537</span>
-                        <span id="player-hub-name" class="text-[10px] text-slate-400 block truncate">John Carlo Estrada Morales</span>
+                        <span id="player-hub-num" class="text-xs font-mono font-bold text-white block truncate">0992 •••• 537</span>
+                        <span id="player-hub-name" class="text-[10px] text-slate-400 block truncate">John C***** M******</span>
                     </div>
                 </div>
             </div>
@@ -590,8 +590,8 @@
                     <div id="topup-active-qr" class="w-32 h-32 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                     <div>
                         <span id="topup-active-title" class="font-bold text-blue-400 block text-xs">GCash Account</span>
-                        <span id="topup-active-num" class="text-white font-mono font-bold text-xs">09923978537</span>
-                        <span id="topup-active-name" class="text-slate-400 text-[10px] block">John Carlo Estrada Morales</span>
+                        <span id="topup-active-num" class="text-white font-mono font-bold text-xs">0992 •••• 537</span>
+                        <span id="topup-active-name" class="text-slate-400 text-[10px] block">John C***** M******</span>
                     </div>
                 </div>
             </div>
@@ -826,6 +826,21 @@
         
         let registeredPlayersList = [];
         
+        // PRIVACY MASKING HELPERS
+        function maskPhoneNumber(phone) {
+            if (!phone || phone.length < 7) return '••••••••••';
+            return phone.slice(0, 4) + ' •••• ' + phone.slice(-3);
+        }
+
+        function maskAccountName(name) {
+            if (!name) return '•••••• ••••••';
+            const parts = name.trim().split(' ');
+            return parts.map((part, idx) => {
+                if (idx === 0) return part;
+                return part[0] + '•'.repeat(Math.max(1, part.length - 1));
+            }).join(' ');
+        }
+
         // ROBUST CLOUD + LOCAL PLAYER SYNC
         async function syncAllRegisteredPlayers() {
             let playersMap = new Map();
@@ -1154,6 +1169,20 @@
             } catch (err) {
                 console.error('Init session check error:', err);
             }
+
+            // Real-time polling / background refresher for instant chat updates
+            setInterval(() => {
+                if (currentUser) {
+                    const activeModal = document.getElementById('modal-support-chat');
+                    if (activeModal && !activeModal.classList.contains('hidden')) {
+                        renderPlayerChatMessages(true);
+                    }
+                    const ownerView = document.getElementById('view-owner');
+                    if (ownerView && !ownerView.classList.contains('hidden')) {
+                        renderOwnerQueues();
+                    }
+                }
+            }, 2000);
         });
 
         function restoreUserSession() {
@@ -1390,7 +1419,7 @@
         }
         window.showAuthMode = showAuthMode;
 
-        // Interactive Payment Methods for Registration & Hub & Topup
+        // Interactive Payment Methods with Masked Info for Registration & Hub & Topup
         let currentRegMethod = 'gcash';
         async function switchRegPaymentMethod(method) {
             currentRegMethod = method;
@@ -1406,8 +1435,8 @@
                 if (btnGcash) { btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition'; }
                 if (btnMaya) { btnMaya.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition'; }
                 if (titleEl) titleEl.innerText = 'GCash Account';
-                if (numEl) numEl.innerText = merchantConfig.gcashNum;
-                if (nameEl) nameEl.innerText = merchantConfig.gcashName;
+                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.gcashNum);
+                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.gcashName);
                 if (merchantConfig.gcashQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
@@ -1417,8 +1446,8 @@
                 if (btnMaya) { btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition'; }
                 if (btnGcash) { btnGcash.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition'; }
                 if (titleEl) titleEl.innerText = 'Maya Account';
-                if (numEl) numEl.innerText = merchantConfig.mayaNum;
-                if (nameEl) nameEl.innerText = merchantConfig.mayaName;
+                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.mayaNum);
+                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.mayaName);
                 if (merchantConfig.mayaQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
@@ -1443,8 +1472,8 @@
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
                 if (titleEl) titleEl.innerText = 'GCash Account';
-                if (numEl) numEl.innerText = merchantConfig.gcashNum;
-                if (nameEl) nameEl.innerText = merchantConfig.gcashName;
+                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.gcashNum);
+                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.gcashName);
                 if (merchantConfig.gcashQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
@@ -1454,8 +1483,8 @@
                 if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
                 if (titleEl) titleEl.innerText = 'Maya Account';
-                if (numEl) numEl.innerText = merchantConfig.mayaNum;
-                if (nameEl) nameEl.innerText = merchantConfig.mayaName;
+                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.mayaNum);
+                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.mayaName);
                 if (merchantConfig.mayaQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
@@ -1478,8 +1507,8 @@
                 if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
                 if (titleEl) titleEl.innerText = 'GCASH PAYMENT';
-                if (numEl) numEl.innerText = merchantConfig.gcashNum;
-                if (nameEl) nameEl.innerText = merchantConfig.gcashName;
+                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.gcashNum);
+                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.gcashName);
                 if (merchantConfig.gcashQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
@@ -1489,8 +1518,8 @@
                 if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
                 if (titleEl) titleEl.innerText = 'MAYA PAYMENT';
-                if (numEl) numEl.innerText = merchantConfig.mayaNum;
-                if (nameEl) nameEl.innerText = merchantConfig.mayaName;
+                if (numEl) numEl.innerText = maskPhoneNumber(merchantConfig.mayaNum);
+                if (nameEl) nameEl.innerText = maskAccountName(merchantConfig.mayaName);
                 if (merchantConfig.mayaQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
@@ -2336,10 +2365,12 @@
             const resetList = document.getElementById('owner-reset-list');
             const depList = document.getElementById('owner-deposit-list');
             const wdList = document.getElementById('owner-withdraw-list');
+            const chatThreadsList = document.getElementById('owner-chat-threads-list');
 
             let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
             let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
 
             let approvedDeposits = topups.filter(t => t.status === 'approved');
             let approvedWithdraws = withdraws.filter(w => w.status === 'approved');
@@ -2402,6 +2433,17 @@
                                 <button onclick="window.toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-orange-600'} hover:opacity-90 text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
                                 <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px]">Delete</button>
                             </div>
+                        </div>
+                    `).join('');
+            }
+
+            if (chatThreadsList) {
+                const emails = Object.keys(supportChats);
+                chatThreadsList.innerHTML = emails.length === 0 ? '<div class="text-xs text-slate-500 text-center py-4">No support chats.</div>' :
+                    emails.map(email => `
+                        <div onclick="window.selectOwnerChatThread('${email}')" class="p-2 rounded bg-slate-950 border border-slate-800 cursor-pointer hover:border-blue-500 text-xs">
+                            <span class="text-amber-400 font-bold block truncate">${email}</span>
+                            <span class="text-[10px] text-slate-400">Click to reply</span>
                         </div>
                     `).join('');
             }
@@ -2480,6 +2522,76 @@
             }
         }
         window.renderOwnerQueues = renderOwnerQueues;
+
+        let activeOwnerChatEmail = null;
+        function selectOwnerChatThread(email) {
+            activeOwnerChatEmail = email;
+            renderOwnerActiveChat();
+        }
+        window.selectOwnerChatThread = selectOwnerChatThread;
+
+        function renderOwnerActiveChat() {
+            const box = document.getElementById('owner-active-chat-box');
+            if (!box || !activeOwnerChatEmail) return;
+            let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
+            let messages = supportChats[activeOwnerChatEmail] || [];
+            box.innerHTML = messages.length === 0 ? '<div class="text-center text-slate-500 py-10">No messages in this chat.</div>' :
+                messages.map(m => `
+                    <div class="${m.sender === 'owner' ? 'text-right' : 'text-left'}">
+                        <span class="${m.sender === 'owner' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-200'} px-2 py-1 rounded-lg inline-block text-[11px]">
+                            <strong>${m.sender === 'owner' ? 'Boss' : m.sender}:</strong> ${m.text}
+                        </span>
+                    </div>
+                `).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendOwnerChatMessage() {
+            const input = document.getElementById('owner-chat-input');
+            if (!input || !input.value.trim() || !activeOwnerChatEmail) return;
+            const text = input.value.trim();
+            let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
+            if (!supportChats[activeOwnerChatEmail]) supportChats[activeOwnerChatEmail] = [];
+            supportChats[activeOwnerChatEmail].push({ sender: 'owner', text, time: new Date().toLocaleTimeString() });
+            localStorage.setItem('aetheris_support_chats', JSON.stringify(supportChats));
+            input.value = '';
+            renderOwnerActiveChat();
+        }
+        window.sendOwnerChatMessage = sendOwnerChatMessage;
+
+        function renderPlayerChatMessages(isBackgroundPoll = false) {
+            const box = document.getElementById('player-chat-messages-box');
+            if (!box || !currentUser) return;
+            let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
+            let messages = supportChats[currentUser.email] || [];
+            
+            const content = messages.length === 0 ? '<div class="text-slate-400 text-center py-2">Support ticket open. How can we help you today?</div>' :
+                messages.map(m => `
+                    <div class="${m.sender === 'owner' ? 'text-left' : 'text-right'}">
+                        <span class="${m.sender === 'owner' ? 'bg-amber-600 text-white' : 'bg-blue-600 text-white'} px-2.5 py-1 rounded-lg inline-block">
+                            <strong>${m.sender === 'owner' ? 'Support' : 'You'}:</strong> ${m.text}
+                        </span>
+                    </div>
+                `).join('');
+            
+            if (box.innerHTML !== content) {
+                box.innerHTML = content;
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        function sendPlayerChatMessage() {
+            const input = document.getElementById('player-chat-input');
+            if (!input || !input.value.trim() || !currentUser) return;
+            const text = input.value.trim();
+            let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
+            if (!supportChats[currentUser.email]) supportChats[currentUser.email] = [];
+            supportChats[currentUser.email].push({ sender: currentUser.nickname || currentUser.email, text, time: new Date().toLocaleTimeString() });
+            localStorage.setItem('aetheris_support_chats', JSON.stringify(supportChats));
+            input.value = '';
+            renderPlayerChatMessages();
+        }
+        window.sendPlayerChatMessage = sendPlayerChatMessage;
 
         function inspectPlayer(email) {
             const player = registeredPlayersList.find(p => p.email === email);
@@ -2728,32 +2840,6 @@
             renderOwnerQueues();
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
-
-        function renderPlayerChatMessages() {
-            const box = document.getElementById('player-chat-messages-box');
-            if (!box) return;
-            box.innerHTML = `<div class="text-slate-400 text-center py-2">Support ticket open. How can we help you today?</div>`;
-        }
-
-        function sendPlayerChatMessage() {
-            const input = document.getElementById('player-chat-input');
-            const box = document.getElementById('player-chat-messages-box');
-            if (!input || !input.value.trim() || !box) return;
-            const msg = input.value.trim();
-            box.innerHTML += `<div class="text-right"><span class="bg-blue-600 text-white px-2 py-1 rounded-lg inline-block">${msg}</span></div>`;
-            input.value = '';
-        }
-        window.sendPlayerChatMessage = sendPlayerChatMessage;
-
-        function sendOwnerChatMessage() {
-            const input = document.getElementById('owner-chat-input');
-            const box = document.getElementById('owner-active-chat-box');
-            if (!input || !input.value.trim() || !box) return;
-            const msg = input.value.trim();
-            box.innerHTML += `<div class="text-right"><span class="bg-amber-600 text-white px-2 py-1 rounded-lg inline-block">Boss: ${msg}</span></div>`;
-            input.value = '';
-        }
-        window.sendOwnerChatMessage = sendOwnerChatMessage;
     </script>
 </body>
 </html>
