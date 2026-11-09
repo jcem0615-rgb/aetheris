@@ -1871,7 +1871,7 @@
         }
         window.handleLogin = handleLogin;
 
-        // DEBUG-FRIENDLY REGISTRATION HANDLER WITH EXPLICIT ERROR REPORTING
+        // FIXED REGISTRATION HANDLER (Stores filename locally to prevent 5MB quota exceeded error, full base64 in Supabase)
         async function handleRegister() {
             try {
                 const name = document.getElementById('reg-name').value.trim();
@@ -1920,6 +1920,7 @@
                     return;
                 }
 
+                // Read base64 for Supabase cloud sync
                 let receiptBase64 = await new Promise((resolve) => {
                     const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target.result);
@@ -1928,7 +1929,9 @@
 
                 const hashedPassword = await hashPassword(pass);
                 const now = new Date();
-                const newUserData = {
+                
+                // Full object for Supabase
+                const newUserDataForSupabase = {
                     id: Date.now(),
                     name, nickname, phone, email, birthday: bday,
                     password_hash: hashedPassword,
@@ -1944,23 +1947,29 @@
                     registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
                 };
 
+                // Lightweight object for localStorage (stores filename only to prevent quota error)
+                const newUserDataForLocal = {
+                    ...newUserDataForSupabase,
+                    registration_receipt: receiptFile.name 
+                };
+
                 let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-                pendingRegs.push(newUserData);
+                pendingRegs.push(newUserDataForLocal);
                 localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
 
                 let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
                 if (!localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-                    localUsers.push(newUserData);
+                    localUsers.push(newUserDataForLocal);
                     localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
                 } else {
-                    localUsers = localUsers.map(u => u.email.toLowerCase() === email.toLowerCase() ? newUserData : u);
+                    localUsers = localUsers.map(u => u.email.toLowerCase() === email.toLowerCase() ? newUserDataForLocal : u);
                     localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
                 }
 
                 notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
                 
                 if (supabaseClient) {
-                    const { error: regErr } = await supabaseClient.from('pending_registrations').upsert([newUserData], { onConflict: 'email' });
+                    const { error: regErr } = await supabaseClient.from('pending_registrations').upsert([newUserDataForSupabase], { onConflict: 'email' });
                     if (regErr) {
                         console.error('Supabase registration sync error:', regErr);
                         alert('Cloud sync warning: Saved locally, but Supabase sync failed: ' + regErr.message);
