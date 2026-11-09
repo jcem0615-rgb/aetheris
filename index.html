@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aetheris Duel Arena - Owner Portal</title>
+    <title>Aetheris Duel Arena - Supreme Owner Portal</title>
     <!-- App Icon / Favicon -->
     <link rel="icon" type="image/jpeg" href="image_114c6025.jpg">
     <link rel="apple-touch-icon" href="image_114c6025.jpg">
@@ -43,7 +43,7 @@
                 </div>
                 <div>
                     <h1 class="font-cinzel font-bold text-xs tracking-wider text-amber-400">AETHERIS ARENA</h1>
-                    <p class="text-[9px] text-slate-400">P2P Tactical Card Arena • Safe Mode</p>
+                    <p class="text-[9px] text-slate-400">P2P Tactical Card Arena • Supabase Realtime</p>
                 </div>
             </div>
 
@@ -89,7 +89,7 @@
                     <img src="image_114c6025.jpg" alt="Aetheris Logo" class="w-full h-full object-cover">
                 </div>
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
-                <p class="text-xs text-slate-400">P2P Tactical Card & Combat Arena</p>
+                <p class="text-xs text-slate-400">Supabase Realtime P2P Tactical Card Arena</p>
             </div>
 
             <!-- Login Box -->
@@ -172,16 +172,7 @@
             </div>
         </div>
 
-        <!-- STARTER HERO SELECTION VIEW -->
-        <div id="view-starter-select" class="max-w-xl mx-auto py-4 space-y-4 hidden">
-            <div class="text-center space-y-1.5">
-                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">CHOOSE YOUR FREE STARTER CHAMPION</h2>
-                <p class="text-xs text-slate-400">Pick 1 starter hero for free to begin your journey!</p>
-            </div>
-            <div id="starter-heroes-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-        </div>
-
-        <!-- Hero Roster & Rank Unlocks View -->
+        <!-- Hero Roster View -->
         <div id="view-select" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
@@ -259,14 +250,15 @@
             </div>
         </div>
 
-        <!-- Owner Portal View -->
+        <!-- Owner Portal View (RESTORED FULL VERSION) -->
         <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                    <h2 class="font-cinzel text-base font-bold text-amber-400">👑 SUPREME OWNER ADMIN PORTAL</h2>
-                    <div class="space-x-2">
-                        <button type="button" onclick="window.loadTestRequests()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold rounded-lg shadow">⚡ Load Test Requests</button>
-                        <button type="button" onclick="window.forceSyncOwnerPortal()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shadow">Force Sync</button>
+                    <h2 class="font-cinzel text-base font-bold text-amber-400">👑 SUPREME OWNER REALTIME PORTAL</h2>
+                    <div class="space-x-2 flex items-center">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="Supabase Realtime Connected"></span>
+                        <button type="button" onclick="window.loadTestRequests()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold rounded-lg shadow">⚡ Test Request</button>
+                        <button type="button" onclick="window.forceSyncOwnerPortal()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shadow">Sync</button>
                     </div>
                 </div>
 
@@ -294,7 +286,7 @@
                 <!-- Master Wallet Ledger -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-emerald-500/40 space-y-2">
                     <div class="flex items-center justify-between">
-                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">📊 Master Wallet Transaction History</h3>
+                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">📊 Master Wallet Transaction History (Realtime)</h3>
                         <button type="button" onclick="window.clearWalletLedger()" class="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600/40 rounded text-[10px]">Clear Ledger</button>
                     </div>
                     <div id="owner-wallet-ledger-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
@@ -336,7 +328,7 @@
                     </div>
                 </div>
 
-                <!-- Approvals & Queues -->
+                <!-- Approvals & Queues (FULLY RESTORED) -->
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-amber-400">Registration Approvals</h3>
                     <div id="owner-registration-list" class="space-y-1.5">
@@ -401,6 +393,21 @@
             </div>
         </div>
 
+        <!-- Support Chat Modal -->
+        <div id="modal-support-chat" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden flex flex-col h-[420px]">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-blue-400">💬 Customer Service Support</h3>
+                <button type="button" onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div id="player-chat-messages-box" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <div class="text-slate-400 text-center py-2">Loading support messages...</div>
+            </div>
+            <div class="flex space-x-2 pt-1">
+                <input type="text" id="player-chat-input" placeholder="Type your message to support..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <button type="button" onclick="window.sendPlayerChatMessage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow">Send</button>
+            </div>
+        </div>
+
         <!-- Player Profile Modal -->
         <div id="modal-player-profile" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400">PLAYER PROFILE & HISTORY</h3>
@@ -437,82 +444,93 @@
         const EXCLUSIVE_OWNER_EMAIL = 'jcem0615@gmail.com';
         let currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
         let registeredPlayersList = [];
-        let walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
+        let walletTransactionLedger = [];
         let currentRegMethod = 'gcash';
         let currentHubMethod = 'gcash';
+        let deferredPWAEvent = null;
 
-        function logWalletTransaction(email, nickname, type, amount, preBalance, postBalance, reason) {
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPWAEvent = e;
+            const installBtns = document.querySelectorAll('#btn-install-pwa, #auth-install-btn');
+            installBtns.forEach(btn => { if (btn) btn.classList.remove('hidden'); });
+        });
+
+        window.installPWA = async function() {
+            try {
+                if (deferredPWAEvent) {
+                    deferredPWAEvent.prompt();
+                    const choice = await deferredPWAEvent.userChoice;
+                    if (choice.outcome === 'accepted') { deferredPWAEvent = null; }
+                } else {
+                    alert('Aetheris Arena is ready! To install on iOS/Android: tap your browser menu and select "Add to Home Screen".');
+                }
+            } catch(err) { console.error(err); }
+        };
+
+        // --- SUPABASE & REALTIME DATABASE SYNC ---
+        async function logWalletTransactionSupabase(email, nickname, type, amount, preBalance, postBalance, reason) {
             try {
                 const now = new Date();
                 const tx = {
-                    id: Date.now() + Math.random(),
                     timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`,
                     date: now.toISOString().split('T')[0],
                     time: now.toLocaleTimeString(),
                     email, nickname: nickname || email,
-                    type, amount, preBalance, postBalance, reason
+                    type, amount, pre_balance: preBalance, post_balance: postBalance, reason
                 };
+                if (supabaseClient) {
+                    await supabaseClient.from('wallet_ledger').insert([tx]);
+                }
                 walletTransactionLedger.unshift(tx);
-                localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
             } catch(err) { console.error(err); }
         }
 
-        window.clearWalletLedger = function() {
-            if (confirm('Clear the entire wallet transaction ledger?')) {
-                walletTransactionLedger = [];
-                localStorage.removeItem('aetheris_wallet_ledger');
-                renderOwnerQueues();
-            }
-        };
-
         async function syncAllRegisteredPlayers() {
             try {
+                let dbPlayers = [];
+                if (supabaseClient) {
+                    const { data, error } = await supabaseClient.from('players').select('*');
+                    if (!error && data) dbPlayers = data;
+                }
+                
                 let playersMap = new Map();
-                let existingLocalMap = new Map();
-                try {
-                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                    dbList.forEach(item => { if (item && item.email) existingLocalMap.set(item.email.toLowerCase(), item); });
-                } catch(e) {}
-
                 playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
                     id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
                 });
 
-                existingLocalMap.forEach((val, key) => playersMap.set(key, val));
+                dbPlayers.forEach(p => { if(p && p.email) playersMap.set(p.email.toLowerCase(), p); });
 
                 if (currentUser && currentUser.email) {
                     const emailKey = currentUser.email.toLowerCase();
                     let existing = playersMap.get(emailKey) || {};
                     playersMap.set(emailKey, {
                         ...existing,
-                        email: currentUser.email,
-                        name: currentUser.name || existing.name || 'Player',
-                        nickname: currentUser.nickname || existing.nickname || 'PLAYER',
-                        phone: currentUser.phone || existing.phone || '',
-                        wallet: currentUser.wallet !== undefined ? currentUser.wallet : (existing.wallet || 0),
-                        status: currentUser.status || existing.status || 'active',
-                        role: currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase() ? 'owner' : (existing.role || 'player')
+                        ...currentUser,
+                        role: emailKey === EXCLUSIVE_OWNER_EMAIL.toLowerCase() ? 'owner' : (existing.role || 'player')
                     });
                 }
 
                 registeredPlayersList = Array.from(playersMap.values());
-                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
             } catch(err) { console.error(err); }
         }
 
-        window.showAuthMode = function(mode) {
-            try {
-                document.getElementById('auth-login-box').classList.add('hidden');
-                document.getElementById('auth-register-box').classList.add('hidden');
-                document.getElementById('auth-forgot-box').classList.add('hidden');
+        let merchantConfig = { gcashNum: '09923978537', gcashName: 'John Carlo Estrada Morales', mayaNum: '09923978537', mayaName: 'John Carlo Estrada Morales' };
 
-                if (mode === 'login') document.getElementById('auth-login-box').classList.remove('hidden');
-                if (mode === 'register') {
-                    document.getElementById('auth-register-box').classList.remove('hidden');
-                    updateRegPaymentDisplay();
-                }
-                if (mode === 'forgot') document.getElementById('auth-forgot-box').classList.remove('hidden');
-            } catch(err) { console.error(err); }
+        window.showAuthMode = function(mode) {
+            const loginBox = document.getElementById('auth-login-box');
+            const registerBox = document.getElementById('auth-register-box');
+            const forgotBox = document.getElementById('auth-forgot-box');
+            if (loginBox) loginBox.classList.add('hidden');
+            if (registerBox) registerBox.classList.add('hidden');
+            if (forgotBox) forgotBox.classList.add('hidden');
+
+            if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
+            if (mode === 'register' && registerBox) {
+                registerBox.classList.remove('hidden');
+                updateRegPaymentDisplay();
+            }
+            if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
         };
 
         window.togglePass = function(id, btn) {
@@ -542,72 +560,92 @@
         function updateRegPaymentDisplay() {
             const box = document.getElementById('reg-active-qr');
             if (!box) return;
-            box.innerHTML = `<div class="p-2"><p class="font-bold text-amber-400 text-xs">${currentRegMethod.toUpperCase()}</p><p class="text-[10px] text-slate-300 mt-1">Number: 09923978537<br>Name: John Carlo Morales</p></div>`;
+            const details = currentRegMethod === 'gcash' ? `GCash: ${merchantConfig.gcashNum}\nName: ${merchantConfig.gcashName}` : `Maya: ${merchantConfig.mayaNum}\nName: ${merchantConfig.mayaName}`;
+            box.innerHTML = `<div class="p-2"><p class="font-bold text-amber-400 text-xs">${currentRegMethod.toUpperCase()}</p><p class="text-[10px] text-slate-300 whitespace-pre-line mt-1">${details}</p></div>`;
         }
 
-        window.handleLogin = async function() {
-            try {
-                const email = document.getElementById('login-email').value.trim().toLowerCase();
-                const pass = document.getElementById('login-pass').value.trim();
-                if (!email || !pass) { alert('Enter email and password.'); return; }
-
-                await syncAllRegisteredPlayers();
-                let found = registeredPlayersList.find(p => p.email.toLowerCase() === email);
-
-                if (!found && email === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                    found = { id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner' };
+        window.switchPlayerHubPayment = function(method) {
+            currentHubMethod = method;
+            const btnG = document.getElementById('btn-hub-gcash');
+            const btnM = document.getElementById('btn-hub-maya');
+            if (btnG && btnM) {
+                if (method === 'gcash') {
+                    btnG.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                    btnM.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                } else {
+                    btnG.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                    btnM.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
                 }
-
-                if (!found) { alert('Account not found. Please register first.'); return; }
-                if (found.status === 'frozen') { alert('Account frozen.'); return; }
-
-                currentUser = found;
-                if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                    currentUser.role = 'owner';
-                    currentUser.wallet = 999999;
-                }
-                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
-                bootApplicationUI();
-            } catch(err) {
-                console.error(err);
-                alert('Sign in error.');
+            }
+            const box = document.getElementById('player-active-qr');
+            if (box) {
+                const details = method === 'gcash' ? `GCash: ${merchantConfig.gcashNum}\nName: ${merchantConfig.gcashName}` : `Maya: ${merchantConfig.mayaNum}\nName: ${merchantConfig.mayaName}`;
+                box.innerHTML = `<div class="p-2"><p class="font-bold text-amber-400 text-xs">${method.toUpperCase()}</p><p class="text-[10px] text-slate-300 whitespace-pre-line mt-1">${details}</p></div>`;
             }
         };
 
-        window.handleRegister = async function() {
-            try {
-                const name = document.getElementById('reg-name').value.trim();
-                const nickname = document.getElementById('reg-nickname').value.trim();
-                const phone = document.getElementById('reg-phone').value.trim();
-                const email = document.getElementById('reg-email').value.trim().toLowerCase();
-                const bday = document.getElementById('reg-bday').value;
-                const pass = document.getElementById('reg-pass').value.trim();
-                const ref = document.getElementById('reg-ref').value.trim();
-
-                if (!name || !nickname || !phone || !email || !bday || !pass || !ref) {
-                    alert('Fill in all fields.'); return;
-                }
-
-                let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-                regs.push({ email, name, nickname, phone, bday, pass, ref, status: 'pending' });
-                localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
-
-                alert('Registration submitted successfully! Pending owner approval.');
-                window.showAuthMode('login');
-            } catch(err) { console.error(err); }
+        window.saveQRCodeImage = function(method) {
+            alert(`QR Code for ${method.toUpperCase()} downloaded successfully! Number: ${merchantConfig.gcashNum}`);
         };
 
-        window.submitResetRequest = function() {
-            try {
-                const email = document.getElementById('forgot-email').value.trim().toLowerCase();
-                const bday = document.getElementById('forgot-bday').value;
-                if (!email || !bday) { alert('Enter email and birthday.'); return; }
-                let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
-                resets.push({ email, bday, status: 'pending' });
-                localStorage.setItem('aetheris_pending_resets', JSON.stringify(resets));
-                alert('Password reset submitted.');
-                window.showAuthMode('login');
-            } catch(err) { console.error(err); }
+        window.handleLogin = async function() {
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const pass = document.getElementById('login-pass').value.trim();
+            if (!email || !pass) { alert('Enter email and password.'); return; }
+
+            await syncAllRegisteredPlayers();
+            let found = registeredPlayersList.find(p => p.email.toLowerCase() === email);
+
+            if (!found && email === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                found = { id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner' };
+            }
+
+            if (!found) { alert('Account not found. Please register first.'); return; }
+            if (found.status === 'frozen') { alert('Account frozen.'); return; }
+
+            currentUser = found;
+            if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                currentUser.role = 'owner';
+                currentUser.wallet = 999999;
+            }
+            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            bootApplicationUI();
+        };
+
+        window.handleRegister = async function() {
+            const name = document.getElementById('reg-name').value.trim();
+            const nickname = document.getElementById('reg-nickname').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const bday = document.getElementById('reg-bday').value;
+            const pass = document.getElementById('reg-pass').value.trim();
+            const ref = document.getElementById('reg-ref').value.trim();
+
+            if (!name || !nickname || !phone || !email || !bday || !pass || !ref) {
+                alert('Fill in all fields.'); return;
+            }
+
+            const payload = { email, name, nickname, phone, bday, pass, ref, method: currentRegMethod, amount: 50, status: 'pending', timestamp: new Date().toISOString() };
+            
+            if (supabaseClient) {
+                await supabaseClient.from('registrations').insert([payload]);
+            }
+
+            alert('Registration submitted successfully! Pending owner approval of your ₱50 fee.');
+            window.showAuthMode('login');
+        };
+
+        window.submitResetRequest = async function() {
+            const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+            const bday = document.getElementById('forgot-bday').value;
+            if (!email || !bday) { alert('Enter email and birthday.'); return; }
+
+            const payload = { email, bday, status: 'pending', timestamp: new Date().toISOString() };
+            if (supabaseClient) {
+                await supabaseClient.from('resets').insert([payload]);
+            }
+            alert('Password reset request submitted.');
+            window.showAuthMode('login');
         };
 
         window.logoutPlayer = function() {
@@ -617,306 +655,287 @@
         };
 
         function bootApplicationUI() {
-            try {
-                document.getElementById('view-auth').classList.add('hidden');
-                document.getElementById('view-starter-select').classList.add('hidden');
-                document.getElementById('main-header').classList.remove('hidden');
-                document.getElementById('nav-menu').classList.remove('hidden');
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('nav-menu').classList.remove('hidden');
 
-                document.getElementById('nav-header-nickname').innerText = currentUser.nickname || currentUser.email;
-                document.getElementById('nav-wallet').innerText = `₱${(currentUser.wallet || 0).toFixed(2)}`;
-                document.getElementById('nav-wallet-container').classList.remove('hidden');
-                document.getElementById('nav-wallet-container').classList.add('flex');
-                document.getElementById('nav-nickname-container').classList.remove('hidden');
-                document.getElementById('nav-nickname-container').classList.add('flex');
+            document.getElementById('nav-header-nickname').innerText = currentUser.nickname || currentUser.email;
+            document.getElementById('nav-wallet').innerText = `₱${(currentUser.wallet || 0).toFixed(2)}`;
+            document.getElementById('nav-wallet-container').classList.remove('hidden');
+            document.getElementById('nav-wallet-container').classList.add('flex');
+            document.getElementById('nav-nickname-container').classList.remove('hidden');
+            document.getElementById('nav-nickname-container').classList.add('flex');
 
-                const isOwner = currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase() || currentUser.role === 'owner';
-                const btnOwner = document.getElementById('btn-owner');
-                if (btnOwner) {
-                    if (isOwner) btnOwner.classList.remove('hidden');
-                    else btnOwner.classList.add('hidden');
-                }
+            const isOwner = currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase() || currentUser.role === 'owner';
+            const btnOwner = document.getElementById('btn-owner');
+            if (btnOwner) {
+                if (isOwner) btnOwner.classList.remove('hidden');
+                else btnOwner.classList.add('hidden');
+            }
 
-                renderHubData();
+            window.switchPlayerHubPayment('gcash');
+            renderHubData();
 
-                if (isOwner) {
-                    window.switchTab('owner');
-                } else {
-                    window.switchTab('hub');
-                }
-            } catch(err) { console.error(err); }
+            if (isOwner) {
+                window.switchTab('owner');
+            } else {
+                window.switchTab('hub');
+            }
         }
 
         function renderHubData() {
-            try {
-                if (!currentUser) return;
-                document.getElementById('player-nickname-badge').innerText = currentUser.nickname || 'PLAYER';
-                document.getElementById('nav-wallet').innerText = `₱${(currentUser.wallet || 0).toFixed(2)}`;
-            } catch(err) { console.error(err); }
+            if (!currentUser) return;
+            document.getElementById('player-nickname-badge').innerText = currentUser.nickname || 'PLAYER';
+            document.getElementById('hub-rank-badge').innerText = currentUser.rank || 'Bronze I';
+            document.getElementById('hub-explevel-badge').innerText = `Lv. ${currentUser.level || 1}`;
+            document.getElementById('nav-wallet').innerText = `₱${(currentUser.wallet || 0).toFixed(2)}`;
         }
 
         window.switchTab = function(tabName) {
-            try {
-                ['view-hub', 'view-select', 'view-shop', 'view-owner'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.classList.add('hidden');
-                });
+            ['view-hub', 'view-select', 'view-shop', 'view-owner'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
 
-                if (tabName === 'hub') document.getElementById('view-hub').classList.remove('hidden');
-                if (tabName === 'select') document.getElementById('view-select').classList.remove('hidden');
-                if (tabName === 'shop') document.getElementById('view-shop').classList.remove('hidden');
-                if (tabName === 'owner') {
-                    document.getElementById('view-owner').classList.remove('hidden');
-                    renderOwnerQueues();
-                }
-            } catch(err) { console.error(err); }
+            if (tabName === 'hub') document.getElementById('view-hub').classList.remove('hidden');
+            if (tabName === 'select') document.getElementById('view-select').classList.remove('hidden');
+            if (tabName === 'shop') document.getElementById('view-shop').classList.remove('hidden');
+            if (tabName === 'owner') {
+                document.getElementById('view-owner').classList.remove('hidden');
+                renderOwnerQueues();
+            }
         };
 
         window.openModal = function(name) {
-            try {
-                document.getElementById('modal-backdrop').classList.remove('hidden');
-                ['modal-topup', 'modal-withdraw', 'modal-player-profile', 'modal-leaderboard', 'modal-player-details'].forEach(mId => {
-                    document.getElementById(mId).classList.add('hidden');
-                });
-                document.getElementById(`modal-${name}`).classList.remove('hidden');
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            ['modal-topup', 'modal-withdraw', 'modal-support-chat', 'modal-player-profile', 'modal-leaderboard', 'modal-player-details'].forEach(mId => {
+                document.getElementById(mId).classList.add('hidden');
+            });
+            document.getElementById(`modal-${name}`).classList.remove('hidden');
 
-                if (name === 'withdraw') {
-                    document.getElementById('withdraw-account').value = currentUser.phone || '';
-                    document.getElementById('withdraw-name').value = currentUser.name || '';
-                }
-            } catch(err) { console.error(err); }
+            if (name === 'withdraw') {
+                document.getElementById('withdraw-account').value = currentUser.phone || '';
+                document.getElementById('withdraw-name').value = currentUser.name || '';
+            }
         };
 
         window.closeModal = function() {
             document.getElementById('modal-backdrop').classList.add('hidden');
         };
 
-        window.submitTopUp = function() {
-            try {
-                const amount = parseFloat(document.getElementById('topup-amount').value);
-                const ref = document.getElementById('topup-ref').value.trim();
-                if (!amount || amount < 50 || !ref) { alert('Enter valid amount & reference.'); return; }
+        window.submitTopUp = async function() {
+            const amount = parseFloat(document.getElementById('topup-amount').value);
+            const ref = document.getElementById('topup-ref').value.trim();
+            if (!amount || amount < 50 || !ref) { alert('Enter valid amount (min ₱50) & reference number.'); return; }
 
-                let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-                topups.push({ email: currentUser.email, nickname: currentUser.nickname, amount, ref, status: 'pending' });
-                localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
+            const payload = { email: currentUser.email, nickname: currentUser.nickname, amount, ref, status: 'pending', timestamp: new Date().toISOString() };
+            if (supabaseClient) {
+                await supabaseClient.from('topups').insert([payload]);
+            }
 
-                alert('Top-up request submitted.');
-                window.closeModal();
-            } catch(err) { console.error(err); }
+            alert('Top-up request submitted for realtime owner approval.');
+            window.closeModal();
         };
 
-        window.submitWithdrawal = function() {
-            try {
-                const amount = parseFloat(document.getElementById('withdraw-amount').value);
-                const method = document.getElementById('withdraw-method').value;
-                if (!amount || amount < 100) { alert('Minimum is ₱100.'); return; }
-                if (amount > (currentUser.wallet || 0)) { alert('Insufficient balance.'); return; }
+        window.submitWithdrawal = async function() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const method = document.getElementById('withdraw-method').value;
+            if (!amount || amount < 100) { alert('Minimum withdrawal is ₱100.'); return; }
+            if (amount > (currentUser.wallet || 0)) { alert('Insufficient wallet balance.'); return; }
 
-                currentUser.wallet -= amount;
-                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            currentUser.wallet -= amount;
+            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
 
-                let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
-                withdraws.push({ email: currentUser.email, nickname: currentUser.nickname, amount, method, status: 'pending' });
-                localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
+            const payload = { email: currentUser.email, nickname: currentUser.nickname, amount, method, phone: currentUser.phone, name: currentUser.name, status: 'pending', timestamp: new Date().toISOString() };
+            if (supabaseClient) {
+                await supabaseClient.from('withdrawals').insert([payload]);
+                await supabaseClient.from('players').upsert([currentUser]);
+            }
 
-                logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', amount, currentUser.wallet + amount, currentUser.wallet, `Withdrawal via ${method}`);
-                alert('Withdrawal submitted!');
-                window.closeModal();
-                renderHubData();
-            } catch(err) { console.error(err); }
+            logWalletTransactionSupabase(currentUser.email, currentUser.nickname, 'DEBIT', amount, currentUser.wallet + amount, currentUser.wallet, `Withdrawal request via ${method}`);
+            alert('Withdrawal request submitted successfully!');
+            window.closeModal();
+            renderHubData();
         };
 
         window.forceSyncOwnerPortal = async function() {
             await syncAllRegisteredPlayers();
             renderOwnerQueues();
-            alert('Owner portal synced!');
+            alert('Realtime owner portal synced!');
         };
 
-        window.executeManualWalletAdjustment = function() {
-            try {
-                const email = document.getElementById('manual-wallet-email').value.trim().toLowerCase();
-                const amount = parseFloat(document.getElementById('manual-wallet-amount').value);
-                if (!email || isNaN(amount)) { alert('Enter valid email and amount.'); return; }
+        window.executeManualWalletAdjustment = async function() {
+            const email = document.getElementById('manual-wallet-email').value.trim().toLowerCase();
+            const amount = parseFloat(document.getElementById('manual-wallet-amount').value);
+            if (!email || isNaN(amount)) { alert('Enter valid email and amount.'); return; }
 
-                let found = registeredPlayersList.find(p => p.email.toLowerCase() === email);
-                if (!found) { alert('Player not found.'); return; }
+            let found = registeredPlayersList.find(p => p.email.toLowerCase() === email);
+            if (!found) { alert('Player not found.'); return; }
 
-                const pre = found.wallet || 0;
-                found.wallet = pre + amount;
-                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+            const pre = found.wallet || 0;
+            found.wallet = pre + amount;
 
-                logWalletTransaction(found.email, found.nickname, amount >= 0 ? 'CREDIT' : 'DEBIT', Math.abs(amount), pre, found.wallet, 'Manual adjustment by owner');
+            if (supabaseClient) {
+                await supabaseClient.from('players').upsert([found]);
+            }
+            await logWalletTransactionSupabase(found.email, found.nickname, amount >= 0 ? 'CREDIT' : 'DEBIT', Math.abs(amount), pre, found.wallet, 'Manual balance adjustment by owner');
 
-                if (currentUser && currentUser.email.toLowerCase() === email) {
-                    currentUser.wallet = found.wallet;
-                    localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
-                    renderHubData();
-                }
+            if (currentUser && currentUser.email.toLowerCase() === email) {
+                currentUser.wallet = found.wallet;
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+                renderHubData();
+            }
 
-                alert(`Adjusted wallet by ₱${amount}. New balance: ₱${found.wallet}`);
-                renderOwnerQueues();
-            } catch(err) { console.error(err); }
+            alert(`Adjusted wallet for ${email} by ₱${amount}. New balance: ₱${found.wallet}`);
+            renderOwnerQueues();
         };
 
         window.inspectPlayer = function(email) {
-            try {
-                const found = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
-                if (!found) return;
-                window.openModal('player-details');
-                document.getElementById('player-inspection-content').innerHTML = `
-                    <p><strong>Name:</strong> ${found.name}</p>
-                    <p><strong>Nickname:</strong> ${found.nickname}</p>
-                    <p><strong>Email:</strong> ${found.email}</p>
-                    <p><strong>Phone:</strong> ${found.phone}</p>
-                    <p><strong>Wallet:</strong> ₱${found.wallet || 0}</p>
-                    <p><strong>Status:</strong> ${found.status || 'active'}</p>
-                `;
-            } catch(err) { console.error(err); }
+            const found = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (!found) return;
+            window.openModal('player-details');
+            document.getElementById('player-inspection-content').innerHTML = `
+                <p><strong>Name:</strong> ${found.name}</p>
+                <p><strong>Nickname:</strong> ${found.nickname}</p>
+                <p><strong>Email:</strong> ${found.email}</p>
+                <p><strong>Phone:</strong> ${found.phone}</p>
+                <p><strong>Wallet:</strong> ₱${found.wallet || 0}</p>
+                <p><strong>Status:</strong> ${found.status || 'active'}</p>
+            `;
         };
 
-        window.toggleFreezePlayer = function(email) {
-            try {
-                let found = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
-                if (found) {
-                    found.status = found.status === 'frozen' ? 'active' : 'frozen';
-                    localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
-                    renderOwnerQueues();
-                    alert(`Player status: ${found.status}`);
-                }
-            } catch(err) { console.error(err); }
-        };
-
-        window.deletePlayerAccount = function(email) {
-            try {
-                if (confirm(`Delete account for ${email}?`)) {
-                    registeredPlayersList = registeredPlayersList.filter(p => p.email.toLowerCase() !== email.toLowerCase());
-                    localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
-                    renderOwnerQueues();
-                    alert('Account deleted.');
-                }
-            } catch(err) { console.error(err); }
-        };
-
-        window.approveRegistration = async function(email) {
-            try {
-                let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-                let target = regs.find(r => r.email.toLowerCase() === email.toLowerCase());
-                if (target) {
-                    localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs.filter(r => r.email.toLowerCase() !== email.toLowerCase())));
-                    
-                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                    dbList.push({ email: target.email, name: target.name, nickname: target.nickname, phone: target.phone, bday: target.bday, pass: target.pass, wallet: 0, status: 'active' });
-                    localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
-
-                    await syncAllRegisteredPlayers();
-                    renderOwnerQueues();
-                    alert(`Approved registration for ${email}`);
-                }
-            } catch(err) { console.error(err); }
-        };
-
-        window.approvePasswordReset = function(email) {
-            try {
-                let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
-                localStorage.setItem('aetheris_pending_resets', JSON.stringify(resets.filter(r => r.email.toLowerCase() !== email.toLowerCase())));
+        window.toggleFreezePlayer = async function(email) {
+            let found = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (found) {
+                found.status = found.status === 'frozen' ? 'active' : 'frozen';
+                if (supabaseClient) await supabaseClient.from('players').upsert([found]);
                 renderOwnerQueues();
-                alert(`Password reset approved for ${email}. Temp password: password123`);
-            } catch(err) { console.error(err); }
+                alert(`Player status updated to ${found.status}`);
+            }
         };
 
-        window.approveTopUp = function(email, ref) {
-            try {
-                let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-                let t = topups.find(x => x.email.toLowerCase() === email.toLowerCase() && x.ref === ref);
-                if (t) {
-                    t.status = 'approved';
-                    localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
+        window.deletePlayerAccount = async function(email) {
+            if (confirm(`Delete account for ${email}?`)) {
+                if (supabaseClient) await supabaseClient.from('players').delete().eq('email', email);
+                renderOwnerQueues();
+                alert('Account deleted.');
+            }
+        };
 
-                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                    let p = dbList.find(x => x.email.toLowerCase() === email.toLowerCase());
-                    if (p) {
-                        const pre = p.wallet || 0;
-                        p.wallet = pre + t.amount;
-                        localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
-                        logWalletTransaction(p.email, p.nickname, 'CREDIT', t.amount, pre, p.wallet, `Top-up approved`);
+        // --- REALTIME APPROVAL HANDLERS ---
+        window.approveRegistration = async function(email) {
+            if (supabaseClient) {
+                const { data } = await supabaseClient.from('registrations').select('*').eq('email', email).single();
+                if (data) {
+                    await supabaseClient.from('registrations').delete().eq('email', email);
+                    const newPlayer = { email: data.email, name: data.name, nickname: data.nickname, phone: data.phone, bday: data.bday, pass: data.pass, wallet: 0, status: 'active', rank: 'Bronze I', level: 1 };
+                    await supabaseClient.from('players').insert([newPlayer]);
+                }
+            }
+            await syncAllRegisteredPlayers();
+            renderOwnerQueues();
+            alert(`Approved registration for ${email}`);
+        };
+
+        window.approvePasswordReset = async function(email) {
+            if (supabaseClient) {
+                await supabaseClient.from('resets').delete().eq('email', email);
+                await supabaseClient.from('players').update({ pass: 'password123' }).eq('email', email);
+            }
+            renderOwnerQueues();
+            alert(`Password reset approved for ${email}. Temporary password: password123`);
+        };
+
+        window.approveTopUp = async function(email, ref) {
+            if (supabaseClient) {
+                const { data } = await supabaseClient.from('topups').select('*').eq('email', email).eq('ref', ref).single();
+                if (data) {
+                    await supabaseClient.from('topups').update({ status: 'approved' }).eq('email', email).eq('ref', ref);
+                    let found = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+                    if (found) {
+                        const pre = found.wallet || 0;
+                        found.wallet = pre + data.amount;
+                        await supabaseClient.from('players').upsert([found]);
+                        await logWalletTransactionSupabase(found.email, found.nickname, 'CREDIT', data.amount, pre, found.wallet, `Top-up approved (Ref: ${ref})`);
 
                         if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
-                            currentUser.wallet = p.wallet;
+                            currentUser.wallet = found.wallet;
                             localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
                             renderHubData();
                         }
                     }
-                    renderOwnerQueues();
-                    alert(`Top-up of ₱${t.amount} approved!`);
                 }
-            } catch(err) { console.error(err); }
+            }
+            renderOwnerQueues();
+            alert(`Top-up approved & credited for ${email}!`);
         };
 
-        window.approveWithdrawal = function(email, amount) {
-            try {
-                let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
-                let w = withdraws.find(x => x.email.toLowerCase() === email.toLowerCase() && x.amount === amount && x.status === 'pending');
-                if (w) {
-                    w.status = 'approved';
-                    localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
-                    renderOwnerQueues();
-                    alert(`Withdrawal of ₱${amount} approved!`);
-                }
-            } catch(err) { console.error(err); }
+        window.approveWithdrawal = async function(email, amount) {
+            if (supabaseClient) {
+                await supabaseClient.from('withdrawals').update({ status: 'approved' }).eq('email', email).eq('amount', amount);
+            }
+            renderOwnerQueues();
+            alert(`Withdrawal of ₱${amount} for ${email} approved!`);
         };
 
-        window.loadTestRequests = function() {
-            try {
-                let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-                regs.push({ email: 'testplayer@gmail.com', name: 'Test Player', nickname: 'TestWarrior', phone: '09123456789', bday: '2000-01-01', ref: 'REF123', status: 'pending' });
-                localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
+        window.loadTestRequests = async function() {
+            if (supabaseClient) {
+                await supabaseClient.from('registrations').insert([{ email: 'testplayer@gmail.com', name: 'Test Player', nickname: 'TestWarrior', phone: '09123456789', bday: '2000-01-01', ref: 'REF123', status: 'pending' }]);
+                await supabaseClient.from('resets').insert([{ email: 'forgot@gmail.com', bday: '1995-05-15', status: 'pending' }]);
+                await supabaseClient.from('topups').insert([{ email: 'topupuser@gmail.com', nickname: 'TopUpKing', amount: 200, ref: 'GCASH999', status: 'pending' }]);
+                await supabaseClient.from('withdrawals').insert([{ email: 'cash@gmail.com', nickname: 'RichPlayer', amount: 500, method: 'GCash', phone: '09987654321', status: 'pending' }]);
+            }
+            renderOwnerQueues();
+            alert('Test requests added to Supabase tables in realtime!');
+        };
 
-                let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
-                resets.push({ email: 'forgot@gmail.com', bday: '1995-05-15', status: 'pending' });
-                localStorage.setItem('aetheris_pending_resets', JSON.stringify(resets));
-
-                let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-                topups.push({ email: 'topupuser@gmail.com', nickname: 'TopUpKing', amount: 200, ref: 'GCASH999', status: 'pending' });
-                localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
-
-                let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
-                withdraws.push({ email: 'cash@gmail.com', nickname: 'RichPlayer', amount: 500, method: 'GCash', status: 'pending' });
-                localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
-
+        window.clearWalletLedger = async function() {
+            if (confirm('Clear master wallet ledger?')) {
+                if (supabaseClient) {
+                    await supabaseClient.from('wallet_ledger').delete().neq('id', 0);
+                }
+                walletTransactionLedger = [];
                 renderOwnerQueues();
-                alert('Test requests loaded!');
-            } catch(err) { console.error(err); }
+            }
         };
 
-        function renderOwnerQueues() {
+        async function renderOwnerQueues() {
             try {
-                syncAllRegisteredPlayers();
-                const topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-                const withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
-                const regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-                const resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
-                walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
+                await syncAllRegisteredPlayers();
+                let topups = [], withdraws = [], regs = [], resets = [];
 
-                let approvedDeps = topups.filter(t => t.status === 'approved');
-                let approvedWds = withdraws.filter(w => w.status === 'approved');
+                if (supabaseClient) {
+                    const tRes = await supabaseClient.from('topups').select('*');
+                    if (tRes.data) topups = tRes.data;
+                    const wRes = await supabaseClient.from('withdrawals').select('*');
+                    if (wRes.data) withdraws = wRes.data;
+                    const rRes = await supabaseClient.from('registrations').select('*');
+                    if (rRes.data) regs = rRes.data;
+                    const rsRes = await supabaseClient.from('resets').select('*');
+                    if (rsRes.data) resets = rsRes.data;
+                    const lRes = await supabaseClient.from('wallet_ledger').select('*').order('id', { ascending: false });
+                    if (lRes.data) walletTransactionLedger = lRes.data;
+                }
 
-                document.getElementById('metric-total-deposits').innerText = `₱${approvedDeps.reduce((a, c) => a + c.amount, 0).toFixed(2)}`;
-                document.getElementById('metric-total-withdrawals').innerText = `₱${approvedWds.reduce((a, c) => a + c.amount, 0).toFixed(2)}`;
+                let approvedDeposits = topups.filter(t => t.status === 'approved');
+                let approvedWithdraws = withdraws.filter(w => w.status === 'approved');
 
-                document.getElementById('owner-deposit-history-list').innerHTML = approvedDeps.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No deposits.</div>' :
-                    approvedDeps.map(d => `<div class="bg-slate-900 p-2 rounded border border-slate-800 text-xs flex justify-between"><span><strong>${d.nickname}</strong></span><span class="text-emerald-400 font-bold">+₱${d.amount}</span></div>`).join('');
+                document.getElementById('metric-total-deposits').innerText = `₱${approvedDeposits.reduce((a, c) => a + c.amount, 0).toFixed(2)}`;
+                document.getElementById('metric-total-withdrawals').innerText = `₱${approvedWithdraws.reduce((a, c) => a + c.amount, 0).toFixed(2)}`;
 
-                document.getElementById('owner-withdraw-history-list').innerHTML = approvedWds.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No withdrawals.</div>' :
-                    approvedWds.map(w => `<div class="bg-slate-900 p-2 rounded border border-slate-800 text-xs flex justify-between"><span><strong>${w.nickname}</strong></span><span class="text-amber-400 font-bold">-₱${w.amount}</span></div>`).join('');
+                document.getElementById('owner-deposit-history-list').innerHTML = approvedDeposits.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No approved deposits yet.</div>' :
+                    approvedDeposits.map(d => `<div class="bg-slate-900 p-2 rounded border border-slate-800 text-xs flex justify-between"><span><strong>${d.nickname}</strong></span><span class="text-emerald-400 font-bold">+₱${d.amount}</span></div>`).join('');
 
-                document.getElementById('owner-wallet-ledger-list').innerHTML = walletTransactionLedger.length === 0 ? '<div class="text-xs text-slate-500 text-center py-2">No transactions.</div>' :
+                document.getElementById('owner-withdraw-history-list').innerHTML = approvedWithdraws.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No approved withdrawals yet.</div>' :
+                    approvedWithdraws.map(w => `<div class="bg-slate-900 p-2 rounded border border-slate-800 text-xs flex justify-between"><span><strong>${w.nickname}</strong></span><span class="text-amber-400 font-bold">-₱${w.amount}</span></div>`).join('');
+
+                document.getElementById('owner-wallet-ledger-list').innerHTML = walletTransactionLedger.length === 0 ? '<div class="text-xs text-slate-500 text-center py-2">No transactions logged.</div>' :
                     walletTransactionLedger.map(tx => `
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between items-center">
                             <div>
                                 <span class="font-bold text-white">${tx.nickname}</span> (${tx.email})<br>
                                 <span class="text-[10px] text-amber-300 font-bold">${tx.reason}</span><br>
-                                <span class="text-[9px] text-slate-400">₱${tx.preBalance} ➔ ₱${tx.postBalance} | 📅 ${tx.date} ⏰ ${tx.time}</span>
+                                <span class="text-[9px] text-slate-400">₱${tx.pre_balance} ➔ ₱${tx.post_balance} | 📅 ${tx.date} ⏰ ${tx.time}</span>
                             </div>
                             <span class="${tx.type === 'CREDIT' ? 'text-emerald-400' : 'text-red-400'} font-bold text-sm">${tx.type === 'CREDIT' ? '+' : '-'}₱${tx.amount}</span>
                         </div>
@@ -941,7 +960,7 @@
                 document.getElementById('owner-registration-list').innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registrations.</div>' :
                     pendingRegs.map(r => `
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                            <div><span class="font-bold text-amber-400">${r.nickname}</span> (${r.email})<br><span class="text-[10px] text-slate-400">Ref: ${r.ref}</span></div>
+                            <div><span class="font-bold text-amber-400">${r.nickname}</span> (${r.email})<br><span class="text-[10px] text-slate-400">Ref: ${r.ref} | ₱50 Fee</span></div>
                             <button type="button" onclick="window.approveRegistration('${r.email}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[10px] shadow">Approve</button>
                         </div>
                     `).join('');
@@ -949,7 +968,7 @@
                 document.getElementById('owner-reset-list').innerHTML = resets.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>' :
                     resets.map(r => `
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                            <div><span class="font-bold text-amber-400">${r.email}</span></div>
+                            <div><span class="font-bold text-amber-400">${r.email}</span><br><span class="text-[10px] text-slate-400">Bday: ${r.bday}</span></div>
                             <button type="button" onclick="window.approvePasswordReset('${r.email}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-[10px] shadow">Reset & Approve</button>
                         </div>
                     `).join('');
@@ -959,7 +978,7 @@
                     pendingDeps.map(t => `
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                             <div><span class="font-bold text-amber-400">${t.nickname}</span> (${t.email})<br><span class="text-[10px] text-slate-400">₱${t.amount} | Ref: ${t.ref}</span></div>
-                            <button type="button" onclick="window.approveTopUp('${t.email}', '${t.ref}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[10px] shadow">Approve</button>
+                            <button type="button" onclick="window.approveTopUp('${t.email}', '${t.ref}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[10px] shadow">Approve Top-Up</button>
                         </div>
                     `).join('');
 
@@ -968,23 +987,31 @@
                     pendingWds.map(w => `
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                             <div><span class="font-bold text-amber-400">${w.nickname}</span> (${w.email})<br><span class="text-[10px] text-slate-400">₱${w.amount} via ${w.method}</span></div>
-                            <button type="button" onclick="window.approveWithdrawal('${w.email}', ${w.amount})" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded text-[10px] shadow">Approve</button>
+                            <button type="button" onclick="window.approveWithdrawal('${w.email}', ${w.amount})" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded text-[10px] shadow">Approve Payout</button>
                         </div>
                     `).join('');
             } catch(err) { console.error(err); }
         }
         window.renderOwnerQueues = renderOwnerQueues;
 
+        // --- SUPABASE REALTIME SUBSCRIPTIONS ---
+        function initSupabaseRealtime() {
+            if (!supabaseClient) return;
+            supabaseClient.channel('public:aetheris_realtime')
+                .on('postgres_changes', { event: '*', schema: 'public' }, payload => {
+                    console.log('Realtime change received:', payload);
+                    renderOwnerQueues();
+                    if (currentUser) renderHubData();
+                })
+                .subscribe();
+        }
+
         window.onload = async function() {
-            try {
-                await syncAllRegisteredPlayers();
-                if (currentUser) {
-                    bootApplicationUI();
-                } else {
-                    document.getElementById('view-auth').classList.remove('hidden');
-                }
-            } catch(err) {
-                console.error(err);
+            await syncAllRegisteredPlayers();
+            initSupabaseRealtime();
+            if (currentUser) {
+                bootApplicationUI();
+            } else {
                 document.getElementById('view-auth').classList.remove('hidden');
             }
         };
