@@ -1901,6 +1901,26 @@
                 return;
             }
 
+            // Check for phone number duplication and email duplication across databases
+            let allExistingPlayers = [...registeredPlayersList];
+            try {
+                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+                let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+                allExistingPlayers = [...allExistingPlayers, ...localUsers, ...pendingRegs];
+            } catch(e) {}
+
+            const phoneExists = allExistingPlayers.some(p => p.phone && p.phone.trim() === phone);
+            if (phoneExists) {
+                alert('This phone number is already registered to another account. Please use a unique phone number.');
+                return;
+            }
+
+            const emailExists = allExistingPlayers.some(p => p.email && p.email.toLowerCase() === email.toLowerCase());
+            if (emailExists) {
+                alert('This email address is already registered to another account.');
+                return;
+            }
+
             if (!receiptFile) {
                 alert('Please upload your registration fee receipt/proof of payment screenshot.');
                 return;
