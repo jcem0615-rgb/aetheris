@@ -2709,18 +2709,46 @@
                 alert('Please enter a valid player email and amount.');
                 return;
             }
-            await syncAllRegisteredPlayers();
-            let targetPlayer = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+
+            // Load directly from local DB first to ensure accurate current balance
+            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let targetPlayer = dbList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            
+            if (!targetPlayer) {
+                targetPlayer = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            }
+
             if (!targetPlayer) {
                 alert('Player not found in directory.');
                 return;
             }
+
             targetPlayer.wallet = (targetPlayer.wallet || 0) + amount;
+
+            // Update in local DB list
+            let idx = dbList.findIndex(p => p.email.toLowerCase() === email.toLowerCase());
+            if (idx >= 0) {
+                dbList[idx].wallet = targetPlayer.wallet;
+            } else {
+                dbList.push(targetPlayer);
+            }
+            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+
+            // If it's the currently logged-in user, update their session too
             if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
                 currentUser.wallet = targetPlayer.wallet;
                 updateWalletDisplay();
-                syncUserToSupabase();
             }
+
+            // CRITICAL FIX: Instantly push the updated balance to Supabase so it doesn't overwrite with stale data
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('profiles').update({ wallet: targetPlayer.wallet }).eq('email', targetPlayer.email);
+                } catch(e) {
+                    console.error('Failed to sync wallet to Supabase:', e);
+                }
+            }
+
             const now = new Date();
             balanceAdderHistory.unshift({
                 id: Date.now(),
@@ -2730,8 +2758,11 @@
                 date: now.toISOString().split('T')[0],
                 time: now.toLocaleTimeString()
             });
+
             persistLocalStorage();
             logSystemActivity('Manual Wallet Adjustment', `Adjusted balance for ${email} by ₱${amount}. New total: ₱${targetPlayer.wallet}`, 'Owner');
+            
+            await syncAllRegisteredPlayers();
             renderOwnerQueues();
             alert(`Successfully adjusted wallet for ${email} by ₱${amount}. New total: ₱${targetPlayer.wallet}`);
         }
