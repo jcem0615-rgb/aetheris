@@ -857,38 +857,32 @@
                 id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
             });
 
-            ['aetheris_registered_players_db', 'aetheris_registered_users', 'aetheris_pending_registrations'].forEach(key => {
-                try {
-                    let list = JSON.parse(localStorage.getItem(key)) || [];
-                    list.forEach(item => {
-                        if (item && item.email) {
-                            const emailKey = item.email.toLowerCase();
-                            const existing = playersMap.get(emailKey);
-                            const walletVal = item.wallet || item.balance || 0;
-                            if (existing) {
-                                existing.wallet = Math.max(existing.wallet || 0, walletVal);
-                                if (!existing.name && item.name) existing.name = item.name;
-                                if (!existing.nickname && item.nickname) existing.nickname = item.nickname;
-                                if (!existing.phone && item.phone) existing.phone = item.phone;
-                                if (item.status && item.status !== 'pending_registration') existing.status = item.status;
-                            } else {
-                                playersMap.set(emailKey, {
-                                    id: item.id || Date.now(),
-                                    email: item.email,
-                                    name: item.name || 'Player',
-                                    nickname: item.nickname || 'PLAYER',
-                                    phone: item.phone || '',
-                                    wallet: walletVal,
-                                    wins: item.wins || 0,
-                                    xp: item.xp || 0,
-                                    active_hero: item.active_hero || 'pyra',
-                                    status: item.status === 'approved' ? 'active' : (item.status || 'active')
-                                });
-                            }
-                        }
-                    });
-                } catch(e) {}
-            });
+            // Synchronize authoritative local storage list
+            try {
+                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                dbList.forEach(item => {
+                    if (item && item.email) {
+                        playersMap.set(item.email.toLowerCase(), item);
+                    }
+                });
+            } catch(e) {}
+
+            // If currentUser exists, ensure its current wallet/stats override the list directly
+            if (currentUser && currentUser.email) {
+                const emailKey = currentUser.email.toLowerCase();
+                playersMap.set(emailKey, {
+                    id: currentUser.id || Date.now(),
+                    email: currentUser.email,
+                    name: currentUser.name || 'Player',
+                    nickname: currentUser.nickname || 'PLAYER',
+                    phone: currentUser.phone || '',
+                    wallet: currentUser.wallet || 0,
+                    wins: currentUser.wins || 0,
+                    xp: currentUser.xp || 0,
+                    active_hero: currentUser.active_hero || 'pyra',
+                    status: currentUser.status || 'active'
+                });
+            }
 
             if (supabaseClient) {
                 try {
@@ -897,30 +891,22 @@
                         data.forEach(p => {
                             if (p && p.email) {
                                 const emailKey = p.email.toLowerCase();
-                                const existing = playersMap.get(emailKey);
-                                const walletVal = p.wallet || p.balance || 0;
-                                if (existing) {
-                                    existing.wallet = Math.max(existing.wallet || 0, walletVal);
-                                    if (p.name) existing.name = p.name;
-                                    if (p.nickname) existing.nickname = p.nickname;
-                                    if (p.phone) existing.phone = p.phone;
-                                    if (p.wins) existing.wins = Math.max(existing.wins || 0, p.wins);
-                                    if (p.xp) existing.xp = Math.max(existing.xp || 0, p.xp);
-                                    if (p.status) existing.status = p.status;
-                                } else {
-                                    playersMap.set(emailKey, {
-                                        id: p.id || Date.now(),
-                                        email: p.email,
-                                        name: p.name || p.fullName || 'Player',
-                                        nickname: p.nickname || p.username || 'PLAYER',
-                                        phone: p.phone || '',
-                                        wallet: walletVal,
-                                        wins: p.wins || 0,
-                                        xp: p.xp || 0,
-                                        active_hero: p.active_hero || 'pyra',
-                                        status: p.status || 'active'
-                                    });
+                                if (currentUser && currentUser.email.toLowerCase() === emailKey) {
+                                    // Keep currentUser authoritative
+                                    return;
                                 }
+                                playersMap.set(emailKey, {
+                                    id: p.id || Date.now(),
+                                    email: p.email,
+                                    name: p.name || p.fullName || 'Player',
+                                    nickname: p.nickname || p.username || 'PLAYER',
+                                    phone: p.phone || '',
+                                    wallet: p.wallet || p.balance || 0,
+                                    wins: p.wins || 0,
+                                    xp: p.xp || 0,
+                                    active_hero: p.active_hero || 'pyra',
+                                    status: p.status || 'active'
+                                });
                             }
                         });
                     }
@@ -1026,6 +1012,28 @@
         function persistLocalStorage() {
             if (currentUser) {
                 localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+                // Update player inside registered players database immediately so owner view matches
+                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                let idx = dbList.findIndex(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+                if (idx >= 0) {
+                    dbList[idx].wallet = currentUser.wallet;
+                    dbList[idx].nickname = currentUser.nickname;
+                    dbList[idx].wins = currentUser.wins;
+                    dbList[idx].xp = currentUser.xp;
+                } else {
+                    dbList.push({
+                        id: currentUser.id || Date.now(),
+                        email: currentUser.email,
+                        name: currentUser.name,
+                        nickname: currentUser.nickname,
+                        phone: currentUser.phone,
+                        wallet: currentUser.wallet,
+                        wins: currentUser.wins,
+                        xp: currentUser.xp,
+                        status: currentUser.status || 'active'
+                    });
+                }
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
             } else {
                 localStorage.removeItem('aetheris_current_user');
             }
@@ -2852,7 +2860,7 @@
             }
             if (battleList) {
                 battleList.innerHTML = battleHistoryLog.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history.</div>' :
-                    battleHistoryLog.map(b => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">[${b.date} ${b.time}] <strong>${b.playerNickname}</strong> vs ${b.opponent} ➔ ${b.result}</div>`).join('');
+                    battleList.map(b => `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300">[${b.date} ${b.time}] <strong>${b.playerNickname}</strong> vs ${b.opponent} ➔ ${b.result}</div>`).join('');
             }
         }
         window.renderOwnerQueues = renderOwnerQueues;
