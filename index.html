@@ -2710,7 +2710,6 @@
                 return;
             }
 
-            // Load directly from local DB first to ensure accurate current balance
             let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
             let targetPlayer = dbList.find(p => p.email.toLowerCase() === email.toLowerCase());
             
@@ -2725,7 +2724,6 @@
 
             targetPlayer.wallet = (targetPlayer.wallet || 0) + amount;
 
-            // Update in local DB list
             let idx = dbList.findIndex(p => p.email.toLowerCase() === email.toLowerCase());
             if (idx >= 0) {
                 dbList[idx].wallet = targetPlayer.wallet;
@@ -2734,18 +2732,23 @@
             }
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
 
-            // If it's the currently logged-in user, update their session too
             if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
                 currentUser.wallet = targetPlayer.wallet;
                 updateWalletDisplay();
             }
 
-            // CRITICAL FIX: Instantly push the updated balance to Supabase so it doesn't overwrite with stale data
+            // CRITICAL FIX: Use upsert to guarantee Supabase saves the new wallet without overwriting with stale data
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('profiles').update({ wallet: targetPlayer.wallet }).eq('email', targetPlayer.email);
+                    await supabaseClient.from('profiles').upsert([{
+                        email: targetPlayer.email,
+                        wallet: targetPlayer.wallet,
+                        name: targetPlayer.name || 'Player',
+                        nickname: targetPlayer.nickname || 'PLAYER',
+                        status: targetPlayer.status || 'active'
+                    }], { onConflict: 'email' });
                 } catch(e) {
-                    console.error('Failed to sync wallet to Supabase:', e);
+                    console.error('Supabase wallet sync error:', e);
                 }
             }
 
