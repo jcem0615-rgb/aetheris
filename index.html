@@ -976,7 +976,7 @@
             if (supabaseClient && !preserveLocalWallets) {
                 try {
                     const sbProfiles = await fetchCollectionFromSupabase('profiles');
-                    if (sbProfiles) {
+                    if (sbProfiles && sbProfiles.length > 0) {
                         sbProfiles.forEach(p => {
                             if (p && p.email) {
                                 const emailKey = p.email.toLowerCase();
@@ -3048,7 +3048,7 @@
             if (supabaseClient) {
                 try {
                     const sbProfiles = await fetchCollectionFromSupabase('pending_registrations');
-                    if (sbProfiles) {
+                    if (sbProfiles && sbProfiles.length > 0) {
                         sbProfiles.forEach(p => {
                             if (p && p.email) {
                                 allPendingMap.set(p.email.toLowerCase(), p);
