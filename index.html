@@ -156,14 +156,6 @@
 
                 <!-- Mandatory Notification Permission & Checkboxes for Registration -->
                 <div class="space-y-2.5 pt-1 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
-                    <div class="flex items-center justify-between bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        <div>
-                            <span class="font-bold text-amber-400 block text-xs">Push Notification Setting</span>
-                            <span class="text-[10px] text-slate-400">Allow notifications to receive approval/rejection updates on your phone.</span>
-                        </div>
-                        <button type="button" onclick="window.requestRegistrationNotificationPermission()" id="btn-enable-notif" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Enable</button>
-                    </div>
-
                     <label class="flex items-start space-x-2 cursor-pointer">
                         <input type="checkbox" id="reg-check-terms" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
                         <span class="text-slate-300 text-[10px]">
@@ -181,7 +173,12 @@
                 <div class="flex items-center justify-between text-xs pt-1">
                     <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
                 </div>
-                <button onclick="window.handleRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Register Account</button>
+
+                <!-- Action Row: Enable Notifications & Register Account Side-by-Side -->
+                <div class="flex space-x-2 pt-1">
+                    <button type="button" onclick="window.requestRegistrationNotificationPermission()" id="btn-enable-notif" class="py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Enable Notif</button>
+                    <button onclick="window.handleRegister()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Register Account</button>
+                </div>
             </div>
 
             <!-- Forgot Password Box -->
@@ -1875,16 +1872,6 @@
         window.handleLogin = handleLogin;
 
         async function handleRegister() {
-            // Automatically prompt for notification permission if not granted yet, instead of blocking
-            if (!registrationNotifGranted && Notification.permission === 'default' && 'Notification' in window) {
-                try {
-                    const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                        registrationNotifGranted = true;
-                    }
-                } catch(e) {}
-            }
-
             const name = document.getElementById('reg-name').value.trim();
             const nickname = document.getElementById('reg-nickname').value.trim();
             const phone = document.getElementById('reg-phone').value.trim();
