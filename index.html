@@ -218,7 +218,7 @@
                         <button type="button" onclick="window.togglePass('force-newpass', this)" class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
                 </div>
-                <button onclick="window.executeForceReset()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Update Password & Login</button>
+                <button onclick="window.executeForceReset()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg shadow-lg transition">Update Password & Login</button>
             </div>
         </div>
 
@@ -1331,66 +1331,48 @@
 
             await syncAllRegisteredPlayers(true);
             await updateMerchantPaymentDisplay();
+
+            // ================= PERSISTENT SESSION RESTORATION ON RELOAD =================
             try {
                 if (currentUser && currentUser.email) {
-                    const localWallet = currentUser.wallet || 0;
-                    const localWins = currentUser.wins || 0;
-                    const localXp = currentUser.xp || 0;
-
-                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                    let foundRecord = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
-                    if (foundRecord && (foundRecord.wallet || 0) > localWallet) {
-                        currentUser.wallet = foundRecord.wallet;
+                    if (currentUser.status === 'frozen') {
+                        alert('Your account has been frozen by the administration.');
+                        logoutPlayer();
+                        return;
                     }
 
-                    if (supabaseClient) {
-                        const { data, error } = await supabaseClient
-                            .from('profiles')
-                            .select('*')
-                            .eq('email', currentUser.email)
-                            .single();
-                        if (data && !error) {
-                            currentUser = data;
-                            if (foundRecord && (foundRecord.wallet || 0) > (currentUser.wallet || 0)) {
-                                currentUser.wallet = foundRecord.wallet;
-                            }
-                            if (localWallet > (currentUser.wallet || 0) || localWins > (currentUser.wins || 0)) {
-                                currentUser.wallet = Math.max(localWallet, currentUser.wallet || 0);
-                                currentUser.wins = Math.max(localWins, currentUser.wins || 0);
-                                currentUser.xp = Math.max(localXp, currentUser.xp || 0);
-                                persistLocalStorage();
-                                await syncUserToSupabase();
-                            }
+                    // Instantly restore session locally so reload never logs out
+                    restoreUserSession();
 
-                            if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                                currentUser.role = 'owner';
-                            }
-                            if (currentUser.status === 'frozen') {
-                                alert('Your account has been frozen by the administration.');
-                                logoutPlayer();
-                                return;
-                            }
-                            if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
-                            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [];
-                            restoreUserSession();
-                        } else {
-                            if (currentUser.email) {
-                                if (currentUser.status === 'frozen') {
-                                    alert('Your account has been frozen.');
+                    // Background sync with Supabase for latest wallet & stats without blocking or logging out
+                    if (supabaseClient) {
+                        try {
+                            const { data, error } = await Promise.race([
+                                supabaseClient.from('profiles').select('*').eq('email', currentUser.email).single(),
+                                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+                            ]);
+                            if (data && !error) {
+                                if (data.status === 'frozen') {
+                                    alert('Your account has been frozen by the administration.');
                                     logoutPlayer();
                                     return;
                                 }
-                                restoreUserSession();
-                            } else {
-                                currentUser = null;
-                                localStorage.removeItem('aetheris_current_user');
+                                currentUser = { ...currentUser, ...data };
+                                if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
+                                if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = currentUser.unlocked_heroes || ['pyra'];
+                                persistLocalStorage();
+                                updateWalletDisplay();
                             }
+                        } catch(e) {
+                            // Offline or network error - keep local session intact without logging out
                         }
-                    } else if (currentUser.email) {
-                        restoreUserSession();
                     }
                 }
-            } catch (err) {}
+            } catch (err) {
+                if (currentUser && currentUser.email) {
+                    restoreUserSession();
+                }
+            }
 
             // ================= REAL-TIME BACKGROUND POLLING LOOP =================
             setInterval(async () => {
