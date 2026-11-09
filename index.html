@@ -158,7 +158,7 @@
                 <div class="space-y-2.5 pt-1 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
                     <div class="flex items-center justify-between bg-slate-900 p-2 rounded-lg border border-slate-800">
                         <div>
-                            <span class="font-bold text-amber-400 block text-xs">Push Notification Setting (Required)</span>
+                            <span class="font-bold text-amber-400 block text-xs">Push Notification Setting</span>
                             <span class="text-[10px] text-slate-400">Allow notifications to receive approval/rejection updates on your phone.</span>
                         </div>
                         <button type="button" onclick="window.requestRegistrationNotificationPermission()" id="btn-enable-notif" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Enable</button>
@@ -771,7 +771,7 @@
 
         const EXCLUSIVE_OWNER_EMAIL = 'jcem0615@gmail.com';
         let deferredPrompt = null;
-        let registrationNotifGranted = false; // Tracks mandatory notification status
+        let registrationNotifGranted = false;
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -869,7 +869,6 @@
             return null;
         }
 
-        // CENTRALIZED WALLET TRANSACTION LEDGER FUNCTION (Audits Every Credit & Debit)
         async function logWalletTransaction(email, nickname, type, amount, preBalance, postBalance, reason) {
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
@@ -881,7 +880,7 @@
                 time: timeStr,
                 email,
                 nickname: nickname || email,
-                type, // 'CREDIT' (Addition) or 'DEBIT' (Deduction)
+                type,
                 amount,
                 preBalance,
                 postBalance,
@@ -903,22 +902,7 @@
             }
         }
         window.clearWalletLedger = clearWalletLedger;
-        
-        function maskPhoneNumber(phone) {
-            if (!phone || phone.length < 7) return '••••••••••';
-            return phone.slice(0, 4) + ' •••• ' + phone.slice(-3);
-        }
 
-        function maskAccountName(name) {
-            if (!name) return '•••••• ••••••';
-            const parts = name.trim().split(' ');
-            return parts.map((part, idx) => {
-                if (idx === 0) return part;
-                return part[0] + '•'.repeat(Math.max(1, part.length - 1));
-            }).join(' ');
-        }
-
-        // SAVE QR CODE TO DEVICE FUNCTION
         function saveQRCodeImage(method) {
             let qrData = method === 'gcash' ? merchantConfig.gcashQR : merchantConfig.mayaQR;
             if (!qrData) {
@@ -936,7 +920,6 @@
 
         async function syncAllRegisteredPlayers(preserveLocalWallets = false) {
             let playersMap = new Map();
-            
             let existingLocalMap = new Map();
             try {
                 let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
@@ -980,9 +963,7 @@
                         sbProfiles.forEach(p => {
                             if (p && p.email) {
                                 const emailKey = p.email.toLowerCase();
-                                if (currentUser && currentUser.email.toLowerCase() === emailKey) {
-                                    return;
-                                }
+                                if (currentUser && currentUser.email.toLowerCase() === emailKey) return;
                                 let localExisting = playersMap.get(emailKey);
                                 let finalWallet = p.wallet || p.balance || 0;
                                 if (localExisting && localExisting.wallet !== undefined && localExisting.wallet > finalWallet) {
@@ -1127,7 +1108,6 @@
             window.dispatchEvent(new Event('aetheris_data_updated'));
         }
 
-        // ================= REAL-TIME CROSS-TAB & CROSS-WINDOW STORAGE SYNC =================
         window.addEventListener('storage', (event) => {
             if (['aetheris_current_user', 'aetheris_registered_players_db', 'aetheris_wallet_ledger', 'aetheris_pending_topups', 'aetheris_pending_withdrawals', 'aetheris_pending_registrations', 'aetheris_pending_resets', 'aetheris_support_chats', 'aetheris_registered_users'].includes(event.key)) {
                 walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
@@ -1308,7 +1288,6 @@
         window.addEventListener('DOMContentLoaded', async () => {
             await loadMerchantConfig();
             
-            // Fetch remote Supabase logs/queues to local caches
             if (supabaseClient) {
                 try {
                     const remoteLedger = await fetchCollectionFromSupabase('wallet_ledger');
@@ -1332,7 +1311,6 @@
             await syncAllRegisteredPlayers(true);
             await updateMerchantPaymentDisplay();
 
-            // ================= PERSISTENT SESSION RESTORATION ON RELOAD =================
             try {
                 if (currentUser && currentUser.email) {
                     if (currentUser.status === 'frozen') {
@@ -1341,10 +1319,8 @@
                         return;
                     }
 
-                    // Instantly restore session locally so reload never logs out
                     restoreUserSession();
 
-                    // Background sync with Supabase for latest wallet & stats without blocking or logging out
                     if (supabaseClient) {
                         try {
                             const { data, error } = await Promise.race([
@@ -1363,9 +1339,7 @@
                                 persistLocalStorage();
                                 updateWalletDisplay();
                             }
-                        } catch(e) {
-                            // Offline or network error - keep local session intact without logging out
-                        }
+                        } catch(e) {}
                     }
                 }
             } catch (err) {
@@ -1374,7 +1348,6 @@
                 }
             }
 
-            // ================= REAL-TIME BACKGROUND POLLING LOOP =================
             setInterval(async () => {
                 if (currentUser && currentUser.email) {
                     let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
@@ -1902,10 +1875,14 @@
         window.handleLogin = handleLogin;
 
         async function handleRegister() {
-            // STRICT VALIDATION: Check if push notifications are enabled
-            if (!registrationNotifGranted && Notification.permission !== 'granted') {
-                alert('You must enable Push Notifications (click the "Enable" button) before registering.');
-                return;
+            // Automatically prompt for notification permission if not granted yet, instead of blocking
+            if (!registrationNotifGranted && Notification.permission === 'default' && 'Notification' in window) {
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        registrationNotifGranted = true;
+                    }
+                } catch(e) {}
             }
 
             const name = document.getElementById('reg-name').value.trim();
@@ -1919,19 +1896,16 @@
             const checkTerms = document.getElementById('reg-check-terms').checked;
             const checkPrivacy = document.getElementById('reg-check-privacy').checked;
 
-            // STRICT VALIDATION: All fields required
             if (!name || !nickname || !phone || !email || !bday || !pass || !ref) {
                 alert('Please fill out all registration fields.');
                 return;
             }
 
-            // STRICT VALIDATION: Receipt picture mandatory
             if (!receiptFile) {
                 alert('Please upload your registration fee receipt/proof of payment screenshot.');
                 return;
             }
 
-            // STRICT VALIDATION: Checkboxes required
             if (!checkTerms || !checkPrivacy) {
                 alert('You must accept the Terms and Conditions and Privacy Policy.');
                 return;
