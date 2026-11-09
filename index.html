@@ -465,7 +465,7 @@
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Password Reset Requests</h3>
                     <div id="owner-reset-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending password reset requests.</div>
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>
                     </div>
                 </div>
 
@@ -1052,6 +1052,9 @@
             localStorage.setItem('aetheris_balance_adder_history', JSON.stringify(balanceAdderHistory));
             syncAllRegisteredPlayers(true);
             persistMerchantConfig();
+
+            // INSTANT REAL-TIME NOTIFICATION EVENT
+            window.dispatchEvent(new Event('aetheris_data_updated'));
         }
 
         // ================= REAL-TIME STORAGE & POLLING SYNC =================
@@ -1066,7 +1069,7 @@
                     }
                 } catch(e) {}
             }
-            if (event.key === 'aetheris_registered_players_db') {
+            if (event.key === 'aetheris_registered_players_db' || event.key === 'aetheris_pending_topups' || event.key === 'aetheris_pending_withdrawals' || event.key === 'aetheris_pending_registrations' || event.key === 'aetheris_pending_resets') {
                 syncAllRegisteredPlayers(true).then(() => {
                     if (currentUser && currentUser.email) {
                         let found = registeredPlayersList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
@@ -1075,7 +1078,19 @@
                             updateWalletDisplay();
                         }
                     }
+                    const ownerView = document.getElementById('view-owner');
+                    if (ownerView && !ownerView.classList.contains('hidden')) {
+                        renderOwnerQueues();
+                    }
                 });
+            }
+        });
+
+        // INSTANT REAL-TIME EVENT LISTENER FOR OWNER QUEUES & UI
+        window.addEventListener('aetheris_data_updated', () => {
+            const ownerView = document.getElementById('view-owner');
+            if (ownerView && !ownerView.classList.contains('hidden')) {
+                renderOwnerQueues();
             }
         });
 
@@ -1307,7 +1322,6 @@
                         try {
                             const { data } = await supabaseClient.from('profiles').select('wallet, wins, xp, status').eq('email', currentUser.email).single();
                             if (data) {
-                                // SMART SYNC FIX: If local database or wallet is higher than remote Supabase wallet, push it up!
                                 if (me && me.wallet > data.wallet) {
                                     currentUser.wallet = me.wallet;
                                     await syncUserToSupabase();
@@ -1340,7 +1354,7 @@
                         renderOwnerQueues();
                     }
                 }
-            }, 2000);
+            }, 1000);
         });
 
         function restoreUserSession() {
@@ -1882,6 +1896,9 @@
             notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
             logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref} via ${currentRegMethod}.`, nickname);
 
+            // INSTANT REAL-TIME EVENT DISPATCH
+            window.dispatchEvent(new Event('aetheris_data_updated'));
+
             if (supabaseClient) {
                 try {
                     await supabaseClient.from('profiles').insert([newUserData]);
@@ -1902,6 +1919,10 @@
             }
             pendingResets.push({ email, birthday: bday, timestamp: Date.now() });
             persistLocalStorage();
+            
+            // INSTANT REAL-TIME EVENT DISPATCH
+            window.dispatchEvent(new Event('aetheris_data_updated'));
+
             alert('Password reset request submitted to owner for verification.');
             showAuthMode('login');
         }
@@ -2006,7 +2027,6 @@
 
             await syncAllRegisteredPlayers(true);
 
-            // Bot pool for rich competitive leaderboard display
             const botEntries = [
                 { nickname: 'Kenjie', email: 'kenjie@bot.com', xp: 1250, wins: 14, status: 'active', active_hero: 'storm-knight' },
                 { nickname: 'Kenneth', email: 'kenneth@bot.com', xp: 980, wins: 10, status: 'active', active_hero: 'sylph' },
@@ -2207,6 +2227,9 @@
             notifyOwner('New Top-Up Request', `Player ${currentUser.nickname} submitted a top-up request of ₱${amt} via ${currentTopupMethod.toUpperCase()}.`);
             logSystemActivity('Top-up Submitted', `Player ${currentUser.nickname} submitted top-up of ₱${amt} via ${currentTopupMethod}.`, currentUser.nickname);
 
+            // INSTANT REAL-TIME EVENT DISPATCH
+            window.dispatchEvent(new Event('aetheris_data_updated'));
+
             alert('Top-up request submitted successfully! Awaiting owner approval.');
             closeModal();
         }
@@ -2250,6 +2273,9 @@
 
             notifyOwner('New Withdrawal Request', `Player ${currentUser.nickname} requested withdrawal of ₱${amt} via ${method}.`);
             logSystemActivity('Withdrawal Requested', `Player ${currentUser.nickname} requested withdrawal of ₱${amt} via ${method}.`, currentUser.nickname);
+
+            // INSTANT REAL-TIME EVENT DISPATCH
+            window.dispatchEvent(new Event('aetheris_data_updated'));
 
             alert('Withdrawal request submitted successfully!');
             closeModal();
