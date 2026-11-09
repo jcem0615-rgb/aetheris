@@ -857,7 +857,6 @@
                 id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
             });
 
-            // Gather from local storage databases first
             ['aetheris_registered_players_db', 'aetheris_registered_users', 'aetheris_pending_registrations'].forEach(key => {
                 try {
                     let list = JSON.parse(localStorage.getItem(key)) || [];
@@ -925,9 +924,7 @@
                             }
                         });
                     }
-                } catch(e) {
-                    console.error('Supabase sync profiles error:', e);
-                }
+                } catch(e) {}
             }
 
             registeredPlayersList = Array.from(playersMap.values());
@@ -937,7 +934,7 @@
         async function syncUserToSupabase() {
             if (!currentUser || !currentUser.email || !supabaseClient) return;
             try {
-                const { error } = await supabaseClient.from('profiles').upsert([{
+                await supabaseClient.from('profiles').upsert([{
                     email: currentUser.email,
                     name: currentUser.name || 'Player',
                     nickname: currentUser.nickname || 'PLAYER',
@@ -950,10 +947,7 @@
                     unlocked_skills: currentUser.unlockedSkills || {},
                     status: currentUser.status || 'active'
                 }], { onConflict: 'email' });
-                if (error) console.error('Supabase upsert error:', error);
-            } catch(e) {
-                console.error('Supabase sync user error:', e);
-            }
+            } catch(e) {}
         }
 
         let merchantConfig = {
@@ -968,7 +962,7 @@
         async function loadMerchantConfig() {
             if (supabaseClient) {
                 try {
-                    const { data, error } = await supabaseClient.from('app_settings').select('*').eq('key', 'merchant_config').single();
+                    const { data } = await supabaseClient.from('app_settings').select('*').eq('key', 'merchant_config').single();
                     if (data && data.value) {
                         merchantConfig = data.value;
                         localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
@@ -978,9 +972,7 @@
             }
             try {
                 const stored = localStorage.getItem('aetheris_merchant_config');
-                if (stored) {
-                    merchantConfig = JSON.parse(stored);
-                }
+                if (stored) merchantConfig = JSON.parse(stored);
             } catch(e) {}
         }
 
@@ -988,16 +980,11 @@
             localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('app_settings').upsert([
-                        { key: 'merchant_config', value: merchantConfig }
-                    ], { onConflict: 'key' });
-                } catch(e) {
-                    console.error('Supabase merchant config sync error:', e);
-                }
+                    await supabaseClient.from('app_settings').upsert([{ key: 'merchant_config', value: merchantConfig }], { onConflict: 'key' });
+                } catch(e) {}
             }
         }
 
-        // HUMAN PLAYER NAMES FOR OPPONENTS
         const humanBotNames = ['Kenjie', 'Kenneth', 'Clyde', 'Joana', 'Glenda', 'Glenn', 'Mark', 'Jessa', 'Bryan', 'Rica', 'Christian', 'Nicole', 'Jomar', 'Kaye', 'Roldan'];
         function getRandomHumanBotName() {
             return humanBotNames[Math.floor(Math.random() * humanBotNames.length)];
@@ -1249,9 +1236,7 @@
                         }
                     }
                 }
-            } catch (err) {
-                console.error('Init session check error:', err);
-            }
+            } catch (err) {}
 
             setInterval(() => {
                 if (currentUser) {
@@ -1343,9 +1328,7 @@
                 if (btnLeaderboard) btnLeaderboard.classList.remove('hidden');
                 if (btnChat) btnChat.classList.remove('hidden');
                 switchTab('hub');
-            } catch(err) {
-                console.error('restoreUserSession error:', err);
-            }
+            } catch(err) {}
         }
 
         function updateHeaderUserInfo() {
@@ -1507,16 +1490,16 @@
             const qrBox = document.getElementById('reg-active-qr');
 
             if (method === 'gcash') {
-                if (btnGcash) { btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition'; }
-                if (btnMaya) { btnMaya.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition'; }
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
                 if (merchantConfig.gcashQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
                     qrBox.innerHTML = 'No GCash QR';
                 }
             } else {
-                if (btnMaya) { btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition'; }
-                if (btnGcash) { btnGcash.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition'; }
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
                 if (merchantConfig.mayaQR && qrBox) {
                     qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
                 } else if (qrBox) {
@@ -1715,9 +1698,7 @@
                             return;
                         }
                     }
-                } catch(err) {
-                    console.error('Supabase login error:', err);
-                }
+                } catch(err) {}
             }
 
             let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
@@ -1795,9 +1776,7 @@
             if (supabaseClient) {
                 try {
                     await supabaseClient.from('profiles').insert([newUserData]);
-                } catch(err) {
-                    console.error('Supabase reg insert error:', err);
-                }
+                } catch(err) {}
             }
 
             alert('Registration submitted successfully! Your account is pending owner approval.');
@@ -2157,25 +2136,20 @@
             if (statusEl) statusEl.innerText = 'Searching active player queue...';
 
             matchmakingElapsedSeconds = 0;
-            // Randomize bot trigger between 15, 16, 17, 18, 19, or 20 seconds
             randomBotTriggerSeconds = 15 + Math.floor(Math.random() * 6);
             if (countdownEl) countdownEl.innerText = `Elapsed time: ${matchmakingElapsedSeconds}s`;
 
             if (supabaseClient) {
                 try {
-                    const { data, error } = await supabaseClient.from('matchmaking_queue').insert([{
+                    const { data } = await supabaseClient.from('matchmaking_queue').insert([{
                         player_email: currentUser.email,
                         player_nickname: currentUser.nickname,
                         stake: stake,
                         status: 'waiting'
                     }]).select().single();
 
-                    if (data && !error) {
-                        myQueueRecordId = data.id;
-                    }
-                } catch (e) {
-                    console.error('Queue insertion error:', e);
-                }
+                    if (data) myQueueRecordId = data.id;
+                } catch (e) {}
             }
 
             if (matchmakingInterval) clearInterval(matchmakingInterval);
@@ -2222,9 +2196,7 @@
                                 return;
                             }
                         }
-                    } catch (err) {
-                        console.error('Matchmaking poll error:', err);
-                    }
+                    } catch (err) {}
                 }
             }, 2000);
 
@@ -2232,7 +2204,6 @@
                 matchmakingElapsedSeconds++;
                 if (countdownEl) countdownEl.innerText = `Elapsed time: ${matchmakingElapsedSeconds}s`;
 
-                // AUTOMATIC FALLBACK AT RANDOM 15TH-20TH SECOND IF NO HUMAN FOUND
                 if (matchmakingElapsedSeconds >= randomBotTriggerSeconds) {
                     cleanupMatchmaking();
                     closeModal();
@@ -2373,7 +2344,6 @@
             initPlayerDeck();
             renderDuelUI();
 
-            // CHECK COIN TOSS INITIATIVE
             if (!duelState.isPlayerTurn) {
                 const log = document.getElementById('fs-battle-log');
                 if (log) log.innerText = `[${duelState.currentOpponentName}] won the toss and strikes first!`;
@@ -2536,15 +2506,11 @@
 
             setTimeout(() => {
                 let enemyActionText = '';
-
-                // 1. EMERGENCY HEAL: Checked first so it triggers when HP is < 20
                 if (duelState.enemyHp < 20) {
                     const healAmt = 60;
                     duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmt);
                     enemyActionText = `[${duelState.currentOpponentName}] casts REVITALIZE and restores ${healAmt} HP!`;
-                } 
-                // 2. HEAVY COUNTER: Checked second when HP is between 20 and 59
-                else if (duelState.enemyHp < 60) {
+                } else if (duelState.enemyHp < 60) {
                     let specDmg1 = 35;
                     let specDmg2 = 30;
                     let specHeal = 20;
@@ -2558,9 +2524,7 @@
                     duelState.playerPoison += specPoison;
 
                     enemyActionText = `[${duelState.currentOpponentName}] attacks! Deals damage, gains armor, & applies poison.`;
-                } 
-                // 3. STANDARD ATTACK: When HP is 60 or above
-                else {
+                } else {
                     let normalDmg = 25;
                     applyArmorBlockedDamage('player', normalDmg);
                     enemyActionText = `[${duelState.currentOpponentName}] attacks for ${normalDmg} damage.`;
@@ -2683,6 +2647,41 @@
             renderOwnerQueues();
         }
         window.deleteBalanceAdderHistoryItem = deleteBalanceAdderHistoryItem;
+
+        async function executeManualWalletAdjustment() {
+            const email = document.getElementById('manual-wallet-email').value.trim();
+            const amount = parseFloat(document.getElementById('manual-wallet-amount').value);
+            if (!email || isNaN(amount)) {
+                alert('Please enter a valid player email and amount.');
+                return;
+            }
+            await syncAllRegisteredPlayers();
+            let targetPlayer = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (!targetPlayer) {
+                alert('Player not found in directory.');
+                return;
+            }
+            targetPlayer.wallet = (targetPlayer.wallet || 0) + amount;
+            if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
+                currentUser.wallet = targetPlayer.wallet;
+                updateWalletDisplay();
+                syncUserToSupabase();
+            }
+            const now = new Date();
+            balanceAdderHistory.unshift({
+                id: Date.now(),
+                email: targetPlayer.email,
+                amount,
+                newTotal: targetPlayer.wallet,
+                date: now.toISOString().split('T')[0],
+                time: now.toLocaleTimeString()
+            });
+            persistLocalStorage();
+            logSystemActivity('Manual Wallet Adjustment', `Adjusted balance for ${email} by ₱${amount}. New total: ₱${targetPlayer.wallet}`, 'Owner');
+            renderOwnerQueues();
+            alert(`Successfully adjusted wallet for ${email} by ₱${amount}. New total: ₱${targetPlayer.wallet}`);
+        }
+        window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
         function renderOwnerQueues() {
             syncAllRegisteredPlayers();
@@ -3123,123 +3122,27 @@
                         syncUserToSupabase();
                         updateWalletDisplay();
                     }
-                    registeredPlayersList = registeredPlayersList.map(p => {
-                        if (p.email === w.email) p.wallet = (p.wallet || 0) + w.amount;
-                        return p;
-                    });
                 }
                 return w;
             });
             localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
-            persistLocalStorage();
-
             if (targetWd) {
-                sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Rejected & Refunded', `Your withdrawal of ₱${targetWd.amount} was rejected and refunded.`);
+                sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Rejected', `Your withdrawal of ₱${targetWd.amount} was rejected and refunded to your wallet.`);
             }
             alert('Withdrawal rejected and refunded.');
             renderOwnerQueues();
         }
         window.rejectWithdrawal = rejectWithdrawal;
 
-        function approvePasswordReset(index) {
-            pendingResets.splice(index, 1);
+        function approvePasswordReset(idx) {
+            const req = pendingResets[idx];
+            if (!req) return;
+            pendingResets.splice(idx, 1);
             persistLocalStorage();
-            alert('Password reset approved.');
+            alert(`Password reset request for ${req.email} approved.`);
             renderOwnerQueues();
         }
         window.approvePasswordReset = approvePasswordReset;
-
-        async function executeManualWalletAdjustment() {
-            const email = document.getElementById('manual-wallet-email').value.trim().toLowerCase();
-            const amt = parseFloat(document.getElementById('manual-wallet-amount').value);
-            if (!email || isNaN(amt)) {
-                alert('Please enter a valid player email and amount.');
-                return;
-            }
-
-            // Find existing player across all sources to get their true current balance
-            let currentBalance = 0;
-            
-            let regPlayers = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-            let foundPlayer = regPlayers.find(p => p.email && p.email.toLowerCase() === email);
-            if (foundPlayer) {
-                currentBalance = foundPlayer.wallet || foundPlayer.balance || 0;
-            } else {
-                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
-                let foundLocal = localUsers.find(u => u.email && u.email.toLowerCase() === email);
-                if (foundLocal) {
-                    currentBalance = foundLocal.wallet || foundLocal.balance || 0;
-                }
-            }
-
-            if (supabaseClient) {
-                try {
-                    const { data: existingProf } = await supabaseClient.from('profiles').select('wallet').eq('email', email).single();
-                    if (existingProf && typeof existingProf.wallet === 'number') {
-                        currentBalance = Math.max(currentBalance, existingProf.wallet);
-                    }
-                } catch(e) {
-                    console.error('Supabase fetch wallet error:', e);
-                }
-            }
-
-            let newWalletTotal = currentBalance + amt;
-
-            // Update Supabase profile wallet
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('profiles').upsert([{ email, wallet: newWalletTotal }], { onConflict: 'email' });
-                } catch(e) {
-                    console.error('Supabase manual balance update error:', e);
-                }
-            }
-
-            // Update LocalStorage registered players DB
-            let foundInDb = false;
-            regPlayers = regPlayers.map(p => {
-                if (p.email && p.email.toLowerCase() === email) {
-                    p.wallet = newWalletTotal;
-                    foundInDb = true;
-                }
-                return p;
-            });
-            if (!foundInDb) {
-                regPlayers.push({ email, wallet: newWalletTotal, status: 'active', nickname: email.split('@')[0] });
-            }
-            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(regPlayers));
-
-            // Update local users array
-            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
-            localUsers = localUsers.map(u => {
-                if (u.email && u.email.toLowerCase() === email) {
-                    u.wallet = newWalletTotal;
-                }
-                return u;
-            });
-            localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
-
-            // If the target player is currently logged in on this browser session
-            if (currentUser && currentUser.email && currentUser.email.toLowerCase() === email) {
-                currentUser.wallet = newWalletTotal;
-                updateWalletDisplay();
-            }
-
-            const now = new Date();
-            balanceAdderHistory.unshift({
-                id: Date.now(),
-                email,
-                amount: amt,
-                newTotal: newWalletTotal,
-                date: now.toISOString().split('T')[0],
-                time: now.toLocaleTimeString()
-            });
-
-            persistLocalStorage();
-            await syncAllRegisteredPlayers();
-            renderOwnerQueues();
-            alert(`Successfully added ₱${amt} to ${email}!\nPrevious Balance: ₱${currentBalance} ➔ New Balance: ₱${newWalletTotal}`);
-        }
-        window.executeManualWalletAdjustment = executeManualWalletAdjustment;
     </script>
 </body>
 </html>
