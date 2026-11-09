@@ -351,6 +351,18 @@
                     </div>
                 </div>
 
+                <!-- MASTER WALLET LEDGER / AUDIT TRAIL (Every Credit & Debit Logged) -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-emerald-500/40 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">ledger 📊 Master Wallet Transaction History (Credits & Debits)</h3>
+                        <button onclick="window.clearWalletLedger()" class="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600/40 rounded text-[10px]">Clear Ledger</button>
+                    </div>
+                    <p class="text-[10px] text-slate-400">Complete audit trail of every wallet addition, deduction, wager, prize, and purchase across all players.</p>
+                    <div id="owner-wallet-ledger-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div class="text-[11px] text-slate-500 text-center py-2">No wallet transactions logged yet.</div>
+                    </div>
+                </div>
+
                 <!-- SEPARATE DEPOSIT & WITHDRAWAL HISTORY WITH DATE, TIME & ACTOR -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
@@ -817,8 +829,42 @@
         let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
         let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
         let balanceAdderHistory = JSON.parse(localStorage.getItem('aetheris_balance_adder_history')) || [];
+        let walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
         
         let registeredPlayersList = [];
+
+        // CENTRALIZED WALLET TRANSACTION LEDGER FUNCTION (Audits Every Credit & Debit)
+        function logWalletTransaction(email, nickname, type, amount, preBalance, postBalance, reason) {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toLocaleTimeString();
+            const tx = {
+                id: Date.now() + Math.random(),
+                timestamp: `${dateStr} ${timeStr}`,
+                date: dateStr,
+                time: timeStr,
+                email,
+                nickname: nickname || email,
+                type, // 'CREDIT' (Addition) or 'DEBIT' (Deduction)
+                amount,
+                preBalance,
+                postBalance,
+                reason
+            };
+            walletTransactionLedger.unshift(tx);
+            localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
+            logSystemActivity('Wallet ' + type, `${nickname || email}: ${type === 'CREDIT' ? '+' : '-'}₱${amount} (₱${preBalance} ➔ ₱${postBalance}) | Reason: ${reason}`, nickname || email);
+            window.dispatchEvent(new Event('aetheris_data_updated'));
+        }
+
+        function clearWalletLedger() {
+            if (confirm('Are you sure you want to clear the entire wallet transaction ledger?')) {
+                walletTransactionLedger = [];
+                localStorage.removeItem('aetheris_wallet_ledger');
+                renderOwnerQueues();
+            }
+        }
+        window.clearWalletLedger = clearWalletLedger;
         
         function maskPhoneNumber(phone) {
             if (!phone || phone.length < 7) return '••••••••••';
@@ -1050,16 +1096,17 @@
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
             localStorage.setItem('aetheris_balance_adder_history', JSON.stringify(balanceAdderHistory));
+            localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
             syncAllRegisteredPlayers(true);
             persistMerchantConfig();
 
-            // INSTANT REAL-TIME NOTIFICATION EVENT (Same-tab / Same-window)
             window.dispatchEvent(new Event('aetheris_data_updated'));
         }
 
         // ================= REAL-TIME CROSS-TAB & CROSS-WINDOW STORAGE SYNC =================
         window.addEventListener('storage', (event) => {
-            if (['aetheris_current_user', 'aetheris_registered_players_db', 'aetheris_pending_topups', 'aetheris_pending_withdrawals', 'aetheris_pending_registrations', 'aetheris_pending_resets', 'aetheris_support_chats', 'aetheris_registered_users'].includes(event.key)) {
+            if (['aetheris_current_user', 'aetheris_registered_players_db', 'aetheris_wallet_ledger', 'aetheris_pending_topups', 'aetheris_pending_withdrawals', 'aetheris_pending_registrations', 'aetheris_pending_resets', 'aetheris_support_chats', 'aetheris_registered_users'].includes(event.key)) {
+                walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
                 syncAllRegisteredPlayers(true).then(() => {
                     if (currentUser && currentUser.email) {
                         let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
@@ -1077,7 +1124,6 @@
             }
         });
 
-        // INSTANT REAL-TIME EVENT LISTENER FOR OWNER QUEUES & UI (Same-window)
         window.addEventListener('aetheris_data_updated', () => {
             const ownerView = document.getElementById('view-owner');
             if (ownerView && !ownerView.classList.contains('hidden')) {
@@ -1890,7 +1936,6 @@
             notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
             logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref} via ${currentRegMethod}.`, nickname);
 
-            // INSTANT REAL-TIME EVENT DISPATCH & STORAGE TRIGGER
             window.dispatchEvent(new Event('aetheris_data_updated'));
 
             if (supabaseClient) {
@@ -1915,7 +1960,6 @@
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             persistLocalStorage();
             
-            // INSTANT REAL-TIME EVENT DISPATCH
             window.dispatchEvent(new Event('aetheris_data_updated'));
 
             alert('Password reset request submitted to owner for verification.');
@@ -2126,15 +2170,19 @@
         window.setActiveHero = setActiveHero;
 
         async function unlockHero(heroId, price) {
-            const bal = currentUser.wallet || currentUser.balance || 0;
-            if (bal < price) {
+            const preBal = currentUser.wallet || currentUser.balance || 0;
+            if (preBal < price) {
                 alert('Insufficient wallet balance.');
                 return;
             }
-            currentUser.wallet = bal - price;
+            const postBal = preBal - price;
+            currentUser.wallet = postBal;
             if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [];
             currentUser.unlocked_heroes.push(heroId);
             currentUser.active_hero = heroId;
+
+            logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', price, preBal, postBal, `Hero Purchase (${heroId})`);
+
             persistLocalStorage();
             await syncUserToSupabase();
             restoreUserSession();
@@ -2170,14 +2218,18 @@
         }
 
         async function buyShopSkill(skillId, cost) {
-            const bal = currentUser.wallet || currentUser.balance || 0;
-            if (bal < cost) {
+            const preBal = currentUser.wallet || currentUser.balance || 0;
+            if (preBal < cost) {
                 alert('Insufficient balance.');
                 return;
             }
-            currentUser.wallet = bal - cost;
+            const postBal = preBal - cost;
+            currentUser.wallet = postBal;
             if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
             currentUser.unlockedSkills[skillId] = true;
+
+            logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', cost, preBal, postBal, `Skill Purchase (${skillId})`);
+
             persistLocalStorage();
             await syncUserToSupabase();
             updateWalletDisplay();
@@ -2222,7 +2274,6 @@
             notifyOwner('New Top-Up Request', `Player ${currentUser.nickname} submitted a top-up request of ₱${amt} via ${currentTopupMethod.toUpperCase()}.`);
             logSystemActivity('Top-up Submitted', `Player ${currentUser.nickname} submitted top-up of ₱${amt} via ${currentTopupMethod}.`, currentUser.nickname);
 
-            // INSTANT REAL-TIME EVENT DISPATCH
             window.dispatchEvent(new Event('aetheris_data_updated'));
 
             alert('Top-up request submitted successfully! Awaiting owner approval.');
@@ -2233,18 +2284,22 @@
         async function submitWithdrawal() {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const method = document.getElementById('withdraw-method').value;
-            const bal = currentUser.wallet || currentUser.balance || 0;
+            const preBal = currentUser.wallet || currentUser.balance || 0;
 
             if (!amt || amt < 100) {
                 alert('Minimum withdrawal amount is ₱100.');
                 return;
             }
-            if (bal < amt) {
+            if (preBal < amt) {
                 alert('Insufficient wallet balance.');
                 return;
             }
 
-            currentUser.wallet = bal - amt;
+            const postBal = preBal - amt;
+            currentUser.wallet = postBal;
+
+            logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', amt, preBal, postBal, `Withdrawal Request (${method})`);
+
             persistLocalStorage();
             await syncUserToSupabase();
             updateWalletDisplay();
@@ -2269,7 +2324,6 @@
             notifyOwner('New Withdrawal Request', `Player ${currentUser.nickname} requested withdrawal of ₱${amt} via ${method}.`);
             logSystemActivity('Withdrawal Requested', `Player ${currentUser.nickname} requested withdrawal of ₱${amt} via ${method}.`, currentUser.nickname);
 
-            // INSTANT REAL-TIME EVENT DISPATCH
             window.dispatchEvent(new Event('aetheris_data_updated'));
 
             alert('Withdrawal request submitted successfully!');
@@ -2278,14 +2332,18 @@
         window.submitWithdrawal = submitWithdrawal;
 
         async function startRankedMatchmaking(stake) {
-            const bal = currentUser.wallet || currentUser.balance || 0;
-            if (bal < stake) {
+            const preBal = currentUser.wallet || currentUser.balance || 0;
+            if (preBal < stake) {
                 alert('Insufficient wallet balance.');
                 return;
             }
-            preBattleWallet = bal;
-            currentUser.wallet = bal - stake;
+            preBattleWallet = preBal;
+            const postBal = preBal - stake;
+            currentUser.wallet = postBal;
             currentDuelBet = stake;
+
+            logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', stake, preBal, postBal, 'Ranked Match Wager Stake');
+
             persistLocalStorage();
             await syncUserToSupabase();
             updateWalletDisplay();
@@ -2409,7 +2467,12 @@
 
         async function cancelMatchmakingQueue() {
             await cleanupMatchmaking();
-            currentUser.wallet = (currentUser.wallet || 0) + currentDuelBet;
+            const preBal = currentUser.wallet || currentUser.balance || 0;
+            const postBal = preBal + currentDuelBet;
+            currentUser.wallet = postBal;
+
+            logWalletTransaction(currentUser.email, currentUser.nickname, 'CREDIT', currentDuelBet, preBal, postBal, 'Matchmaking Cancelled & Refunded');
+
             persistLocalStorage();
             await syncUserToSupabase();
             updateWalletDisplay();
@@ -2713,10 +2776,13 @@
             if (duelState.enemyHp <= 0) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
                 const prize = currentDuelBet * 2 * 0.95;
-                const postWallet = (currentUser.wallet || 0) + prize;
-                currentUser.wallet = postWallet;
+                const preBal = currentUser.wallet || currentUser.balance || 0;
+                const postBal = preBal + prize;
+                currentUser.wallet = postBal;
                 currentUser.wins = (currentUser.wins || 0) + 1;
                 currentUser.xp = (currentUser.xp || 0) + 50;
+
+                logWalletTransaction(currentUser.email, currentUser.nickname, 'CREDIT', prize, preBal, postBal, `Ranked Duel Victory vs ${duelState.currentOpponentName}`);
 
                 const now = new Date();
                 const battleRecord = {
@@ -2726,7 +2792,7 @@
                     opponent: duelState.currentOpponentName,
                     result: 'VICTORY',
                     preBalance: preBattleWallet,
-                    postBalance: postWallet,
+                    postBalance: postBal,
                     stake: currentDuelBet,
                     prize: prize,
                     date: now.toISOString().split('T')[0],
@@ -2742,7 +2808,7 @@
                 closeDuelFullscreen();
             } else if (duelState.playerHp <= 0) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-                const postWallet = currentUser.wallet || 0;
+                const postBal = currentUser.wallet || 0;
 
                 const now = new Date();
                 const battleRecord = {
@@ -2752,7 +2818,7 @@
                     opponent: duelState.currentOpponentName,
                     result: 'DEFEAT',
                     preBalance: preBattleWallet,
-                    postBalance: postWallet,
+                    postBalance: postBal,
                     stake: currentDuelBet,
                     prize: 0,
                     date: now.toISOString().split('T')[0],
@@ -2772,7 +2838,7 @@
             if (confirm('Are you sure you want to surrender?')) {
                 if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
                 if (currentUser) {
-                    const postWallet = currentUser.wallet || 0;
+                    const postBal = currentUser.wallet || 0;
                     const now = new Date();
                     battleHistoryLog.unshift({
                         id: Date.now(),
@@ -2781,7 +2847,7 @@
                         opponent: duelState.currentOpponentName,
                         result: 'SURRENDER',
                         preBalance: preBattleWallet,
-                        postBalance: postWallet,
+                        postBalance: postBal,
                         stake: currentDuelBet,
                         prize: 0,
                         date: now.toISOString().split('T')[0],
@@ -2829,7 +2895,9 @@
                 return;
             }
 
-            targetPlayer.wallet = (targetPlayer.wallet || 0) + amount;
+            const preBal = targetPlayer.wallet || 0;
+            const postBal = preBal + amount;
+            targetPlayer.wallet = postBal;
 
             let idx = dbList.findIndex(p => p.email.toLowerCase() === email.toLowerCase());
             if (idx >= 0) {
@@ -2843,6 +2911,8 @@
                 currentUser.wallet = targetPlayer.wallet;
                 updateWalletDisplay();
             }
+
+            logWalletTransaction(targetPlayer.email, targetPlayer.nickname || targetPlayer.name, amount >= 0 ? 'CREDIT' : 'DEBIT', Math.abs(amount), preBal, postBal, 'Manual Emergency Wallet Adjustment by Owner');
 
             if (supabaseClient) {
                 try {
@@ -2877,6 +2947,7 @@
 
         function renderOwnerQueues() {
             syncAllRegisteredPlayers(true);
+            const walletLedgerList = document.getElementById('owner-wallet-ledger-list');
             const depositHistoryList = document.getElementById('owner-deposit-history-list');
             const withdrawHistoryList = document.getElementById('owner-withdraw-history-list');
             const balanceAdderHistoryList = document.getElementById('owner-balance-adder-history');
@@ -2899,7 +2970,8 @@
             let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
             let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || pendingResets;
 
-            // Bulletproof pending registration aggregator
+            walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
+
             let allPendingMap = new Map();
             regs.forEach(r => {
                 if (r && r.email && (!r.status || r.status === 'pending_registration' || r.status === 'pending')) {
@@ -2921,6 +2993,20 @@
 
             if (totalDepositsMetric) totalDepositsMetric.innerText = `₱${totalDepSum.toFixed(2)}`;
             if (totalWithdrawalsMetric) totalWithdrawalsMetric.innerText = `₱${totalWdSum.toFixed(2)}`;
+
+            if (walletLedgerList) {
+                walletLedgerList.innerHTML = walletTransactionLedger.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No wallet transactions logged yet.</div>' :
+                    walletTransactionLedger.map(tx => `
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between items-center">
+                            <div>
+                                <span class="font-bold text-white">${tx.nickname}</span> <span class="text-[10px] text-slate-400">(${tx.email})</span><br>
+                                <span class="text-[10px] text-amber-300 font-bold">${tx.reason}</span><br>
+                                <span class="text-[9px] text-slate-400">₱${tx.preBalance} ➔ ₱${tx.postBalance} | 📅 ${tx.date} ⏰ ${tx.time}</span>
+                            </div>
+                            <span class="${tx.type === 'CREDIT' ? 'text-emerald-400' : 'text-red-400'} font-bold text-sm">${tx.type === 'CREDIT' ? '+' : '-'}₱${tx.amount}</span>
+                        </div>
+                    `).join('');
+            }
 
             if (depositHistoryList) {
                 depositHistoryList.innerHTML = approvedDeposits.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No deposit history yet.</div>' :
@@ -3299,8 +3385,13 @@
                 if (t.id === id) {
                     t.status = 'approved';
                     targetTopup = t;
+                    const preBal = currentUser && currentUser.email.toLowerCase() === t.email.toLowerCase() ? (currentUser.wallet || 0) : 0;
+                    const postBal = preBal + t.amount;
+
+                    logWalletTransaction(t.email, t.nickname, 'CREDIT', t.amount, preBal, postBal, `Top-Up Approved (${t.reference})`);
+
                     if (currentUser && currentUser.email.toLowerCase() === t.email.toLowerCase()) {
-                        currentUser.wallet = (currentUser.wallet || 0) + t.amount;
+                        currentUser.wallet = postBal;
                         persistLocalStorage();
                         syncUserToSupabase();
                         updateWalletDisplay();
@@ -3371,8 +3462,13 @@
                 if (w.id === id) {
                     w.status = 'rejected';
                     targetWd = w;
+                    const preBal = currentUser && currentUser.email.toLowerCase() === w.email.toLowerCase() ? (currentUser.wallet || 0) : 0;
+                    const postBal = preBal + w.amount;
+
+                    logWalletTransaction(w.email, w.nickname, 'CREDIT', w.amount, preBal, postBal, `Withdrawal Rejected & Refunded (${w.method})`);
+
                     if (currentUser && currentUser.email.toLowerCase() === w.email.toLowerCase()) {
-                        currentUser.wallet = (currentUser.wallet || 0) + w.amount;
+                        currentUser.wallet = postBal;
                         persistLocalStorage();
                         syncUserToSupabase();
                         updateWalletDisplay();
