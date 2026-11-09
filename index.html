@@ -1936,13 +1936,13 @@
             notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
             logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref} via ${currentRegMethod}.`, nickname);
 
-            window.dispatchEvent(new Event('aetheris_data_updated'));
-
             if (supabaseClient) {
                 try {
                     await supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' });
                 } catch(err) {}
             }
+
+            window.dispatchEvent(new Event('aetheris_data_updated'));
 
             alert('Registration submitted successfully! Your account is pending owner approval.');
             showAuthMode('login');
@@ -2945,8 +2945,8 @@
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
-        function renderOwnerQueues() {
-            syncAllRegisteredPlayers(true);
+        async function renderOwnerQueues() {
+            await syncAllRegisteredPlayers(true);
             const walletLedgerList = document.getElementById('owner-wallet-ledger-list');
             const depositHistoryList = document.getElementById('owner-deposit-history-list');
             const withdrawHistoryList = document.getElementById('owner-withdraw-history-list');
@@ -2983,6 +2983,20 @@
                     allPendingMap.set(u.email.toLowerCase(), u);
                 }
             });
+
+            if (supabaseClient) {
+                try {
+                    const { data: sbProfiles } = await supabaseClient.from('profiles').select('*').in('status', ['pending_registration', 'pending']);
+                    if (sbProfiles) {
+                        sbProfiles.forEach(p => {
+                            if (p && p.email) {
+                                allPendingMap.set(p.email.toLowerCase(), p);
+                            }
+                        });
+                    }
+                } catch(e) {}
+            }
+
             let pendingRegs = Array.from(allPendingMap.values());
 
             let approvedDeposits = topups.filter(t => t.status === 'approved');
@@ -3082,7 +3096,7 @@
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
                                 <strong class="text-amber-400">${r.nickname || r.name}</strong> (${r.email})<br>
-                                <span class="text-slate-400 text-[10px]">Method: <strong class="text-blue-400">${(r.payment_method || 'gcash').toUpperCase()}</strong> | Ref: ${r.registration_ref || 'N/A'}</span>
+                                <span class="text-slate-400 text-[10px]">Method: <strong class="text-blue-400">${(r.payment_method || 'gcash').toUpperCase()}</strong> | Ref: ${r.registration_ref || r.reference || 'N/A'}</span>
                             </div>
                             <div class="space-x-1">
                                 <button onclick="window.approveRegistration('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
@@ -3325,6 +3339,10 @@
             });
             localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
 
+            if (supabaseClient) {
+                supabaseClient.from('profiles').update({ status: 'active' }).eq('email', email).then(() => {});
+            }
+
             if (approvedUser) {
                 let existingDb = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
                 if (!existingDb.some(p => p.email.toLowerCase() === approvedUser.email.toLowerCase())) {
@@ -3371,6 +3389,10 @@
                 return u;
             });
             localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+
+            if (supabaseClient) {
+                supabaseClient.from('profiles').update({ status: 'rejected' }).eq('email', email).then(() => {});
+            }
 
             sendPushNotificationToPlayer(email, 'Registration Rejected', 'Your registration was rejected.');
             alert('Registration rejected.');
