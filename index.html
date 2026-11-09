@@ -373,7 +373,7 @@
                     <p class="text-[10px] text-slate-400">Add or adjust a player's wallet balance manually for emergency support purposes.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <input type="email" id="manual-wallet-email" placeholder="Player Email Address" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                        <input type="number" id="manual-wallet-amount" placeholder="Amount (e.g. 500 or -100)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <input type="number" id="manual-wallet-amount" placeholder="Amount (e.g. 300 or -100)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                         <button onclick="window.executeManualWalletAdjustment()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg py-1.5 shadow">Apply Balance</button>
                     </div>
                     <div class="pt-2">
@@ -857,24 +857,71 @@
                 id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
             });
 
+            // Gather from local storage databases first
+            ['aetheris_registered_players_db', 'aetheris_registered_users', 'aetheris_pending_registrations'].forEach(key => {
+                try {
+                    let list = JSON.parse(localStorage.getItem(key)) || [];
+                    list.forEach(item => {
+                        if (item && item.email) {
+                            const emailKey = item.email.toLowerCase();
+                            const existing = playersMap.get(emailKey);
+                            const walletVal = item.wallet || item.balance || 0;
+                            if (existing) {
+                                existing.wallet = Math.max(existing.wallet || 0, walletVal);
+                                if (!existing.name && item.name) existing.name = item.name;
+                                if (!existing.nickname && item.nickname) existing.nickname = item.nickname;
+                                if (!existing.phone && item.phone) existing.phone = item.phone;
+                                if (item.status && item.status !== 'pending_registration') existing.status = item.status;
+                            } else {
+                                playersMap.set(emailKey, {
+                                    id: item.id || Date.now(),
+                                    email: item.email,
+                                    name: item.name || 'Player',
+                                    nickname: item.nickname || 'PLAYER',
+                                    phone: item.phone || '',
+                                    wallet: walletVal,
+                                    wins: item.wins || 0,
+                                    xp: item.xp || 0,
+                                    active_hero: item.active_hero || 'pyra',
+                                    status: item.status === 'approved' ? 'active' : (item.status || 'active')
+                                });
+                            }
+                        }
+                    });
+                } catch(e) {}
+            });
+
             if (supabaseClient) {
                 try {
                     const { data, error } = await supabaseClient.from('profiles').select('*');
                     if (data && !error) {
                         data.forEach(p => {
                             if (p && p.email) {
-                                playersMap.set(p.email.toLowerCase(), {
-                                    id: p.id || Date.now(),
-                                    email: p.email,
-                                    name: p.name || p.fullName || 'Player',
-                                    nickname: p.nickname || p.username || 'PLAYER',
-                                    phone: p.phone || '',
-                                    wallet: p.wallet || p.balance || 0,
-                                    wins: p.wins || 0,
-                                    xp: p.xp || 0,
-                                    active_hero: p.active_hero || 'pyra',
-                                    status: p.status || 'active'
-                                });
+                                const emailKey = p.email.toLowerCase();
+                                const existing = playersMap.get(emailKey);
+                                const walletVal = p.wallet || p.balance || 0;
+                                if (existing) {
+                                    existing.wallet = Math.max(existing.wallet || 0, walletVal);
+                                    if (p.name) existing.name = p.name;
+                                    if (p.nickname) existing.nickname = p.nickname;
+                                    if (p.phone) existing.phone = p.phone;
+                                    if (p.wins) existing.wins = Math.max(existing.wins || 0, p.wins);
+                                    if (p.xp) existing.xp = Math.max(existing.xp || 0, p.xp);
+                                    if (p.status) existing.status = p.status;
+                                } else {
+                                    playersMap.set(emailKey, {
+                                        id: p.id || Date.now(),
+                                        email: p.email,
+                                        name: p.name || p.fullName || 'Player',
+                                        nickname: p.nickname || p.username || 'PLAYER',
+                                        phone: p.phone || '',
+                                        wallet: walletVal,
+                                        wins: p.wins || 0,
+                                        xp: p.xp || 0,
+                                        active_hero: p.active_hero || 'pyra',
+                                        status: p.status || 'active'
+                                    });
+                                }
                             }
                         });
                     }
@@ -882,28 +929,6 @@
                     console.error('Supabase sync profiles error:', e);
                 }
             }
-
-            ['aetheris_registered_players_db', 'aetheris_registered_users', 'aetheris_pending_registrations'].forEach(key => {
-                try {
-                    let list = JSON.parse(localStorage.getItem(key)) || [];
-                    list.forEach(item => {
-                        if (item && item.email) {
-                            playersMap.set(item.email.toLowerCase(), {
-                                id: item.id || Date.now(),
-                                email: item.email,
-                                name: item.name || 'Player',
-                                nickname: item.nickname || 'PLAYER',
-                                phone: item.phone || '',
-                                wallet: item.wallet || item.balance || 0,
-                                wins: item.wins || 0,
-                                xp: item.xp || 0,
-                                active_hero: item.active_hero || 'pyra',
-                                status: item.status === 'approved' ? 'active' : (item.status || 'active')
-                            });
-                        }
-                    });
-                } catch(e) {}
-            });
 
             registeredPlayersList = Array.from(playersMap.values());
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
@@ -2721,7 +2746,7 @@
                     balanceAdderHistory.map(b => `
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[10px] flex justify-between items-center">
                             <div>
-                                <span class="text-white font-bold">${b.email}</span>: <span class="${b.amount >= 0 ? 'text-emerald-400' : 'text-red-400'} font-bold">${b.amount >= 0 ? '+' : ''}₱${b.amount}</span><br>
+                                <span class="text-white font-bold">${b.email}</span>: <span class="${b.amount >= 0 ? 'text-emerald-400' : 'text-red-400'} font-bold">${b.amount >= 0 ? '+' : ''}₱${b.amount}</span> <span class="text-slate-400">(Total: ₱${b.newTotal})</span><br>
                                 <span class="text-[9px] text-slate-400">📅 ${b.date} ⏰ ${b.time}</span>
                             </div>
                             <button onclick="window.deleteBalanceAdderHistoryItem(${b.id})" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px] font-bold">Delete</button>
@@ -3125,61 +3150,77 @@
         window.approvePasswordReset = approvePasswordReset;
 
         async function executeManualWalletAdjustment() {
-            const email = document.getElementById('manual-wallet-email').value.trim();
+            const email = document.getElementById('manual-wallet-email').value.trim().toLowerCase();
             const amt = parseFloat(document.getElementById('manual-wallet-amount').value);
             if (!email || isNaN(amt)) {
-                alert('Please enter a valid email and amount.');
+                alert('Please enter a valid player email and amount.');
                 return;
             }
 
-            let newWalletTotal = 0;
+            // Find existing player across all sources to get their true current balance
+            let currentBalance = 0;
+            
+            let regPlayers = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let foundPlayer = regPlayers.find(p => p.email && p.email.toLowerCase() === email);
+            if (foundPlayer) {
+                currentBalance = foundPlayer.wallet || foundPlayer.balance || 0;
+            } else {
+                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+                let foundLocal = localUsers.find(u => u.email && u.email.toLowerCase() === email);
+                if (foundLocal) {
+                    currentBalance = foundLocal.wallet || foundLocal.balance || 0;
+                }
+            }
 
-            // Update Supabase profile wallet directly if connected
             if (supabaseClient) {
                 try {
                     const { data: existingProf } = await supabaseClient.from('profiles').select('wallet').eq('email', email).single();
-                    if (existingProf) {
-                        newWalletTotal = (existingProf.wallet || 0) + amt;
-                        await supabaseClient.from('profiles').update({ wallet: newWalletTotal }).eq('email', email);
-                    } else {
-                        newWalletTotal = amt;
-                        await supabaseClient.from('profiles').upsert([{ email, wallet: amt }], { onConflict: 'email' });
+                    if (existingProf && typeof existingProf.wallet === 'number') {
+                        currentBalance = Math.max(currentBalance, existingProf.wallet);
                     }
+                } catch(e) {
+                    console.error('Supabase fetch wallet error:', e);
+                }
+            }
+
+            let newWalletTotal = currentBalance + amt;
+
+            // Update Supabase profile wallet
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('profiles').upsert([{ email, wallet: newWalletTotal }], { onConflict: 'email' });
                 } catch(e) {
                     console.error('Supabase manual balance update error:', e);
                 }
             }
 
             // Update LocalStorage registered players DB
-            let regPlayers = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
             let foundInDb = false;
             regPlayers = regPlayers.map(p => {
-                if (p.email.toLowerCase() === email.toLowerCase()) {
-                    p.wallet = (p.wallet || 0) + amt;
-                    newWalletTotal = p.wallet;
+                if (p.email && p.email.toLowerCase() === email) {
+                    p.wallet = newWalletTotal;
                     foundInDb = true;
                 }
                 return p;
             });
             if (!foundInDb) {
-                regPlayers.push({ email, wallet: amt, status: 'active', nickname: email.split('@')[0] });
-                newWalletTotal = amt;
+                regPlayers.push({ email, wallet: newWalletTotal, status: 'active', nickname: email.split('@')[0] });
             }
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(regPlayers));
 
-            // Update local users array if present
+            // Update local users array
             let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
             localUsers = localUsers.map(u => {
-                if (u.email.toLowerCase() === email.toLowerCase()) {
-                    u.wallet = (u.wallet || 0) + amt;
+                if (u.email && u.email.toLowerCase() === email) {
+                    u.wallet = newWalletTotal;
                 }
                 return u;
             });
             localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
 
-            // If the target player is currently logged in on this browser session, update their view instantly
-            if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
-                currentUser.wallet = (currentUser.wallet || 0) + amt;
+            // If the target player is currently logged in on this browser session
+            if (currentUser && currentUser.email && currentUser.email.toLowerCase() === email) {
+                currentUser.wallet = newWalletTotal;
                 updateWalletDisplay();
             }
 
@@ -3188,13 +3229,15 @@
                 id: Date.now(),
                 email,
                 amount: amt,
+                newTotal: newWalletTotal,
                 date: now.toISOString().split('T')[0],
                 time: now.toLocaleTimeString()
             });
 
             persistLocalStorage();
+            await syncAllRegisteredPlayers();
             renderOwnerQueues();
-            alert(`Successfully added ₱${amt} to ${email}! New balance: ₱${newWalletTotal}`);
+            alert(`Successfully added ₱${amt} to ${email}!\nPrevious Balance: ₱${currentBalance} ➔ New Balance: ₱${newWalletTotal}`);
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
     </script>
