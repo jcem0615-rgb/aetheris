@@ -472,14 +472,14 @@
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals (Min ₱50)</h3>
                     <div id="owner-deposit-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching deposit requests.</div>
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending top-ups.</div>
                     </div>
                 </div>
 
                 <div class="space-y-1.5 pb-2">
                     <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals (Min ₱100 • Zero Fee)</h3>
                     <div id="owner-withdraw-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No matching withdrawal requests.</div>
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawals.</div>
                     </div>
                 </div>
             </div>
@@ -1069,7 +1069,7 @@
                     }
                 } catch(e) {}
             }
-            if (event.key === 'aetheris_registered_players_db' || event.key === 'aetheris_pending_topups' || event.key === 'aetheris_pending_withdrawals' || event.key === 'aetheris_pending_registrations' || event.key === 'aetheris_pending_resets') {
+            if (event.key === 'aetheris_registered_players_db' || event.key === 'aetheris_pending_topups' || event.key === 'aetheris_pending_withdrawals' || event.key === 'aetheris_pending_registrations' || event.key === 'aetheris_pending_resets' || event.key === 'aetheris_registered_users') {
                 syncAllRegisteredPlayers(true).then(() => {
                     if (currentUser && currentUser.email) {
                         let found = registeredPlayersList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
@@ -2900,7 +2900,22 @@
             let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
             let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
             let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
+
+            // Bulletproof pending registration aggregator
+            let allPendingMap = new Map();
+            regs.forEach(r => {
+                if (r && r.email && (!r.status || r.status === 'pending_registration' || r.status === 'pending')) {
+                    allPendingMap.set(r.email.toLowerCase(), r);
+                }
+            });
+            localUsers.forEach(u => {
+                if (u && u.email && (u.status === 'pending_registration' || u.status === 'pending')) {
+                    allPendingMap.set(u.email.toLowerCase(), u);
+                }
+            });
+            let pendingRegs = Array.from(allPendingMap.values());
 
             let approvedDeposits = topups.filter(t => t.status === 'approved');
             let approvedWithdraws = withdraws.filter(w => w.status === 'approved');
@@ -2980,13 +2995,12 @@
             }
 
             if (regList) {
-                let pendingRegs = regs.filter(r => r.status === 'pending_registration');
                 regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registrations.</div>' :
                     pendingRegs.map(r => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
-                                <strong class="text-amber-400">${r.nickname}</strong> (${r.email})<br>
-                                <span class="text-slate-400 text-[10px]">Method: <strong class="text-blue-400">${(r.payment_method || 'gcash').toUpperCase()}</strong> | Ref: ${r.registration_ref}</span>
+                                <strong class="text-amber-400">${r.nickname || r.name}</strong> (${r.email})<br>
+                                <span class="text-slate-400 text-[10px]">Method: <strong class="text-blue-400">${(r.payment_method || 'gcash').toUpperCase()}</strong> | Ref: ${r.registration_ref || 'N/A'}</span>
                             </div>
                             <div class="space-x-1">
                                 <button onclick="window.approveRegistration('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
@@ -3188,6 +3202,10 @@
                 localUsers = localUsers.filter(u => u.email.toLowerCase() !== email.toLowerCase());
                 localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
 
+                let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+                pendingRegs = pendingRegs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+                localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
+
                 if (supabaseClient) {
                     try {
                         await supabaseClient.from('profiles').delete().eq('email', email);
@@ -3204,7 +3222,9 @@
 
         function approveRegistration(email) {
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
             let approvedUser = null;
+
             regs = regs.map(r => {
                 if (r.email.toLowerCase() === email.toLowerCase()) {
                     r.status = 'approved';
@@ -3214,17 +3234,34 @@
             });
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
 
+            localUsers = localUsers.map(u => {
+                if (u.email.toLowerCase() === email.toLowerCase()) {
+                    u.status = 'active';
+                    if (!approvedUser) approvedUser = u;
+                }
+                return u;
+            });
+            localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+
             if (approvedUser) {
                 let existingDb = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
                 if (!existingDb.some(p => p.email.toLowerCase() === approvedUser.email.toLowerCase())) {
                     existingDb.push({
-                        id: approvedUser.id,
+                        id: approvedUser.id || Date.now(),
                         email: approvedUser.email,
                         name: approvedUser.name,
                         nickname: approvedUser.nickname,
                         phone: approvedUser.phone,
                         wallet: 0,
+                        wins: 0,
+                        xp: 0,
                         status: 'active'
+                    });
+                    localStorage.setItem('aetheris_registered_players_db', JSON.stringify(existingDb));
+                } else {
+                    existingDb = existingDb.map(p => {
+                        if (p.email.toLowerCase() === email.toLowerCase()) p.status = 'active';
+                        return p;
                     });
                     localStorage.setItem('aetheris_registered_players_db', JSON.stringify(existingDb));
                 }
@@ -3245,6 +3282,14 @@
                 return r;
             });
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
+
+            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+            localUsers = localUsers.map(u => {
+                if (u.email.toLowerCase() === email.toLowerCase()) u.status = 'rejected';
+                return u;
+            });
+            localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+
             sendPushNotificationToPlayer(email, 'Registration Rejected', 'Your registration was rejected.');
             alert('Registration rejected.');
             renderOwnerQueues();
