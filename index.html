@@ -857,7 +857,6 @@
                 id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
             });
 
-            // Synchronize authoritative local storage list
             try {
                 let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
                 dbList.forEach(item => {
@@ -867,7 +866,6 @@
                 });
             } catch(e) {}
 
-            // If currentUser exists, ensure its current wallet/stats override the list directly
             if (currentUser && currentUser.email) {
                 const emailKey = currentUser.email.toLowerCase();
                 playersMap.set(emailKey, {
@@ -892,7 +890,6 @@
                             if (p && p.email) {
                                 const emailKey = p.email.toLowerCase();
                                 if (currentUser && currentUser.email.toLowerCase() === emailKey) {
-                                    // Keep currentUser authoritative
                                     return;
                                 }
                                 playersMap.set(emailKey, {
@@ -1012,7 +1009,6 @@
         function persistLocalStorage() {
             if (currentUser) {
                 localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
-                // Update player inside registered players database immediately so owner view matches
                 let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
                 let idx = dbList.findIndex(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
                 if (idx >= 0) {
@@ -1044,6 +1040,31 @@
             syncAllRegisteredPlayers();
             persistMerchantConfig();
         }
+
+        // ================= REAL-TIME STORAGE & POLLING SYNC =================
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'aetheris_current_user' && event.newValue) {
+                try {
+                    const updated = JSON.parse(event.newValue);
+                    if (currentUser && updated.email && updated.email.toLowerCase() === currentUser.email.toLowerCase()) {
+                        currentUser = updated;
+                        updateWalletDisplay();
+                        updateHeaderUserInfo();
+                    }
+                } catch(e) {}
+            }
+            if (event.key === 'aetheris_registered_players_db') {
+                syncAllRegisteredPlayers().then(() => {
+                    if (currentUser && currentUser.email) {
+                        let found = registeredPlayersList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+                        if (found && found.wallet !== currentUser.wallet) {
+                            currentUser.wallet = found.wallet;
+                            updateWalletDisplay();
+                        }
+                    }
+                });
+            }
+        });
 
         async function requestRegistrationNotificationPermission() {
             if (!('Notification' in window)) {
@@ -1246,7 +1267,35 @@
                 }
             } catch (err) {}
 
-            setInterval(() => {
+            // ================= REAL-TIME BACKGROUND POLLING LOOP =================
+            setInterval(async () => {
+                if (currentUser && currentUser.email) {
+                    // Check local registered players DB for balance updates
+                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                    let me = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+                    if (me && me.wallet !== currentUser.wallet) {
+                        currentUser.wallet = me.wallet;
+                        updateWalletDisplay();
+                    }
+
+                    // Check Supabase profile for balance updates in real-time
+                    if (supabaseClient) {
+                        try {
+                            const { data } = await supabaseClient.from('profiles').select('wallet, wins, xp, status').eq('email', currentUser.email).single();
+                            if (data) {
+                                if (data.wallet !== currentUser.wallet || data.wins !== currentUser.wins) {
+                                    currentUser.wallet = data.wallet;
+                                    currentUser.wins = data.wins;
+                                    currentUser.xp = data.xp;
+                                    updateWalletDisplay();
+                                    persistLocalStorage();
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                }
+
+                // Support chat & owner queues live refresh
                 if (currentUser) {
                     const activeModal = document.getElementById('modal-support-chat');
                     if (activeModal && !activeModal.classList.contains('hidden')) {
