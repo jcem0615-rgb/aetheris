@@ -1053,26 +1053,17 @@
             syncAllRegisteredPlayers(true);
             persistMerchantConfig();
 
-            // INSTANT REAL-TIME NOTIFICATION EVENT
+            // INSTANT REAL-TIME NOTIFICATION EVENT (Same-tab / Same-window)
             window.dispatchEvent(new Event('aetheris_data_updated'));
         }
 
-        // ================= REAL-TIME STORAGE & POLLING SYNC =================
+        // ================= REAL-TIME CROSS-TAB & CROSS-WINDOW STORAGE SYNC =================
         window.addEventListener('storage', (event) => {
-            if (event.key === 'aetheris_current_user' && event.newValue) {
-                try {
-                    const updated = JSON.parse(event.newValue);
-                    if (currentUser && updated.email && updated.email.toLowerCase() === currentUser.email.toLowerCase()) {
-                        currentUser = updated;
-                        updateWalletDisplay();
-                        updateHeaderUserInfo();
-                    }
-                } catch(e) {}
-            }
-            if (event.key === 'aetheris_registered_players_db' || event.key === 'aetheris_pending_topups' || event.key === 'aetheris_pending_withdrawals' || event.key === 'aetheris_pending_registrations' || event.key === 'aetheris_pending_resets' || event.key === 'aetheris_registered_users') {
+            if (['aetheris_current_user', 'aetheris_registered_players_db', 'aetheris_pending_topups', 'aetheris_pending_withdrawals', 'aetheris_pending_registrations', 'aetheris_pending_resets', 'aetheris_support_chats', 'aetheris_registered_users'].includes(event.key)) {
                 syncAllRegisteredPlayers(true).then(() => {
                     if (currentUser && currentUser.email) {
-                        let found = registeredPlayersList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+                        let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                        let found = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
                         if (found && found.wallet !== currentUser.wallet) {
                             currentUser.wallet = found.wallet;
                             updateWalletDisplay();
@@ -1086,7 +1077,7 @@
             }
         });
 
-        // INSTANT REAL-TIME EVENT LISTENER FOR OWNER QUEUES & UI
+        // INSTANT REAL-TIME EVENT LISTENER FOR OWNER QUEUES & UI (Same-window)
         window.addEventListener('aetheris_data_updated', () => {
             const ownerView = document.getElementById('view-owner');
             if (ownerView && !ownerView.classList.contains('hidden')) {
@@ -1891,17 +1882,20 @@
             if (!localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
                 localUsers.push(newUserData);
                 localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+            } else {
+                localUsers = localUsers.map(u => u.email.toLowerCase() === email.toLowerCase() ? newUserData : u);
+                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
             }
 
             notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
             logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref} via ${currentRegMethod}.`, nickname);
 
-            // INSTANT REAL-TIME EVENT DISPATCH
+            // INSTANT REAL-TIME EVENT DISPATCH & STORAGE TRIGGER
             window.dispatchEvent(new Event('aetheris_data_updated'));
 
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('profiles').insert([newUserData]);
+                    await supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' });
                 } catch(err) {}
             }
 
@@ -1918,6 +1912,7 @@
                 return;
             }
             pendingResets.push({ email, birthday: bday, timestamp: Date.now() });
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             persistLocalStorage();
             
             // INSTANT REAL-TIME EVENT DISPATCH
@@ -2902,6 +2897,7 @@
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
             let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
             let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
+            let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || pendingResets;
 
             // Bulletproof pending registration aggregator
             let allPendingMap = new Map();
@@ -2995,7 +2991,7 @@
             }
 
             if (regList) {
-                regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registrations.</div>' :
+                regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
                     pendingRegs.map(r => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
@@ -3045,8 +3041,8 @@
             }
 
             if (resetList) {
-                resetList.innerHTML = pendingResets.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>' :
-                    pendingResets.map((r, idx) => `
+                resetList.innerHTML = resets.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>' :
+                    resets.map((r, idx) => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
                                 <strong class="text-amber-400">${r.email}</strong><br>
@@ -3339,6 +3335,7 @@
                 return t;
             });
             localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
+            persistLocalStorage();
             if (target) {
                 sendPushNotificationToPlayer(target.email, 'Top-Up Rejected', `Your top-up of ₱${target.amount} was rejected.`);
             }
@@ -3358,6 +3355,7 @@
                 return w;
             });
             localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
+            persistLocalStorage();
             if (targetWd) {
                 sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Approved!', `Your withdrawal of ₱${targetWd.amount} via ${targetWd.method} has been processed.`);
             }
@@ -3383,6 +3381,7 @@
                 return w;
             });
             localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
+            persistLocalStorage();
             if (targetWd) {
                 sendPushNotificationToPlayer(targetWd.email, 'Withdrawal Rejected', `Your withdrawal of ₱${targetWd.amount} was rejected and refunded to your wallet.`);
             }
@@ -3395,6 +3394,7 @@
             const req = pendingResets[idx];
             if (!req) return;
             pendingResets.splice(idx, 1);
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             persistLocalStorage();
             alert(`Password reset request for ${req.email} approved.`);
             renderOwnerQueues();
