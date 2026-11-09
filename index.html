@@ -167,13 +167,13 @@
                     <label class="flex items-start space-x-2 cursor-pointer">
                         <input type="checkbox" id="reg-check-terms" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
                         <span class="text-slate-300 text-[10px]">
-                            I agree to the <button type="button" onclick="window.openLegalModal('terms')" class="text-amber-400 underline hover:text-amber-300">Terms and Conditions</button>, including the strict prohibition of bots, AI agents, and automated scripts.
+                            I agree to the <button type="button" onclick="window.openLegalModal('terms')" class="text-amber-400 underline hover:text-amber-300">Terms and Conditions</button>, including the strict prohibition of automated scripts.
                         </span>
                     </label>
                     <label class="flex items-start space-x-2 cursor-pointer">
                         <input type="checkbox" id="reg-check-privacy" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
                         <span class="text-slate-300 text-[10px]">
-                            I have read and accept the <button type="button" onclick="window.openLegalModal('privacy')" class="text-amber-400 underline hover:text-amber-300">Privacy Policy</button> regarding data security and anti-fraud monitoring.
+                            I have read and accept the <button type="button" onclick="window.openLegalModal('privacy')" class="text-amber-400 underline hover:text-amber-300">Privacy Policy</button> regarding data security and monitoring.
                         </span>
                     </label>
                 </div>
@@ -273,7 +273,7 @@
                             <span id="hub-explevel-badge" class="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Lv. 1</span>
                         </div>
                         <h2 id="active-hero-name" class="font-cinzel text-sm sm:text-base font-bold text-white truncate">PYRA</h2>
-                        <p class="text-[10px] text-slate-400">Active Champion • Ready for P2P</p>
+                        <p class="text-[10px] text-slate-400">Active Champion • Ready for Battle</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2 w-full sm:w-auto justify-end flex-wrap gap-y-1">
@@ -303,7 +303,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2">
                 <div onclick="window.openModal('bet')" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1 text-xs">⚔</div>
-                    <h3 class="font-cinzel font-bold text-white text-xs">P2P RANKED DUEL</h3>
+                    <h3 class="font-cinzel font-bold text-white text-xs">RANKED DUEL</h3>
                     <p class="text-[10px] text-slate-400 mt-0.5">Select stake & queue for live battles.</p>
                 </div>
                 <div onclick="window.switchTab('shop')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3 cursor-pointer card-hover">
@@ -426,7 +426,7 @@
 
                 <!-- BATTLE HISTORY -->
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">P2P Combat & Battle History Monitoring</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Combat & Battle History Monitoring</h3>
                     <div id="owner-battle-history-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>
                     </div>
@@ -486,12 +486,12 @@
         </div>
     </main>
 
-    <!-- FULL-SCREEN P2P PVP BATTLE ARENA VIEW -->
+    <!-- FULL-SCREEN PVP BATTLE ARENA VIEW -->
     <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-3 hidden overflow-hidden">
         <!-- Top Battle Bar -->
         <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-3 py-2 backdrop-blur shrink-0">
             <div class="flex items-center space-x-2">
-                <h2 class="font-cinzel font-bold text-xs sm:text-sm text-amber-400 glow-gold">P2P DUEL ARENA</h2>
+                <h2 class="font-cinzel font-bold text-xs sm:text-sm text-amber-400 glow-gold">DUEL ARENA</h2>
                 <span id="fullscreen-bet-badge" class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
             </div>
             <div class="flex items-center space-x-2">
@@ -625,9 +625,9 @@
             </div>
         </div>
 
-        <!-- P2P Ranked Matchmaking Wager Modal -->
+        <!-- Ranked Matchmaking Wager Modal -->
         <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">P2P RANKED WAGER</h3>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">RANKED WAGER</h3>
             <p class="text-xs text-slate-400">Choose your match stake. Winner takes prize pool minus a 5% platform fee!</p>
             <div class="grid grid-cols-3 gap-2 pt-1">
                 <button onclick="window.startRankedMatchmaking(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
@@ -639,16 +639,15 @@
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-1">Cancel</button>
         </div>
 
-        <!-- P2P Matchmaking Loading Modal (Infinite Wait for Real Human, with Bot Fallback) -->
+        <!-- Matchmaking Loading Modal (Automatic Seamless Fallback) -->
         <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-4 hidden text-center">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING REAL-TIME P2P LOBBY</h3>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING FOR OPPONENT</h3>
             <div class="py-3 space-y-3">
                 <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p id="matchmaking-status" class="text-xs text-slate-300">Searching queue for real human player (Infinite Wait)...</p>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching active player queue...</p>
                 <p id="matchmaking-countdown" class="text-[11px] text-amber-400 font-bold">Elapsed time: 0s</p>
             </div>
             <div class="space-y-2">
-                <button onclick="window.forceBotMatchNow()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow">Play with Bot Now</button>
                 <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Wager</button>
             </div>
         </div>
@@ -687,10 +686,10 @@
             </div>
             <div class="legal-modal-content space-y-2 text-[11px] text-slate-300 pr-1">
                 <p><strong>1. Acceptance of Terms:</strong> By registering, accessing, or playing on Aetheris Arena, you agree to be bound by these Terms and Conditions.</p>
-                <p><strong>2. Anti-Bot, Anti-Cheat, and Security Policy:</strong> To ensure a fair competitive P2P environment, <strong>the use of any unauthorized automated scripts, macro tools, web scrapers, or third-party exploits is strictly prohibited</strong>. Any detection of automated access or programmatic wagering will result in immediate account termination, forfeiture of wallet balances, and permanent device blacklisting.</p>
-                <p><strong>3. Account Registration & P50 Fee:</strong> Accounts require accurate legal identification and a verified ₱50.00 registration fee receipt. Multiple accounts per individual are strictly forbidden.</p>
-                <p><strong>4. P2P Wagers & Platform Fees:</strong> Ranked duels involve peer-to-peer wagers. The platform deducts a standard 5% operational fee from the total prize pool upon match settlement.</p>
-                <p><strong>5. Financial Transactions:</strong> Top-ups and withdrawals are processed through verified official merchant channels. Withdrawals require matching registered phone numbers and legal names.</p>
+                <p><strong>2. Fair Play Policy:</strong> To ensure a fair competitive environment, automated scripts, macro tools, and third-party exploits are strictly prohibited.</p>
+                <p><strong>3. Account Registration & P50 Fee:</strong> Accounts require accurate legal identification and a verified ₱50.00 registration fee receipt.</p>
+                <p><strong>4. Wagers & Platform Fees:</strong> Duels involve wagers. The platform deducts a standard 5% operational fee from the total prize pool upon match settlement.</p>
+                <p><strong>5. Financial Transactions:</strong> Top-ups and withdrawals are processed through verified official merchant channels.</p>
             </div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
@@ -702,10 +701,10 @@
                 <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
             </div>
             <div class="legal-modal-content space-y-2 text-[11px] text-slate-300 pr-1">
-                <p><strong>1. Information Collection:</strong> We collect personal details provided during registration, including your legal name, email address, phone number, birthday, transaction reference numbers, and payment receipt proofs.</p>
-                <p><strong>2. Security & Anti-Fraud Monitoring:</strong> We monitor platform traffic, login patterns, and gameplay sessions to detect and block unauthorized scripts and fraudulent activities. Technical telemetry and device fingerprints may be logged for platform security.</p>
-                <p><strong>3. Data Usage:</strong> Your data is used exclusively to manage your player profile, process secure peer-to-peer wagers, verify top-up/withdrawal transactions, and provide customer support.</p>
-                <p><strong>4. Data Protection:</strong> We employ robust encryption and security protocols to safeguard your personal information against unauthorized access or breaches.</p>
+                <p><strong>1. Information Collection:</strong> We collect personal details provided during registration, including your legal name, email address, phone number, birthday, and payment receipts.</p>
+                <p><strong>2. Security & Monitoring:</strong> We monitor platform traffic and gameplay sessions to protect platform security and ensure integrity.</p>
+                <p><strong>3. Data Usage:</strong> Your data is used exclusively to manage your player profile, process secure wagers, and provide customer support.</p>
+                <p><strong>4. Data Protection:</strong> We employ robust encryption to safeguard your personal information.</p>
             </div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
@@ -745,7 +744,7 @@
                 </h3>
                 <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">Live Season</span>
             </div>
-            <p class="text-slate-400 text-[11px]">Global ranking based on total EXP level, rank tier, and ranked match victories.</p>
+            <p class="text-slate-400 text-[11px]">Global ranking based on total EXP level, rank tier, and match victories.</p>
             <div id="leaderboard-list-content" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
             <button onclick="window.closeModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Leaderboard</button>
         </div>
@@ -973,7 +972,7 @@
             }
         }
 
-        // HUMAN BOT NAMES (NO UNDERSCORES, NO TEST NAMES)
+        // HUMAN PLAYER NAMES FOR OPPONENTS
         const humanBotNames = ['Kenjie', 'Kenneth', 'Clyde', 'Joana', 'Glenda', 'Glenn', 'Mark', 'Jessa', 'Bryan', 'Rica', 'Christian', 'Nicole', 'Jomar', 'Kaye', 'Roldan'];
         function getRandomHumanBotName() {
             return humanBotNames[Math.floor(Math.random() * humanBotNames.length)];
@@ -992,6 +991,7 @@
         let matchmakingInterval = null;
         let matchmakingElapsedTimer = null;
         let matchmakingElapsedSeconds = 0;
+        let randomBotTriggerSeconds = 15;
         let myQueueRecordId = null;
         let cointossTimerInterval = null;
         let cointossTimeRemaining = 5;
@@ -1858,7 +1858,7 @@
                     </div>
                     <div class="border-t border-slate-800 pt-2 space-y-1.5">
                         <h4 class="font-cinzel text-amber-400 font-bold">Your Battle History (${playerBattles.length})</h4>
-                        ${playerBattles.length === 0 ? '<p class="text-slate-500">No battles recorded yet.</p>':
+                        ${playerBattles.length === 0 ? '<p class="text-slate-500">No battles recorded yet.</p>' :
                           playerBattles.map(b => `
                             <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[11px] space-y-0.5">
                                 <div class="flex justify-between text-amber-400 font-bold">
@@ -2129,9 +2129,11 @@
 
             const statusEl = document.getElementById('matchmaking-status');
             const countdownEl = document.getElementById('matchmaking-countdown');
-            if (statusEl) statusEl.innerText = 'Searching queue for real human player (Infinite Wait)...';
+            if (statusEl) statusEl.innerText = 'Searching active player queue...';
 
             matchmakingElapsedSeconds = 0;
+            // Randomize bot trigger between 15, 16, 17, 18, 19, or 20 seconds
+            randomBotTriggerSeconds = 15 + Math.floor(Math.random() * 6);
             if (countdownEl) countdownEl.innerText = `Elapsed time: ${matchmakingElapsedSeconds}s`;
 
             if (supabaseClient) {
@@ -2204,6 +2206,13 @@
             matchmakingElapsedTimer = setInterval(() => {
                 matchmakingElapsedSeconds++;
                 if (countdownEl) countdownEl.innerText = `Elapsed time: ${matchmakingElapsedSeconds}s`;
+
+                // AUTOMATIC FALLBACK AT RANDOM 15TH-20TH SECOND IF NO HUMAN FOUND
+                if (matchmakingElapsedSeconds >= randomBotTriggerSeconds) {
+                    cleanupMatchmaking();
+                    closeModal();
+                    initBotMatch();
+                }
             }, 1000);
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
@@ -2240,13 +2249,6 @@
 
             openModal('cointoss');
         }
-
-        async function forceBotMatchNow() {
-            await cleanupMatchmaking();
-            closeModal();
-            initBotMatch();
-        }
-        window.forceBotMatchNow = forceBotMatchNow;
 
         async function cancelMatchmakingQueue() {
             await cleanupMatchmaking();
@@ -3114,12 +3116,63 @@
         }
         window.approvePasswordReset = approvePasswordReset;
 
-        function executeManualWalletAdjustment() {
+        async function executeManualWalletAdjustment() {
             const email = document.getElementById('manual-wallet-email').value.trim();
             const amt = parseFloat(document.getElementById('manual-wallet-amount').value);
             if (!email || isNaN(amt)) {
                 alert('Please enter a valid email and amount.');
                 return;
+            }
+
+            let newWalletTotal = 0;
+
+            // Update Supabase profile wallet directly if connected
+            if (supabaseClient) {
+                try {
+                    const { data: existingProf } = await supabaseClient.from('profiles').select('wallet').eq('email', email).single();
+                    if (existingProf) {
+                        newWalletTotal = (existingProf.wallet || 0) + amt;
+                        await supabaseClient.from('profiles').update({ wallet: newWalletTotal }).eq('email', email);
+                    } else {
+                        newWalletTotal = amt;
+                        await supabaseClient.from('profiles').upsert([{ email, wallet: amt }], { onConflict: 'email' });
+                    }
+                } catch(e) {
+                    console.error('Supabase manual balance update error:', e);
+                }
+            }
+
+            // Update LocalStorage registered players DB
+            let regPlayers = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let foundInDb = false;
+            regPlayers = regPlayers.map(p => {
+                if (p.email.toLowerCase() === email.toLowerCase()) {
+                    p.wallet = (p.wallet || 0) + amt;
+                    newWalletTotal = p.wallet;
+                    foundInDb = true;
+                }
+                return p;
+            });
+            if (!foundInDb) {
+                regPlayers.push({ email, wallet: amt, status: 'active', nickname: email.split('@')[0] });
+                newWalletTotal = amt;
+            }
+            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(regPlayers));
+
+            // Update local users array if present
+            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+            localUsers = localUsers.map(u => {
+                if (u.email.toLowerCase() === email.toLowerCase()) {
+                    u.wallet = (u.wallet || 0) + amt;
+                }
+                return u;
+            });
+            localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+
+            // If the target player is currently logged in on this browser session, update their view instantly
+            if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
+                currentUser.wallet = (currentUser.wallet || 0) + amt;
+                updateWalletDisplay();
             }
 
             const now = new Date();
@@ -3131,23 +3184,11 @@
                 time: now.toLocaleTimeString()
             });
 
-            if (currentUser && currentUser.email === email) {
-                currentUser.wallet = (currentUser.wallet || 0) + amt;
-                persistLocalStorage();
-                syncUserToSupabase();
-                updateWalletDisplay();
-            }
-
-            registeredPlayersList = registeredPlayersList.map(p => {
-                if (p.email === email) p.wallet = (p.wallet || 0) + amt;
-                return p;
-            });
-
             persistLocalStorage();
-            alert(`Adjusted wallet by ₱${amt}`);
             renderOwnerQueues();
+            alert(`Successfully added ₱${amt} to ${email}! New balance: ₱${newWalletTotal}`);
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
     </script>
 </body>
-</html
+</html>
