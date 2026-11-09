@@ -1233,49 +1233,62 @@
             await syncAllRegisteredPlayers(true);
             await updateMerchantPaymentDisplay();
             try {
-                if (currentUser && currentUser.email && supabaseClient) {
+                if (currentUser && currentUser.email) {
                     const localWallet = currentUser.wallet || 0;
                     const localWins = currentUser.wins || 0;
                     const localXp = currentUser.xp || 0;
 
-                    const { data, error } = await supabaseClient
-                        .from('profiles')
-                        .select('*')
-                        .eq('email', currentUser.email)
-                        .single();
-                    if (data && !error) {
-                        currentUser = data;
-                        if (localWallet > (currentUser.wallet || 0) || localWins > (currentUser.wins || 0)) {
-                            currentUser.wallet = Math.max(localWallet, currentUser.wallet || 0);
-                            currentUser.wins = Math.max(localWins, currentUser.wins || 0);
-                            currentUser.xp = Math.max(localXp, currentUser.xp || 0);
-                            persistLocalStorage();
-                            await syncUserToSupabase();
-                        }
+                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                    let foundRecord = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+                    if (foundRecord && (foundRecord.wallet || 0) > localWallet) {
+                        currentUser.wallet = foundRecord.wallet;
+                    }
 
-                        if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                            currentUser.role = 'owner';
-                        }
-                        if (currentUser.status === 'frozen') {
-                            alert('Your account has been frozen by the administration.');
-                            logoutPlayer();
-                            return;
-                        }
-                        if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
-                        if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [];
-                        restoreUserSession();
-                    } else {
-                        if (currentUser.email) {
+                    if (supabaseClient) {
+                        const { data, error } = await supabaseClient
+                            .from('profiles')
+                            .select('*')
+                            .eq('email', currentUser.email)
+                            .single();
+                        if (data && !error) {
+                            currentUser = data;
+                            if (foundRecord && (foundRecord.wallet || 0) > (currentUser.wallet || 0)) {
+                                currentUser.wallet = foundRecord.wallet;
+                            }
+                            if (localWallet > (currentUser.wallet || 0) || localWins > (currentUser.wins || 0)) {
+                                currentUser.wallet = Math.max(localWallet, currentUser.wallet || 0);
+                                currentUser.wins = Math.max(localWins, currentUser.wins || 0);
+                                currentUser.xp = Math.max(localXp, currentUser.xp || 0);
+                                persistLocalStorage();
+                                await syncUserToSupabase();
+                            }
+
+                            if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                                currentUser.role = 'owner';
+                            }
                             if (currentUser.status === 'frozen') {
-                                alert('Your account has been frozen.');
+                                alert('Your account has been frozen by the administration.');
                                 logoutPlayer();
                                 return;
                             }
+                            if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
+                            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [];
                             restoreUserSession();
                         } else {
-                            currentUser = null;
-                            localStorage.removeItem('aetheris_current_user');
+                            if (currentUser.email) {
+                                if (currentUser.status === 'frozen') {
+                                    alert('Your account has been frozen.');
+                                    logoutPlayer();
+                                    return;
+                                }
+                                restoreUserSession();
+                            } else {
+                                currentUser = null;
+                                localStorage.removeItem('aetheris_current_user');
+                            }
                         }
+                    } else if (currentUser.email) {
+                        restoreUserSession();
                     }
                 }
             } catch (err) {}
@@ -1294,9 +1307,12 @@
                         try {
                             const { data } = await supabaseClient.from('profiles').select('wallet, wins, xp, status').eq('email', currentUser.email).single();
                             if (data) {
-                                // INTELLIGENT SYNC FIX: Only update local wallet if remote balance is higher (admin deposit/approval),
-                                // otherwise push local state up so wagering/gameplay deductions are never overwritten by stale remote data.
-                                if (data.wallet > currentUser.wallet) {
+                                // SMART SYNC FIX: If local database or wallet is higher than remote Supabase wallet, push it up!
+                                if (me && me.wallet > data.wallet) {
+                                    currentUser.wallet = me.wallet;
+                                    await syncUserToSupabase();
+                                    updateWalletDisplay();
+                                } else if (data.wallet > currentUser.wallet) {
                                     currentUser.wallet = data.wallet;
                                     currentUser.wins = data.wins;
                                     currentUser.xp = data.xp;
@@ -1452,6 +1468,11 @@
 
         function updateWalletDisplay() {
             if (!currentUser) return;
+            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let found = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+            if (found && found.wallet !== undefined && found.wallet > currentUser.wallet) {
+                currentUser.wallet = found.wallet;
+            }
             const bal = currentUser.wallet || currentUser.balance || 0;
             const navWallet = document.getElementById('nav-wallet');
             if (navWallet) navWallet.innerText = `₱${Number(bal).toFixed(2)}`;
@@ -1495,6 +1516,7 @@
                 if (hub) hub.classList.remove('hidden');
                 if (btnHub) { btnHub.classList.add('bg-blue-600', 'text-white'); btnHub.classList.remove('text-slate-400'); }
                 await loadMerchantConfig();
+                updateWalletDisplay();
                 switchPlayerHubPayment('gcash');
             } else if (tabName === 'select') {
                 const sel = document.getElementById('view-select');
@@ -1764,6 +1786,9 @@
                         }
                         if (data.password_hash === hashed || data.password === pass) {
                             currentUser = data;
+                            if (foundPlayerRecord && (foundPlayerRecord.wallet || 0) > (currentUser.wallet || 0)) {
+                                currentUser.wallet = foundPlayerRecord.wallet;
+                            }
                             if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
                             persistLocalStorage();
                             restoreUserSession();
@@ -1784,6 +1809,9 @@
                     return;
                 }
                 currentUser = found;
+                if (foundPlayerRecord && (foundPlayerRecord.wallet || 0) > (currentUser.wallet || 0)) {
+                    currentUser.wallet = foundPlayerRecord.wallet;
+                }
                 if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
                 persistLocalStorage();
                 restoreUserSession();
@@ -1844,6 +1872,12 @@
             let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
             pendingRegs.push(newUserData);
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
+
+            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+            if (!localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+                localUsers.push(newUserData);
+                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+            }
 
             notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
             logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref} via ${currentRegMethod}.`, nickname);
@@ -1924,7 +1958,7 @@
             openModal('player-profile');
             const content = document.getElementById('player-profile-content');
             if (!content || !currentUser) return;
-            const playerBattles = battleHistoryLog.filter(b => b.playerEmail === currentUser.email);
+            const playerBattles = battleHistoryLog.filter(b => b.playerEmail && currentUser.email && b.playerEmail.toLowerCase() === currentUser.email.toLowerCase());
             content.innerHTML = `
                 <div class="space-y-3">
                     <div class="space-y-1">
@@ -1956,37 +1990,68 @@
         }
         window.openPlayerProfileModal = openPlayerProfileModal;
 
+        function getRankTier(xp, wins) {
+            if (xp >= 2500 || wins >= 25) return 'Platinum I';
+            if (xp >= 1400 || wins >= 15) return 'Gold II';
+            if (xp >= 950 || wins >= 10) return 'Gold I';
+            if (xp >= 600 || wins >= 7) return 'Silver II';
+            if (xp >= 350 || wins >= 4) return 'Silver I';
+            return 'Bronze I';
+        }
+
         async function openLeaderboardModal() {
             openModal('leaderboard');
             const list = document.getElementById('leaderboard-list-content');
             if (!list) return;
 
             await syncAllRegisteredPlayers(true);
-            let sortedPlayers = [...registeredPlayersList].sort((a, b) => {
+
+            // Bot pool for rich competitive leaderboard display
+            const botEntries = [
+                { nickname: 'Kenjie', email: 'kenjie@bot.com', xp: 1250, wins: 14, status: 'active', active_hero: 'storm-knight' },
+                { nickname: 'Kenneth', email: 'kenneth@bot.com', xp: 980, wins: 10, status: 'active', active_hero: 'sylph' },
+                { nickname: 'Clyde', email: 'clyde@bot.com', xp: 850, wins: 8, status: 'active', active_hero: 'valen' },
+                { nickname: 'Joana', email: 'joana@bot.com', xp: 720, wins: 7, status: 'active', active_hero: 'pyra' },
+                { nickname: 'Glenda', email: 'glenda@bot.com', xp: 600, wins: 5, status: 'active', active_hero: 'nyx' },
+                { nickname: 'Glenn', email: 'glenn@bot.com', xp: 450, wins: 4, status: 'active', active_hero: 'titan-1' },
+                { nickname: 'Mark', email: 'mark@bot.com', xp: 320, wins: 3, status: 'active', active_hero: 'pyra' },
+                { nickname: 'Rica', email: 'rica@bot.com', xp: 210, wins: 2, status: 'active', active_hero: 'sylph' }
+            ];
+
+            let combinedMap = new Map();
+            botEntries.forEach(b => combinedMap.set(b.email.toLowerCase(), b));
+            registeredPlayersList.forEach(p => {
+                if (p.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                    combinedMap.set(p.email.toLowerCase(), p);
+                }
+            });
+
+            let sortedLeaderboard = Array.from(combinedMap.values()).sort((a, b) => {
                 let xpA = a.xp || 0;
                 let xpB = b.xp || 0;
                 if (xpB !== xpA) return xpB - xpA;
                 return (b.wins || 0) - (a.wins || 0);
             }).slice(0, 10);
 
-            if (sortedPlayers.length === 0 && currentUser) {
-                sortedPlayers = [currentUser];
-            }
-
-            list.innerHTML = sortedPlayers.map((p, idx) => {
+            list.innerHTML = sortedLeaderboard.map((p, idx) => {
                 let expLevel = Math.floor((p.xp || 0) / 100) + 1;
+                let rank = getRankTier(p.xp || 0, p.wins || 0);
                 let heroId = p.active_hero || 'pyra';
                 let heroObj = heroes.find(h => h.id === heroId) || heroes[0];
                 let heroName = heroObj ? heroObj.name : 'Pyra';
                 let nick = p.nickname || p.name || 'PLAYER';
+                let status = p.status || 'active';
 
                 return `
                     <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                         <div class="flex items-center space-x-2.5">
                             <span class="font-bold text-amber-400 w-5">#${idx + 1}</span>
                             <div>
-                                <span class="font-bold text-white uppercase">${nick}</span>
-                                <span class="text-[10px] text-slate-400 block">Hero Used Last: <strong class="text-amber-300">${heroName}</strong></span>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="font-bold text-white uppercase">${nick}</span>
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">${status}</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400 block">Rank: <strong class="text-amber-300">${rank}</strong> • Hero: <strong class="text-blue-300">${heroName}</strong></span>
                             </div>
                         </div>
                         <div class="text-right">
@@ -3033,12 +3098,12 @@
         window.sendPlayerChatMessage = sendPlayerChatMessage;
 
         function inspectPlayer(email) {
-            const player = registeredPlayersList.find(p => p.email === email);
+            const player = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
             if (!player) return;
             openModal('player-details');
             const content = document.getElementById('player-inspection-content');
             if (content) {
-                const playerBattles = battleHistoryLog.filter(b => b.playerEmail === email);
+                const playerBattles = battleHistoryLog.filter(b => b.playerEmail && b.playerEmail.toLowerCase() === email.toLowerCase());
                 content.innerHTML = `
                     <div class="space-y-3">
                         <div class="space-y-1">
@@ -3073,7 +3138,7 @@
 
         function toggleFreezePlayer(email) {
             registeredPlayersList = registeredPlayersList.map(p => {
-                if (p.email === email) {
+                if (p.email.toLowerCase() === email.toLowerCase()) {
                     p.status = (p.status === 'frozen' ? 'active' : 'frozen');
                     logSystemActivity('Account Status Change', `Account ${email} status changed to ${p.status}`, 'Owner');
                 }
@@ -3085,13 +3150,28 @@
         }
         window.toggleFreezePlayer = toggleFreezePlayer;
 
-        function deletePlayerAccount(email) {
+        async function deletePlayerAccount(email) {
             if (confirm(`Delete player account ${email}?`)) {
-                registeredPlayersList = registeredPlayersList.filter(p => p.email !== email);
+                registeredPlayersList = registeredPlayersList.filter(p => p.email.toLowerCase() !== email.toLowerCase());
+                
+                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                dbList = dbList.filter(p => p.email.toLowerCase() !== email.toLowerCase());
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+
+                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+                localUsers = localUsers.filter(u => u.email.toLowerCase() !== email.toLowerCase());
+                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('profiles').delete().eq('email', email);
+                    } catch(e) {}
+                }
+
                 persistLocalStorage();
                 logSystemActivity('Account Deleted', `Deleted player ${email}`, 'Owner');
                 renderOwnerQueues();
-                alert('Account deleted.');
+                alert('Account deleted successfully.');
             }
         }
         window.deletePlayerAccount = deletePlayerAccount;
@@ -3100,7 +3180,7 @@
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
             let approvedUser = null;
             regs = regs.map(r => {
-                if (r.email === email) {
+                if (r.email.toLowerCase() === email.toLowerCase()) {
                     r.status = 'approved';
                     approvedUser = r;
                 }
@@ -3110,7 +3190,7 @@
 
             if (approvedUser) {
                 let existingDb = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                if (!existingDb.some(p => p.email === approvedUser.email)) {
+                if (!existingDb.some(p => p.email.toLowerCase() === approvedUser.email.toLowerCase())) {
                     existingDb.push({
                         id: approvedUser.id,
                         email: approvedUser.email,
@@ -3135,7 +3215,7 @@
         function rejectRegistration(email) {
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
             regs = regs.map(r => {
-                if (r.email === email) r.status = 'rejected';
+                if (r.email.toLowerCase() === email.toLowerCase()) r.status = 'rejected';
                 return r;
             });
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
@@ -3152,14 +3232,14 @@
                 if (t.id === id) {
                     t.status = 'approved';
                     targetTopup = t;
-                    if (currentUser && currentUser.email === t.email) {
+                    if (currentUser && currentUser.email.toLowerCase() === t.email.toLowerCase()) {
                         currentUser.wallet = (currentUser.wallet || 0) + t.amount;
                         persistLocalStorage();
                         syncUserToSupabase();
                         updateWalletDisplay();
                     }
                     registeredPlayersList = registeredPlayersList.map(p => {
-                        if (p.email === t.email) p.wallet = (p.wallet || 0) + t.amount;
+                        if (p.email.toLowerCase() === t.email.toLowerCase()) p.wallet = (p.wallet || 0) + t.amount;
                         return p;
                     });
                 }
@@ -3222,7 +3302,7 @@
                 if (w.id === id) {
                     w.status = 'rejected';
                     targetWd = w;
-                    if (currentUser && currentUser.email === w.email) {
+                    if (currentUser && currentUser.email.toLowerCase() === w.email.toLowerCase()) {
                         currentUser.wallet = (currentUser.wallet || 0) + w.amount;
                         persistLocalStorage();
                         syncUserToSupabase();
