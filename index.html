@@ -1871,107 +1871,110 @@
         }
         window.handleLogin = handleLogin;
 
+        // DEBUG-FRIENDLY REGISTRATION HANDLER WITH EXPLICIT ERROR REPORTING
         async function handleRegister() {
-            const name = document.getElementById('reg-name').value.trim();
-            const nickname = document.getElementById('reg-nickname').value.trim();
-            const phone = document.getElementById('reg-phone').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const bday = document.getElementById('reg-bday').value;
-            const pass = document.getElementById('reg-pass').value;
-            const ref = document.getElementById('reg-ref').value.trim();
-            const receiptFile = document.getElementById('reg-receipt').files[0];
-            const checkTerms = document.getElementById('reg-check-terms').checked;
-            const checkPrivacy = document.getElementById('reg-check-privacy').checked;
-
-            if (!name || !nickname || !phone || !email || !bday || !pass || !ref) {
-                alert('Please fill out all registration fields.');
-                return;
-            }
-
-            // Check for phone number duplication and email duplication across databases
-            let allExistingPlayers = [...registeredPlayersList];
             try {
-                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
-                let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-                allExistingPlayers = [...allExistingPlayers, ...localUsers, ...pendingRegs];
-            } catch(e) {}
+                const name = document.getElementById('reg-name').value.trim();
+                const nickname = document.getElementById('reg-nickname').value.trim();
+                const phone = document.getElementById('reg-phone').value.trim();
+                const email = document.getElementById('reg-email').value.trim();
+                const bday = document.getElementById('reg-bday').value;
+                const pass = document.getElementById('reg-pass').value;
+                const ref = document.getElementById('reg-ref').value.trim();
+                const receiptInput = document.getElementById('reg-receipt');
+                const receiptFile = receiptInput ? receiptInput.files[0] : null;
+                const checkTerms = document.getElementById('reg-check-terms').checked;
+                const checkPrivacy = document.getElementById('reg-check-privacy').checked;
 
-            const phoneExists = allExistingPlayers.some(p => p.phone && p.phone.trim() === phone);
-            if (phoneExists) {
-                alert('This phone number is already registered to another account. Please use a unique phone number.');
-                return;
-            }
+                if (!name || !nickname || !phone || !email || !bday || !pass || !ref) {
+                    alert('Please fill out all registration fields.');
+                    return;
+                }
 
-            const emailExists = allExistingPlayers.some(p => p.email && p.email.toLowerCase() === email.toLowerCase());
-            if (emailExists) {
-                alert('This email address is already registered to another account.');
-                return;
-            }
-
-            if (!receiptFile) {
-                alert('Please upload your registration fee receipt/proof of payment screenshot.');
-                return;
-            }
-
-            if (!checkTerms || !checkPrivacy) {
-                alert('You must accept the Terms and Conditions and Privacy Policy.');
-                return;
-            }
-
-            let receiptBase64 = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.readAsDataURL(receiptFile);
-            });
-
-            const hashedPassword = await hashPassword(pass);
-            const now = new Date();
-            const newUserData = {
-                id: Date.now(),
-                name, nickname, phone, email, birthday: bday,
-                password_hash: hashedPassword,
-                wallet: 0, wins: 0, xp: 0,
-                active_hero: null,
-                unlocked_heroes: [],
-                unlockedSkills: {},
-                registration_ref: ref,
-                registration_receipt: receiptBase64,
-                payment_method: currentRegMethod,
-                status: 'pending_registration',
-                first_fight_done: false,
-                registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
-            };
-
-            let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            pendingRegs.push(newUserData);
-            localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
-
-            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
-            if (!localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-                localUsers.push(newUserData);
-                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
-            } else {
-                localUsers = localUsers.map(u => u.email.toLowerCase() === email.toLowerCase() ? newUserData : u);
-                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
-            }
-
-            notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
-            await logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref} via ${currentRegMethod}.`, nickname);
-
-            if (supabaseClient) {
+                let allExistingPlayers = [...registeredPlayersList];
                 try {
-                    await Promise.race([
-                        supabaseClient.from('pending_registrations').upsert([newUserData], { onConflict: 'email' }),
-                        supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' }),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
-                    ]);
-                } catch(err) {}
+                    let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+                    let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+                    allExistingPlayers = [...allExistingPlayers, ...localUsers, ...pendingRegs];
+                } catch(e) {}
+
+                const phoneExists = allExistingPlayers.some(p => p.phone && p.phone.trim() === phone);
+                if (phoneExists) {
+                    alert('This phone number is already registered to another account. Please use a unique phone number.');
+                    return;
+                }
+
+                const emailExists = allExistingPlayers.some(p => p.email && p.email.toLowerCase() === email.toLowerCase());
+                if (emailExists) {
+                    alert('This email address is already registered to another account.');
+                    return;
+                }
+
+                if (!receiptFile) {
+                    alert('Please upload your registration fee receipt/proof of payment screenshot.');
+                    return;
+                }
+
+                if (!checkTerms || !checkPrivacy) {
+                    alert('You must accept the Terms and Conditions and Privacy Policy.');
+                    return;
+                }
+
+                let receiptBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(receiptFile);
+                });
+
+                const hashedPassword = await hashPassword(pass);
+                const now = new Date();
+                const newUserData = {
+                    id: Date.now(),
+                    name, nickname, phone, email, birthday: bday,
+                    password_hash: hashedPassword,
+                    wallet: 0, wins: 0, xp: 0,
+                    active_hero: null,
+                    unlocked_heroes: [],
+                    unlockedSkills: {},
+                    registration_ref: ref,
+                    registration_receipt: receiptBase64,
+                    payment_method: currentRegMethod,
+                    status: 'pending_registration',
+                    first_fight_done: false,
+                    registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
+                };
+
+                let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+                pendingRegs.push(newUserData);
+                localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
+
+                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+                if (!localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+                    localUsers.push(newUserData);
+                    localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+                } else {
+                    localUsers = localUsers.map(u => u.email.toLowerCase() === email.toLowerCase() ? newUserData : u);
+                    localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+                }
+
+                notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
+                
+                if (supabaseClient) {
+                    const { error: regErr } = await supabaseClient.from('pending_registrations').upsert([newUserData], { onConflict: 'email' });
+                    if (regErr) {
+                        console.error('Supabase registration sync error:', regErr);
+                        alert('Cloud sync warning: Saved locally, but Supabase sync failed: ' + regErr.message);
+                    }
+                }
+
+                window.dispatchEvent(new Event('aetheris_data_updated'));
+
+                alert('Registration submitted successfully! Your account is pending owner approval.');
+                showAuthMode('login');
+            } catch (err) {
+                console.error('Registration exception:', err);
+                alert('Registration error: ' + err.message);
             }
-
-            window.dispatchEvent(new Event('aetheris_data_updated'));
-
-            alert('Registration submitted successfully! Your account is pending owner approval.');
-            showAuthMode('login');
         }
         window.handleRegister = handleRegister;
 
