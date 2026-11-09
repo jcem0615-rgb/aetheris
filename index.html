@@ -181,7 +181,7 @@
                 <div class="flex items-center justify-between text-xs pt-1">
                     <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
                 </div>
-                <button onclick="window.handleRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Register Account</button>
+                <button onclick="window.handleRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Register Account</button>
             </div>
 
             <!-- Forgot Password Box -->
@@ -969,19 +969,22 @@
         async function syncUserToSupabase() {
             if (!currentUser || !currentUser.email || !supabaseClient) return;
             try {
-                await supabaseClient.from('profiles').upsert([{
-                    email: currentUser.email,
-                    name: currentUser.name || 'Player',
-                    nickname: currentUser.nickname || 'PLAYER',
-                    phone: currentUser.phone || '',
-                    wallet: currentUser.wallet || 0,
-                    wins: currentUser.wins || 0,
-                    xp: currentUser.xp || 0,
-                    active_hero: currentUser.active_hero || 'pyra',
-                    unlocked_heroes: currentUser.unlocked_heroes || ['pyra'],
-                    unlocked_skills: currentUser.unlockedSkills || {},
-                    status: currentUser.status || 'active'
-                }], { onConflict: 'email' });
+                await Promise.race([
+                    supabaseClient.from('profiles').upsert([{
+                        email: currentUser.email,
+                        name: currentUser.name || 'Player',
+                        nickname: currentUser.nickname || 'PLAYER',
+                        phone: currentUser.phone || '',
+                        wallet: currentUser.wallet || 0,
+                        wins: currentUser.wins || 0,
+                        xp: currentUser.xp || 0,
+                        active_hero: currentUser.active_hero || 'pyra',
+                        unlocked_heroes: currentUser.unlocked_heroes || ['pyra'],
+                        unlocked_skills: currentUser.unlockedSkills || {},
+                        status: currentUser.status || 'active'
+                    }], { onConflict: 'email' }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+                ]);
             } catch(e) {}
         }
 
@@ -1931,7 +1934,10 @@
 
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' });
+                    await Promise.race([
+                        supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' }),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+                    ]);
                 } catch(err) {}
             }
 
@@ -2909,13 +2915,16 @@
 
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('profiles').upsert([{
-                        email: targetPlayer.email,
-                        wallet: targetPlayer.wallet,
-                        name: targetPlayer.name || 'Player',
-                        nickname: targetPlayer.nickname || 'PLAYER',
-                        status: targetPlayer.status || 'active'
-                    }], { onConflict: 'email' });
+                    await Promise.race([
+                        supabaseClient.from('profiles').upsert([{
+                            email: targetPlayer.email,
+                            wallet: targetPlayer.wallet,
+                            name: targetPlayer.name || 'Player',
+                            nickname: targetPlayer.nickname || 'PLAYER',
+                            status: targetPlayer.status || 'active'
+                        }], { onConflict: 'email' }),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+                    ]);
                 } catch(e) {}
             }
 
