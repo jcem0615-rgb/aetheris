@@ -49,7 +49,7 @@
 
             <!-- Header Right: Nickname & Wallet Beside Each Other -->
             <div class="flex items-center space-x-1.5">
-                <button id="btn-install-pwa" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow transition hidden">
+                <button type="button" id="btn-install-pwa" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow transition hidden">
                     <span>Install</span>
                 </button>
                 
@@ -68,14 +68,14 @@
 
         <!-- Scrollable Navigation Tabs for Mobile -->
         <nav id="nav-menu" class="hidden flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto w-full no-scrollbar">
-            <button onclick="window.switchTab('hub')" id="btn-hub" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white whitespace-nowrap transition">Home</button>
-            <button onclick="window.switchTab('select')" id="btn-roster" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Roster</button>
-            <button onclick="window.switchTab('shop')" id="btn-shop" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Shop</button>
-            <button onclick="window.openPlayerProfileModal()" id="btn-profile" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-amber-400 hover:bg-amber-500/10 whitespace-nowrap transition">Profile</button>
-            <button onclick="window.openLeaderboardModal()" id="btn-leaderboard" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10 whitespace-nowrap transition">Rankings</button>
-            <button onclick="window.openChatModal()" id="btn-support-chat" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-blue-400 hover:bg-blue-500/10 whitespace-nowrap transition">Support Chat</button>
-            <button onclick="window.switchTab('owner')" id="btn-owner" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition hidden">Owner</button>
-            <button onclick="window.logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition ml-auto">Logout</button>
+            <button type="button" onclick="window.switchTab('hub')" id="btn-hub" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white whitespace-nowrap transition">Home</button>
+            <button type="button" onclick="window.switchTab('select')" id="btn-roster" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Roster</button>
+            <button type="button" onclick="window.switchTab('shop')" id="btn-shop" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Shop</button>
+            <button type="button" onclick="window.openPlayerProfileModal()" id="btn-profile" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-amber-400 hover:bg-amber-500/10 whitespace-nowrap transition">Profile</button>
+            <button type="button" onclick="window.openLeaderboardModal()" id="btn-leaderboard" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10 whitespace-nowrap transition">Rankings</button>
+            <button type="button" onclick="window.openChatModal()" id="btn-support-chat" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-blue-400 hover:bg-blue-500/10 whitespace-nowrap transition">Support Chat</button>
+            <button type="button" onclick="window.switchTab('owner')" id="btn-owner" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition hidden">Owner</button>
+            <button type="button" onclick="window.logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition ml-auto">Logout</button>
         </nav>
     </header>
 
@@ -96,7 +96,7 @@
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
                 <div class="flex items-center justify-between">
                     <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
-                    <button id="auth-install-btn" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition hidden">
+                    <button type="button" id="auth-install-btn" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition hidden">
                         <span>Install App</span>
                     </button>
                 </div>
@@ -639,31 +639,38 @@
         });
 
         window.installPWA = async function() {
-            if (deferredPWAEvent) {
-                deferredPWAEvent.prompt();
-                const choice = await deferredPWAEvent.userChoice;
-                if (choice.outcome === 'accepted') {
-                    deferredPWAEvent = null;
+            try {
+                if (deferredPWAEvent) {
+                    deferredPWAEvent.prompt();
+                    const choice = await deferredPWAEvent.userChoice;
+                    if (choice.outcome === 'accepted') {
+                        deferredPWAEvent = null;
+                    }
+                } else {
+                    alert('Aetheris Arena is ready! To install on iOS/Android: tap your browser menu (Share button on Safari or three dots on Chrome) and select "Add to Home Screen".');
                 }
-            } else {
-                alert('Aetheris Arena is ready! To install on iOS/Android: tap your browser menu (Share button on Safari or three dots on Chrome) and select "Add to Home Screen".');
+            } catch(err) {
+                console.error(err);
             }
         };
 
         function logWalletTransaction(email, nickname, type, amount, preBalance, postBalance, reason) {
-            const now = new Date();
-            const tx = {
-                id: Date.now() + Math.random(),
-                timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`,
-                date: now.toISOString().split('T')[0],
-                time: now.toLocaleTimeString(),
-                email, nickname: nickname || email,
-                type, amount, preBalance, postBalance, reason
-            };
-            walletTransactionLedger.unshift(tx);
-            localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
-            logSystemActivity('Wallet ' + type, `${nickname || email}: ${type === 'CREDIT' ? '+' : '-'}₱${amount} (₱${preBalance} ➔ ₱${postBalance}) | Reason: ${reason}`, nickname || email);
-            window.dispatchEvent(new Event('aetheris_data_updated'));
+            try {
+                const now = new Date();
+                const tx = {
+                    id: Date.now() + Math.random(),
+                    timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`,
+                    date: now.toISOString().split('T')[0],
+                    time: now.toLocaleTimeString(),
+                    email, nickname: nickname || email,
+                    type, amount, preBalance, postBalance, reason
+                };
+                walletTransactionLedger.unshift(tx);
+                localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
+                logSystemActivity('Wallet ' + type, `${nickname || email}: ${type === 'CREDIT' ? '+' : '-'}₱${amount} (₱${preBalance} ➔ ₱${postBalance}) | Reason: ${reason}`, nickname || email);
+            } catch(err) {
+                console.error(err);
+            }
         }
 
         window.clearWalletLedger = function() {
@@ -675,38 +682,42 @@
         };
 
         async function syncAllRegisteredPlayers(preserveLocalWallets = false) {
-            let playersMap = new Map();
-            let existingLocalMap = new Map();
             try {
-                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                dbList.forEach(item => { if (item && item.email) existingLocalMap.set(item.email.toLowerCase(), item); });
-            } catch(e) {}
+                let playersMap = new Map();
+                let existingLocalMap = new Map();
+                try {
+                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                    dbList.forEach(item => { if (item && item.email) existingLocalMap.set(item.email.toLowerCase(), item); });
+                } catch(e) {}
 
-            playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
-                id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
-            });
-
-            existingLocalMap.forEach((val, key) => playersMap.set(key, val));
-
-            if (currentUser && currentUser.email) {
-                const emailKey = currentUser.email.toLowerCase();
-                let existing = playersMap.get(emailKey) || {};
-                playersMap.set(emailKey, {
-                    ...existing,
-                    email: currentUser.email,
-                    name: currentUser.name || existing.name || 'Player',
-                    nickname: currentUser.nickname || existing.nickname || 'PLAYER',
-                    phone: currentUser.phone || existing.phone || '',
-                    wallet: currentUser.wallet !== undefined ? currentUser.wallet : (existing.wallet || 0),
-                    wins: currentUser.wins || existing.wins || 0,
-                    xp: currentUser.xp || existing.xp || 0,
-                    active_hero: currentUser.active_hero || existing.active_hero || 'pyra',
-                    status: currentUser.status || existing.status || 'active'
+                playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
+                    id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
                 });
-            }
 
-            registeredPlayersList = Array.from(playersMap.values());
-            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+                existingLocalMap.forEach((val, key) => playersMap.set(key, val));
+
+                if (currentUser && currentUser.email) {
+                    const emailKey = currentUser.email.toLowerCase();
+                    let existing = playersMap.get(emailKey) || {};
+                    playersMap.set(emailKey, {
+                        ...existing,
+                        email: currentUser.email,
+                        name: currentUser.name || existing.name || 'Player',
+                        nickname: currentUser.nickname || existing.nickname || 'PLAYER',
+                        phone: currentUser.phone || existing.phone || '',
+                        wallet: currentUser.wallet !== undefined ? currentUser.wallet : (existing.wallet || 0),
+                        wins: currentUser.wins || existing.wins || 0,
+                        xp: currentUser.xp || existing.xp || 0,
+                        active_hero: currentUser.active_hero || existing.active_hero || 'pyra',
+                        status: currentUser.status || existing.status || 'active'
+                    });
+                }
+
+                registeredPlayersList = Array.from(playersMap.values());
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+            } catch(err) {
+                console.error(err);
+            }
         }
 
         let merchantConfig = { gcashNum: '09923978537', gcashName: 'John Carlo Estrada Morales', gcashQR: null, mayaNum: '09923978537', mayaName: 'John Carlo Estrada Morales', mayaQR: null };
@@ -716,91 +727,112 @@
                 if (stored) merchantConfig = JSON.parse(stored);
             } catch(e) {}
         }
-        async function persistMerchantConfig() {
-            localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
-        }
 
         function logSystemActivity(action, details, actor = 'System') {
-            const now = new Date();
-            systemAuditLogs.unshift({
-                id: Date.now(),
-                timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`,
-                date: now.toISOString().split('T')[0],
-                time: now.toLocaleTimeString(),
-                actor, action, details
-            });
-            localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
+            try {
+                const now = new Date();
+                systemAuditLogs.unshift({
+                    id: Date.now(),
+                    timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`,
+                    date: now.toISOString().split('T')[0],
+                    time: now.toLocaleTimeString(),
+                    actor, action, details
+                });
+                localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
+            } catch(err) {
+                console.error(err);
+            }
         }
 
         window.showAuthMode = function(mode) {
-            const loginBox = document.getElementById('auth-login-box');
-            const registerBox = document.getElementById('auth-register-box');
-            const forgotBox = document.getElementById('auth-forgot-box');
-            if (loginBox) loginBox.classList.add('hidden');
-            if (registerBox) registerBox.classList.add('hidden');
-            if (forgotBox) forgotBox.classList.add('hidden');
+            try {
+                const loginBox = document.getElementById('auth-login-box');
+                const registerBox = document.getElementById('auth-register-box');
+                const forgotBox = document.getElementById('auth-forgot-box');
+                if (loginBox) loginBox.classList.add('hidden');
+                if (registerBox) registerBox.classList.add('hidden');
+                if (forgotBox) forgotBox.classList.add('hidden');
 
-            if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
-            if (mode === 'register') {
-                if (registerBox) registerBox.classList.remove('hidden');
-                updateRegPaymentDisplay();
+                if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
+                if (mode === 'register') {
+                    if (registerBox) registerBox.classList.remove('hidden');
+                    updateRegPaymentDisplay();
+                }
+                if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
+            } catch(err) {
+                console.error(err);
             }
-            if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
         };
 
         window.togglePass = function(id, btn) {
-            const input = document.getElementById(id);
-            if (input) {
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    if (btn) btn.innerText = 'HIDE';
-                } else {
-                    input.type = 'password';
-                    if (btn) btn.innerText = 'SHOW';
+            try {
+                const input = document.getElementById(id);
+                if (input) {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        if (btn) btn.innerText = 'HIDE';
+                    } else {
+                        input.type = 'password';
+                        if (btn) btn.innerText = 'SHOW';
+                    }
                 }
+            } catch(err) {
+                console.error(err);
             }
         };
 
         window.switchRegPaymentMethod = function(method) {
-            currentRegMethod = method;
-            const btnG = document.getElementById('btn-reg-gcash');
-            const btnM = document.getElementById('btn-reg-maya');
-            if (btnG && btnM) {
-                if (method === 'gcash') {
-                    btnG.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
-                    btnM.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                } else {
-                    btnM.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
-                    btnG.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+            try {
+                currentRegMethod = method;
+                const btnG = document.getElementById('btn-reg-gcash');
+                const btnM = document.getElementById('btn-reg-maya');
+                if (btnG && btnM) {
+                    if (method === 'gcash') {
+                        btnG.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                        btnM.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                    } else {
+                        btnM.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                        btnG.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                    }
                 }
+                updateRegPaymentDisplay();
+            } catch(err) {
+                console.error(err);
             }
-            updateRegPaymentDisplay();
         };
 
         function updateRegPaymentDisplay() {
-            const box = document.getElementById('reg-active-qr');
-            if (!box) return;
-            const details = currentRegMethod === 'gcash' ? `GCash: ${merchantConfig.gcashNum}\nName: ${merchantConfig.gcashName}` : `Maya: ${merchantConfig.mayaNum}\nName: ${merchantConfig.mayaName}`;
-            box.innerHTML = `<div class="p-2"><p class="font-bold text-amber-400 text-xs">${currentRegMethod.toUpperCase()}</p><p class="text-[10px] text-slate-300 whitespace-pre-line mt-1">${details}</p></div>`;
+            try {
+                const box = document.getElementById('reg-active-qr');
+                if (!box) return;
+                const details = currentRegMethod === 'gcash' ? `GCash: ${merchantConfig.gcashNum}\nName: ${merchantConfig.gcashName}` : `Maya: ${merchantConfig.mayaNum}\nName: ${merchantConfig.mayaName}`;
+                box.innerHTML = `<div class="p-2"><p class="font-bold text-amber-400 text-xs">${currentRegMethod.toUpperCase()}</p><p class="text-[10px] text-slate-300 whitespace-pre-line mt-1">${details}</p></div>`;
+            } catch(err) {
+                console.error(err);
+            }
         }
 
         window.switchPlayerHubPayment = function(method) {
-            currentHubMethod = method;
-            const btnG = document.getElementById('btn-hub-gcash');
-            const btnM = document.getElementById('btn-hub-maya');
-            if (btnG && btnM) {
-                if (method === 'gcash') {
-                    btnG.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
-                    btnM.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                } else {
-                    btnM.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
-                    btnG.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+            try {
+                currentHubMethod = method;
+                const btnG = document.getElementById('btn-hub-gcash');
+                const btnM = document.getElementById('btn-hub-maya');
+                if (btnG && btnM) {
+                    if (method === 'gcash') {
+                        btnG.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                        btnM.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                    } else {
+                        btnM.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                        btnG.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                    }
                 }
-            }
-            const box = document.getElementById('player-active-qr');
-            if (box) {
-                const details = method === 'gcash' ? `GCash: ${merchantConfig.gcashNum}\nName: ${merchantConfig.gcashName}` : `Maya: ${merchantConfig.mayaNum}\nName: ${merchantConfig.mayaName}`;
-                box.innerHTML = `<div class="p-2"><p class="font-bold text-amber-400 text-xs">${method.toUpperCase()}</p><p class="text-[10px] text-slate-300 whitespace-pre-line mt-1">${details}</p></div>`;
+                const box = document.getElementById('player-active-qr');
+                if (box) {
+                    const details = method === 'gcash' ? `GCash: ${merchantConfig.gcashNum}\nName: ${merchantConfig.gcashName}` : `Maya: ${merchantConfig.mayaNum}\nName: ${merchantConfig.mayaName}`;
+                    box.innerHTML = `<div class="p-2"><p class="font-bold text-amber-400 text-xs">${method.toUpperCase()}</p><p class="text-[10px] text-slate-300 whitespace-pre-line mt-1">${details}</p></div>`;
+                }
+            } catch(err) {
+                console.error(err);
             }
         };
 
@@ -820,87 +852,101 @@
         };
 
         window.handleLogin = async function() {
-            const emailInput = document.getElementById('login-email');
-            const passInput = document.getElementById('login-pass');
-            if (!emailInput || !passInput) return;
-            const email = emailInput.value.trim().toLowerCase();
-            const pass = passInput.value.trim();
+            try {
+                const emailInput = document.getElementById('login-email');
+                const passInput = document.getElementById('login-pass');
+                if (!emailInput || !passInput) return;
+                const email = emailInput.value.trim().toLowerCase();
+                const pass = passInput.value.trim();
 
-            if (!email || !pass) {
-                alert('Please enter both email and password.');
-                return;
+                if (!email || !pass) {
+                    alert('Please enter both email and password.');
+                    return;
+                }
+
+                await syncAllRegisteredPlayers(true);
+                const found = registeredPlayersList.find(p => p.email.toLowerCase() === email);
+
+                if (!found) {
+                    alert('Account not found. Please register first.');
+                    return;
+                }
+
+                if (found.status === 'frozen') {
+                    alert('Your account has been frozen by administration.');
+                    return;
+                }
+
+                currentUser = found;
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+                logSystemActivity('Player Login', `User logged in: ${email}`, email);
+                bootApplicationUI();
+            } catch(err) {
+                console.error(err);
+                alert('Error signing in. Please check console.');
             }
-
-            await syncAllRegisteredPlayers(true);
-            const found = registeredPlayersList.find(p => p.email.toLowerCase() === email);
-
-            if (!found) {
-                alert('Account not found. Please register first.');
-                return;
-            }
-
-            if (found.status === 'frozen') {
-                alert('Your account has been frozen by administration.');
-                return;
-            }
-
-            currentUser = found;
-            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
-            logSystemActivity('Player Login', `User logged in: ${email}`, email);
-            bootApplicationUI();
         };
 
         window.handleRegister = async function() {
-            const name = document.getElementById('reg-name').value.trim();
-            const nickname = document.getElementById('reg-nickname').value.trim();
-            const phone = document.getElementById('reg-phone').value.trim();
-            const email = document.getElementById('reg-email').value.trim().toLowerCase();
-            const bday = document.getElementById('reg-bday').value;
-            const pass = document.getElementById('reg-pass').value.trim();
-            const ref = document.getElementById('reg-ref').value.trim();
-            const terms = document.getElementById('reg-check-terms').checked;
-            const privacy = document.getElementById('reg-check-privacy').checked;
+            try {
+                const name = document.getElementById('reg-name').value.trim();
+                const nickname = document.getElementById('reg-nickname').value.trim();
+                const phone = document.getElementById('reg-phone').value.trim();
+                const email = document.getElementById('reg-email').value.trim().toLowerCase();
+                const bday = document.getElementById('reg-bday').value;
+                const pass = document.getElementById('reg-pass').value.trim();
+                const ref = document.getElementById('reg-ref').value.trim();
+                const terms = document.getElementById('reg-check-terms').checked;
+                const privacy = document.getElementById('reg-check-privacy').checked;
 
-            if (!name || !nickname || !phone || !email || !bday || !pass || !ref) {
-                alert('Please fill in all registration fields.');
-                return;
-            }
-            if (!terms || !privacy) {
-                alert('Please accept the Terms and Conditions and Privacy Policy.');
-                return;
-            }
+                if (!name || !nickname || !phone || !email || !bday || !pass || !ref) {
+                    alert('Please fill in all registration fields.');
+                    return;
+                }
+                if (!terms || !privacy) {
+                    alert('Please accept the Terms and Conditions and Privacy Policy.');
+                    return;
+                }
 
-            await syncAllRegisteredPlayers(true);
-            if (registeredPlayersList.some(p => p.email.toLowerCase() === email)) {
-                alert('This email address is already registered.');
-                return;
-            }
-            if (registeredPlayersList.some(p => p.phone === phone)) {
-                alert('This phone number is already registered.');
-                return;
-            }
+                await syncAllRegisteredPlayers(true);
+                if (registeredPlayersList.some(p => p.email.toLowerCase() === email)) {
+                    alert('This email address is already registered.');
+                    return;
+                }
+                if (registeredPlayersList.some(p => p.phone === phone)) {
+                    alert('This phone number is already registered.');
+                    return;
+                }
 
-            let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            pendingRegs.push({
-                email, name, nickname, phone, bday, pass, ref, method: currentRegMethod, amount: 50, status: 'pending', timestamp: new Date().toISOString()
-            });
-            localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
+                let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+                pendingRegs.push({
+                    email, name, nickname, phone, bday, pass, ref, method: currentRegMethod, amount: 50, status: 'pending', timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
 
-            alert('Registration submitted successfully! Please wait for owner approval of your ₱50 fee.');
-            window.showAuthMode('login');
+                alert('Registration submitted successfully! Please wait for owner approval of your ₱50 fee.');
+                window.showAuthMode('login');
+            } catch(err) {
+                console.error(err);
+                alert('Error during registration.');
+            }
         };
 
         window.submitResetRequest = function() {
-            const email = document.getElementById('forgot-email').value.trim().toLowerCase();
-            const bday = document.getElementById('forgot-bday').value;
-            if (!email || !bday) {
-                alert('Please enter your email and birthday.');
-                return;
+            try {
+                const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+                const bday = document.getElementById('forgot-bday').value;
+                if (!email || !bday) {
+                    alert('Please enter your email and birthday.');
+                    return;
+                }
+                pendingResets.push({ email, bday, timestamp: new Date().toISOString() });
+                localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
+                alert('Password reset request submitted to administration.');
+                window.showAuthMode('login');
+            } catch(err) {
+                console.error(err);
             }
-            pendingResets.push({ email, bday, timestamp: new Date().toISOString() });
-            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
-            alert('Password reset request submitted to administration.');
-            window.showAuthMode('login');
         };
 
         window.logoutPlayer = function() {
@@ -910,37 +956,45 @@
         };
 
         function bootApplicationUI() {
-            const authView = document.getElementById('view-auth');
-            const starterView = document.getElementById('view-starter-select');
-            const hubView = document.getElementById('view-hub');
-            const header = document.getElementById('main-header');
-            const navMenu = document.getElementById('nav-menu');
-            const btnOwner = document.getElementById('btn-owner');
+            try {
+                const authView = document.getElementById('view-auth');
+                const starterView = document.getElementById('view-starter-select');
+                const hubView = document.getElementById('view-hub');
+                const header = document.getElementById('main-header');
+                const navMenu = document.getElementById('nav-menu');
+                const btnOwner = document.getElementById('btn-owner');
 
-            if (authView) authView.classList.add('hidden');
-            if (starterView) starterView.classList.add('hidden');
-            if (hubView) hubView.classList.remove('hidden');
-            if (header) header.classList.remove('hidden');
-            if (navMenu) navMenu.classList.remove('hidden');
+                if (authView) authView.classList.add('hidden');
+                if (starterView) starterView.classList.add('hidden');
+                if (hubView) hubView.classList.remove('hidden');
+                if (header) header.classList.remove('hidden');
+                if (navMenu) navMenu.classList.remove('hidden');
 
-            const navNickname = document.getElementById('nav-header-nickname');
-            const navWallet = document.getElementById('nav-wallet');
-            const navWalletContainer = document.getElementById('nav-wallet-container');
-            const navNicknameContainer = document.getElementById('nav-nickname-container');
+                const navNickname = document.getElementById('nav-header-nickname');
+                const navWallet = document.getElementById('nav-wallet');
+                const navWalletContainer = document.getElementById('nav-wallet-container');
+                const navNicknameContainer = document.getElementById('nav-nickname-container');
 
-            if (navNickname) navNickname.innerText = currentUser.nickname || currentUser.email;
-            if (navWallet) navWallet.innerText = `₱${(currentUser.wallet || 0).toFixed(2)}`;
-            if (navWalletContainer) navWalletContainer.classList.remove('hidden');
-            navWalletContainer.classList.add('flex');
-            if (navNicknameContainer) navNicknameContainer.classList.remove('hidden');
-            navNicknameContainer.classList.add('flex');
+                if (navNickname) navNickname.innerText = currentUser.nickname || currentUser.email;
+                if (navWallet) navWallet.innerText = `₱${(currentUser.wallet || 0).toFixed(2)}`;
+                if (navWalletContainer) {
+                    navWalletContainer.classList.remove('hidden');
+                    navWalletContainer.classList.add('flex');
+                }
+                if (navNicknameContainer) {
+                    navNicknameContainer.classList.remove('hidden');
+                    navNicknameContainer.classList.add('flex');
+                }
 
-            if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase() || currentUser.role === 'owner') {
-                if (btnOwner) btnOwner.classList.remove('hidden');
+                if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase() || currentUser.role === 'owner') {
+                    if (btnOwner) btnOwner.classList.remove('hidden');
+                }
+
+                window.switchPlayerHubPayment('gcash');
+                renderHubData();
+            } catch(err) {
+                console.error(err);
             }
-
-            window.switchPlayerHubPayment('gcash');
-            renderHubData();
         }
 
         function renderHubData() {
@@ -959,46 +1013,54 @@
         }
 
         window.switchTab = function(tabName) {
-            const hub = document.getElementById('view-hub');
-            const roster = document.getElementById('view-select');
-            const shop = document.getElementById('view-shop');
-            const owner = document.getElementById('view-owner');
+            try {
+                const hub = document.getElementById('view-hub');
+                const roster = document.getElementById('view-select');
+                const shop = document.getElementById('view-shop');
+                const owner = document.getElementById('view-owner');
 
-            if (hub) hub.classList.add('hidden');
-            if (roster) roster.classList.add('hidden');
-            if (shop) shop.classList.add('hidden');
-            if (owner) owner.classList.add('hidden');
+                if (hub) hub.classList.add('hidden');
+                if (roster) roster.classList.add('hidden');
+                if (shop) shop.classList.add('hidden');
+                if (owner) owner.classList.add('hidden');
 
-            if (tabName === 'hub' && hub) hub.classList.remove('hidden');
-            if (tabName === 'select' && roster) roster.classList.remove('hidden');
-            if (tabName === 'shop' && shop) shop.classList.remove('hidden');
-            if (tabName === 'owner' && owner) {
-                owner.classList.remove('hidden');
-                renderOwnerQueues();
+                if (tabName === 'hub' && hub) hub.classList.remove('hidden');
+                if (tabName === 'select' && roster) roster.classList.remove('hidden');
+                if (tabName === 'shop' && shop) shop.classList.remove('hidden');
+                if (tabName === 'owner' && owner) {
+                    owner.classList.remove('hidden');
+                    renderOwnerQueues();
+                }
+            } catch(err) {
+                console.error(err);
             }
         };
 
         window.openModal = function(name) {
-            const backdrop = document.getElementById('modal-backdrop');
-            if (!backdrop) return;
-            backdrop.classList.remove('hidden');
+            try {
+                const backdrop = document.getElementById('modal-backdrop');
+                if (!backdrop) return;
+                backdrop.classList.remove('hidden');
 
-            const modals = ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-support-chat', 'modal-terms', 'modal-privacy', 'modal-player-profile', 'modal-leaderboard', 'modal-player-details'];
-            modals.forEach(mId => {
-                const el = document.getElementById(mId);
-                if (el) el.classList.add('hidden');
-            });
+                const modals = ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-cointoss', 'modal-support-chat', 'modal-terms', 'modal-privacy', 'modal-player-profile', 'modal-leaderboard', 'modal-player-details'];
+                modals.forEach(mId => {
+                    const el = document.getElementById(mId);
+                    if (el) el.classList.add('hidden');
+                });
 
-            const target = document.getElementById(`modal-${name}`);
-            if (target) target.classList.remove('hidden');
+                const target = document.getElementById(`modal-${name}`);
+                if (target) target.classList.remove('hidden');
 
-            if (name === 'withdraw') {
-                const accInput = document.getElementById('withdraw-account');
-                const nameInput = document.getElementById('withdraw-name');
-                if (accInput) accInput.value = currentUser.phone || '';
-                if (nameInput) nameInput.value = currentUser.name || '';
-            } else if (name === 'support-chat') {
-                renderPlayerChatMessages();
+                if (name === 'withdraw') {
+                    const accInput = document.getElementById('withdraw-account');
+                    const nameInput = document.getElementById('withdraw-name');
+                    if (accInput) accInput.value = currentUser.phone || '';
+                    if (nameInput) nameInput.value = currentUser.name || '';
+                } else if (name === 'support-chat') {
+                    renderPlayerChatMessages();
+                }
+            } catch(err) {
+                console.error(err);
             }
         };
 
@@ -1008,68 +1070,80 @@
         };
 
         window.submitTopUp = function() {
-            const amount = parseFloat(document.getElementById('topup-amount').value);
-            const ref = document.getElementById('topup-ref').value.trim();
-            if (!amount || amount < 50 || !ref) {
-                alert('Please enter a valid amount (minimum ₱50) and reference number.');
-                return;
+            try {
+                const amount = parseFloat(document.getElementById('topup-amount').value);
+                const ref = document.getElementById('topup-ref').value.trim();
+                if (!amount || amount < 50 || !ref) {
+                    alert('Please enter a valid amount (minimum ₱50) and reference number.');
+                    return;
+                }
+                let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
+                topups.push({
+                    email: currentUser.email, nickname: currentUser.nickname, amount, ref, status: 'pending', timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
+                alert('Top-up request submitted for owner approval.');
+                window.closeModal();
+            } catch(err) {
+                console.error(err);
             }
-            let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-            topups.push({
-                email: currentUser.email, nickname: currentUser.nickname, amount, ref, status: 'pending', timestamp: new Date().toISOString()
-            });
-            localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
-            alert('Top-up request submitted for owner approval.');
-            window.closeModal();
         };
 
         window.submitWithdrawal = function() {
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const method = document.getElementById('withdraw-method').value;
-            if (!amount || amount < 100) {
-                alert('Minimum withdrawal amount is ₱100.');
-                return;
-            }
-            if (amount > (currentUser.wallet || 0)) {
-                alert('Insufficient wallet balance.');
-                return;
-            }
-            currentUser.wallet -= amount;
-            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            try {
+                const amount = parseFloat(document.getElementById('withdraw-amount').value);
+                const method = document.getElementById('withdraw-method').value;
+                if (!amount || amount < 100) {
+                    alert('Minimum withdrawal amount is ₱100.');
+                    return;
+                }
+                if (amount > (currentUser.wallet || 0)) {
+                    alert('Insufficient wallet balance.');
+                    return;
+                }
+                currentUser.wallet -= amount;
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
 
-            let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
-            withdraws.push({
-                email: currentUser.email, nickname: currentUser.nickname, amount, method, phone: currentUser.phone, name: currentUser.name, status: 'pending', timestamp: new Date().toISOString()
-            });
-            localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
+                let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
+                withdraws.push({
+                    email: currentUser.email, nickname: currentUser.nickname, amount, method, phone: currentUser.phone, name: currentUser.name, status: 'pending', timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
 
-            logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', amount, currentUser.wallet + amount, currentUser.wallet, `Withdrawal request via ${method}`);
-            alert('Withdrawal request submitted successfully!');
-            window.closeModal();
-            renderHubData();
+                logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', amount, currentUser.wallet + amount, currentUser.wallet, `Withdrawal request via ${method}`);
+                alert('Withdrawal request submitted successfully!');
+                window.closeModal();
+                renderHubData();
+            } catch(err) {
+                console.error(err);
+            }
         };
 
         window.startRankedMatchmaking = function(betAmount) {
-            if ((currentUser.wallet || 0) < betAmount) {
-                alert('Insufficient wallet balance for this ranked wager.');
-                return;
-            }
-            currentDuelBet = betAmount;
-            window.closeModal();
-            window.openModal('matchmaking');
-
-            let countdown = 0;
-            const countdownEl = document.getElementById('matchmaking-countdown');
-            const timer = setInterval(() => {
-                countdown++;
-                if (countdownEl) countdownEl.innerText = `Elapsed time: ${countdown}s`;
-                if (countdown >= 3) {
-                    clearInterval(timer);
-                    window.closeModal();
-                    launchDuelArena();
+            try {
+                if ((currentUser.wallet || 0) < betAmount) {
+                    alert('Insufficient wallet balance for this ranked wager.');
+                    return;
                 }
-            }, 1000);
-            window.currentMatchmakingTimer = timer;
+                currentDuelBet = betAmount;
+                window.closeModal();
+                window.openModal('matchmaking');
+
+                let countdown = 0;
+                const countdownEl = document.getElementById('matchmaking-countdown');
+                const timer = setInterval(() => {
+                    countdown++;
+                    if (countdownEl) countdownEl.innerText = `Elapsed time: ${countdown}s`;
+                    if (countdown >= 3) {
+                        clearInterval(timer);
+                        window.closeModal();
+                        launchDuelArena();
+                    }
+                }, 1000);
+                window.currentMatchmakingTimer = timer;
+            } catch(err) {
+                console.error(err);
+            }
         };
 
         window.cancelMatchmakingQueue = function() {
@@ -1151,7 +1225,7 @@
             let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
             let msgs = supportChats[currentUser.email] || [];
             box.innerHTML = msgs.length === 0 ? '<div class="text-slate-500 text-center py-4">No messages yet. Send a message to Customer Support.</div>' :
-                msgs.map(m => `div class="p-2 rounded-lg ${m.sender === 'owner' ? 'bg-blue-950/60 border border-blue-500/30 ml-4' : 'bg-slate-900 border border-slate-800 mr-4'}">
+                msgs.map(m => `<div class="p-2 rounded-lg ${m.sender === 'owner' ? 'bg-blue-950/60 border border-blue-500/30 ml-4' : 'bg-slate-900 border border-slate-800 mr-4'}">
                     <span class="text-[9px] text-amber-400 font-bold block">${m.sender === 'owner' ? 'Support Owner' : 'You'}</span>
                     <p class="text-white mt-0.5">${m.text}</p>
                 </div>`).join('');
@@ -1253,105 +1327,117 @@
         };
 
         async function renderOwnerQueues() {
-            await syncAllRegisteredPlayers(true);
-            const walletLedgerList = document.getElementById('owner-wallet-ledger-list');
-            const depositHistoryList = document.getElementById('owner-deposit-history-list');
-            const withdrawHistoryList = document.getElementById('owner-withdraw-history-list');
-            const balanceAdderHistoryList = document.getElementById('owner-balance-adder-history');
-            const totalDepositsMetric = document.getElementById('metric-total-deposits');
-            const totalWithdrawalsMetric = document.getElementById('metric-total-withdrawals');
-            const playersList = document.getElementById('owner-players-list');
-            const playerCountBadge = document.getElementById('owner-player-count');
-            const regList = document.getElementById('owner-registration-list');
-            const resetList = document.getElementById('owner-reset-list');
-            const depList = document.getElementById('owner-deposit-list');
-            const wdList = document.getElementById('owner-withdraw-list');
+            try {
+                await syncAllRegisteredPlayers(true);
+                const walletLedgerList = document.getElementById('owner-wallet-ledger-list');
+                const depositHistoryList = document.getElementById('owner-deposit-history-list');
+                const withdrawHistoryList = document.getElementById('owner-withdraw-history-list');
+                const balanceAdderHistoryList = document.getElementById('owner-balance-adder-history');
+                const totalDepositsMetric = document.getElementById('metric-total-deposits');
+                const totalWithdrawalsMetric = document.getElementById('metric-total-withdrawals');
+                const playersList = document.getElementById('owner-players-list');
+                const playerCountBadge = document.getElementById('owner-player-count');
+                const regList = document.getElementById('owner-registration-list');
+                const resetList = document.getElementById('owner-reset-list');
+                const depList = document.getElementById('owner-deposit-list');
+                const wdList = document.getElementById('owner-withdraw-list');
 
-            let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-            let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
-            let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
+                let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
+                let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
+                let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+                walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
 
-            let approvedDeposits = topups.filter(t => t.status === 'approved');
-            let approvedWithdraws = withdraws.filter(w => w.status === 'approved');
+                let approvedDeposits = topups.filter(t => t.status === 'approved');
+                let approvedWithdraws = withdraws.filter(w => w.status === 'approved');
 
-            if (totalDepositsMetric) totalDepositsMetric.innerText = `₱${approvedDeposits.reduce((a, c) => a + c.amount, 0).toFixed(2)}`;
-            if (totalWithdrawalsMetric) totalWithdrawalsMetric.innerText = `₱${approvedWithdraws.reduce((a, c) => a + c.amount, 0).toFixed(2)}`;
+                if (totalDepositsMetric) totalDepositsMetric.innerText = `₱${approvedDeposits.reduce((a, c) => a + c.amount, 0).toFixed(2)}`;
+                if (totalWithdrawalsMetric) totalWithdrawalsMetric.innerText = `₱${approvedWithdraws.reduce((a, c) => a + c.amount, 0).toFixed(2)}`;
 
-            if (walletLedgerList) {
-                walletLedgerList.innerHTML = walletTransactionLedger.length === 0 ? '<div class="text-xs text-slate-500 text-center py-2">No transactions logged.</div>' :
-                    walletTransactionLedger.map(tx => `
-                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between items-center">
-                            <div>
-                                <span class="font-bold text-white">${tx.nickname}</span> (${tx.email})<br>
-                                <span class="text-[10px] text-amber-300 font-bold">${tx.reason}</span><br>
-                                <span class="text-[9px] text-slate-400">₱${tx.preBalance} ➔ ₱${tx.postBalance} | 📅 ${tx.date} ⏰ ${tx.time}</span>
+                if (walletLedgerList) {
+                    walletLedgerList.innerHTML = walletTransactionLedger.length === 0 ? '<div class="text-xs text-slate-500 text-center py-2">No transactions logged.</div>' :
+                        walletTransactionLedger.map(tx => `
+                            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs flex justify-between items-center">
+                                <div>
+                                    <span class="font-bold text-white">${tx.nickname}</span> (${tx.email})<br>
+                                    <span class="text-[10px] text-amber-300 font-bold">${tx.reason}</span><br>
+                                    <span class="text-[9px] text-slate-400">₱${tx.preBalance} ➔ ₱${tx.postBalance} | 📅 ${tx.date} ⏰ ${tx.time}</span>
+                                </div>
+                                <span class="${tx.type === 'CREDIT' ? 'text-emerald-400' : 'text-red-400'} font-bold text-sm">${tx.type === 'CREDIT' ? '+' : '-'}₱${tx.amount}</span>
                             </div>
-                            <span class="${tx.type === 'CREDIT' ? 'text-emerald-400' : 'text-red-400'} font-bold text-sm">${tx.type === 'CREDIT' ? '+' : '-'}₱${tx.amount}</span>
+                        `).join('');
+                }
+
+                if (playerCountBadge) playerCountBadge.innerText = registeredPlayersList.length;
+                if (playersList) {
+                    playersList.innerHTML = registeredPlayersList.map(p => `
+                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div>
+                                <strong class="text-amber-400">${p.nickname || 'Player'}</strong> (${p.email})<br>
+                                <span class="text-slate-400 text-[10px]">Bal: ₱${p.wallet || 0} | Status: <strong class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'}">${p.status || 'active'}</strong></span>
+                            </div>
+                            <div class="space-x-1">
+                                <button type="button" onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[10px]">Inspect</button>
+                                <button type="button" onclick="window.toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-orange-600'} text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
+                                <button type="button" onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Delete</button>
+                            </div>
                         </div>
                     `).join('');
-            }
+                }
 
-            if (playerCountBadge) playerCountBadge.innerText = registeredPlayersList.length;
-            if (playersList) {
-                playersList.innerHTML = registeredPlayersList.map(p => `
-                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div>
-                            <strong class="text-amber-400">${p.nickname || 'Player'}</strong> (${p.email})<br>
-                            <span class="text-slate-400 text-[10px]">Bal: ₱${p.wallet || 0} | Status: <strong class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'}">${p.status || 'active'}</strong></span>
-                        </div>
-                        <div class="space-x-1">
-                            <button type="button" onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[10px]">Inspect</button>
-                            <button type="button" onclick="window.toggleFreezePlayer('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-orange-600'} text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
-                            <button type="button" onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Delete</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            if (regList) {
-                let pendingRegs = regs.filter(r => r.status === 'pending');
-                regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
-                    pendingRegs.map(r => `
-                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                            <div>
-                                <span class="font-bold text-amber-400">${r.nickname}</span> (${r.email})<br>
-                                <span class="text-[10px] text-slate-400">Ref: ${r.ref} | ₱50 Fee</span>
+                if (regList) {
+                    let pendingRegs = regs.filter(r => r.status === 'pending');
+                    regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
+                        pendingRegs.map(r => `
+                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                                <div>
+                                    <span class="font-bold text-amber-400">${r.nickname}</span> (${r.email})<br>
+                                    <span class="text-[10px] text-slate-400">Ref: ${r.ref} | ₱50 Fee</span>
+                                </div>
+                                <button type="button" onclick="window.approveRegistration('${r.email}')" class="px-3 py-1 bg-emerald-600 text-white font-bold rounded text-[10px]">Approve</button>
                             </div>
-                            <button type="button" onclick="window.approveRegistration('${r.email}')" class="px-3 py-1 bg-emerald-600 text-white font-bold rounded text-[10px]">Approve</button>
-                        </div>
-                    `).join('');
+                        `).join('');
+                }
+            } catch(err) {
+                console.error(err);
             }
         }
         window.renderOwnerQueues = renderOwnerQueues;
 
         window.approveRegistration = async function(email) {
-            let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            let target = regs.find(r => r.email.toLowerCase() === email.toLowerCase());
-            if (target) {
-                target.status = 'active';
-                localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs.filter(r => r.email.toLowerCase() !== email.toLowerCase())));
-                
-                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                dbList.push({
-                    email: target.email, name: target.name, nickname: target.nickname, phone: target.phone, bday: target.bday, pass: target.pass, wallet: 0, status: 'active', rank: 'Bronze I', level: 1
-                });
-                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+            try {
+                let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+                let target = regs.find(r => r.email.toLowerCase() === email.toLowerCase());
+                if (target) {
+                    target.status = 'active';
+                    localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs.filter(r => r.email.toLowerCase() !== email.toLowerCase())));
+                    
+                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                    dbList.push({
+                        email: target.email, name: target.name, nickname: target.nickname, phone: target.phone, bday: target.bday, pass: target.pass, wallet: 0, status: 'active', rank: 'Bronze I', level: 1
+                    });
+                    localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
 
-                await syncAllRegisteredPlayers(true);
-                renderOwnerQueues();
-                alert(`Approved registration for ${email}`);
+                    await syncAllRegisteredPlayers(true);
+                    renderOwnerQueues();
+                    alert(`Approved registration for ${email}`);
+                }
+            } catch(err) {
+                console.error(err);
             }
         };
 
         window.onload = async function() {
-            await loadMerchantConfig();
-            await syncAllRegisteredPlayers(true);
-            if (currentUser) {
-                bootApplicationUI();
-            } else {
-                const authView = document.getElementById('view-auth');
-                if (authView) authView.classList.remove('hidden');
+            try {
+                await loadMerchantConfig();
+                await syncAllRegisteredPlayers(true);
+                if (currentUser) {
+                    bootApplicationUI();
+                } else {
+                    const authView = document.getElementById('view-auth');
+                    if (authView) authView.classList.remove('hidden');
+                }
+            } catch(err) {
+                console.error(err);
             }
         };
     </script>
