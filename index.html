@@ -1270,7 +1270,6 @@
             // ================= REAL-TIME BACKGROUND POLLING LOOP =================
             setInterval(async () => {
                 if (currentUser && currentUser.email) {
-                    // Check local registered players DB for balance updates
                     let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
                     let me = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
                     if (me && me.wallet !== currentUser.wallet) {
@@ -1278,7 +1277,6 @@
                         updateWalletDisplay();
                     }
 
-                    // Check Supabase profile for balance updates in real-time
                     if (supabaseClient) {
                         try {
                             const { data } = await supabaseClient.from('profiles').select('wallet, wins, xp, status').eq('email', currentUser.email).single();
@@ -1295,7 +1293,6 @@
                     }
                 }
 
-                // Support chat & owner queues live refresh
                 if (currentUser) {
                     const activeModal = document.getElementById('modal-support-chat');
                     if (activeModal && !activeModal.classList.contains('hidden')) {
@@ -2802,7 +2799,7 @@
                     balanceAdderHistory.map(b => `
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[10px] flex justify-between items-center">
                             <div>
-                                <span class="text-white font-bold">${b.email}</span>: <span class="${b.amount >= 0 ? 'text-emerald-400' : 'text-red-400'} font-bold">${b.amount >= 0 ? '+' : ''}₱${b.amount}</span> <span class="text-slate-400">(Total: ₱${b.newTotal})</span><br>
+                                <span class="text-white font-bold">${b.email}</span>: <span class="${b.amount >= 0 ? 'text-emerald-400' : 'text-red-400'} font-bold">${b.amount >= 0 ? '+' : ''}₱${b.amount}</span> <span class="text-slate-400">(Total: ₱${b.newTotal !== undefined ? b.newTotal : 'N/A'})</span><br>
                                 <span class="text-[9px] text-slate-400">📅 ${b.date} ⏰ ${b.time}</span>
                             </div>
                             <button onclick="window.deleteBalanceAdderHistoryItem(${b.id})" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px] font-bold">Delete</button>
