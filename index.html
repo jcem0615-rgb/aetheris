@@ -499,8 +499,8 @@
             </div>
         </div>
 
-        <!-- Main Combat Stage with Cosmic Portal Background -->
-        <div class="flex-1 my-2 border border-slate-800/80 rounded-3xl p-3 flex flex-col justify-between relative overflow-hidden shadow-2xl" style="background-image: url('image_911bbe0e (1)_2.jpg'); background-size: cover; background-position: center;">
+        <!-- Main Combat Stage with Uploaded Battlefield Background Image -->
+        <div class="flex-1 my-2 border border-slate-800/80 rounded-3xl p-3 flex flex-col justify-between relative overflow-hidden shadow-2xl" style="background-image: url('image_911bbe0e%20%281%29_2.jpg'); background-size: cover; background-position: center;">
             <div class="absolute inset-0 bg-black/40 pointer-events-none"></div>
 
             <!-- Opponent Stage Area (Top) -->
@@ -639,15 +639,18 @@
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-1">Cancel</button>
         </div>
 
-        <!-- P2P Matchmaking Loading Modal -->
+        <!-- P2P Matchmaking Loading Modal (Infinite Wait for Real Human, with Bot Fallback) -->
         <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-4 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING REAL-TIME P2P LOBBY</h3>
             <div class="py-3 space-y-3">
                 <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p id="matchmaking-status" class="text-xs text-slate-300">Searching queue for real player...</p>
-                <p id="matchmaking-countdown" class="text-[11px] text-amber-400 font-bold">Time left: 20s</p>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching queue for real human player (Infinite Wait)...</p>
+                <p id="matchmaking-countdown" class="text-[11px] text-amber-400 font-bold">Elapsed time: 0s</p>
             </div>
-            <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Wager</button>
+            <div class="space-y-2">
+                <button onclick="window.forceBotMatchNow()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow">Play with Bot Now</button>
+                <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Wager</button>
+            </div>
         </div>
 
         <!-- Transparent Coin Toss Modal with 5s Timer -->
@@ -970,7 +973,8 @@
             }
         }
 
-        const humanBotNames = ['Juan_Cruz', 'Maria_Santos', 'Carlo_Garcia', 'Aria_Vanguard', 'Miguel_Reyes', 'Bea_Alonzo', 'Marco_Polo', 'Elena_Gilbert', 'Kian_Roxas', 'Sofia_Cruz'];
+        // HUMAN BOT NAMES (NO UNDERSCORES, NO TEST NAMES)
+        const humanBotNames = ['Kenjie', 'Kenneth', 'Clyde', 'Joana', 'Glenda', 'Glenn', 'Mark', 'Jessa', 'Bryan', 'Rica', 'Christian', 'Nicole', 'Jomar', 'Kaye', 'Roldan'];
         function getRandomHumanBotName() {
             return humanBotNames[Math.floor(Math.random() * humanBotNames.length)];
         }
@@ -978,7 +982,7 @@
         let duelState = { 
             playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
             enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-            turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, currentOpponentName: 'Juan_Cruz', enemyHero: null, enemyDeck: [], isPlayerTurn: true
+            turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, currentOpponentName: 'Kenjie', enemyHero: null, enemyDeck: [], isPlayerTurn: true
         };
 
         let playerDeck = [];
@@ -986,7 +990,8 @@
         let playerDiscard = [];
         
         let matchmakingInterval = null;
-        let matchmakingTimeoutTimer = null;
+        let matchmakingElapsedTimer = null;
+        let matchmakingElapsedSeconds = 0;
         let myQueueRecordId = null;
         let cointossTimerInterval = null;
         let cointossTimeRemaining = 5;
@@ -1853,7 +1858,7 @@
                     </div>
                     <div class="border-t border-slate-800 pt-2 space-y-1.5">
                         <h4 class="font-cinzel text-amber-400 font-bold">Your Battle History (${playerBattles.length})</h4>
-                        ${playerBattles.length === 0 ? '<p class="text-slate-500">No battles recorded yet.</p>' :
+                        ${playerBattles.length === 0 ? '<p class="text-slate-500">No battles recorded yet.</p>':
                           playerBattles.map(b => `
                             <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[11px] space-y-0.5">
                                 <div class="flex justify-between text-amber-400 font-bold">
@@ -2124,10 +2129,10 @@
 
             const statusEl = document.getElementById('matchmaking-status');
             const countdownEl = document.getElementById('matchmaking-countdown');
-            if (statusEl) statusEl.innerText = 'Searching queue for real player...';
+            if (statusEl) statusEl.innerText = 'Searching queue for real human player (Infinite Wait)...';
 
-            let secondsLeft = 20;
-            if (countdownEl) countdownEl.innerText = `Time left: ${secondsLeft}s`;
+            matchmakingElapsedSeconds = 0;
+            if (countdownEl) countdownEl.innerText = `Elapsed time: ${matchmakingElapsedSeconds}s`;
 
             if (supabaseClient) {
                 try {
@@ -2147,7 +2152,7 @@
             }
 
             if (matchmakingInterval) clearInterval(matchmakingInterval);
-            if (matchmakingTimeoutTimer) clearTimeout(matchmakingTimeoutTimer);
+            if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
 
             matchmakingInterval = setInterval(async () => {
                 if (supabaseClient) {
@@ -2196,22 +2201,16 @@
                 }
             }, 2000);
 
-            matchmakingTimeoutTimer = setInterval(() => {
-                secondsLeft--;
-                if (countdownEl) countdownEl.innerText = `Time left: ${secondsLeft}s`;
-
-                if (secondsLeft <= 0) {
-                    cleanupMatchmaking();
-                    closeModal();
-                    initBotMatch();
-                }
+            matchmakingElapsedTimer = setInterval(() => {
+                matchmakingElapsedSeconds++;
+                if (countdownEl) countdownEl.innerText = `Elapsed time: ${matchmakingElapsedSeconds}s`;
             }, 1000);
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
 
         async function cleanupMatchmaking() {
             if (matchmakingInterval) clearInterval(matchmakingInterval);
-            if (matchmakingTimeoutTimer) clearTimeout(matchmakingTimeoutTimer);
+            if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
             if (supabaseClient && myQueueRecordId) {
                 try {
                     await supabaseClient.from('matchmaking_queue').delete().eq('id', myQueueRecordId);
@@ -2241,6 +2240,13 @@
 
             openModal('cointoss');
         }
+
+        async function forceBotMatchNow() {
+            await cleanupMatchmaking();
+            closeModal();
+            initBotMatch();
+        }
+        window.forceBotMatchNow = forceBotMatchNow;
 
         async function cancelMatchmakingQueue() {
             await cleanupMatchmaking();
@@ -3144,4 +3150,4 @@
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
     </script>
 </body>
-</html>
+</html
