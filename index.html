@@ -850,39 +850,46 @@
         }
         window.saveQRCodeImage = saveQRCodeImage;
 
-        async function syncAllRegisteredPlayers() {
+        async function syncAllRegisteredPlayers(preserveLocalWallets = false) {
             let playersMap = new Map();
             
-            playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
-                id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
-            });
-
+            let existingLocalMap = new Map();
             try {
                 let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
                 dbList.forEach(item => {
                     if (item && item.email) {
-                        playersMap.set(item.email.toLowerCase(), item);
+                        existingLocalMap.set(item.email.toLowerCase(), item);
                     }
                 });
             } catch(e) {}
 
+            playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
+                id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
+            });
+
+            existingLocalMap.forEach((val, key) => {
+                playersMap.set(key, val);
+            });
+
             if (currentUser && currentUser.email) {
                 const emailKey = currentUser.email.toLowerCase();
+                let existing = playersMap.get(emailKey) || {};
                 playersMap.set(emailKey, {
-                    id: currentUser.id || Date.now(),
+                    ...existing,
+                    id: currentUser.id || existing.id || Date.now(),
                     email: currentUser.email,
-                    name: currentUser.name || 'Player',
-                    nickname: currentUser.nickname || 'PLAYER',
-                    phone: currentUser.phone || '',
-                    wallet: currentUser.wallet || 0,
-                    wins: currentUser.wins || 0,
-                    xp: currentUser.xp || 0,
-                    active_hero: currentUser.active_hero || 'pyra',
-                    status: currentUser.status || 'active'
+                    name: currentUser.name || existing.name || 'Player',
+                    nickname: currentUser.nickname || existing.nickname || 'PLAYER',
+                    phone: currentUser.phone || existing.phone || '',
+                    wallet: currentUser.wallet !== undefined ? currentUser.wallet : (existing.wallet || 0),
+                    wins: currentUser.wins || existing.wins || 0,
+                    xp: currentUser.xp || existing.xp || 0,
+                    active_hero: currentUser.active_hero || existing.active_hero || 'pyra',
+                    status: currentUser.status || existing.status || 'active'
                 });
             }
 
-            if (supabaseClient) {
+            if (supabaseClient && !preserveLocalWallets) {
                 try {
                     const { data, error } = await supabaseClient.from('profiles').select('*');
                     if (data && !error) {
@@ -892,17 +899,23 @@
                                 if (currentUser && currentUser.email.toLowerCase() === emailKey) {
                                     return;
                                 }
+                                let localExisting = playersMap.get(emailKey);
+                                let finalWallet = p.wallet || p.balance || 0;
+                                if (localExisting && localExisting.wallet !== undefined && localExisting.wallet > finalWallet) {
+                                    finalWallet = localExisting.wallet;
+                                }
+
                                 playersMap.set(emailKey, {
-                                    id: p.id || Date.now(),
+                                    id: p.id || (localExisting ? localExisting.id : Date.now()),
                                     email: p.email,
-                                    name: p.name || p.fullName || 'Player',
-                                    nickname: p.nickname || p.username || 'PLAYER',
-                                    phone: p.phone || '',
-                                    wallet: p.wallet || p.balance || 0,
-                                    wins: p.wins || 0,
-                                    xp: p.xp || 0,
-                                    active_hero: p.active_hero || 'pyra',
-                                    status: p.status || 'active'
+                                    name: p.name || p.fullName || (localExisting ? localExisting.name : 'Player'),
+                                    nickname: p.nickname || p.username || (localExisting ? localExisting.nickname : 'PLAYER'),
+                                    phone: p.phone || (localExisting ? localExisting.phone : ''),
+                                    wallet: finalWallet,
+                                    wins: Math.max(p.wins || 0, localExisting ? (localExisting.wins || 0) : 0),
+                                    xp: Math.max(p.xp || 0, localExisting ? (localExisting.xp || 0) : 0),
+                                    active_hero: p.active_hero || (localExisting ? localExisting.active_hero : 'pyra'),
+                                    status: p.status || (localExisting ? localExisting.status : 'active')
                                 });
                             }
                         });
@@ -1037,7 +1050,7 @@
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
             localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
             localStorage.setItem('aetheris_balance_adder_history', JSON.stringify(balanceAdderHistory));
-            syncAllRegisteredPlayers();
+            syncAllRegisteredPlayers(true);
             persistMerchantConfig();
         }
 
@@ -1054,7 +1067,7 @@
                 } catch(e) {}
             }
             if (event.key === 'aetheris_registered_players_db') {
-                syncAllRegisteredPlayers().then(() => {
+                syncAllRegisteredPlayers(true).then(() => {
                     if (currentUser && currentUser.email) {
                         let found = registeredPlayersList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
                         if (found && found.wallet !== currentUser.wallet) {
@@ -1217,7 +1230,7 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             await loadMerchantConfig();
-            await syncAllRegisteredPlayers();
+            await syncAllRegisteredPlayers(true);
             await updateMerchantPaymentDisplay();
             try {
                 if (currentUser && currentUser.email && supabaseClient) {
@@ -1281,12 +1294,20 @@
                         try {
                             const { data } = await supabaseClient.from('profiles').select('wallet, wins, xp, status').eq('email', currentUser.email).single();
                             if (data) {
-                                if (data.wallet !== currentUser.wallet || data.wins !== currentUser.wins) {
+                                // INTELLIGENT SYNC FIX: Only update local wallet if remote balance is higher (admin deposit/approval),
+                                // otherwise push local state up so wagering/gameplay deductions are never overwritten by stale remote data.
+                                if (data.wallet > currentUser.wallet) {
                                     currentUser.wallet = data.wallet;
                                     currentUser.wins = data.wins;
                                     currentUser.xp = data.xp;
                                     updateWalletDisplay();
                                     persistLocalStorage();
+                                } else if (data.wallet !== currentUser.wallet) {
+                                    await syncUserToSupabase();
+                                }
+                                if (data.status === 'frozen') {
+                                    alert('Your account has been frozen by the administration.');
+                                    logoutPlayer();
                                 }
                             }
                         } catch(e) {}
@@ -1490,7 +1511,7 @@
                 if (own) own.classList.remove('hidden');
                 if (btnOwner) { btnOwner.classList.add('bg-blue-600', 'text-white'); btnOwner.classList.remove('text-slate-400'); }
                 await loadMerchantConfig();
-                await syncAllRegisteredPlayers();
+                await syncAllRegisteredPlayers(true);
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
             }
@@ -1498,7 +1519,7 @@
         window.switchTab = switchTab;
 
         async function forceSyncOwnerPortal() {
-            await syncAllRegisteredPlayers();
+            await syncAllRegisteredPlayers(true);
             await loadMerchantConfig();
             renderOwnerQueues();
             alert('Owner Portal synced successfully!');
@@ -1916,7 +1937,7 @@
                     </div>
                     <div class="border-t border-slate-800 pt-2 space-y-1.5">
                         <h4 class="font-cinzel text-amber-400 font-bold">Your Battle History (${playerBattles.length})</h4>
-                        ${playerBattles.length === 0 ? '<p class="text-slate-500">No battles recorded yet.</p>' :
+                        ${playerBattles.length === 0 ? '<p class="text-slate-500">No battles recorded yet.</p>':
                           playerBattles.map(b => `
                             <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[11px] space-y-0.5">
                                 <div class="flex justify-between text-amber-400 font-bold">
@@ -1940,7 +1961,7 @@
             const list = document.getElementById('leaderboard-list-content');
             if (!list) return;
 
-            await syncAllRegisteredPlayers();
+            await syncAllRegisteredPlayers(true);
             let sortedPlayers = [...registeredPlayersList].sort((a, b) => {
                 let xpA = a.xp || 0;
                 let xpB = b.xp || 0;
@@ -2737,7 +2758,6 @@
                 updateWalletDisplay();
             }
 
-            // CRITICAL FIX: Use upsert to guarantee Supabase saves the new wallet without overwriting with stale data
             if (supabaseClient) {
                 try {
                     await supabaseClient.from('profiles').upsert([{
@@ -2747,9 +2767,7 @@
                         nickname: targetPlayer.nickname || 'PLAYER',
                         status: targetPlayer.status || 'active'
                     }], { onConflict: 'email' });
-                } catch(e) {
-                    console.error('Supabase wallet sync error:', e);
-                }
+                } catch(e) {}
             }
 
             const now = new Date();
@@ -2765,14 +2783,14 @@
             persistLocalStorage();
             logSystemActivity('Manual Wallet Adjustment', `Adjusted balance for ${email} by ₱${amount}. New total: ₱${targetPlayer.wallet}`, 'Owner');
             
-            await syncAllRegisteredPlayers();
+            await syncAllRegisteredPlayers(true);
             renderOwnerQueues();
             alert(`Successfully adjusted wallet for ${email} by ₱${amount}. New total: ₱${targetPlayer.wallet}`);
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
         function renderOwnerQueues() {
-            syncAllRegisteredPlayers();
+            syncAllRegisteredPlayers(true);
             const depositHistoryList = document.getElementById('owner-deposit-history-list');
             const withdrawHistoryList = document.getElementById('owner-withdraw-history-list');
             const balanceAdderHistoryList = document.getElementById('owner-balance-adder-history');
