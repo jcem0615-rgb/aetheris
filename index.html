@@ -2652,6 +2652,13 @@
             switchTab('hub');
         }
 
+        function deleteBalanceAdderHistoryItem(id) {
+            balanceAdderHistory = balanceAdderHistory.filter(b => b.id !== id);
+            persistLocalStorage();
+            renderOwnerQueues();
+        }
+        window.deleteBalanceAdderHistoryItem = deleteBalanceAdderHistoryItem;
+
         function renderOwnerQueues() {
             syncAllRegisteredPlayers();
             const depositHistoryList = document.getElementById('owner-deposit-history-list');
@@ -2717,6 +2724,7 @@
                                 <span class="text-white font-bold">${b.email}</span>: <span class="${b.amount >= 0 ? 'text-emerald-400' : 'text-red-400'} font-bold">${b.amount >= 0 ? '+' : ''}₱${b.amount}</span><br>
                                 <span class="text-[9px] text-slate-400">📅 ${b.date} ⏰ ${b.time}</span>
                             </div>
+                            <button onclick="window.deleteBalanceAdderHistoryItem(${b.id})" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px] font-bold">Delete</button>
                         </div>
                     `).join('');
             }
