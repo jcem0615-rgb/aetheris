@@ -46,7 +46,7 @@
                 </div>
                 <div>
                     <h1 class="font-cinzel font-bold text-xs tracking-wider text-amber-400">AETHERIS ARENA</h1>
-                    <p id="header-subtitle" class="text-[9px] text-slate-400">P2P Tactical Card Arena</p>
+                    <p id="header-subtitle" class="text-[9px] text-slate-400">Admin Command Center</p>
                 </div>
             </div>
 
@@ -57,26 +57,20 @@
                 </button>
                 
                 <div id="nav-nickname-container" class="hidden items-center bg-slate-900 border border-amber-500/40 rounded-full px-2.5 py-0.5">
-                    <span id="nav-header-nickname" class="text-xs font-bold font-cinzel text-amber-400 truncate max-w-[90px]">PLAYER</span>
+                    <span id="nav-header-nickname" class="text-xs font-bold font-cinzel text-amber-400 truncate max-w-[90px]">BOSS</span>
                 </div>
 
                 <div id="nav-wallet-container" class="hidden items-center space-x-1 bg-slate-900 border border-slate-700 rounded-full px-2.5 py-0.5">
                     <span class="text-[10px] text-slate-400">Bal:</span>
-                    <span id="nav-wallet" class="text-xs font-bold text-emerald-400">₱0.00</span>
+                    <span id="nav-wallet" class="text-xs font-bold text-emerald-400">₱999,999.00</span>
                 </div>
             </div>
         </div>
 
-        <!-- Scrollable Navigation Tabs -->
+        <!-- Scrollable Navigation Tabs (Restricted for Owner) -->
         <nav id="nav-menu" class="hidden flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto w-full no-scrollbar">
-            <button onclick="window.switchTab('hub')" id="btn-hub" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white whitespace-nowrap transition">Home</button>
-            <button onclick="window.switchTab('select')" id="btn-roster" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Roster</button>
-            <button onclick="window.switchTab('shop')" id="btn-shop" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Shop</button>
-            <button onclick="window.openPlayerProfileModal()" id="btn-profile" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-amber-400 hover:bg-amber-500/10 whitespace-nowrap transition">Profile</button>
-            <button onclick="window.openLeaderboardModal()" id="btn-leaderboard" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10 whitespace-nowrap transition">Rankings</button>
-            <button onclick="window.openChatModal()" id="btn-support-chat" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-blue-400 hover:bg-blue-500/10 whitespace-nowrap transition">Support Chat</button>
-            <button onclick="window.switchTab('owner')" id="btn-owner" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition hidden">Owner</button>
-            <button onclick="window.logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition ml-auto">Logout</button>
+            <button onclick="window.switchTab('owner')" id="btn-owner" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-600 text-white whitespace-nowrap transition">👑 Owner Admin Portal</button>
+            <button onclick="window.logoutPlayer()" class="px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition ml-auto">Logout</button>
         </nav>
     </header>
 
@@ -97,165 +91,15 @@
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
                 <div class="flex items-center justify-between">
                     <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
-                    <button id="auth-install-btn" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition hidden">
-                        <span>Install App</span>
-                    </button>
                 </div>
                 <div class="space-y-2.5">
                     <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
                     <div class="relative">
-                        <input type="password" id="login-pass" placeholder="Password (or default 123456)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
                         <button type="button" onclick="window.togglePass('login-pass', this)" class="absolute right-3 top-3 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
                 </div>
-                <div class="flex items-center justify-between text-xs">
-                    <button onclick="window.showAuthMode('register')" class="text-blue-400 hover:underline">Create Account</button>
-                    <button onclick="window.showAuthMode('forgot')" class="text-amber-400 hover:underline">Forgot Password?</button>
-                </div>
                 <button onclick="window.handleLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
-            </div>
-
-            <!-- Register Box -->
-            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
-                <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
-                <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced.</p>
-                
-                <div class="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
-                    <p class="text-[11px] text-amber-400 font-bold text-center">Select Payment Channel & Scan/Save QR to Pay ₱50 Fee:</p>
-                    <div class="flex space-x-2">
-                        <button type="button" onclick="window.switchRegPaymentMethod('gcash')" id="btn-reg-gcash" class="flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
-                        <button type="button" onclick="window.switchRegPaymentMethod('maya')" id="btn-reg-maya" class="flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
-                    </div>
-
-                    <div id="reg-payment-display-box" class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2 mt-2">
-                        <div id="reg-active-qr" class="w-36 h-36 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                        <button type="button" onclick="window.saveQRCodeImage(currentRegMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code to Phone</button>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <input type="text" id="reg-name" placeholder="Full Legal Name (Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="text" id="reg-phone" placeholder="Phone Number (Unique & Locked)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="email" id="reg-email" placeholder="Email Address (Unique)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <div class="space-y-0.5">
-                        <label class="text-[10px] text-slate-400 block">Birthday:</label>
-                        <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
-                    </div>
-                    <div class="relative">
-                        <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
-                        <button type="button" onclick="window.togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
-                    </div>
-                    <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <div class="space-y-0.5">
-                        <label class="text-[10px] text-amber-400 block font-bold">Upload Registration Fee Receipt:</label>
-                        <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
-                    </div>
-                </div>
-
-                <div class="space-y-2.5 pt-1 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
-                    <label class="flex items-start space-x-2 cursor-pointer">
-                        <input type="checkbox" id="reg-check-terms" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
-                        <span class="text-slate-300 text-[10px]">
-                            I agree to the <button type="button" onclick="window.openLegalModal('terms')" class="text-amber-400 underline hover:text-amber-300">Terms and Conditions</button>.
-                        </span>
-                    </label>
-                    <label class="flex items-start space-x-2 cursor-pointer">
-                        <input type="checkbox" id="reg-check-privacy" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
-                        <span class="text-slate-300 text-[10px]">
-                            I have read and accept the <button type="button" onclick="window.openLegalModal('privacy')" class="text-amber-400 underline hover:text-amber-300">Privacy Policy</button>.
-                        </span>
-                    </label>
-                </div>
-
-                <div class="flex items-center justify-between text-xs pt-1">
-                    <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
-                </div>
-
-                <div class="flex space-x-2 pt-1">
-                    <button type="button" onclick="window.requestRegistrationNotificationPermission()" id="btn-enable-notif" class="py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">Enable Notif</button>
-                    <button onclick="window.handleRegister()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Register Account</button>
-                </div>
-            </div>
-
-            <!-- Forgot Password Box -->
-            <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
-                <h3 class="font-cinzel text-base font-bold text-white">Request Password Reset</h3>
-                <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request.</p>
-                <div class="space-y-2.5">
-                    <input type="email" id="forgot-email" placeholder="Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
-                    <div class="space-y-1">
-                        <label class="text-[10px] text-slate-400 block">Registered Birthday:</label>
-                        <input type="date" id="forgot-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
-                </div>
-                <button onclick="window.submitResetRequest()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Submit Reset Request</button>
-            </div>
-        </div>
-
-        <!-- Force Change Password View -->
-        <div id="view-force-reset" class="max-w-md mx-auto py-6 space-y-3 hidden">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
-                <h3 class="font-cinzel text-base font-bold text-amber-400">Force Password Change</h3>
-                <p class="text-xs text-slate-400">You logged in using a temporary password. Please confirm your email, birthday, and create a new secure password.</p>
-                <div class="space-y-2.5">
-                    <input type="email" id="force-email" placeholder="Confirm Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
-                    <div class="space-y-1">
-                        <label class="text-[10px] text-slate-400 block">Confirm Birthday:</label>
-                        <input type="date" id="force-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                    <div class="relative">
-                        <input type="password" id="force-newpass" placeholder="New Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
-                        <button type="button" onclick="window.togglePass('force-newpass', this)" class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
-                    </div>
-                </div>
-                <button onclick="window.executeForceReset()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg shadow-lg transition">Update Password & Login</button>
-            </div>
-        </div>
-
-        <!-- STARTER HERO SELECTION VIEW -->
-        <div id="view-starter-select" class="max-w-xl mx-auto py-4 space-y-4 hidden">
-            <div class="text-center space-y-1.5">
-                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">CHOOSE YOUR FREE STARTER CHAMPION</h2>
-                <p class="text-xs text-slate-400">Pick 1 starter hero for free to begin your journey!</p>
-            </div>
-            <div id="starter-heroes-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-        </div>
-
-        <!-- Hero Roster & Rank Unlocks View -->
-        <div id="view-select" class="hidden space-y-3 py-2">
-            <div class="text-center max-w-lg mx-auto mb-2">
-                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
-            </div>
-            <div id="hero-cards-container" class="space-y-2.5 pb-6"></div>
-        </div>
-
-        <!-- Skill Shop View -->
-        <div id="view-shop" class="hidden space-y-3 py-2">
-            <div class="text-center max-w-lg mx-auto mb-2">
-                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO SKILL MARKETPLACE</h2>
-            </div>
-            <div id="shop-skills-container" class="space-y-2.5 pb-6"></div>
-        </div>
-
-        <!-- Player Hub View -->
-        <div id="view-hub" class="hidden space-y-3 py-2">
-            <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 glow-box">
-                <div class="flex items-center space-x-3 w-full sm:w-auto">
-                    <div id="active-hero-avatar" class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
-                        <img id="active-hero-img-el" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-center space-x-1.5 flex-wrap gap-y-0.5">
-                            <span id="player-nickname-badge" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider truncate">Player</span>
-                        </div>
-                        <h2 id="active-hero-name" class="font-cinzel text-sm sm:text-base font-bold text-white truncate">PYRA</h2>
-                        <p class="text-[10px] text-slate-400">Active Champion • Ready for Battle</p>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -270,22 +114,6 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
-                        <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
-                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Deposits</span>
-                            <span id="metric-total-deposits" class="text-sm font-bold text-emerald-400">₱0.00</span>
-                        </div>
-                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
-                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Withdrawals</span>
-                            <span id="metric-total-withdrawals" class="text-sm font-bold text-amber-400">₱0.00</span>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- PLAYER DIRECTORY WITH REFRESH BUTTON -->
                 <div class="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
                     <div class="flex items-center justify-between">
@@ -297,34 +125,11 @@
                     </div>
                 </div>
 
-                <!-- PENDING QUEUES SECTION -->
+                <!-- PENDING REGISTRATION APPROVALS -->
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Registration Approvals (₱50 Fee Receipt)[cite: 7]</h3>
                     <div id="owner-registration-list" class="space-y-1.5">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>
-                    </div>
-                </div>
-
-                <!-- MERCHANT SETTINGS & QR -->
-                <div class="space-y-2">
-                    <h3 class="font-cinzel text-xs font-bold text-amber-400">Merchant E-Wallet Credentials & Scannable QR Codes</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
-                            <span class="text-xs font-bold text-blue-400 self-start">GCash Account & QR</span>
-                            <div id="owner-gcash-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                            <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="file" id="input-gcash-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
-                            <button onclick="window.saveGcashSettings()" class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow">Save GCash Settings</button>
-                        </div>
-                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
-                            <span class="text-xs font-bold text-teal-400 self-start">Maya Account & QR</span>
-                            <div id="owner-maya-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                            <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="file" id="input-maya-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
-                            <button onclick="window.saveMayaSettings()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg shadow">Save Maya Settings</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -335,7 +140,7 @@
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
         <div id="modal-player-details" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection & Battle History</h3>
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection & Details</h3>
                 <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
             </div>
             <div id="player-inspection-content" class="space-y-3 text-xs text-slate-300 max-h-96 overflow-y-auto pr-1 bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
@@ -370,77 +175,33 @@
         }
 
         let registeredPlayersList = [];
-        let walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
-        let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
 
-        let merchantConfig = {
-            gcashNum: '09923978537',
-            gcashName: 'John Carlo Estrada Morales',
-            gcashQR: null,
-            mayaNum: '09923978537',
-            mayaName: 'John Carlo Estrada Morales',
-            mayaQR: null
-        };
-
-        async function loadMerchantConfig() {
-            if (supabaseClient) {
-                try {
-                    const { data } = await supabaseClient.from('app_settings').select('*').eq('key', 'merchant_config').single();
-                    if (data && data.value) {
-                        merchantConfig = data.value;
-                        localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
-                        return;
-                    }
-                } catch(e) {}
-            }
-            try {
-                const stored = localStorage.getItem('aetheris_merchant_config');
-                if (stored) merchantConfig = JSON.parse(stored);
-            } catch(e) {}
-        }
-
-        async function persistMerchantConfig() {
-            localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('app_settings').upsert([{ key: 'merchant_config', value: merchantConfig }], { onConflict: 'key' });
-                } catch(e) {}
-            }
-        }
-
+        // Aggressively sync and aggregate all players from ALL browser storage buckets and Supabase
         async function syncAllRegisteredPlayers() {
             let playersMap = new Map();
 
-            // 1. Load from registered players DB
-            try {
-                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                dbList.forEach(item => {
-                    if (item && item.email && item.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                        playersMap.set(item.email.toLowerCase(), item);
-                    }
-                });
-            } catch(e) {}
+            // 1. Pull from all local storage sources
+            ['aetheris_registered_players_db', 'aetheris_registered_users', 'aetheris_pending_registrations'].forEach(key => {
+                try {
+                    let list = JSON.parse(localStorage.getItem(key)) || [];
+                    list.forEach(item => {
+                        if (item && item.email && item.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                            let existing = playersMap.get(item.email.toLowerCase()) || {};
+                            playersMap.set(item.email.toLowerCase(), { ...existing, ...item, status: item.status || existing.status || 'active' });
+                        }
+                    });
+                } catch(e) {}
+            });
 
-            // 2. Load from registered users
-            try {
-                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
-                localUsers.forEach(item => {
-                    if (item && item.email && item.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                        let existing = playersMap.get(item.email.toLowerCase()) || {};
-                        playersMap.set(item.email.toLowerCase(), { ...existing, ...item, status: item.status || existing.status || 'active' });
-                    }
-                });
-            } catch(e) {}
-
-            // 3. Fetch Supabase profiles
+            // 2. Pull from Supabase profiles
             if (supabaseClient) {
                 try {
                     const { data, error } = await supabaseClient.from('profiles').select('*');
                     if (data && !error) {
                         data.forEach(p => {
                             if (p && p.email && p.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                                let localExisting = playersMap.get(p.email.toLowerCase()) || {};
-                                playersMap.set(p.email.toLowerCase(), { ...localExisting, ...p, status: p.status || localExisting.status || 'active' });
+                                let existing = playersMap.get(p.email.toLowerCase()) || {};
+                                playersMap.set(p.email.toLowerCase(), { ...existing, ...p, status: p.status || existing.status || 'active' });
                             }
                         });
                     }
@@ -452,9 +213,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            await loadMerchantConfig();
             await syncAllRegisteredPlayers();
-            await updateMerchantPaymentDisplay();
 
             try {
                 if (currentUser && currentUser.email) {
@@ -482,22 +241,12 @@
                     const navWallet = document.getElementById('nav-wallet-container');
                     const navNick = document.getElementById('nav-nickname-container');
                     const navMenu = document.getElementById('nav-menu');
-                    const btnOwner = document.getElementById('btn-owner');
-                    const subTitle = document.getElementById('header-subtitle');
 
                     if (mainHeader) mainHeader.classList.remove('hidden');
                     if (navWallet) navWallet.classList.remove('hidden');
                     if (navNick) navNick.classList.remove('hidden');
-                    if (subTitle) subTitle.innerText = 'Admin Command Center';
-                    
-                    // Restrict owner navigation menu to Admin Portal & Logout only
-                    if (navMenu) {
-                        navMenu.classList.remove('hidden');
-                        navMenu.innerHTML = `
-                            <button onclick="window.switchTab('owner')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-600 text-white whitespace-nowrap transition">👑 Owner Admin Portal</button>
-                            <button onclick="window.logoutPlayer()" class="px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition ml-auto">Logout</button>
-                        `;
-                    }
+                    if (navMenu) navMenu.classList.remove('hidden');
+
                     updateHeaderUserInfo();
                     switchTab('owner');
                     return;
@@ -507,16 +256,14 @@
 
         function updateHeaderUserInfo() {
             if (!currentUser) return;
-            const nickText = currentUser.nickname || 'PLAYER';
             const navHeaderNick = document.getElementById('nav-header-nickname');
-            if (navHeaderNick) navHeaderNick.innerText = nickText;
+            if (navHeaderNick) navHeaderNick.innerText = currentUser.nickname || 'BOSS';
             const navWallet = document.getElementById('nav-wallet');
-            if (navWallet) navWallet.innerText = `₱${Number(currentUser.wallet || 0).toFixed(2)}`;
+            if (navWallet) navWallet.innerText = `₱${Number(currentUser.wallet || 999999).toFixed(2)}`;
         }
 
         async function switchTab(tabName) {
-            const views = ['view-hub', 'view-select', 'view-shop', 'view-owner', 'view-auth', 'view-starter-select'];
-            views.forEach(v => {
+            ['view-owner', 'view-auth'].forEach(v => {
                 const el = document.getElementById(v);
                 if (el) el.classList.add('hidden');
             });
@@ -524,17 +271,14 @@
             if (tabName === 'owner') {
                 const own = document.getElementById('view-owner');
                 if (own) own.classList.remove('hidden');
-                await loadMerchantConfig();
                 await syncAllRegisteredPlayers();
                 renderOwnerQueues();
-                updateMerchantPaymentDisplay();
             }
         }
         window.switchTab = switchTab;
 
         async function forceSyncOwnerPortal() {
             await syncAllRegisteredPlayers();
-            await loadMerchantConfig();
             renderOwnerQueues();
             alert('Owner Portal & Player Directory synced successfully!');
         }
@@ -552,20 +296,6 @@
             }
         }
         window.togglePass = togglePass;
-
-        function showAuthMode(mode) {
-            const loginBox = document.getElementById('auth-login-box');
-            const registerBox = document.getElementById('auth-register-box');
-            const forgotBox = document.getElementById('auth-forgot-box');
-            if (loginBox) loginBox.classList.add('hidden');
-            if (registerBox) registerBox.classList.add('hidden');
-            if (forgotBox) forgotBox.classList.add('hidden');
-
-            if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
-            if (mode === 'register' && registerBox) registerBox.classList.remove('hidden');
-            if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
-        }
-        window.showAuthMode = showAuthMode;
 
         async function handleLogin() {
             const email = document.getElementById('login-email').value.trim();
@@ -601,13 +331,16 @@
 
         function openModal(type) {
             const backdrop = document.getElementById('modal-backdrop');
-            if (backdrop) backdrop.classList.remove('hidden');
+            if (backdrop) backdrop.classList.add('hidden');
             ['modal-player-details', 'modal-image-preview'].forEach(m => {
                 const el = document.getElementById(m);
                 if (el) el.classList.add('hidden');
             });
             const target = document.getElementById(`modal-${type}`);
-            if (target) target.classList.remove('hidden');
+            if (target) {
+                if (backdrop) backdrop.classList.remove('hidden');
+                target.classList.remove('hidden');
+            }
         }
         window.openModal = openModal;
 
@@ -680,18 +413,11 @@
             const regList = document.getElementById('owner-registration-list');
 
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
-
-            let allPendingMap = new Map();
-            regs.forEach(r => { if (r && r.email) allPendingMap.set(r.email.toLowerCase(), r); });
-            localUsers.forEach(u => { if (u && u.email && u.status === 'pending_registration') allPendingMap.set(u.email.toLowerCase(), u); });
-            let pendingRegs = Array.from(allPendingMap.values());
-
             let displayPlayers = registeredPlayersList.filter(p => p.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase());
 
             if (playerCountBadge) playerCountBadge.innerText = displayPlayers.length;
             if (playersList) {
-                playersList.innerHTML = displayPlayers.length === 0 ? '<div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players in directory yet. Click Refresh Directory above.</div>' :
+                playersList.innerHTML = displayPlayers.length === 0 ? '<div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players in directory yet.</div>' :
                     displayPlayers.map(p => `
                         <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
                             <div>
@@ -708,8 +434,8 @@
             }
 
             if (regList) {
-                regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
-                    pendingRegs.map(r => `
+                regList.innerHTML = regs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
+                    regs.map(r => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
                                 <strong class="text-amber-400">${r.nickname || r.name}</strong> (${r.email})<br>
@@ -755,23 +481,17 @@
         }
         window.approveRegistration = approveRegistration;
 
-        async function updateMerchantPaymentDisplay() {
-            await loadMerchantConfig();
-            const inputGcashNum = document.getElementById('input-gcash-num');
-            const inputGcashName = document.getElementById('input-gcash-name');
-            const inputMayaNum = document.getElementById('input-maya-num');
-            const inputMayaName = document.getElementById('input-maya-name');
-            const ownerGcashPreview = document.getElementById('owner-gcash-qr-preview');
-            const ownerMayaPreview = document.getElementById('owner-maya-qr-preview');
-
-            if (inputGcashNum) inputGcashNum.value = merchantConfig.gcashNum;
-            if (inputGcashName) inputGcashName.value = merchantConfig.gcashName;
-            if (inputMayaNum) inputMayaNum.value = merchantConfig.mayaNum;
-            if (inputMayaName) inputMayaName.value = merchantConfig.mayaName;
-
-            if (merchantConfig.gcashQR && ownerGcashPreview) ownerGcashPreview.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
-            if (merchantConfig.mayaQR && ownerMayaPreview) ownerMayaPreview.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+        async function rejectRegistration(email) {
+            let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            regs = regs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+            localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
+            if (supabaseClient) {
+                try { await supabaseClient.from('pending_registrations').delete().eq('email', email); } catch(e) {}
+            }
+            renderOwnerQueues();
+            alert(`Rejected registration for ${email}.`);
         }
+        window.rejectRegistration = rejectRegistration;
     </script>
 </body>
 </html>
