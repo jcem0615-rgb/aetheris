@@ -23,7 +23,7 @@
 </head>
 <body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
 
-    <!-- Toast Notification Container -->
+    <!-- Toast Container -->
     <div id="toast-container" class="fixed top-16 right-3 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
     <!-- Top Navigation Bar -->
@@ -41,6 +41,7 @@
 
             <div class="flex items-center space-x-2">
                 <button onclick="window.switchTab('player-lobby')" id="nav-btn-lobby" class="px-2.5 py-1 bg-slate-900 border border-slate-700 text-slate-300 rounded-xl text-[10px] font-bold transition hidden">Lobby</button>
+                <button onclick="window.switchTab('owner')" id="nav-btn-owner" class="px-2.5 py-1 bg-amber-600/20 border border-amber-500/40 text-amber-400 rounded-xl text-[10px] font-bold transition hidden">Owner Portal</button>
                 <div class="flex items-center bg-slate-900 border border-amber-500/40 rounded-full px-3 py-1">
                     <span id="nav-role-badge" class="text-xs font-bold font-cinzel text-amber-400">PLAYER</span>
                 </div>
@@ -52,7 +53,7 @@
     <!-- Main Content Container -->
     <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 flex flex-col justify-center my-auto">
 
-        <!-- 1. AUTH VIEW (Unified Sign In & Register) -->
+        <!-- 1. AUTH VIEW -->
         <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4">
             <div class="text-center space-y-1.5">
                 <div class="w-16 h-16 mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/40 border-2 border-amber-500/60 bg-slate-950 flex items-center justify-center">
@@ -87,6 +88,7 @@
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
                 <p class="text-[11px] text-amber-400/90">*Note: A 50 AC (₱50) registration fee applies.</p>
+                
                 <div class="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
                     <p class="text-[11px] text-amber-400 font-bold text-center">Scan or Save QR to Pay 50 AC Fee:</p>
                     <div class="flex space-x-2">
@@ -98,13 +100,17 @@
                         <button type="button" onclick="window.saveQRCodeImage(currentRegMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code</button>
                     </div>
                 </div>
+
                 <div class="space-y-2">
                     <input type="text" id="reg-name" placeholder="Full Legal Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="text" id="reg-phone" placeholder="Phone Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="email" id="reg-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
-                    <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <div class="relative">
+                        <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
+                        <button type="button" onclick="window.togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
                     <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
                 </div>
@@ -196,7 +202,7 @@
             </div>
         </div>
 
-        <!-- 5. OWNER ADMIN PORTAL VIEW (Fully Restored with All Ledger & Queues) -->
+        <!-- 5. OWNER ADMIN PORTAL VIEW (Complete with all features, ledgers, & queues) -->
         <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -210,9 +216,7 @@
 
                 <!-- TRANSACTION MONITORING & TOTALS -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
-                        <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS (AC)</h3>
-                    </div>
+                    <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS (AC)</h3>
                     <div class="grid grid-cols-2 gap-2 pt-1">
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
                             <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Deposits</span>
@@ -257,11 +261,50 @@
                     </div>
                 </div>
 
+                <!-- CUSTOMER SERVICE CHAT PORTAL -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-blue-500/40 space-y-2">
+                    <h3 class="font-cinzel text-xs font-bold text-blue-400">💬 Customer Service Support Tickets</h3>
+                    <div id="owner-support-tickets-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                        <div class="text-xs text-slate-500 text-center py-2">No active support tickets.</div>
+                    </div>
+                </div>
+
+                <!-- SYSTEM AUDIT LOG -->
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-amber-400">System Activity & Audit Log</h3>
+                    <div id="owner-system-audit-log" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>
+                    </div>
+                </div>
+
                 <!-- BATTLE HISTORY -->
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Combat & Battle History Monitoring</h3>
                     <div id="owner-battle-history-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>
+                    </div>
+                </div>
+
+                <!-- MERCHANT SETTINGS & QR -->
+                <div class="space-y-2">
+                    <h3 class="font-cinzel text-xs font-bold text-amber-400">Merchant E-Wallet Credentials & Scannable QR Codes</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
+                            <span class="text-xs font-bold text-blue-400 self-start">GCash Account & QR</span>
+                            <div id="owner-gcash-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                            <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="file" id="input-gcash-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
+                            <button onclick="window.saveGcashSettings()" class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow">Save GCash Settings</button>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
+                            <span class="text-xs font-bold text-teal-400 self-start">Maya Account & QR</span>
+                            <div id="owner-maya-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                            <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="file" id="input-maya-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
+                            <button onclick="window.saveMayaSettings()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg shadow">Save Maya Settings</button>
+                        </div>
                     </div>
                 </div>
 
@@ -336,11 +379,27 @@
             enemyHp: 100,
             playerMaxHp: 100,
             enemyMaxHp: 100,
-            isMyTrust: true,
+            isMyTurn: true,
             hand: []
         };
 
+        let merchantConfig = JSON.parse(localStorage.getItem('aetheris_merchant_config')) || {
+            gcashNum: '09923978537', gcashName: 'John Carlo Estrada Morales', gcashQR: null,
+            mayaNum: '09923978537', mayaName: 'John Carlo Estrada Morales', mayaQR: null
+        };
+
         window.addEventListener('DOMContentLoaded', async () => {
+            // Sanitize legacy battle history
+            let history = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
+            history = history.filter(h => h && typeof h === 'object').map(h => ({
+                id: h.id || Date.now(),
+                player: h.player || h.email || 'Player',
+                hero: h.hero || 'Aether Knight',
+                result: h.result || 'WIN',
+                wager: h.wager || 50
+            }));
+            localStorage.setItem('aetheris_battle_history', JSON.stringify(history));
+
             await syncAllRegisteredPlayers();
             if (currentUser && currentUser.email) {
                 if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
@@ -374,15 +433,40 @@
                 document.getElementById(`auth-${t}-box`).classList.toggle('hidden', t !== tab);
                 document.getElementById(`tab-btn-${t}`).className = t === tab ? 'flex-1 py-2 rounded-lg bg-blue-600 text-white transition' : 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
             });
+            if (tab === 'register') switchRegPaymentMethod('gcash');
         }
         window.switchAuthTab = switchAuthTab;
 
-        function switchRegPaymentMethod(method) {
+        async function switchRegPaymentMethod(method) {
             currentRegMethod = method;
-            document.getElementById('btn-reg-gcash').className = method === 'gcash' ? 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition' : 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-            document.getElementById('btn-reg-maya').className = method === 'maya' ? 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition' : 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+            const btnGcash = document.getElementById('btn-reg-gcash');
+            const btnMaya = document.getElementById('btn-reg-maya');
+            const qrBox = document.getElementById('reg-active-qr');
+            if (method === 'gcash') {
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.gcashQR && qrBox) qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+                else if (qrBox) qrBox.innerHTML = 'No GCash QR';
+            } else {
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.mayaQR && qrBox) qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+                else if (qrBox) qrBox.innerHTML = 'No Maya QR';
+            }
         }
         window.switchRegPaymentMethod = switchRegPaymentMethod;
+
+        function saveQRCodeImage(method) {
+            let qrData = method === 'gcash' ? merchantConfig.gcashQR : merchantConfig.mayaQR;
+            if (!qrData) { alert('No QR code image available.'); return; }
+            const link = document.createElement('a');
+            link.href = qrData;
+            link.download = `${method.toUpperCase()}_QR.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        window.saveQRCodeImage = saveQRCodeImage;
 
         function restoreOwnerSession() {
             document.getElementById('view-auth').classList.add('hidden');
@@ -390,6 +474,7 @@
             document.getElementById('nav-role-badge').innerText = '👑 BOSS (ADMIN)';
             document.getElementById('nav-wallet-display').innerText = 'Owner Command Center';
             document.getElementById('nav-btn-lobby').classList.remove('hidden');
+            document.getElementById('nav-btn-owner').classList.remove('hidden');
             switchTab('owner');
         }
 
@@ -398,6 +483,12 @@
             document.getElementById('main-header').classList.remove('hidden');
             document.getElementById('nav-role-badge').innerText = currentUser.nickname || 'PLAYER';
             document.getElementById('nav-wallet-display').innerText = `Wallet: ${currentUser.wallet || 0} AC`;
+            document.getElementById('nav-btn-lobby').classList.remove('hidden');
+            if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                document.getElementById('nav-btn-owner').classList.remove('hidden');
+            } else {
+                document.getElementById('nav-btn-owner').classList.add('hidden');
+            }
             switchTab('player-lobby');
         }
 
@@ -408,14 +499,9 @@
             document.getElementById(`view-${tabName}`).classList.remove('hidden');
             if (tabName === 'player-lobby') {
                 document.getElementById('lobby-player-stats').innerText = `Wins: ${currentUser.wins || 0} | Wallet: ${currentUser.wallet || 0} AC`;
-                if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                    document.getElementById('nav-btn-lobby').classList.add('hidden');
-                } else {
-                    document.getElementById('nav-btn-lobby').classList.remove('hidden');
-                }
             } else if (tabName === 'owner') {
-                document.getElementById('nav-btn-lobby').classList.remove('hidden');
                 renderOwnerQueues();
+                updateMerchantPaymentDisplay();
             }
         }
         window.switchTab = switchTab;
@@ -485,6 +571,22 @@
         }
         window.handleRegister = handleRegister;
 
+        function openForgotPasswordModal() { openModal('forgot-password'); }
+        window.openForgotPasswordModal = openForgotPasswordModal;
+
+        async function submitPasswordResetRequest() {
+            const email = document.getElementById('forgot-email').value.trim();
+            const newPass = document.getElementById('forgot-new-pass').value;
+            if (!email || !newPass) { alert('Enter email and new password.'); return; }
+
+            let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+            pendingResets.push({ id: Date.now(), email, new_password: newPass });
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
+            closeModal();
+            alert('Password reset request submitted to owner.');
+        }
+        window.submitPasswordResetRequest = submitPasswordResetRequest;
+
         function logoutPlayer() {
             currentUser = null;
             localStorage.removeItem('aetheris_current_user');
@@ -492,11 +594,29 @@
         }
         window.logoutPlayer = logoutPlayer;
 
+        function openModal(type) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            ['modal-player-details', 'modal-image-preview', 'modal-forgot-password'].forEach(m => document.getElementById(m).classList.add('hidden'));
+            document.getElementById(`modal-${type}`).classList.remove('hidden');
+        }
+        window.openModal = openModal;
+
+        function closeModal() { document.getElementById('modal-backdrop').classList.add('hidden'); }
+        window.closeModal = closeModal;
+
+        function viewReceipt(receiptData) {
+            const decoded = decodeURIComponent(receiptData);
+            openModal('image-preview');
+            const imgTag = document.getElementById('preview-img-tag');
+            if (imgTag && decoded && decoded.startsWith('data:')) imgTag.src = decoded;
+        }
+        window.viewReceipt = viewReceipt;
+
         function selectHero(heroName) {
             selectedHeroName = heroName;
             ['Aether Knight', 'Void Pyromancer', 'Shadow Assassin'].forEach((h, idx) => {
                 const btn = document.getElementById(`hero-card-${idx+1}`);
-                btn.className = h === heroName ? 'p-2.5 bg-slate-950 border-2 border-amber-500 rounded-xl text-center transition' : 'p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-center transition';
+                if (btn) btn.className = h === heroName ? 'p-2.5 bg-slate-950 border-2 border-amber-500 rounded-xl text-center transition' : 'p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-center transition';
             });
         }
         window.selectHero = selectHero;
@@ -692,8 +812,10 @@
 
         function logCombat(msg) {
             const logBox = document.getElementById('battle-combat-log');
-            logBox.innerHTML += `<div>[Combat]: ${msg}</div>`;
-            logBox.scrollTop = logBox.scrollHeight;
+            if (logBox) {
+                logBox.innerHTML += `<div>[Combat]: ${msg}</div>`;
+                logBox.scrollTop = logBox.scrollHeight;
+            }
         }
 
         // --- OWNER PORTAL FUNCTIONS ---
@@ -708,6 +830,7 @@
             if (confirm('Clear all test data?')) {
                 localStorage.removeItem('aetheris_registered_players_db');
                 localStorage.removeItem('aetheris_pending_registrations');
+                localStorage.removeItem('aetheris_pending_resets');
                 localStorage.removeItem('aetheris_battle_history');
                 registeredPlayersList = [];
                 renderOwnerQueues();
@@ -729,6 +852,73 @@
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
+        async function saveGcashSettings() {
+            const num = document.getElementById('input-gcash-num').value.trim();
+            const name = document.getElementById('input-gcash-name').value.trim();
+            const fileInput = document.getElementById('input-gcash-qr');
+
+            if (num) merchantConfig.gcashNum = num;
+            if (name) merchantConfig.gcashName = name;
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    merchantConfig.gcashQR = e.target.result;
+                    localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
+                    alert('GCash settings saved!');
+                    updateMerchantPaymentDisplay();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
+                alert('GCash settings saved!');
+                updateMerchantPaymentDisplay();
+            }
+        }
+        window.saveGcashSettings = saveGcashSettings;
+
+        async function saveMayaSettings() {
+            const num = document.getElementById('input-maya-num').value.trim();
+            const name = document.getElementById('input-maya-name').value.trim();
+            const fileInput = document.getElementById('input-maya-qr');
+
+            if (num) merchantConfig.mayaNum = num;
+            if (name) merchantConfig.mayaName = name;
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    merchantConfig.mayaQR = e.target.result;
+                    localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
+                    alert('Maya settings saved!');
+                    updateMerchantPaymentDisplay();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
+                alert('Maya settings saved!');
+                updateMerchantPaymentDisplay();
+            }
+        }
+        window.saveMayaSettings = saveMayaSettings;
+
+        function updateMerchantPaymentDisplay() {
+            const inputGcashNum = document.getElementById('input-gcash-num');
+            const inputGcashName = document.getElementById('input-gcash-name');
+            const inputMayaNum = document.getElementById('input-maya-num');
+            const inputMayaName = document.getElementById('input-maya-name');
+            const ownerGcashPreview = document.getElementById('owner-gcash-qr-preview');
+            const ownerMayaPreview = document.getElementById('owner-maya-qr-preview');
+
+            if (inputGcashNum) inputGcashNum.value = merchantConfig.gcashNum;
+            if (inputGcashName) inputGcashName.value = merchantConfig.gcashName;
+            if (inputMayaNum) inputMayaNum.value = merchantConfig.mayaNum;
+            if (inputMayaName) inputMayaName.value = merchantConfig.mayaName;
+
+            if (merchantConfig.gcashQR && ownerGcashPreview) ownerGcashPreview.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+            if (merchantConfig.mayaQR && ownerMayaPreview) ownerMayaPreview.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+        }
+
         async function renderOwnerQueues() {
             await syncAllRegisteredPlayers();
             document.getElementById('owner-player-count').innerText = registeredPlayersList.length;
@@ -746,8 +936,8 @@
             historyList.innerHTML = history.length === 0 ? '<div class="text-xs text-slate-400 text-center py-2">No battles recorded.</div>' :
                 history.map(h => `
                     <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
-                        <span>${h.player} (${h.hero})</span>
-                        <span class="font-bold ${h.result === 'WIN' ? 'text-emerald-400' : 'text-red-400'}">${h.result} (${h.wager} AC)</span>
+                        <span>${h.player || 'Player'} (${h.hero || 'Hero'})</span>
+                        <span class="font-bold ${(h.result || '').toUpperCase() === 'WIN' ? 'text-emerald-400' : 'text-red-400'}">${h.result || 'WIN'} (${h.wager || 50} AC)</span>
                     </div>
                 `).join('');
 
@@ -758,8 +948,22 @@
                     <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs flex justify-between items-center">
                         <span>${r.nickname} (${r.email})</span>
                         <div class="space-x-1">
+                            <button onclick="window.viewReceipt('${encodeURIComponent(r.registration_receipt || '')}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[10px]">Receipt</button>
                             <button onclick="window.approveRegistration('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
                             <button onclick="window.rejectRegistration('${r.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+
+            let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+            const resetList = document.getElementById('owner-reset-list');
+            resetList.innerHTML = resets.length === 0 ? '<div class="bg-slate-950 p-2 rounded text-xs text-slate-400 text-center">No password reset requests.</div>' :
+                resets.map(res => `
+                    <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs flex justify-between items-center">
+                        <span>${res.email} (New Pass: ${res.new_password})</span>
+                        <div class="space-x-1">
+                            <button onclick="window.approvePasswordReset('${res.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
+                            <button onclick="window.rejectPasswordReset('${res.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
                         </div>
                     </div>
                 `).join('');
@@ -770,7 +974,7 @@
             let reg = regs.find(r => r.email.toLowerCase() === email.toLowerCase());
             if (!reg) return;
             reg.status = 'active';
-            reg.wallet = 50; // Starter AC after approval
+            reg.wallet = 50;
             regs = regs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
 
@@ -790,6 +994,34 @@
             alert(`Rejected ${email}.`);
         }
         window.rejectRegistration = rejectRegistration;
+
+        async function approvePasswordReset(email) {
+            let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+            let resetReq = resets.find(r => r.email.toLowerCase() === email.toLowerCase());
+            if (!resetReq) return;
+
+            let db = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let player = db.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (player) {
+                player.password_hash = resetReq.new_password;
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(db));
+            }
+
+            resets = resets.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(resets));
+            renderOwnerQueues();
+            alert(`Password reset approved for ${email}.`);
+        }
+        window.approvePasswordReset = approvePasswordReset;
+
+        async function rejectPasswordReset(email) {
+            let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+            resets = resets.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(resets));
+            renderOwnerQueues();
+            alert(`Password reset rejected for ${email}.`);
+        }
+        window.rejectPasswordReset = rejectPasswordReset;
     </script>
 </body>
 </html>
