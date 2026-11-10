@@ -18,6 +18,9 @@
         .font-cinzel { font-family: 'Cinzel', serif; }
         .glow-gold { text-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
         .glow-box { box-shadow: 0 0 25px rgba(59, 130, 246, 0.15); }
+        .card-hover { transition: all 0.2s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3); }
+        .fantasy-frame { border: 2px solid #64748b; box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.6); }
         .legal-modal-content { max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -41,7 +44,6 @@
                 </div>
             </div>
 
-            <!-- Owner Header Right: Admin Badge Only (No Player Wallet) -->
             <div class="flex items-center space-x-2">
                 <div class="flex items-center bg-slate-900 border border-amber-500/40 rounded-full px-3 py-1">
                     <span class="text-xs font-bold font-cinzel text-amber-400">👑 BOSS (ADMIN)</span>
@@ -61,12 +63,12 @@
                     <img src="image_114c6025.jpg" alt="Aetheris Logo" class="w-full h-full object-cover">
                 </div>
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
-                <p class="text-xs text-slate-400">Owner Secure Login</p>
+                <p class="text-xs text-slate-400">Sign In or Register</p>
             </div>
 
             <!-- Login Box -->
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
-                <h3 class="font-cinzel text-base font-bold text-white">Admin Sign In</h3>
+                <h3 class="font-cinzel text-base font-bold text-white">Sign In</h3>
                 <div class="space-y-2.5">
                     <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
                     <div class="relative">
@@ -74,181 +76,83 @@
                         <button type="button" onclick="window.togglePass('login-pass', this)" class="absolute right-3 top-3 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
                 </div>
-                <button onclick="window.handleLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In as Owner</button>
+                <div class="flex items-center justify-between text-xs">
+                    <button onclick="window.showAuthMode('register')" class="text-blue-400 hover:underline">Create Account / Register</button>
+                </div>
+                <button onclick="window.handleLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
+            </div>
+
+            <!-- Register Box -->
+            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
+                <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
+                <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies.</p>
+                
+                <div class="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
+                    <p class="text-[11px] text-amber-400 font-bold text-center">Scan or Save QR to Pay ₱50 Fee:</p>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="window.switchRegPaymentMethod('gcash')" id="btn-reg-gcash" class="flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
+                        <button type="button" onclick="window.switchRegPaymentMethod('maya')" id="btn-reg-maya" class="flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
+                    </div>
+                    <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2 mt-2">
+                        <div id="reg-active-qr" class="w-36 h-36 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <button type="button" onclick="window.saveQRCodeImage(currentRegMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code</button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <input type="text" id="reg-name" placeholder="Full Legal Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-phone" placeholder="Phone Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="email" id="reg-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <div class="space-y-0.5">
+                        <label class="text-[10px] text-slate-400 block">Birthday:</label>
+                        <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
+                        <button type="button" onclick="window.togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
+                    <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <div class="space-y-0.5">
+                        <label class="text-[10px] text-amber-400 block font-bold">Upload Registration Fee Receipt:</label>
+                        <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
+                </div>
+                <button onclick="window.handleRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Register Account</button>
             </div>
         </div>
 
-        <!-- Owner Portal View (Fully Restored) -->
+        <!-- Owner Portal View -->
         <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                     <h2 class="font-cinzel text-base font-bold text-amber-400">👑 OWNER ADMIN PORTAL</h2>
                     <div class="space-x-2">
-                        <button onclick="window.forceSyncOwnerPortal()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shadow">Force Sync Data</button>
-                        <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
+                        <button onclick="window.clearAllTestData()" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold rounded-lg shadow">🧹 Clear All Test Players</button>
+                        <button onclick="window.forceSyncOwnerPortal()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shadow">Force Sync</button>
                     </div>
                 </div>
 
-                <!-- TRANSACTION MONITORING & TOTALS -->
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
-                        <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
-                        <div class="flex items-center space-x-2 text-xs w-full sm:w-auto">
-                            <span class="text-slate-400 text-[10px]">Filter Date:</span>
-                            <input type="date" id="filter-date" onchange="window.renderOwnerQueues()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
-                            <button onclick="document.getElementById('filter-date').value=''; window.renderOwnerQueues();" class="px-2 py-1 bg-slate-800 text-slate-300 rounded-lg text-[10px] hover:bg-slate-700">Clear</button>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
-                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Deposits</span>
-                            <span id="metric-total-deposits" class="text-sm font-bold text-emerald-400">₱0.00</span>
-                        </div>
-                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
-                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Withdrawals</span>
-                            <span id="metric-total-withdrawals" class="text-sm font-bold text-amber-400">₱0.00</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MASTER WALLET TRANSACTION LEDGER -->
-                <div class="bg-slate-950 p-3 rounded-xl border border-emerald-500/40 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">📊 Master Wallet Transaction History</h3>
-                        <button onclick="window.clearWalletLedger()" class="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600/40 rounded text-[10px]">Clear Ledger</button>
-                    </div>
-                    <div id="owner-wallet-ledger-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        <div class="text-[11px] text-slate-500 text-center py-2">No wallet transactions logged yet.</div>
-                    </div>
-                </div>
-
-                <!-- DEPOSIT & WITHDRAWAL HISTORY -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">📥 Deposit History</h3>
-                        <div id="owner-deposit-history-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                            <div class="text-[11px] text-slate-500 text-center py-2">No deposit history yet.</div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                        <h3 class="font-cinzel text-xs font-bold text-amber-400">📤 Withdrawal History</h3>
-                        <div id="owner-withdraw-history-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                            <div class="text-[11px] text-slate-500 text-center py-2">No withdrawal history yet.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MANUAL WALLET BALANCE ADDER -->
-                <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/40 space-y-2">
-                    <h3 class="font-cinzel text-xs font-bold text-amber-400">⚡ Manual Wallet Balance Adder</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <input type="email" id="manual-wallet-email" placeholder="Player Email Address" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                        <input type="number" id="manual-wallet-amount" placeholder="Amount (e.g. 300)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                        <button onclick="window.executeManualWalletAdjustment()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg py-1.5 shadow">Apply Balance</button>
-                    </div>
-                    <div class="pt-2">
-                        <span class="font-cinzel text-[10px] font-bold text-slate-400 block mb-1">Balance Adder History:</span>
-                        <div id="owner-balance-adder-history" class="space-y-1 max-h-32 overflow-y-auto pr-1">
-                            <div class="text-[10px] text-slate-500 text-center py-1">No manual balance adjustments logged.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- REGISTERED PLAYERS DIRECTORY WITH INSPECT, FREEZE & DELETE -->
+                <!-- REGISTERED PLAYERS DIRECTORY -->
                 <div class="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
                     <div class="flex items-center justify-between">
                         <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory (<span id="owner-player-count" class="text-amber-400">0</span>)</h3>
-                        <button onclick="window.forceSyncOwnerPortal()" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg shadow">🔄 Refresh Directory</button>
+                        <button onclick="window.forceSyncOwnerPortal()" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg shadow">🔄 Refresh</button>
                     </div>
                     <div id="owner-players-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Loading players directory...</div>
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players in directory yet.</div>
                     </div>
                 </div>
 
-                <!-- CUSTOMER SERVICE CHAT PORTAL -->
-                <div class="bg-slate-950 p-3 rounded-xl border border-blue-500/40 space-y-2">
-                    <h3 class="font-cinzel text-xs font-bold text-blue-400">💬 Customer Service Support Tickets</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div id="owner-chat-threads-list" class="space-y-1 max-h-48 overflow-y-auto pr-1 bg-slate-900 p-2 rounded-lg border border-slate-800">
-                            <div class="text-xs text-slate-500 text-center py-4">No support chats.</div>
-                        </div>
-                        <div class="sm:col-span-2 bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex flex-col justify-between h-48">
-                            <div id="owner-active-chat-box" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs text-slate-300">
-                                <div class="text-center text-slate-500 py-10">Select a player ticket on the left.</div>
-                            </div>
-                            <div class="flex space-x-2 pt-2 border-t border-slate-800">
-                                <input type="text" id="owner-chat-input" placeholder="Type reply as Owner..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                                <button onclick="window.sendOwnerChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Send</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SYSTEM AUDIT LOG -->
-                <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-amber-400">System Activity & Audit Log</h3>
-                    <div id="owner-system-audit-log" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>
-                    </div>
-                </div>
-
-                <!-- BATTLE HISTORY -->
-                <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Combat & Battle History Monitoring</h3>
-                    <div id="owner-battle-history-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>
-                    </div>
-                </div>
-
-                <!-- MERCHANT SETTINGS & QR -->
-                <div class="space-y-2">
-                    <h3 class="font-cinzel text-xs font-bold text-amber-400">Merchant E-Wallet Credentials & Scannable QR Codes</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
-                            <span class="text-xs font-bold text-blue-400 self-start">GCash Account & QR</span>
-                            <div id="owner-gcash-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                            <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="file" id="input-gcash-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
-                            <button onclick="window.saveGcashSettings()" class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow">Save GCash Settings</button>
-                        </div>
-                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
-                            <span class="text-xs font-bold text-teal-400 self-start">Maya Account & QR</span>
-                            <div id="owner-maya-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                            <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="file" id="input-maya-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
-                            <button onclick="window.saveMayaSettings()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg shadow">Save Maya Settings</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PENDING QUEUES SECTION -->
+                <!-- REGISTRATION APPROVALS -->
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Registration Approvals (₱50 Fee Receipt)[cite: 7]</h3>
                     <div id="owner-registration-list" class="space-y-1.5">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>
-                    </div>
-                </div>
-
-                <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Password Reset Requests</h3>
-                    <div id="owner-reset-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>
-                    </div>
-                </div>
-
-                <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals (Min ₱50)</h3>
-                    <div id="owner-deposit-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending top-ups.</div>
-                    </div>
-                </div>
-
-                <div class="space-y-1.5 pb-2">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals (Min ₱100 • Zero Fee)</h3>
-                    <div id="owner-withdraw-list" class="space-y-1.5">
-                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawals.</div>
                     </div>
                 </div>
             </div>
@@ -259,7 +163,7 @@
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
         <div id="modal-player-details" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection & Battle History</h3>
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection</h3>
                 <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
             </div>
             <div id="player-inspection-content" class="space-y-3 text-xs text-slate-300 max-h-96 overflow-y-auto pr-1 bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
@@ -294,11 +198,7 @@
         }
 
         let registeredPlayersList = [];
-        let walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
-        let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
-        let balanceAdderHistory = JSON.parse(localStorage.getItem('aetheris_balance_adder_history')) || [];
-        let battleHistoryLog = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
-        let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+        let currentRegMethod = 'gcash';
 
         let merchantConfig = {
             gcashNum: '09923978537',
@@ -310,40 +210,38 @@
         };
 
         async function loadMerchantConfig() {
-            if (supabaseClient) {
-                try {
-                    const { data } = await supabaseClient.from('app_settings').select('*').eq('key', 'merchant_config').single();
-                    if (data && data.value) {
-                        merchantConfig = data.value;
-                        localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
-                        return;
-                    }
-                } catch(e) {}
-            }
             try {
                 const stored = localStorage.getItem('aetheris_merchant_config');
                 if (stored) merchantConfig = JSON.parse(stored);
             } catch(e) {}
         }
 
-        async function persistMerchantConfig() {
-            localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('app_settings').upsert([{ key: 'merchant_config', value: merchantConfig }], { onConflict: 'key' });
-                } catch(e) {}
+        async function clearAllTestData() {
+            if (confirm('Are you sure you want to clear all test players and pending registrations?')) {
+                localStorage.removeItem('aetheris_registered_players_db');
+                localStorage.removeItem('aetheris_registered_users');
+                localStorage.removeItem('aetheris_pending_registrations');
+                registeredPlayersList = [];
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('profiles').delete().neq('email', EXCLUSIVE_OWNER_EMAIL);
+                        await supabaseClient.from('pending_registrations').delete().neq('email', EXCLUSIVE_OWNER_EMAIL);
+                    } catch(e) {}
+                }
+                renderOwnerQueues();
+                alert('All test player accounts and registrations cleared successfully!');
             }
         }
+        window.clearAllTestData = clearAllTestData;
 
         async function syncAllRegisteredPlayers() {
             let playersMap = new Map();
-            ['aetheris_registered_players_db', 'aetheris_registered_users', 'aetheris_pending_registrations'].forEach(key => {
+            ['aetheris_registered_players_db', 'aetheris_registered_users'].forEach(key => {
                 try {
                     let list = JSON.parse(localStorage.getItem(key)) || [];
                     list.forEach(item => {
                         if (item && item.email && item.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                            let existing = playersMap.get(item.email.toLowerCase()) || {};
-                            playersMap.set(item.email.toLowerCase(), { ...existing, ...item, status: item.status || existing.status || 'active' });
+                            playersMap.set(item.email.toLowerCase(), item);
                         }
                     });
                 } catch(e) {}
@@ -355,8 +253,7 @@
                     if (data && !error) {
                         data.forEach(p => {
                             if (p && p.email && p.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                                let existing = playersMap.get(p.email.toLowerCase()) || {};
-                                playersMap.set(p.email.toLowerCase(), { ...existing, ...p, status: p.status || existing.status || 'active' });
+                                playersMap.set(p.email.toLowerCase(), p);
                             }
                         });
                     }
@@ -370,7 +267,6 @@
         window.addEventListener('DOMContentLoaded', async () => {
             await loadMerchantConfig();
             await syncAllRegisteredPlayers();
-            await updateMerchantPaymentDisplay();
 
             try {
                 if (currentUser && currentUser.email) {
@@ -402,19 +298,16 @@
             if (tabName === 'owner') {
                 const own = document.getElementById('view-owner');
                 if (own) own.classList.remove('hidden');
-                await loadMerchantConfig();
                 await syncAllRegisteredPlayers();
                 renderOwnerQueues();
-                updateMerchantPaymentDisplay();
             }
         }
         window.switchTab = switchTab;
 
         async function forceSyncOwnerPortal() {
             await syncAllRegisteredPlayers();
-            await loadMerchantConfig();
             renderOwnerQueues();
-            alert('Owner Portal & Player Directory synced successfully!');
+            alert('Owner Portal synced successfully!');
         }
         window.forceSyncOwnerPortal = forceSyncOwnerPortal;
 
@@ -430,6 +323,56 @@
             }
         }
         window.togglePass = togglePass;
+
+        function showAuthMode(mode) {
+            const loginBox = document.getElementById('auth-login-box');
+            const registerBox = document.getElementById('auth-register-box');
+            if (loginBox) loginBox.classList.add('hidden');
+            if (registerBox) registerBox.classList.add('hidden');
+
+            if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
+            if (mode === 'register' && registerBox) {
+                registerBox.classList.remove('hidden');
+                switchRegPaymentMethod('gcash');
+            }
+        }
+        window.showAuthMode = showAuthMode;
+
+        async function switchRegPaymentMethod(method) {
+            currentRegMethod = method;
+            await loadMerchantConfig();
+            const btnGcash = document.getElementById('btn-reg-gcash');
+            const btnMaya = document.getElementById('btn-reg-maya');
+            const qrBox = document.getElementById('reg-active-qr');
+
+            if (method === 'gcash') {
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.gcashQR && qrBox) qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+                else if (qrBox) qrBox.innerHTML = 'No GCash QR';
+            } else {
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.mayaQR && qrBox) qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+                else if (qrBox) qrBox.innerHTML = 'No Maya QR';
+            }
+        }
+        window.switchRegPaymentMethod = switchRegPaymentMethod;
+
+        function saveQRCodeImage(method) {
+            let qrData = method === 'gcash' ? merchantConfig.gcashQR : merchantConfig.mayaQR;
+            if (!qrData) {
+                alert('No QR code image available.');
+                return;
+            }
+            const link = document.createElement('a');
+            link.href = qrData;
+            link.download = `${method.toUpperCase()}_QR.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        window.saveQRCodeImage = saveQRCodeImage;
 
         async function handleLogin() {
             const email = document.getElementById('login-email').value.trim();
@@ -454,6 +397,52 @@
             alert('Admin access restricted to owner email.');
         }
         window.handleLogin = handleLogin;
+
+        async function handleRegister() {
+            const name = document.getElementById('reg-name').value.trim();
+            const nickname = document.getElementById('reg-nickname').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const bday = document.getElementById('reg-bday').value;
+            const pass = document.getElementById('reg-pass').value;
+            const ref = document.getElementById('reg-ref').value.trim();
+            const receiptFile = document.getElementById('reg-receipt').files[0];
+
+            if (!name || !nickname || !phone || !email || !bday || !pass || !ref || !receiptFile) {
+                alert('Please fill out all registration fields and upload receipt.');
+                return;
+            }
+
+            let receiptBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(receiptFile);
+            });
+
+            const newReg = {
+                id: Date.now(),
+                name, nickname, phone, email, birthday: bday,
+                password_hash: pass,
+                wallet: 0, wins: 0, status: 'pending_registration',
+                registration_ref: ref,
+                registration_receipt: receiptBase64,
+                payment_method: currentRegMethod
+            };
+
+            let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            pendingRegs.push(newReg);
+            localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('pending_registrations').upsert([newReg], { onConflict: 'email' });
+                } catch(e) {}
+            }
+
+            alert('Registration submitted successfully! You can now log back in as owner to approve it.');
+            showAuthMode('login');
+        }
+        window.handleRegister = handleRegister;
 
         function logoutPlayer() {
             currentUser = null;
@@ -488,116 +477,29 @@
         }
         window.viewReceipt = viewReceipt;
 
-        function inspectPlayerAccount(email) {
-            const player = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
-            if (!player) {
-                alert('Player not found.');
-                return;
-            }
-            openModal('player-details');
-            const content = document.getElementById('player-inspection-content');
-            if (!content) return;
-            content.innerHTML = `
-                <div class="space-y-2">
-                    <p><strong>Name:</strong> ${player.name || 'N/A'}</p>
-                    <p><strong>Username:</strong> ${player.nickname || 'N/A'}</p>
-                    <p><strong>Email:</strong> ${player.email}</p>
-                    <p><strong>Phone:</strong> ${player.phone || 'N/A'}</p>
-                    <p><strong>Wallet Balance:</strong> <span class="text-emerald-400 font-bold">₱${player.wallet || 0}</span></p>
-                    <p><strong>Wins:</strong> ${player.wins || 0}</p>
-                    <p><strong>Account Status:</strong> <span class="${player.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold uppercase">${player.status || 'active'}</span></p>
-                </div>
-            `;
-        }
-        window.inspectPlayerAccount = inspectPlayerAccount;
-
-        async function toggleFreezePlayerAccount(email) {
-            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-            let p = dbList.find(item => item.email.toLowerCase() === email.toLowerCase());
-            if (p) {
-                p.status = p.status === 'frozen' ? 'active' : 'frozen';
-                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
-            }
-            await syncAllRegisteredPlayers();
-            renderOwnerQueues();
-            alert('Player status updated.');
-        }
-        window.toggleFreezePlayerAccount = toggleFreezePlayerAccount;
-
-        async function deletePlayerAccount(email) {
-            if (confirm(`Are you sure you want to delete player ${email}?`)) {
-                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                dbList = dbList.filter(p => p.email.toLowerCase() !== email.toLowerCase());
-                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
-                await syncAllRegisteredPlayers();
-                renderOwnerQueues();
-                alert('Player account deleted.');
-            }
-        }
-        window.deletePlayerAccount = deletePlayerAccount;
-
-        function clearWalletLedger() {
-            if (confirm('Are you sure you want to clear the wallet ledger?')) {
-                walletTransactionLedger = [];
-                localStorage.removeItem('aetheris_wallet_ledger');
-                renderOwnerQueues();
-            }
-        }
-        window.clearWalletLedger = clearWalletLedger;
-
-        async function executeManualWalletAdjustment() {
-            const email = document.getElementById('manual-wallet-email').value.trim();
-            const amount = parseFloat(document.getElementById('manual-wallet-amount').value);
-            if (!email || isNaN(amount)) {
-                alert('Please provide valid email and amount.');
-                return;
-            }
-            let player = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
-            if (!player) {
-                alert('Player not found in directory.');
-                return;
-            }
-            player.wallet = (player.wallet || 0) + amount;
-            persistLocalStorage();
-            renderOwnerQueues();
-            alert(`Successfully added ₱${amount} to ${email}.`);
-        }
-        window.executeManualWalletAdjustment = executeManualWalletAdjustment;
-
         async function renderOwnerQueues() {
             await syncAllRegisteredPlayers();
             const playersList = document.getElementById('owner-players-list');
             const playerCountBadge = document.getElementById('owner-player-count');
             const regList = document.getElementById('owner-registration-list');
-            const depList = document.getElementById('owner-deposit-list');
-            const wdList = document.getElementById('owner-withdraw-list');
-            const resetList = document.getElementById('owner-reset-list');
-            const walletLedgerList = document.getElementById('owner-wallet-ledger-list');
-            const depositHistoryList = document.getElementById('owner-deposit-history-list');
-            const withdrawHistoryList = document.getElementById('owner-withdraw-history-list');
-            const auditLogContainer = document.getElementById('owner-system-audit-log');
-            const battleHistoryList = document.getElementById('owner-battle-history-list');
 
-            let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-            let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            if (supabaseClient) {
+                try {
+                    const { data } = await supabaseClient.from('pending_registrations').select('*');
+                    if (data && data.length > 0) regs = data;
+                } catch(e) {}
+            }
 
-            let displayPlayers = registeredPlayersList.filter(p => p.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase());
-
-            if (playerCountBadge) playerCountBadge.innerText = displayPlayers.length;
+            if (playerCountBadge) playerCountBadge.innerText = registeredPlayersList.length;
             if (playersList) {
-                playersList.innerHTML = displayPlayers.length === 0 ? '<div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players in directory yet.</div>' :
-                    displayPlayers.map(p => `
+                playersList.innerHTML = registeredPlayersList.length === 0 ? '<div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players in directory yet.</div>' :
+                    registeredPlayersList.map(p => `
                         <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
                             <div>
                                 <strong>${p.nickname || 'Player'}</strong> (${p.email}) - <span class="text-emerald-400 font-bold">₱${p.wallet || 0}</span>
-                                <span class="ml-2 text-[9px] px-1.5 py-0.5 rounded ${p.status === 'frozen' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}">${p.status || 'active'}</span>
                             </div>
-                            <div class="space-x-1 flex">
-                                <button onclick="window.inspectPlayerAccount('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">Inspect</button>
-                                <button onclick="window.toggleFreezePlayerAccount('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-amber-600'} text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
-                                <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px]">Delete</button>
-                            </div>
+                            <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px]">Delete</button>
                         </div>
                     `).join('');
             }
@@ -618,44 +520,15 @@
                         </div>
                     `).join('');
             }
-
-            if (depList) {
-                let pendingTopups = topups.filter(t => t.status === 'pending');
-                depList.innerHTML = pendingTopups.length === 0 ? '<div class="bg-slate-950 p-2 rounded text-xs text-slate-400 text-center">No pending top-ups.</div>' :
-                    pendingTopups.map(t => `
-                        <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs flex justify-between items-center">
-                            <span>${t.nickname} - ₱${t.amount}</span>
-                            <div class="space-x-1">
-                                <button onclick="window.approveTopUp(${t.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
-                                <button onclick="window.rejectTopUp(${t.id})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
-                            </div>
-                        </div>
-                    `).join('');
-            }
-
-            if (wdList) {
-                let pendingWds = withdraws.filter(w => w.status === 'pending');
-                wdList.innerHTML = pendingWds.length === 0 ? '<div class="bg-slate-950 p-2 rounded text-xs text-slate-400 text-center">No pending withdrawals.</div>' :
-                    pendingWds.map(w => `
-                        <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs flex justify-between items-center">
-                            <span>${w.nickname} - ₱${w.amount}</span>
-                            <div class="space-x-1">
-                                <button onclick="window.approveWithdrawal(${w.id})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
-                                <button onclick="window.rejectWithdrawal(${w.id})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
-                            </div>
-                        </div>
-                    `).join('');
-            }
         }
         window.renderOwnerQueues = renderOwnerQueues;
 
         async function approveRegistration(email) {
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            let reg = regs.find(r => r.email.toLowerCase() === email.toLowerCase()) || {
-                email, name: 'Player', nickname: email.split('@')[0], wallet: 0, wins: 0, status: 'active'
-            };
-            reg.status = 'active';
+            let reg = regs.find(r => r.email.toLowerCase() === email.toLowerCase());
+            if (!reg) return;
 
+            reg.status = 'active';
             regs = regs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
 
@@ -674,7 +547,7 @@
 
             await syncAllRegisteredPlayers();
             renderOwnerQueues();
-            alert(`Approved registration for ${email}. Player is now added to the directory.`);
+            alert(`Approved registration for ${email}. Player is now in the directory.`);
         }
         window.approveRegistration = approveRegistration;
 
@@ -690,124 +563,19 @@
         }
         window.rejectRegistration = rejectRegistration;
 
-        async function approveTopUp(id) {
-            let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-            let topup = topups.find(t => t.id === id);
-            if (!topup) return;
-            topup.status = 'approved';
-            localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
-
-            let player = registeredPlayersList.find(p => p.email.toLowerCase() === topup.email.toLowerCase());
-            if (player) {
-                player.wallet = (player.wallet || 0) + topup.amount;
-                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
-            }
-            renderOwnerQueues();
-            alert('Top-up approved!');
-        }
-        window.approveTopUp = approveTopUp;
-
-        async function rejectTopUp(id) {
-            let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-            let topup = topups.find(t => t.id === id);
-            if (topup) {
-                topup.status = 'rejected';
-                localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
-            }
-            renderOwnerQueues();
-        }
-        window.rejectTopUp = rejectTopUp;
-
-        async function approveWithdrawal(id) {
-            let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
-            let wd = withdraws.find(w => w.id === id);
-            if (wd) {
-                wd.status = 'approved';
-                localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
-            }
-            renderOwnerQueues();
-            alert('Withdrawal approved!');
-        }
-        window.approveWithdrawal = approveWithdrawal;
-
-        async function rejectWithdrawal(id) {
-            let withdraws = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
-            let wd = withdraws.find(w => w.id === id);
-            if (wd) {
-                wd.status = 'rejected';
-                localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(withdraws));
-            }
-            renderOwnerQueues();
-        }
-        window.rejectWithdrawal = rejectWithdrawal;
-
-        async function saveGcashSettings() {
-            const num = document.getElementById('input-gcash-num').value.trim();
-            const name = document.getElementById('input-gcash-name').value.trim();
-            const fileInput = document.getElementById('input-gcash-qr');
-
-            if (num) merchantConfig.gcashNum = num;
-            if (name) merchantConfig.gcashName = name;
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    merchantConfig.gcashQR = e.target.result;
-                    await persistMerchantConfig();
-                    alert('GCash settings saved successfully!');
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                await persistMerchantConfig();
-                alert('GCash settings saved successfully!');
+        async function deletePlayerAccount(email) {
+            if (confirm(`Delete player ${email}?`)) {
+                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                dbList = dbList.filter(p => p.email.toLowerCase() !== email.toLowerCase());
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+                if (supabaseClient) {
+                    try { await supabaseClient.from('profiles').delete().eq('email', email); } catch(e) {}
+                }
+                await syncAllRegisteredPlayers();
+                renderOwnerQueues();
             }
         }
-        window.saveGcashSettings = saveGcashSettings;
-
-        async function saveMayaSettings() {
-            const num = document.getElementById('input-maya-num').value.trim();
-            const name = document.getElementById('input-maya-name').value.trim();
-            const fileInput = document.getElementById('input-maya-qr');
-
-            if (num) merchantConfig.mayaNum = num;
-            if (name) merchantConfig.mayaName = name;
-
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    merchantConfig.mayaQR = e.target.result;
-                    await persistMerchantConfig();
-                    alert('Maya settings saved successfully!');
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                await persistMerchantConfig();
-                alert('Maya settings saved successfully!');
-            }
-        }
-        window.saveMayaSettings = saveMayaSettings;
-
-        async function updateMerchantPaymentDisplay() {
-            await loadMerchantConfig();
-            const inputGcashNum = document.getElementById('input-gcash-num');
-            const inputGcashName = document.getElementById('input-gcash-name');
-            const inputMayaNum = document.getElementById('input-maya-num');
-            const inputMayaName = document.getElementById('input-maya-name');
-            const ownerGcashPreview = document.getElementById('owner-gcash-qr-preview');
-            const ownerMayaPreview = document.getElementById('owner-maya-qr-preview');
-
-            if (inputGcashNum) inputGcashNum.value = merchantConfig.gcashNum;
-            if (inputGcashName) inputGcashName.value = merchantConfig.gcashName;
-            if (inputMayaNum) inputMayaNum.value = merchantConfig.mayaNum;
-            if (inputMayaName) inputMayaName.value = merchantConfig.mayaName;
-
-            if (merchantConfig.gcashQR && ownerGcashPreview) ownerGcashPreview.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
-            if (merchantConfig.mayaQR && ownerMayaPreview) ownerMayaPreview.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
-        }
-
-        function persistLocalStorage() {
-            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
-        }
+        window.deletePlayerAccount = deletePlayerAccount;
     </script>
 </body>
 </html>
