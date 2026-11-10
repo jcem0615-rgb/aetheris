@@ -824,8 +824,8 @@
                         wallet: currentUser.wallet || 0,
                         wins: currentUser.wins || 0,
                         xp: currentUser.xp || 0,
-                        active_hero: currentUser.active_hero || 'pyra',
-                        unlocked_heroes: currentUser.unlocked_heroes || ['pyra'],
+                        active_hero: currentUser.active_hero || null,
+                        unlocked_heroes: currentUser.unlocked_heroes || [],
                         unlocked_skills: currentUser.unlockedSkills || {},
                         status: currentUser.status || 'active',
                         force_password_change: currentUser.force_password_change || false
@@ -912,6 +912,13 @@
                 });
             } catch(e) {}
 
+            try {
+                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+                localUsers.forEach(item => {
+                    if (item && item.email && item.status === 'active') existingLocalMap.set(item.email.toLowerCase(), item);
+                });
+            } catch(e) {}
+
             playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
                 id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
             });
@@ -931,7 +938,8 @@
                     wallet: currentUser.wallet !== undefined ? currentUser.wallet : (existing.wallet || 0),
                     wins: currentUser.wins || existing.wins || 0,
                     xp: currentUser.xp || existing.xp || 0,
-                    active_hero: currentUser.active_hero || existing.active_hero || 'pyra',
+                    active_hero: currentUser.active_hero || existing.active_hero || null,
+                    unlocked_heroes: currentUser.unlocked_heroes || existing.unlocked_heroes || [],
                     status: currentUser.status || existing.status || 'active',
                     force_password_change: currentUser.force_password_change || existing.force_password_change || false
                 });
@@ -959,7 +967,8 @@
                                     wallet: finalWallet,
                                     wins: Math.max(p.wins || 0, localExisting ? (localExisting.wins || 0) : 0),
                                     xp: Math.max(p.xp || 0, localExisting ? (localExisting.xp || 0) : 0),
-                                    active_hero: p.active_hero || (localExisting ? localExisting.active_hero : 'pyra'),
+                                    active_hero: p.active_hero || (localExisting ? localExisting.active_hero : null),
+                                    unlocked_heroes: p.unlocked_heroes || (localExisting ? localExisting.unlocked_heroes : []),
                                     status: p.status || (localExisting ? localExisting.status : 'active'),
                                     force_password_change: p.force_password_change || (localExisting ? localExisting.force_password_change : false)
                                 });
@@ -1008,6 +1017,7 @@
             }
         }
 
+        // ================= BOT & MATCHMAKING LOGIC =================
         const humanBotNames = ['Kenjie', 'Kenneth', 'Clyde', 'Joana', 'Glenda', 'Glenn', 'Mark', 'Jessa', 'Bryan', 'Rica', 'Christian', 'Nicole', 'Jomar', 'Kaye', 'Roldan'];
         function getRandomHumanBotName() {
             return humanBotNames[Math.floor(Math.random() * humanBotNames.length)];
@@ -1019,17 +1029,79 @@
             turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, currentOpponentName: 'Kenjie', enemyHero: null, enemyDeck: [], isPlayerTurn: true
         };
 
-        let playerDeck = [];
-        let playerHand = [];
-        let playerDiscard = [];
-        
         let matchmakingInterval = null;
-        let matchmakingElapsedTimer = null;
         let matchmakingElapsedSeconds = 0;
-        let randomBotTriggerSeconds = 15;
-        let myQueueRecordId = null;
+        let randomBotTriggerSeconds = 6; // Falls back to bot opponent within 6 seconds
         let cointossTimerInterval = null;
         let cointossTimeRemaining = 5;
+
+        function startRankedMatchmaking(stake) {
+            const preBal = currentUser.wallet || 0;
+            if (preBal < stake) {
+                alert('Insufficient balance.');
+                return;
+            }
+            preBattleWallet = preBal;
+            currentUser.wallet = preBal - stake;
+            currentDuelBet = stake;
+            persistLocalStorage();
+            updateWalletDisplay();
+            closeModal();
+
+            openModal('matchmaking');
+            matchmakingElapsedSeconds = 0;
+            const countdownEl = document.getElementById('matchmaking-countdown');
+
+            matchmakingInterval = setInterval(() => {
+                matchmakingElapsedSeconds++;
+                if (countdownEl) countdownEl.innerText = `Elapsed time: ${matchmakingElapsedSeconds}s`;
+
+                if (matchmakingElapsedSeconds >= randomBotTriggerSeconds) {
+                    clearInterval(matchmakingInterval);
+                    closeModal();
+                    triggerBotMatchmaking();
+                }
+            }, 1000);
+        }
+        window.startRankedMatchmaking = startRankedMatchmaking;
+
+        function cancelMatchmakingQueue() {
+            if (matchmakingInterval) clearInterval(matchmakingInterval);
+            currentUser.wallet = preBattleWallet;
+            persistLocalStorage();
+            updateWalletDisplay();
+            closeModal();
+            alert('Matchmaking cancelled. Wager refunded.');
+        }
+        window.cancelMatchmakingQueue = cancelMatchmakingQueue;
+
+        function triggerBotMatchmaking() {
+            duelState.isBotMatch = true;
+            duelState.currentOpponentName = getRandomHumanBotName();
+            openModal('cointoss');
+        }
+
+        function startCoinTossTimer() {
+            cointossTimeRemaining = 5;
+            const display = document.getElementById('cointoss-timer-display');
+            if (display) display.innerText = `Auto-choosing in ${cointossTimeRemaining}s...`;
+            if (cointossTimerInterval) clearInterval(cointossTimerInterval);
+            cointossTimerInterval = setInterval(() => {
+                cointossTimeRemaining--;
+                if (display) display.innerText = `Auto-choosing in ${cointossTimeRemaining}s...`;
+                if (cointossTimeRemaining <= 0) {
+                    clearInterval(cointossTimerInterval);
+                    executeCoinToss('Heads');
+                }
+            }, 1000);
+        }
+
+        function executeCoinToss(choice) {
+            if (cointossTimerInterval) clearInterval(cointossTimerInterval);
+            closeModal();
+            startDuelFullscreen();
+        }
+        window.executeCoinToss = executeCoinToss;
 
         let currentRegMethod = 'gcash';
         let currentHubMethod = 'gcash';
@@ -1059,6 +1131,8 @@
                     dbList[idx].nickname = currentUser.nickname;
                     dbList[idx].wins = currentUser.wins;
                     dbList[idx].xp = currentUser.xp;
+                    dbList[idx].active_hero = currentUser.active_hero;
+                    dbList[idx].unlocked_heroes = currentUser.unlocked_heroes;
                     dbList[idx].force_password_change = currentUser.force_password_change;
                 } else {
                     dbList.push({
@@ -1070,6 +1144,8 @@
                         wallet: currentUser.wallet,
                         wins: currentUser.wins,
                         xp: currentUser.xp,
+                        active_hero: currentUser.active_hero,
+                        unlocked_heroes: currentUser.unlocked_heroes,
                         status: currentUser.status || 'active',
                         force_password_change: currentUser.force_password_change || false
                     });
@@ -1176,13 +1252,6 @@
             ]}
         ];
 
-        const shopSkillsMap = {
-            'pyra': [
-                { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 2, color: 'red', damage: 55, poison: 15, cost: 150, desc: 'Tier-2 Elite: Deal 55 Fire true damage & apply 15 Burn stacks.' },
-                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 3, color: 'red', damage: 95, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to deal 95 solar fire true damage!' }
-            ]
-        };
-
         window.addEventListener('DOMContentLoaded', async () => {
             await loadMerchantConfig();
             await syncAllRegisteredPlayers(true);
@@ -1245,7 +1314,7 @@
                     return;
                 }
 
-                const activeHero = currentUser.active_hero || currentUser.activeHero || 'pyra';
+                const activeHero = currentUser.active_hero || currentUser.activeHero || null;
                 if (!activeHero) {
                     const mainHeader = document.getElementById('main-header');
                     const viewStarter = document.getElementById('view-starter-select');
@@ -1414,6 +1483,16 @@
             if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
             if (mode === 'register' && registerBox) {
                 registerBox.classList.remove('hidden');
+                // CLEAR OLD REGISTRATION FORM DATA
+                ['reg-name', 'reg-nickname', 'reg-phone', 'reg-email', 'reg-bday', 'reg-pass', 'reg-ref', 'reg-receipt'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                const termsCheck = document.getElementById('reg-check-terms');
+                const privCheck = document.getElementById('reg-check-privacy');
+                if (termsCheck) termsCheck.checked = false;
+                if (privCheck) privCheck.checked = false;
+
                 await loadMerchantConfig();
                 switchRegPaymentMethod('gcash');
             }
@@ -1870,7 +1949,6 @@
             openModal('player-profile');
             const content = document.getElementById('player-profile-content');
             if (!content || !currentUser) return;
-            const playerBattles = battleHistoryLog.filter(b => b.playerEmail && currentUser.email && b.playerEmail.toLowerCase() === currentUser.email.toLowerCase());
             content.innerHTML = `
                 <div class="space-y-3">
                     <div class="space-y-1">
@@ -2023,63 +2101,133 @@
         }
         window.submitWithdrawal = submitWithdrawal;
 
-        async function startRankedMatchmaking(stake) {
-            const preBal = currentUser.wallet || 0;
-            if (preBal < stake) {
-                alert('Insufficient balance.');
-                return;
-            }
-            preBattleWallet = preBal;
-            currentUser.wallet = preBal - stake;
-            currentDuelBet = stake;
-            persistLocalStorage();
-            updateWalletDisplay();
-            closeModal();
-            alert('Matchmaking simulated. Starting duel!');
-            startDuelFullscreen();
-        }
-        window.startRankedMatchmaking = startRankedMatchmaking;
-
         function startDuelFullscreen() {
             const fsView = document.getElementById('view-duel-fullscreen');
             if (fsView) fsView.classList.remove('hidden');
             duelState.playerHp = 100;
+            duelState.playerMaxHp = 100;
+            duelState.playerArmor = 0;
+            duelState.playerAp = 3;
             duelState.enemyHp = 100;
+            duelState.enemyMaxHp = 100;
+            duelState.enemyArmor = 0;
+            
+            const enemyLabel = document.getElementById('fs-enemy-title');
+            const enemyNameLabel = document.getElementById('fs-enemy-name-label');
+            if (enemyLabel) enemyLabel.innerText = duelState.currentOpponentName;
+            if (enemyNameLabel) enemyNameLabel.innerText = duelState.currentOpponentName;
+
+            const playerLabel = document.getElementById('fs-player-name');
+            const playerAvatarLabel = document.getElementById('fs-player-avatar-username');
+            const nick = currentUser ? currentUser.nickname : 'PLAYER';
+            if (playerLabel) playerLabel.innerText = nick;
+            if (playerAvatarLabel) playerAvatarLabel.innerText = nick;
+
             renderDuelUI();
         }
 
         function renderDuelUI() {
             const pBar = document.getElementById('fs-player-hp-bar');
             const eBar = document.getElementById('fs-enemy-hp-bar');
-            if (pBar) pBar.style.width = '100%';
-            if (eBar) eBar.style.width = '100%';
+            const pText = document.getElementById('fs-player-hp-text');
+            const eText = document.getElementById('fs-enemy-hp-text');
+            const pAp = document.getElementById('fs-player-ap');
+            const betBadge = document.getElementById('fullscreen-bet-badge');
+
+            if (pBar) pBar.style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
+            if (eBar) eBar.style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
+            if (pText) pText.innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
+            if (eText) eText.innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
+            if (pAp) pAp.innerText = duelState.playerAp;
+            if (betBadge) betBadge.innerText = `Bet: ₱${currentDuelBet}`;
         }
 
+        // ================= BOT AI TURN & HEALTH THRESHOLD LOGIC =================
         function endDuelTurn() {
-            alert('Battle turn completed.');
-            checkDuelConclusion();
+            const logEl = document.getElementById('fs-battle-log');
+            if (logEl) logEl.innerText = `[Arena]: You ended your turn. ${duelState.currentOpponentName} is taking action...`;
+
+            setTimeout(() => {
+                executeBotTurnAI();
+                if (duelState.enemyHp <= 0) {
+                    setTimeout(() => checkDuelConclusion(true), 1000);
+                } else if (duelState.playerHp <= 0) {
+                    setTimeout(() => checkDuelConclusion(false), 1000);
+                }
+            }, 800);
         }
         window.endDuelTurn = endDuelTurn;
 
-        async function checkDuelConclusion() {
-            const prize = currentDuelBet * 2 * 0.95;
-            currentUser.wallet = (currentUser.wallet || 0) + prize;
-            currentUser.wins = (currentUser.wins || 0) + 1;
-            currentUser.xp = (currentUser.xp || 0) + 50;
-            persistLocalStorage();
-            alert(`VICTORY! You won ₱${prize.toFixed(2)}!`);
+        function executeBotTurnAI() {
+            const logEl = document.getElementById('fs-battle-log');
+
+            // Bot Health Threshold Logic
+            if (duelState.enemyHp < 20) {
+                // Revitalize skill: heals 60 HP to stay in the match
+                let healAmount = 60;
+                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmount);
+                if (logEl) logEl.innerText = `[Bot AI]: ${duelState.currentOpponentName} activated REVITALIZE! Restored 60 HP.`;
+            } 
+            else if (duelState.enemyHp < 60) {
+                // Recovery Surge: heals 40, 45, or 50 HP, grants armor, and deals counter damage with poison/burn
+                let heals = [40, 45, 50];
+                let armors = [15, 20, 25];
+                let damages = [20, 25, 30];
+                let poisonStacks = [10, 15, 17];
+
+                let h = heals[Math.floor(Math.random() * heals.length)];
+                let a = armors[Math.floor(Math.random() * armors.length)];
+                let d = damages[Math.floor(Math.random() * damages.length)];
+                let p = poisonStacks[Math.floor(Math.random() * poisonStacks.length)];
+
+                duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + h);
+                duelState.enemyArmor += a;
+
+                let netDmg = Math.max(0, d - duelState.playerArmor);
+                duelState.playerArmor = Math.max(0, duelState.playerArmor - d);
+                duelState.playerHp = Math.max(0, duelState.playerHp - netDmg);
+                duelState.playerPoison += p;
+
+                if (logEl) logEl.innerText = `[Bot AI]: ${duelState.currentOpponentName} triggered RECOVERY SURGE! Healed ${h} HP, gained ${a} Armor, and dealt ${d} damage (${p} burn).`;
+            } 
+            else {
+                // Standard Attack
+                let standardDmg = 25;
+                let netDmg = Math.max(0, standardDmg - duelState.playerArmor);
+                duelState.playerArmor = Math.max(0, duelState.playerArmor - standardDmg);
+                duelState.playerHp = Math.max(0, duelState.playerHp - netDmg);
+                if (logEl) logEl.innerText = `[Bot AI]: ${duelState.currentOpponentName} executed Standard Strike dealing ${standardDmg} damage.`;
+            }
+
+            renderDuelUI();
+        }
+
+        async function checkDuelConclusion(isVictory = true) {
             closeDuelFullscreen();
+            if (isVictory) {
+                const prize = currentDuelBet * 2 * 0.95;
+                currentUser.wallet = (currentUser.wallet || 0) + prize;
+                currentUser.wins = (currentUser.wins || 0) + 1;
+                currentUser.xp = (currentUser.xp || 0) + 50;
+                persistLocalStorage();
+                alert(`VICTORY! You won ₱${prize.toFixed(2)}!`);
+            } else {
+                persistLocalStorage();
+                alert(`DEFEAT! You lost your ₱${currentDuelBet} wager.`);
+            }
+            switchTab('hub');
         }
 
         function surrenderDuel() {
             closeDuelFullscreen();
+            alert('You surrendered the match.');
+            switchTab('hub');
         }
         window.surrenderDuel = surrenderDuel;
 
         function closeDuelFullscreen() {
             const fsView = document.getElementById('view-duel-fullscreen');
             if (fsView) fsView.classList.add('hidden');
-            switchTab('hub');
         }
 
         async function executeManualWalletAdjustment() {
@@ -2103,13 +2251,10 @@
         async function renderOwnerQueues() {
             await syncAllRegisteredPlayers(true);
             const walletLedgerList = document.getElementById('owner-wallet-ledger-list');
-            const depositHistoryList = document.getElementById('owner-deposit-history-list');
-            const withdrawHistoryList = document.getElementById('owner-withdraw-history-list');
             const totalDepositsMetric = document.getElementById('metric-total-deposits');
             const totalWithdrawalsMetric = document.getElementById('metric-total-withdrawals');
             const playersList = document.getElementById('owner-players-list');
             const playerCountBadge = document.getElementById('owner-player-count');
-            const auditLog = document.getElementById('owner-system-audit-log');
             const regList = document.getElementById('owner-registration-list');
             const resetList = document.getElementById('owner-reset-list');
             const depList = document.getElementById('owner-deposit-list');
@@ -2224,15 +2369,39 @@
 
         async function approveRegistration(email) {
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            let reg = regs.find(r => r.email.toLowerCase() === email.toLowerCase()) || { email, name: 'Player', nickname: email.split('@')[0] };
-            reg.status = 'active';
+            let reg = regs.find(r => r.email.toLowerCase() === email.toLowerCase());
+
+            if (!reg) {
+                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+                reg = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+            }
+
+            if (!reg) {
+                reg = { email, name: 'Player', nickname: email.split('@')[0], wallet: 0, wins: 0, xp: 0, active_hero: null, unlocked_heroes: [], status: 'active' };
+            } else {
+                reg.status = 'active';
+            }
 
             regs = regs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
 
             let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
-            localUsers = localUsers.map(u => u.email.toLowerCase() === email.toLowerCase() ? reg : u);
+            let uIdx = localUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+            if (uIdx >= 0) {
+                localUsers[uIdx] = reg;
+            } else {
+                localUsers.push(reg);
+            }
             localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+
+            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let pIdx = dbList.findIndex(p => p.email.toLowerCase() === email.toLowerCase());
+            if (pIdx >= 0) {
+                dbList[pIdx] = { ...dbList[pIdx], ...reg, status: 'active' };
+            } else {
+                dbList.push(reg);
+            }
+            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
 
             if (supabaseClient) {
                 await supabaseClient.from('profiles').upsert([reg], { onConflict: 'email' });
@@ -2241,6 +2410,7 @@
 
             sendPushNotificationToPlayer(email, 'Registration Approved! 🎉', 'Your Aetheris Arena account has been approved.');
             persistLocalStorage();
+            await syncAllRegisteredPlayers(true);
             renderOwnerQueues();
             alert(`Approved registration for ${email}`);
         }
