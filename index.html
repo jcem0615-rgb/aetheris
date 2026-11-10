@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aetheris Duel Arena - Command Center</title>
+    <title>Aetheris Duel Arena - Owner Command Center</title>
     <!-- App Icon / Favicon -->
     <link rel="icon" type="image/jpeg" href="image_114c6025.jpg">
     <link rel="apple-touch-icon" href="image_114c6025.jpg">
@@ -53,7 +53,7 @@
     <!-- Main Content Container -->
     <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 flex flex-col justify-center my-auto">
 
-        <!-- AUTH VIEW (Admin Login, Player Login, Register) -->
+        <!-- AUTH VIEW (Unified Sign In & Register) -->
         <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4">
             <div class="text-center space-y-1.5">
                 <div class="w-16 h-16 mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/40 border-2 border-amber-500/60 bg-slate-950 flex items-center justify-center">
@@ -63,40 +63,29 @@
                 <p class="text-xs text-slate-400">Tactical Card & Combat Arena</p>
             </div>
 
-            <!-- Auth Mode Switcher Tabs -->
+            <!-- Auth Mode Switcher (Sign In vs Create Account) -->
             <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold">
-                <button onclick="window.switchAuthTab('admin')" id="tab-btn-admin" class="flex-1 py-2 rounded-lg bg-blue-600 text-white transition">Admin Login</button>
-                <button onclick="window.switchAuthTab('player')" id="tab-btn-player" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition">Player Sign In</button>
+                <button onclick="window.switchAuthTab('signin')" id="tab-btn-signin" class="flex-1 py-2 rounded-lg bg-blue-600 text-white transition">Sign In</button>
                 <button onclick="window.switchAuthTab('register')" id="tab-btn-register" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition">Create Account</button>
             </div>
 
-            <!-- 1. Admin Sign In Box -->
-            <div id="auth-admin-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
-                <h3 class="font-cinzel text-base font-bold text-white">Owner Secure Sign In</h3>
+            <!-- 1. Unified Sign In Box -->
+            <div id="auth-signin-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
+                <h3 class="font-cinzel text-base font-bold text-white">Sign In to Arena</h3>
                 <div class="space-y-2.5">
-                    <input type="email" id="admin-login-email" placeholder="Owner Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <input type="email" id="unified-login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
                     <div class="relative">
-                        <input type="password" id="admin-login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
-                        <button type="button" onclick="window.togglePass('admin-login-pass', this)" class="absolute right-3 top-3 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                        <input type="password" id="unified-login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <button type="button" onclick="window.togglePass('unified-login-pass', this)" class="absolute right-3 top-3 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
                 </div>
-                <button onclick="window.handleAdminLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In as Owner</button>
-            </div>
-
-            <!-- 2. Player Sign In Box -->
-            <div id="auth-player-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
-                <h3 class="font-cinzel text-base font-bold text-white">Player Sign In</h3>
-                <div class="space-y-2.5">
-                    <input type="email" id="player-login-email" placeholder="Player Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
-                    <div class="relative">
-                        <input type="password" id="player-login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
-                        <button type="button" onclick="window.togglePass('player-login-pass', this)" class="absolute right-3 top-3 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
-                    </div>
+                <button onclick="window.handleUnifiedLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
+                <div class="text-center pt-1">
+                    <button type="button" onclick="window.openForgotPasswordModal()" class="text-[11px] text-amber-400 hover:underline">Forgot Password?</button>
                 </div>
-                <button onclick="window.handlePlayerLogin()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In to Arena</button>
             </div>
 
-            <!-- 3. Create Player Account Box -->
+            <!-- 2. Create Player Account Box -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
                 <p class="text-[11px] text-amber-400/90">*Note: A 50 AC (₱50) registration fee applies.</p>
@@ -137,7 +126,7 @@
             </div>
         </div>
 
-        <!-- OWNER PORTAL VIEW -->
+        <!-- OWNER PORTAL VIEW (FULLY OPERATIONAL) -->
         <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -145,6 +134,7 @@
                     <div class="space-x-1.5 flex items-center flex-wrap gap-y-1">
                         <button onclick="window.clearAllTestData()" class="px-2 py-1 bg-red-600/80 hover:bg-red-600 text-white text-[10px] font-bold rounded-lg shadow">🧹 Clear Test Data</button>
                         <button onclick="window.forceSyncOwnerPortal()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shadow">Force Sync</button>
+                        <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
                     </div>
                 </div>
 
@@ -166,12 +156,21 @@
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>
                     </div>
                 </div>
+
+                <!-- PASSWORD RESET REQUESTS -->
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-amber-400">Password Reset Requests</h3>
+                    <div id="owner-reset-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 
     <!-- Modals -->
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
+        <!-- Player Inspection Modal -->
         <div id="modal-player-details" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                 <h3 class="font-cinzel text-base font-bold text-amber-400">Player Inspection</h3>
@@ -180,12 +179,31 @@
             <div id="player-inspection-content" class="space-y-3 text-xs text-slate-300 max-h-96 overflow-y-auto pr-1 bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
+
+        <!-- Image Preview Modal -->
         <div id="modal-image-preview" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Payment Receipt Preview</h3>
             <div id="image-preview-container" class="w-full max-h-96 overflow-auto bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-center">
                 <img id="preview-img-tag" src="" alt="Receipt" class="max-w-full max-h-80 object-contain rounded-lg">
             </div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Close</button>
+        </div>
+
+        <!-- Forgot Password Request Modal -->
+        <div id="modal-forgot-password" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Request Password Reset</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div class="space-y-2.5 text-xs">
+                <p class="text-slate-400">Enter your registered email address and your new desired password. The owner will review and approve your request.</p>
+                <input type="email" id="forgot-email" placeholder="Registered Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                <input type="password" id="forgot-new-pass" placeholder="New Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white">
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="window.submitPasswordResetRequest()" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl">Submit Request</button>
+                <button onclick="window.closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-xl">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -231,6 +249,7 @@
                 localStorage.removeItem('aetheris_registered_players_db');
                 localStorage.removeItem('aetheris_registered_users');
                 localStorage.removeItem('aetheris_pending_registrations');
+                localStorage.removeItem('aetheris_pending_resets');
                 registeredPlayersList = [];
                 if (supabaseClient) {
                     try {
@@ -292,13 +311,11 @@
         });
 
         function switchAuthTab(tab) {
-            ['admin', 'player', 'register'].forEach(t => {
+            ['signin', 'register'].forEach(t => {
                 const box = document.getElementById(`auth-${t}-box`);
                 const btn = document.getElementById(`tab-btn-${t}`);
                 if (box) box.classList.add('hidden');
-                if (btn) {
-                    btn.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
-                }
+                if (btn) btn.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
             });
 
             const targetBox = document.getElementById(`auth-${tab}-box`);
@@ -394,14 +411,15 @@
         }
         window.togglePass = togglePass;
 
-        async function handleAdminLogin() {
-            const email = document.getElementById('admin-login-email').value.trim();
-            const pass = document.getElementById('admin-login-pass').value;
+        async function handleUnifiedLogin() {
+            const email = document.getElementById('unified-login-email').value.trim();
+            const pass = document.getElementById('unified-login-pass').value;
             if (!email || !pass) {
-                alert('Please enter your owner email and password.');
+                alert('Please enter your email and password.');
                 return;
             }
 
+            // Check if Owner
             if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                 currentUser = {
                     email: EXCLUSIVE_OWNER_EMAIL,
@@ -414,22 +432,16 @@
                 restoreOwnerSession();
                 return;
             }
-            alert('Admin access restricted to owner email.');
-        }
-        window.handleAdminLogin = handleAdminLogin;
 
-        async function handlePlayerLogin() {
-            const email = document.getElementById('player-login-email').value.trim();
-            const pass = document.getElementById('player-login-pass').value;
-            if (!email || !pass) {
-                alert('Please enter your email and password.');
-                return;
-            }
-
+            // Check Registered Players
             await syncAllRegisteredPlayers();
             let player = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
             if (!player) {
                 alert('Player account not found or pending approval.');
+                return;
+            }
+            if (player.password_hash && player.password_hash !== pass) {
+                alert('Incorrect password.');
                 return;
             }
             if (player.status === 'frozen') {
@@ -442,7 +454,44 @@
             alert(`Welcome back, ${player.nickname || 'Player'}!`);
             location.reload();
         }
-        window.handlePlayerLogin = handlePlayerLogin;
+        window.handleUnifiedLogin = handleUnifiedLogin;
+
+        function openForgotPasswordModal() {
+            openModal('forgot-password');
+        }
+        window.openForgotPasswordModal = openForgotPasswordModal;
+
+        async function submitPasswordResetRequest() {
+            const email = document.getElementById('forgot-email').value.trim();
+            const newPass = document.getElementById('forgot-new-pass').value;
+            if (!email || !newPass) {
+                alert('Please enter your email and new password.');
+                return;
+            }
+
+            await syncAllRegisteredPlayers();
+            let player = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (!player) {
+                alert('Email address not found in registered players directory.');
+                return;
+            }
+
+            const resetReq = {
+                id: Date.now(),
+                email: player.email,
+                nickname: player.nickname,
+                new_password: newPass
+            };
+
+            let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+            pendingResets = pendingResets.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+            pendingResets.push(resetReq);
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
+
+            closeModal();
+            alert('Password reset request submitted successfully! Awaiting owner approval.');
+        }
+        window.submitPasswordResetRequest = submitPasswordResetRequest;
 
         async function handleRegister() {
             const name = document.getElementById('reg-name').value.trim();
@@ -486,7 +535,7 @@
             }
 
             alert('Registration submitted successfully! Your account is pending owner approval.');
-            switchAuthTab('player');
+            switchAuthTab('signin');
         }
         window.handleRegister = handleRegister;
 
@@ -500,7 +549,7 @@
         function openModal(type) {
             const backdrop = document.getElementById('modal-backdrop');
             if (backdrop) backdrop.classList.remove('hidden');
-            ['modal-player-details', 'modal-image-preview'].forEach(m => {
+            ['modal-player-details', 'modal-image-preview', 'modal-forgot-password'].forEach(m => {
                 const el = document.getElementById(m);
                 if (el) el.classList.add('hidden');
             });
@@ -528,14 +577,10 @@
             const playersList = document.getElementById('owner-players-list');
             const playerCountBadge = document.getElementById('owner-player-count');
             const regList = document.getElementById('owner-registration-list');
+            const resetList = document.getElementById('owner-reset-list');
 
             let regs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            if (supabaseClient) {
-                try {
-                    const { data } = await supabaseClient.from('pending_registrations').select('*');
-                    if (data && data.length > 0) regs = data;
-                } catch(e) {}
-            }
+            let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
 
             if (playerCountBadge) playerCountBadge.innerText = registeredPlayersList.length;
             if (playersList) {
@@ -562,6 +607,22 @@
                                 <button onclick="window.viewReceipt('${encodeURIComponent(r.registration_receipt || '')}')" class="px-2 py-1 bg-blue-600 text-white rounded text-[10px]">View Receipt</button>
                                 <button onclick="window.approveRegistration('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
                                 <button onclick="window.rejectRegistration('${r.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
+                            </div>
+                        </div>
+                    `).join('');
+            }
+
+            if (resetList) {
+                resetList.innerHTML = resets.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>' :
+                    resets.map(res => `
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div>
+                                <strong class="text-amber-400">${res.nickname || 'Player'}</strong> (${res.email})<br>
+                                <span class="text-slate-400 text-[10px]">New Pass: ${res.new_password}</span>
+                            </div>
+                            <div class="space-x-1 flex items-center">
+                                <button onclick="window.approvePasswordReset('${res.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
+                                <button onclick="window.rejectPasswordReset('${res.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
                             </div>
                         </div>
                     `).join('');
@@ -593,7 +654,7 @@
 
             await syncAllRegisteredPlayers();
             renderOwnerQueues();
-            alert(`Approved registration for ${email}. Player is now in the directory.`);
+            alert(`Approved registration for ${email}.`);
         }
         window.approveRegistration = approveRegistration;
 
@@ -608,6 +669,44 @@
             alert(`Rejected registration for ${email}.`);
         }
         window.rejectRegistration = rejectRegistration;
+
+        async function approvePasswordReset(email) {
+            let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+            let resetReq = resets.find(r => r.email.toLowerCase() === email.toLowerCase());
+            if (!resetReq) return;
+
+            // Update player password in DB
+            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let player = dbList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (player) {
+                player.password_hash = resetReq.new_password;
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+            }
+
+            // Remove from pending resets
+            resets = resets.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(resets));
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('profiles').update({ password_hash: resetReq.new_password }).eq('email', email);
+                } catch(e) {}
+            }
+
+            await syncAllRegisteredPlayers();
+            renderOwnerQueues();
+            alert(`Password reset approved and updated for ${email}.`);
+        }
+        window.approvePasswordReset = approvePasswordReset;
+
+        async function rejectPasswordReset(email) {
+            let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+            resets = resets.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(resets));
+            renderOwnerQueues();
+            alert(`Password reset rejected for ${email}.`);
+        }
+        window.rejectPasswordReset = rejectPasswordReset;
 
         async function deletePlayerAccount(email) {
             if (confirm(`Delete player ${email}?`)) {
