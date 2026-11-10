@@ -879,7 +879,7 @@
         let registeredPlayersList = [];
 
         async function syncUserToSupabase() {
-            if (!currentUser || !currentUser.email || !supabaseClient) return;
+            if (!currentUser || !currentUser.email || supabaseClient && currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) return;
             try {
                 await Promise.race([
                     supabaseClient.from('profiles').upsert([{
@@ -991,33 +991,13 @@
                 });
             } catch(e) {}
 
-            playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
-                id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
+            existingLocalMap.forEach((val, key) => {
+                if (key !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                    playersMap.set(key, val);
+                }
             });
 
-            existingLocalMap.forEach((val, key) => playersMap.set(key, val));
-
-            if (currentUser && currentUser.email) {
-                const emailKey = currentUser.email.toLowerCase();
-                let existing = playersMap.get(emailKey) || {};
-                playersMap.set(emailKey, {
-                    ...existing,
-                    id: currentUser.id || existing.id || Date.now(),
-                    email: currentUser.email,
-                    name: currentUser.name || existing.name || 'Player',
-                    nickname: currentUser.nickname || existing.nickname || 'PLAYER',
-                    phone: currentUser.phone || existing.phone || '',
-                    wallet: currentUser.wallet !== undefined ? currentUser.wallet : (existing.wallet || 0),
-                    wins: currentUser.wins || existing.wins || 0,
-                    xp: currentUser.xp || existing.xp || 0,
-                    active_hero: currentUser.active_hero || existing.active_hero || null,
-                    unlocked_heroes: currentUser.unlocked_heroes || existing.unlocked_heroes || [],
-                    status: currentUser.status || existing.status || 'active',
-                    force_password_change: currentUser.force_password_change || existing.force_password_change || false
-                });
-            }
-
-            // 3. Fetch Supabase profiles so approved players sync properly
+            // 3. Fetch Supabase profiles so approved players sync properly (excluding owner)
             if (supabaseClient) {
                 try {
                     const sbProfiles = await fetchCollectionFromSupabase('profiles');
@@ -1025,6 +1005,7 @@
                         sbProfiles.forEach(p => {
                             if (p && p.email) {
                                 const emailKey = p.email.toLowerCase();
+                                if (emailKey === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) return; // Skip owner
                                 let localExisting = playersMap.get(emailKey);
                                 let finalWallet = p.wallet || p.balance || 0;
                                 if (localExisting && localExisting.wallet !== undefined && localExisting.wallet > finalWallet) {
@@ -1194,7 +1175,7 @@
         }
 
         async function persistLocalStorage() {
-            if (currentUser) {
+            if (currentUser && currentUser.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                 localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
                 let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
                 let idx = dbList.findIndex(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
@@ -1224,8 +1205,6 @@
                 }
                 localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
                 await syncUserToSupabase();
-            } else {
-                localStorage.removeItem('aetheris_current_user');
             }
             localStorage.setItem('aetheris_battle_history', JSON.stringify(battleHistoryLog));
             localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
@@ -1332,6 +1311,11 @@
 
             try {
                 if (currentUser && currentUser.email) {
+                    if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                        currentUser.role = 'owner';
+                        restoreUserSession();
+                        return;
+                    }
                     if (currentUser.status === 'frozen') {
                         alert('Your account has been frozen by the administration.');
                         logoutPlayer();
@@ -1342,7 +1326,7 @@
             } catch (err) {}
 
             setInterval(async () => {
-                if (currentUser && currentUser.email) {
+                if (currentUser && currentUser.email && currentUser.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                     let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
                     let me = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
                     if (me && me.wallet !== currentUser.wallet) {
@@ -2452,21 +2436,25 @@
                     `).join('');
             }
 
-            if (playerCountBadge) playerCountBadge.innerText = registeredPlayersList.length;
+            // Exclude owner from regular player directory rendering
+            let displayPlayers = registeredPlayersList.filter(p => p.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase());
+
+            if (playerCountBadge) playerCountBadge.innerText = displayPlayers.length;
             if (playersList) {
-                playersList.innerHTML = registeredPlayersList.map(p => `
-                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
-                        <div>
-                            <strong>${p.nickname || 'Player'}</strong> (${p.email}) - <span class="text-emerald-400 font-bold">₱${p.wallet || 0}</span>
-                            <span class="ml-2 text-[9px] px-1.5 py-0.5 rounded ${p.status === 'frozen' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}">${p.status || 'active'}</span>
+                playersList.innerHTML = displayPlayers.length === 0 ? '<div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No registered players yet.</div>' :
+                    displayPlayers.map(p => `
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                            <div>
+                                <strong>${p.nickname || 'Player'}</strong> (${p.email}) - <span class="text-emerald-400 font-bold">₱${p.wallet || 0}</span>
+                                <span class="ml-2 text-[9px] px-1.5 py-0.5 rounded ${p.status === 'frozen' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}">${p.status || 'active'}</span>
+                            </div>
+                            <div class="space-x-1 flex">
+                                <button onclick="window.inspectPlayerAccount('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">Inspect</button>
+                                <button onclick="window.toggleFreezePlayerAccount('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-amber-600'} hover:opacity-90 text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
+                                <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px]">Delete</button>
+                            </div>
                         </div>
-                        <div class="space-x-1 flex">
-                            <button onclick="window.inspectPlayerAccount('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">Inspect</button>
-                            <button onclick="window.toggleFreezePlayerAccount('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-amber-600'} hover:opacity-90 text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
-                            <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px]">Delete</button>
-                        </div>
-                    </div>
-                `).join('');
+                    `).join('');
             }
 
             if (regList) {
