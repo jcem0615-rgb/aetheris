@@ -3446,8 +3446,14 @@
             
             let target = reg || u;
             if (!target) {
-                alert('Registration request not found.');
-                return;
+                let foundPlayer = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+                target = foundPlayer || {
+                    email: email,
+                    name: 'Player',
+                    nickname: email.split('@')[0],
+                    phone: '',
+                    status: 'pending_registration'
+                };
             }
 
             target.status = 'active';
@@ -3458,7 +3464,11 @@
             regs = regs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
             localStorage.setItem('aetheris_pending_registrations', JSON.stringify(regs));
 
-            localUsers = localUsers.map(user => user.email.toLowerCase() === email.toLowerCase() ? target : user);
+            if (!localUsers.some(user => user.email.toLowerCase() === email.toLowerCase())) {
+                localUsers.push(target);
+            } else {
+                localUsers = localUsers.map(user => user.email.toLowerCase() === email.toLowerCase() ? target : user);
+            }
             localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
 
             let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
@@ -3471,8 +3481,10 @@
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
 
             if (supabaseClient) {
-                await supabaseClient.from('profiles').upsert([target], { onConflict: 'email' });
-                await supabaseClient.from('pending_registrations').delete().eq('email', email);
+                try {
+                    await supabaseClient.from('profiles').upsert([target], { onConflict: 'email' });
+                    await supabaseClient.from('pending_registrations').delete().eq('email', email);
+                } catch(e) {}
             }
 
             await logSystemActivity('Registration Approved', `Approved registration for ${email}`, 'Owner');
