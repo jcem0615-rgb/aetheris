@@ -1895,7 +1895,6 @@
         }
         window.handleLogin = handleLogin;
 
-        // FIXED REGISTRATION HANDLER (Stores filename locally to prevent 5MB quota exceeded error, full base64 in Supabase)
         async function handleRegister() {
             try {
                 const name = document.getElementById('reg-name').value.trim();
@@ -1944,7 +1943,6 @@
                     return;
                 }
 
-                // Read base64 for Supabase cloud sync
                 let receiptBase64 = await new Promise((resolve) => {
                     const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target.result);
@@ -1954,7 +1952,6 @@
                 const hashedPassword = await hashPassword(pass);
                 const now = new Date();
                 
-                // Full object for Supabase
                 const newUserDataForSupabase = {
                     id: Date.now(),
                     name, nickname, phone, email, birthday: bday,
@@ -1971,7 +1968,6 @@
                     registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
                 };
 
-                // Lightweight object for localStorage (stores filename only to prevent quota error)
                 const newUserDataForLocal = {
                     ...newUserDataForSupabase,
                     registration_receipt: receiptFile.name 
@@ -3028,6 +3024,7 @@
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
+        // ================= UPDATED RENDER OWNER QUEUES (SUPABASE CROSS-BROWSER SYNC) =================
         async function renderOwnerQueues() {
             await syncAllRegisteredPlayers(true);
             const walletLedgerList = document.getElementById('owner-wallet-ledger-list');
@@ -3052,6 +3049,24 @@
             let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
             let supportChats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
             let resets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || pendingResets;
+
+            // Fetch live collections directly from Supabase so requests from any browser pop up instantly
+            if (supabaseClient) {
+                try {
+                    const sbTopups = await fetchCollectionFromSupabase('topups');
+                    if (sbTopups && sbTopups.length > 0) topups = sbTopups;
+
+                    const sbWithdraws = await fetchCollectionFromSupabase('withdrawals');
+                    if (sbWithdraws && sbWithdraws.length > 0) withdraws = sbWithdraws;
+
+                    const sbChats = await fetchCollectionFromSupabase('support_chats');
+                    if (sbChats && sbChats.length > 0) {
+                        sbChats.forEach(c => {
+                            if (c && c.email && c.messages) supportChats[c.email] = c.messages;
+                        });
+                    }
+                } catch(e) {}
+            }
 
             walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
 
