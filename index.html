@@ -17,6 +17,7 @@
         .gold-badge { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #000; }
         .btn-gold { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #000; font-weight: 700; }
         .btn-gold:hover { opacity: 0.9; }
+        .card-glow { box-shadow: 0 0 20px rgba(99, 102, 241, 0.25); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-black">
@@ -62,7 +63,7 @@
     <!-- MAIN APP CONTAINER -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
 
-        <!-- OWNER ADMIN PORTAL VIEW -->
+        <!-- 1. OWNER ADMIN PORTAL VIEW (Original Design Restored) -->
         <section id="view-Owner" class="space-y-6">
             
             <!-- Portal Header -->
@@ -116,7 +117,6 @@
 
             <!-- DEPOSIT HISTORY & WITHDRAWAL HISTORY -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Deposit History -->
                 <div class="portal-card p-5 rounded-xl space-y-3">
                     <h3 class="font-cinzel font-bold text-slate-200 text-sm tracking-wide border-b border-slate-800 pb-3">
                         <i class="fa-solid fa-arrow-down-long text-emerald-400 mr-1.5 text-xs"></i> DEPOSIT HISTORY
@@ -126,7 +126,6 @@
                     </div>
                 </div>
 
-                <!-- Withdrawal History -->
                 <div class="portal-card p-5 rounded-xl space-y-3">
                     <h3 class="font-cinzel font-bold text-slate-200 text-sm tracking-wide border-b border-slate-800 pb-3">
                         <i class="fa-solid fa-arrow-up-long text-rose-400 mr-1.5 text-xs"></i> WITHDRAWAL HISTORY
@@ -172,17 +171,38 @@
 
         </section>
 
-        <!-- OTHER NAVIGATION VIEWS (Placeholder for Home, Roster, Shop, etc.) -->
-        <section id="view-Home" class="hidden portal-card p-8 rounded-xl text-center space-y-4">
-            <h2 class="font-cinzel text-xl font-bold text-amber-400">Arena Home & Overview</h2>
-            <p class="text-xs text-slate-400">System overview for Aetheris Arena P2P Tactical Card Combat platform.</p>
-            <button onclick="switchNav('Owner')" class="px-4 py-2 btn-gold text-xs rounded-lg">Return to Owner Portal</button>
+        <!-- 2. HOME / LOBBY VIEW (With Matchmaking Option) -->
+        <section id="view-Home" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 portal-card p-6 rounded-2xl relative overflow-hidden card-glow">
+                    <span class="text-xs font-semibold px-2.5 py-1 bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/40">Season 1 Active</span>
+                    <h2 class="font-cinzel text-3xl font-bold text-white mt-3">Welcome, Boss John Carlo!</h2>
+                    <p class="text-sm text-slate-300 mt-2">Engage in tactical 1v1 card duels against advanced AI bots. Bot triggers emergency recovery below 60 HP and heals 60 + attacks 25 below 20 HP.</p>
+                    <div class="mt-6 flex flex-wrap gap-3">
+                        <button onclick="startMatchmaking()" class="px-6 py-3 btn-gold rounded-xl transition flex items-center space-x-2">
+                            <i class="fa-solid fa-swords text-lg"></i>
+                            <span>Find Ranked Match vs Bot</span>
+                        </button>
+                        <button onclick="switchNav('Owner')" class="px-5 py-3 bg-slate-800 border border-slate-700 text-white font-medium rounded-xl hover:bg-slate-700 transition">
+                            <i class="fa-solid fa-shield-halved mr-1"></i> Owner Portal
+                        </button>
+                    </div>
+                </div>
+            </div>
         </section>
-        <section id="view-Roster" class="hidden portal-card p-8 rounded-xl text-center space-y-4">
-            <h2 class="font-cinzel text-xl font-bold text-amber-400">Player Roster Management</h2>
-            <p class="text-xs text-slate-400">Inspect active duelists and card decks across the network.</p>
-            <button onclick="switchNav('Owner')" class="px-4 py-2 btn-gold text-xs rounded-lg">Return to Owner Portal</button>
+
+        <!-- 3. ROSTER / CARD COLLECTION VIEW -->
+        <section id="view-Roster" class="hidden space-y-6">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="font-cinzel text-xl font-bold text-amber-400">Card Roster & Deck Builder</h2>
+                <button onclick="switchNav('Owner')" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded text-xs">Back to Owner Portal</button>
+            </div>
+            <div id="card-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Cards injected via JS -->
+            </div>
         </section>
+
+        <!-- 4. OTHER SUB-VIEWS -->
         <section id="view-Shop" class="hidden portal-card p-8 rounded-xl text-center space-y-4">
             <h2 class="font-cinzel text-xl font-bold text-amber-400">Marketplace & Vault Shop</h2>
             <p class="text-xs text-slate-400">Manage card packs, promotional items, and merchant inventory.</p>
@@ -204,6 +224,66 @@
             <button onclick="switchNav('Owner')" class="px-4 py-2 btn-gold text-xs rounded-lg">Return to Owner Portal</button>
         </section>
 
+        <!-- 5. MATCHMAKING VIEW -->
+        <section id="view-Matchmaking" class="hidden max-w-md mx-auto mt-16 text-center portal-card p-8 rounded-2xl card-glow">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-3xl animate-pulse">
+                <i class="fa-solid fa-radar"></i>
+            </div>
+            <h2 class="font-cinzel text-2xl font-bold text-white">Searching for Opponent</h2>
+            <p id="matchmaking-timer" class="text-amber-400 font-mono text-lg mt-2">00:00</p>
+            <p class="text-xs text-slate-400 mt-2">Matching via P2P network. Bot engages automatically in 3 seconds.</p>
+            <button onclick="switchNav('Owner')" class="mt-6 px-6 py-2 bg-rose-950/80 border border-rose-800 text-rose-300 rounded-lg text-xs">Cancel Queue</button>
+        </section>
+
+        <!-- 6. BATTLE ARENA VIEW (Featuring Updated Bot AI Rules) -->
+        <section id="view-Battle" class="hidden space-y-4 max-w-4xl mx-auto">
+            <div class="portal-card p-4 rounded-xl flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-600/30 border border-indigo-500 flex items-center justify-center text-indigo-300 font-bold">B</div>
+                    <div>
+                        <h4 class="font-bold text-white text-sm">Boss John Carlo</h4>
+                        <div class="w-32 bg-slate-950 h-2 rounded-full mt-1 overflow-hidden">
+                            <div id="battle-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <span class="text-xs font-semibold px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full">Your Turn (30s)</span>
+                    <p id="battle-timer" class="font-mono text-amber-400 font-bold text-lg mt-1">30</p>
+                </div>
+
+                <div class="flex items-center space-x-3 text-right">
+                    <div>
+                        <h4 class="font-bold text-rose-400 text-sm">Aether Bot (Elite)</h4>
+                        <div class="w-32 bg-slate-950 h-2 rounded-full mt-1 overflow-hidden ml-auto">
+                            <div id="battle-enemy-hp-bar" class="bg-rose-500 h-full w-full transition-all duration-300"></div>
+                        </div>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-rose-600/30 border border-rose-500 flex items-center justify-center text-rose-300 font-bold">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#070b14] border border-slate-800 h-64 rounded-xl p-4 flex flex-col justify-between relative overflow-hidden">
+                <div id="battle-combat-log" class="space-y-2 overflow-y-auto max-h-48 text-xs font-mono text-slate-300 pr-2">
+                    <p class="text-amber-400"><i class="fa-solid fa-info-circle mr-1"></i> Battle initialized against Elite Bot. Combat commences!</p>
+                </div>
+                <div class="flex justify-between items-center text-xs text-slate-400 pt-2 border-t border-slate-900">
+                    <span id="battle-ap-display">Action Points: 3 / 3 AP</span>
+                    <span>Status: Normal</span>
+                </div>
+            </div>
+
+            <div class="portal-card p-4 rounded-xl">
+                <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Your Combat Deck (Select Skill)</h4>
+                <div id="battle-hand" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- FOOTER -->
@@ -211,21 +291,32 @@
         &copy; 2026 Aetheris Arena. FMCM IT Solutions & Logicgrid Ecosystem. All rights reserved.
     </footer>
 
-    <!-- PORTAL LOGIC -->
+    <!-- PORTAL & BATTLE LOGIC SCRIPT -->
     <script>
-        // State Management stored in localStorage
         let registeredPlayers = JSON.parse(localStorage.getItem('aetheris_boss_players')) || [
             { email: 'jcem0615@gmail.com', role: 'BOSS', balance: 999999 }
         ];
         let balanceLogs = JSON.parse(localStorage.getItem('aetheris_boss_logs')) || [];
 
+        let battleTimerInterval = null;
+        let battleTimeLeft = 30;
+        let currentBattle = { playerHp: 100, enemyHp: 100, ap: 3 };
+
+        const mockCards = [
+            { name: 'Aether Strike', type: 'Attack', ap: 1, desc: 'Deal 25 damage to enemy HP.' },
+            { name: 'Arcane Shield', type: 'Defense', ap: 1, desc: 'Gain 20 shield block points.' },
+            { name: 'Health Surge', type: 'Heal', ap: 2, desc: 'Restore 30 HP instantly.' },
+            { name: 'Meteor Blast', type: 'Ultimate', ap: 3, desc: 'Unleash devastating 55 damage.' }
+        ];
+
         window.onload = function() {
             renderPlayersDirectory();
             renderBalanceHistory();
+            renderCards();
         };
 
         function switchNav(viewName) {
-            ['Owner', 'Home', 'Roster', 'Shop', 'Profile', 'Rankings', 'Support Chat'].forEach(v => {
+            ['Owner', 'Home', 'Roster', 'Shop', 'Profile', 'Rankings', 'Support Chat', 'Matchmaking', 'Battle'].forEach(v => {
                 const sec = document.getElementById(`view-${v}`);
                 const btn = document.getElementById(`nav-${v}`);
                 if (sec) sec.classList.add('hidden');
@@ -269,7 +360,6 @@
 
             if (!email || isNaN(amount)) return;
 
-            // check if player exists, if not add to directory
             let player = registeredPlayers.find(p => p.email === email);
             if (player) {
                 player.balance += amount;
@@ -297,7 +387,7 @@
             listContainer.innerHTML = registeredPlayers.map(p => `
                 <div class="bg-[#070b14] border border-slate-800 p-3 rounded-lg flex justify-between items-center text-xs">
                     <span class="text-slate-300 font-medium"><strong class="${p.role === 'BOSS' ? 'text-amber-400' : 'text-indigo-400'}">${p.role}</strong> (${p.email}) - <span class="text-emerald-400 font-mono">₱${p.balance.toLocaleString()}</span></span>
-                    ${p.email !== 'jcem0615@gmail.com' ? `<button onclick="deleteRegisteredPlayer('${p.email}')" class="px-2.5 py-1 bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600/30 rounded transition">Delete</button>` : '<span class="text-[10px] text-slate-500">Protected</span>'}
+                    ${p.email !== 'jcem0615@gmail.com' ? `<button onclick="deleteRegisteredPlayer('${p.email}')" class="px-2.5 py-1 bg-rose-600/25 border border-rose-500/40 text-rose-300 hover:bg-rose-600/35 rounded transition">Delete</button>` : '<span class="text-[10px] text-slate-500">Protected</span>'}
                 </div>
             `).join('');
         }
@@ -324,6 +414,145 @@
                 localStorage.setItem('aetheris_boss_players', JSON.stringify(registeredPlayers));
                 renderPlayersDirectory();
             }
+        }
+
+        function renderCards() {
+            const grid = document.getElementById('card-grid');
+            grid.innerHTML = mockCards.map(c => `
+                <div class="portal-card p-4 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-semibold">${c.type}</span>
+                            <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-bolt mr-1"></i>${c.ap} AP</span>
+                        </div>
+                        <h4 class="font-cinzel font-bold text-white text-base mb-1">${c.name}</h4>
+                        <p class="text-xs text-slate-400">${c.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function startMatchmaking() {
+            switchNav('Matchmaking');
+            setTimeout(() => {
+                startBattle();
+            }, 3000);
+        }
+
+        function startBattle() {
+            switchNav('Battle');
+            currentBattle = { playerHp: 100, enemyHp: 100, ap: 3 };
+            document.getElementById('battle-player-hp-bar').style.width = '100%';
+            document.getElementById('battle-enemy-hp-bar').style.width = '100%';
+            renderBattleHand();
+            startBattleTimer();
+        }
+
+        function startBattleTimer() {
+            battleTimeLeft = 30;
+            document.getElementById('battle-timer').innerText = battleTimeLeft;
+            if (battleTimerInterval) clearInterval(battleTimerInterval);
+
+            battleTimerInterval = setInterval(() => {
+                battleTimeLeft--;
+                document.getElementById('battle-timer').innerText = battleTimeLeft;
+                if (battleTimeLeft <= 0) {
+                    clearInterval(battleTimerInterval);
+                    executeBotTurn();
+                }
+            }, 1000);
+        }
+
+        function renderBattleHand() {
+            const hand = document.getElementById('battle-hand');
+            hand.innerHTML = mockCards.map((c, i) => `
+                <div onclick="playCard(${i})" class="bg-[#070b14] border border-slate-800 p-3 rounded-xl cursor-pointer hover:border-amber-500 transition">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-amber-400 font-semibold">${c.type}</span>
+                        <span class="text-xs text-amber-400 font-bold">${c.ap} AP</span>
+                    </div>
+                    <h5 class="font-cinzel text-white text-sm font-bold">${c.name}</h5>
+                    <p class="text-xs text-slate-400 mt-1">${c.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        function playCard(index) {
+            const card = mockCards[index];
+            if (currentBattle.ap < card.ap) {
+                alert('Not enough Action Points!');
+                return;
+            }
+
+            currentBattle.ap -= card.ap;
+            document.getElementById('battle-ap-display').innerText = `Action Points: ${currentBattle.ap} / 3 AP`;
+
+            if (card.type === 'Attack' || card.type === 'Ultimate') {
+                const dmg = card.type === 'Ultimate' ? 55 : 25;
+                currentBattle.enemyHp = Math.max(0, currentBattle.enemyHp - dmg);
+                document.getElementById('battle-enemy-hp-bar').style.width = `${currentBattle.enemyHp}%`;
+                appendCombatLog(`You played ${card.name} for ${dmg} damage!`);
+            } else if (card.type === 'Heal') {
+                currentBattle.playerHp = Math.min(100, currentBattle.playerHp + 30);
+                document.getElementById('battle-player-hp-bar').style.width = `${currentBattle.playerHp}%`;
+                appendCombatLog(`You cast Health Surge and restored 30 HP!`);
+            } else {
+                appendCombatLog(`You deployed ${card.name} and fortified defenses.`);
+            }
+
+            if (currentBattle.enemyHp <= 0) {
+                alert('Victory! Boss defeated the Elite Bot.');
+                switchNav('Owner');
+                return;
+            }
+
+            if (currentBattle.ap === 0) {
+                clearInterval(battleTimerInterval);
+                setTimeout(executeBotTurn, 1000);
+            }
+        }
+
+        function executeBotTurn() {
+            appendCombatLog(`Elite Bot is executing tactical counter-attack...`);
+            setTimeout(() => {
+                let botLogMessage = "";
+
+                // Bot AI Rules: Below 20 HP heals 60 and attacks 25 damage
+                if (currentBattle.enemyHp < 20) {
+                    currentBattle.enemyHp = Math.min(100, currentBattle.enemyHp + 60);
+                    currentBattle.playerHp = Math.max(0, currentBattle.playerHp - 25);
+                    document.getElementById('battle-player-hp-bar').style.width = `${currentBattle.playerHp}%`;
+                    botLogMessage = `Elite Bot triggered Emergency Revitalize (+60 HP) and struck back for 25 damage!`;
+                } else if (currentBattle.enemyHp < 60) {
+                    const healAmt = Math.floor(40 + Math.random() * 11);
+                    currentBattle.enemyHp = Math.min(100, currentBattle.enemyHp + healAmt);
+                    botLogMessage = `Elite Bot unleashed Recovery Surge, restoring ${healAmt} HP!`;
+                } else {
+                    const dmg = Math.floor(15 + Math.random() * 20);
+                    currentBattle.playerHp = Math.max(0, currentBattle.playerHp - dmg);
+                    document.getElementById('battle-player-hp-bar').style.width = `${currentBattle.playerHp}%`;
+                    botLogMessage = `Elite Bot strikes back for ${dmg} damage!`;
+                }
+
+                document.getElementById('battle-enemy-hp-bar').style.width = `${currentBattle.enemyHp}%`;
+                appendCombatLog(botLogMessage);
+
+                if (currentBattle.playerHp <= 0) {
+                    alert('Defeat! Boss was overwhelmed by the bot.');
+                    switchNav('Owner');
+                    return;
+                }
+
+                currentBattle.ap = 3;
+                document.getElementById('battle-ap-display').innerText = `Action Points: 3 / 3 AP`;
+                startBattleTimer();
+            }, 1200);
+        }
+
+        function appendCombatLog(msg) {
+            const log = document.getElementById('battle-combat-log');
+            log.innerHTML += `<p class="text-slate-300"><i class="fa-solid fa-chevron-right text-amber-400 mr-1"></i> ${msg}</p>`;
+            log.scrollTop = log.scrollHeight;
         }
     </script>
 </body>
