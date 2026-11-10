@@ -669,7 +669,6 @@
             </div>
             <div class="legal-modal-content space-y-2 text-[11px] text-slate-300 pr-1">
                 <p><strong>1. Acceptance of Terms:</strong> By registering, accessing, or playing on Aetheris Arena, you agree to be bound by these Terms and Conditions.</p>
-                <p><strong>2. Fair Play Policy:</strong> Automated scripts, macro tools, and third-party exploits are strictly prohibited.</p>
             </div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
@@ -1718,7 +1717,7 @@
 
                 const newUserDataForLocal = {
                     ...newUserDataForSupabase,
-                    registration_receipt: receiptFile.name 
+                    registration_receipt: receiptBase64 
                 };
 
                 let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
@@ -1961,7 +1960,7 @@
                 amount: amt,
                 method: currentTopupMethod,
                 reference: ref,
-                receipt: receiptFile.name,
+                receipt: receiptBase64,
                 status: 'pending',
                 date: now.toISOString().split('T')[0],
                 time: now.toLocaleTimeString(),
@@ -2136,7 +2135,7 @@
             walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
 
             let allPendingMap = new Map();
-            regs.forEach(r => { if (r && r.email && r.status === 'pending_registration') allPendingMap.set(r.email.toLowerCase(), r); });
+            regs.forEach(r => { if (r && r.email && (!r.status || r.status === 'pending_registration')) allPendingMap.set(r.email.toLowerCase(), r); });
             localUsers.forEach(u => { if (u && u.email && u.status === 'pending_registration') allPendingMap.set(u.email.toLowerCase(), u); });
             let pendingRegs = Array.from(allPendingMap.values());
 
@@ -2167,11 +2166,15 @@
             }
 
             if (regList) {
-                regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded text-xs text-slate-400 text-center">No pending registrations.</div>' :
+                regList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
                     pendingRegs.map(r => `
-                        <div class="bg-slate-950 p-2 rounded border border-slate-800 text-xs flex justify-between items-center">
-                            <span>${r.nickname || r.name} (${r.email})</span>
-                            <div class="space-x-1">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div>
+                                <strong class="text-amber-400">${r.nickname || r.name}</strong> (${r.email})<br>
+                                <span class="text-slate-400 text-[10px]">Method: <strong class="text-blue-400">${(r.payment_method || 'gcash').toUpperCase()}</strong> | Ref: ${r.registration_ref || r.reference || 'N/A'}</span>
+                            </div>
+                            <div class="space-x-1 flex items-center">
+                                <button onclick="window.viewReceipt('${encodeURIComponent(r.registration_receipt || '')}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">View Receipt</button>
                                 <button onclick="window.approveRegistration('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
                                 <button onclick="window.rejectRegistration('${r.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
                             </div>
