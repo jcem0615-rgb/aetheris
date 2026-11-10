@@ -753,6 +753,30 @@
     </div>
 
     <script>
+        // ================= AUTOMATIC STORAGE QUOTA SANITIZER =================
+        // Instantly clears any old bloated Base64 strings from localStorage to prevent quota errors
+        try {
+            ['aetheris_pending_registrations', 'aetheris_registered_users', 'aetheris_pending_topups'].forEach(key => {
+                let items = JSON.parse(localStorage.getItem(key)) || [];
+                if (Array.isArray(items)) {
+                    let cleaned = items.map(item => {
+                        let copy = { ...item };
+                        if (copy.registration_receipt && typeof copy.registration_receipt === 'string' && copy.registration_receipt.startsWith('data:')) {
+                            copy.registration_receipt = 'receipt_image.jpg';
+                        }
+                        if (copy.receipt && typeof copy.receipt === 'string' && copy.receipt.startsWith('data:')) {
+                            copy.receipt = 'receipt_image.jpg';
+                        }
+                        return copy;
+                    });
+                    localStorage.setItem(key, JSON.stringify(cleaned));
+                }
+            });
+        } catch(e) {
+            localStorage.removeItem('aetheris_pending_registrations');
+            localStorage.removeItem('aetheris_pending_topups');
+        }
+
         // ================= SUPABASE CONFIGURATION =================
         const SUPABASE_URL = 'https://qocrpleireoffykeendn.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_MzwC0zj5QfPLNvTkcphyww_5pObb4cM';
@@ -2293,7 +2317,7 @@
             });
 
             const now = new Date();
-            const topupRecord = {
+            const topupRecordForSupabase = {
                 id: Date.now(),
                 email: currentUser.email,
                 nickname: currentUser.nickname,
@@ -2307,11 +2331,16 @@
                 timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
             };
 
+            const topupRecordForLocal = {
+                ...topupRecordForSupabase,
+                receipt: receiptFile.name
+            };
+
             let topups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
-            topups.push(topupRecord);
+            topups.push(topupRecordForLocal);
             localStorage.setItem('aetheris_pending_topups', JSON.stringify(topups));
 
-            await syncCollectionToSupabase('topups', topupRecord);
+            await syncCollectionToSupabase('topups', topupRecordForSupabase);
 
             notifyOwner('New Top-Up Request', `Player ${currentUser.nickname} submitted a top-up request of ₱${amt} via ${currentTopupMethod.toUpperCase()}.`);
             await logSystemActivity('Top-up Submitted', `Player ${currentUser.nickname} submitted top-up of ₱${amt} via ${currentTopupMethod}.`, currentUser.nickname);
