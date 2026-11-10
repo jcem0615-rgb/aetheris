@@ -879,7 +879,8 @@
         let registeredPlayersList = [];
 
         async function syncUserToSupabase() {
-            if (!currentUser || !currentUser.email || supabaseClient && currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) return;
+            if (!currentUser || !currentUser.email || currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) return;
+            if (!supabaseClient) return;
             try {
                 await Promise.race([
                     supabaseClient.from('profiles').upsert([{
@@ -997,7 +998,7 @@
                 }
             });
 
-            // 3. Fetch Supabase profiles so approved players sync properly (excluding owner)
+            // 3. Fetch Supabase profiles (robust fallback merge)
             if (supabaseClient) {
                 try {
                     const sbProfiles = await fetchCollectionFromSupabase('profiles');
@@ -1005,25 +1006,12 @@
                         sbProfiles.forEach(p => {
                             if (p && p.email) {
                                 const emailKey = p.email.toLowerCase();
-                                if (emailKey === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) return; // Skip owner
-                                let localExisting = playersMap.get(emailKey);
-                                let finalWallet = p.wallet || p.balance || 0;
-                                if (localExisting && localExisting.wallet !== undefined && localExisting.wallet > finalWallet) {
-                                    finalWallet = localExisting.wallet;
-                                }
+                                if (emailKey === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) return;
+                                let localExisting = playersMap.get(emailKey) || {};
                                 playersMap.set(emailKey, {
-                                    id: p.id || (localExisting ? localExisting.id : Date.now()),
-                                    email: p.email,
-                                    name: p.name || p.fullName || (localExisting ? localExisting.name : 'Player'),
-                                    nickname: p.nickname || p.username || (localExisting ? localExisting.nickname : 'PLAYER'),
-                                    phone: p.phone || (localExisting ? localExisting.phone : ''),
-                                    wallet: finalWallet,
-                                    wins: Math.max(p.wins || 0, localExisting ? (localExisting.wins || 0) : 0),
-                                    xp: Math.max(p.xp || 0, localExisting ? (localExisting.xp || 0) : 0),
-                                    active_hero: p.active_hero || (localExisting ? localExisting.active_hero : null),
-                                    unlocked_heroes: p.unlocked_heroes || (localExisting ? localExisting.unlocked_heroes : []),
-                                    status: p.status || (localExisting ? localExisting.status : 'active'),
-                                    force_password_change: p.force_password_change || (localExisting ? localExisting.force_password_change : false)
+                                    ...localExisting,
+                                    ...p,
+                                    status: p.status || localExisting.status || 'active'
                                 });
                             }
                         });
