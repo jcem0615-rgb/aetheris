@@ -155,7 +155,7 @@
             </div>
         </div>
 
-        <!-- 3. MATCHMAKING QUEUE (20-Second Timeout with Bot Fallback) -->
+        <!-- 3. MATCHMAKING QUEUE -->
         <div id="view-matchmaking" class="hidden max-w-md w-full mx-auto space-y-4 py-12 text-center bg-slate-900 border border-slate-800 rounded-2xl p-6">
             <div class="w-16 h-16 mx-auto border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
             <h3 class="font-cinzel text-lg font-bold text-amber-400">Searching for Opponent...</h3>
@@ -163,7 +163,7 @@
             <button onclick="window.cancelMatchmaking()" class="px-4 py-2 bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold rounded-xl">Cancel Queue</button>
         </div>
 
-        <!-- 4. BATTLE FIELD ARENA (30s Turn Timer & Tiered Bot AI Logic) -->
+        <!-- 4. BATTLE FIELD ARENA -->
         <div id="view-battlefield" class="hidden space-y-3 py-2 pb-8">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -202,7 +202,7 @@
             </div>
         </div>
 
-        <!-- 5. OWNER ADMIN PORTAL VIEW (Complete with all features, ledgers, & queues) -->
+        <!-- 5. OWNER ADMIN PORTAL VIEW (Complete with full controls, Inspect, Freeze, Delete, Ledgers, & Queues) -->
         <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -250,14 +250,30 @@
                     </div>
                 </div>
 
-                <!-- REGISTERED PLAYERS DIRECTORY -->
+                <!-- REGISTERED PLAYERS DIRECTORY (With Inspect, Freeze/Unfreeze, & Delete Controls) -->
                 <div class="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
                     <div class="flex items-center justify-between">
                         <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory (<span id="owner-player-count" class="text-amber-400">0</span>)</h3>
                         <button onclick="window.forceSyncOwnerPortal()" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg shadow">🔄 Refresh</button>
                     </div>
-                    <div id="owner-players-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    <div id="owner-players-list" class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
                         <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Loading players directory...</div>
+                    </div>
+                </div>
+
+                <!-- FUND REQUEST QUEUES (Top-Up & Withdrawal Approvals) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">Deposit Top-Up Requests</h3>
+                        <div id="owner-topup-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                            <div class="text-xs text-slate-500 text-center py-2">No pending top-up requests.</div>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">Withdrawal Cash-Out Requests</h3>
+                        <div id="owner-withdrawal-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                            <div class="text-xs text-slate-500 text-center py-2">No pending withdrawal requests.</div>
+                        </div>
                     </div>
                 </div>
 
@@ -308,7 +324,7 @@
                     </div>
                 </div>
 
-                <!-- PENDING QUEUES -->
+                <!-- PENDING REGISTRATIONS & PASSWORD RESETS -->
                 <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Registration Approvals (50 AC Fee Receipt)</h3>
                     <div id="owner-registration-list" class="space-y-1.5">
@@ -389,7 +405,6 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
-            // Sanitize legacy battle history
             let history = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
             history = history.filter(h => h && typeof h === 'object').map(h => ({
                 id: h.id || Date.now(),
@@ -528,6 +543,7 @@
             let db = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
             let player = db.find(p => p.email.toLowerCase() === email.toLowerCase());
             if (!player) { alert('Player account not found.'); return; }
+            if (player.status === 'frozen') { alert('This account is frozen by the owner.'); return; }
             if (player.password_hash !== pass) { alert('Incorrect password.'); return; }
 
             currentUser = { ...player, role: 'player' };
@@ -621,7 +637,7 @@
         }
         window.selectHero = selectHero;
 
-        // --- 20-SECOND MATCHMAKING & BOT FALLBACK LOGIC ---
+        // --- MATCHMAKING & 20S BOT FALLBACK ---
         function enterMatchmakingQueue() {
             const wager = parseFloat(document.getElementById('match-wager-amount').value);
             if (isNaN(wager) || wager <= 0) { alert('Enter valid wager.'); return; }
@@ -818,7 +834,7 @@
             }
         }
 
-        // --- OWNER PORTAL FUNCTIONS ---
+        // --- OWNER PORTAL FUNCTIONS & CONTROLS ---
         async function forceSyncOwnerPortal() {
             await syncAllRegisteredPlayers();
             renderOwnerQueues();
@@ -851,6 +867,48 @@
             alert(`Added ${amount} AC to ${email}.`);
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
+
+        // Player Directory Actions: Inspect, Freeze/Unfreeze, Delete
+        function inspectPlayer(email) {
+            let player = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (!player) return;
+            openModal('player-details');
+            const content = document.getElementById('player-inspection-content');
+            content.innerHTML = `
+                <div class="space-y-1.5">
+                    <p><strong>Name:</strong> ${player.name}</p>
+                    <p><strong>Nickname:</strong> ${player.nickname}</p>
+                    <p><strong>Email:</strong> ${player.email}</p>
+                    <p><strong>Phone:</strong> ${player.phone}</p>
+                    <p><strong>Birthday:</strong> ${player.birthday || 'N/A'}</p>
+                    <p><strong>Wallet Balance:</strong> <span class="text-emerald-400 font-bold">${player.wallet || 0} AC</span></p>
+                    <p><strong>Wins:</strong> ${player.wins || 0}</p>
+                    <p><strong>Status:</strong> <span class="${player.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${player.status || 'active'}</span></p>
+                    <p><strong>Ref Number:</strong> ${player.registration_ref || 'N/A'}</p>
+                </div>
+            `;
+        }
+        window.inspectPlayer = inspectPlayer;
+
+        function toggleFreezePlayer(email) {
+            let player = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (!player) return;
+            player.status = player.status === 'frozen' ? 'active' : 'frozen';
+            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+            renderOwnerQueues();
+            alert(`Player ${email} has been ${player.status}.`);
+        }
+        window.toggleFreezePlayer = toggleFreezePlayer;
+
+        function deletePlayer(email) {
+            if (confirm(`Are you sure you want to delete player ${email}?`)) {
+                registeredPlayersList = registeredPlayersList.filter(p => p.email.toLowerCase() !== email.toLowerCase());
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+                renderOwnerQueues();
+                alert(`Player ${email} deleted.`);
+            }
+        }
+        window.deletePlayer = deletePlayer;
 
         async function saveGcashSettings() {
             const num = document.getElementById('input-gcash-num').value.trim();
@@ -928,6 +986,11 @@
                 registeredPlayersList.map(p => `
                     <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
                         <span><strong>${p.nickname}</strong> (${p.email}) - <span class="text-emerald-400 font-bold">${p.wallet || 0} AC</span></span>
+                        <div class="space-x-1">
+                            <button onclick="window.inspectPlayer('${p.email}')" class="px-2 py-0.5 bg-blue-600 text-white rounded text-[10px]">Inspect</button>
+                            <button onclick="window.toggleFreezePlayer('${p.email}')" class="px-2 py-0.5 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-amber-600'} text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
+                            <button onclick="window.deletePlayer('${p.email}')" class="px-2 py-0.5 bg-red-600 text-white rounded text-[10px]">Delete</button>
+                        </div>
                     </div>
                 `).join('');
 
