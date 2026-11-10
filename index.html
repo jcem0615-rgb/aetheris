@@ -6,7 +6,689 @@
     <title>Aetheris Duel Arena - Owner Command Center & PvP Arena</title>
     <!-- App Icon / Favicon -->
     <link rel="icon" type="image/jpeg" href="image_114c6025.jpg">
+    <link rel="apple-touch-icon" href="image_114c6025.jpg"><!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aetheris Duel Arena - Owner Command Center & PvP Arena</title>
+    <!-- App Icon / Favicon -->
+    <link rel="icon" type="image/jpeg" href="image_114c6025.jpg">
     <link rel="apple-touch-icon" href="image_114c6025.jpg">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #07090e; color: #f3f4f6; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .glow-gold { text-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+        .glow-box { box-shadow: 0 0 25px rgba(59, 130, 246, 0.15); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
+
+    <!-- Top Navigation Bar -->
+    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 py-2 flex flex-col gap-2 shrink-0 z-50 sticky top-0 hidden">
+        <div class="flex items-center justify-between w-full">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl overflow-hidden shadow-lg shadow-blue-500/30 border border-blue-500/50 flex-shrink-0">
+                    <img src="image_114c6025.jpg" alt="Aetheris Emblem" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <h1 class="font-cinzel font-bold text-xs tracking-wider text-amber-400">AETHERIS ARENA</h1>
+                    <p id="nav-wallet-display" class="text-[9px] text-emerald-400 font-bold">Wallet: 0 AC (1 AC = ₱1)</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button onclick="window.switchTab('player-lobby')" id="nav-btn-lobby" class="px-2.5 py-1 bg-slate-900 border border-slate-700 text-slate-300 rounded-xl text-[10px] font-bold transition hidden">Lobby</button>
+                <button onclick="window.switchTab('owner')" id="nav-btn-owner" class="px-2.5 py-1 bg-amber-600/20 border border-amber-500/40 text-amber-400 rounded-xl text-[10px] font-bold transition hidden">Owner Portal</button>
+                <div class="flex items-center bg-slate-900 border border-amber-500/40 rounded-full px-3 py-1">
+                    <span id="nav-role-badge" class="text-xs font-bold font-cinzel text-amber-400">PLAYER</span>
+                </div>
+                <button onclick="window.logoutPlayer()" class="bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 px-2.5 py-1 rounded-xl text-[10px] font-bold transition">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 flex flex-col justify-center my-auto">
+
+        <!-- 1. AUTH VIEW -->
+        <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4">
+            <div class="text-center space-y-1.5">
+                <div class="w-16 h-16 mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/40 border-2 border-amber-500/60 bg-slate-950 flex items-center justify-center">
+                    <img src="image_114c6025.jpg" alt="Aetheris Logo" class="w-full h-full object-cover">
+                </div>
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
+                <p class="text-xs text-slate-400">Tactical Card & Combat Arena</p>
+            </div>
+
+            <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+                <button onclick="window.switchAuthTab('signin')" id="tab-btn-signin" class="flex-1 py-2 rounded-lg bg-blue-600 text-white transition">Sign In</button>
+                <button onclick="window.switchAuthTab('register')" id="tab-btn-register" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition">Create Account</button>
+            </div>
+
+            <!-- Sign In Box -->
+            <div id="auth-signin-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
+                <h3 class="font-cinzel text-base font-bold text-white">Sign In to Arena</h3>
+                <div class="space-y-2.5">
+                    <input type="email" id="unified-login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <div class="relative">
+                        <input type="password" id="unified-login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <button type="button" onclick="window.togglePass('unified-login-pass', this)" class="absolute right-3 top-3 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
+                </div>
+                <button onclick="window.handleUnifiedLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
+                <div class="text-center pt-1">
+                    <button type="button" onclick="window.openForgotPasswordModal()" class="text-[11px] text-amber-400 hover:underline">Forgot Password?</button>
+                </div>
+            </div>
+
+            <!-- Register Box -->
+            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
+                <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
+                <p class="text-[11px] text-amber-400/90">*Note: A 50 AC (₱50) registration fee applies.</p>
+                <div class="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
+                    <p class="text-[11px] text-amber-400 font-bold text-center">Scan or Save QR to Pay 50 AC Fee:</p>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="window.switchRegPaymentMethod('gcash')" id="btn-reg-gcash" class="flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
+                        <button type="button" onclick="window.switchRegPaymentMethod('maya')" id="btn-reg-maya" class="flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
+                    </div>
+                    <div class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2 mt-2">
+                        <div id="reg-active-qr" class="w-36 h-36 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <button type="button" onclick="window.saveQRCodeImage(currentRegMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code</button>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <input type="text" id="reg-name" placeholder="Full Legal Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-phone" placeholder="Phone Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="email" id="reg-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
+                    <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
+                </div>
+                <button onclick="window.handleRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Submit Registration</button>
+            </div>
+        </div>
+
+        <!-- 2. PLAYER LOBBY VIEW (4 Starter Heroes with Icons & Exclusive Roster Selection) -->
+        <div id="view-player-lobby" class="hidden space-y-3 py-2 pb-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <h2 class="font-cinzel text-base font-bold text-amber-400">⚔️ COMBAT LOBBY</h2>
+                    <span id="lobby-player-stats" class="text-xs text-slate-300">Wins: 0 | Wallet: 0 AC</span>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-cinzel text-amber-400 font-bold block">Select Your Starter Champion (Choose 1):</label>
+                        <span id="hero-lock-status" class="text-[10px] text-emerald-400 font-bold">Locked & Claimed</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <!-- Hero 1: Aether Knight -->
+                        <button onclick="window.selectStarterHero('Aether Knight')" id="starter-hero-1" class="p-3 bg-slate-950 border-2 border-amber-500 rounded-xl text-center transition flex flex-col items-center space-y-1.5">
+                            <div class="w-12 h-12 rounded-lg overflow-hidden border border-amber-500/60 shadow bg-slate-900 flex items-center justify-center">
+                                <img src="image_114c6025.jpg" alt="Aether Knight" class="w-full h-full object-cover">
+                            </div>
+                            <div class="text-xs font-bold text-white font-cinzel">Aether Knight</div>
+                            <div class="text-[9px] text-slate-400 leading-tight">High HP & Defense</div>
+                        </button>
+                        <!-- Hero 2: Pyromancer -->
+                        <button onclick="window.selectStarterHero('Void Pyromancer')" id="starter-hero-2" class="p-3 bg-slate-950 border border-slate-700 rounded-xl text-center transition flex flex-col items-center space-y-1.5">
+                            <div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-700 shadow bg-slate-900 flex items-center justify-center">
+                                <img src="image_114c6025.jpg" alt="Pyromancer" class="w-full h-full object-cover">
+                            </div>
+                            <div class="text-xs font-bold text-white font-cinzel">Pyromancer</div>
+                            <div class="text-[9px] text-slate-400 leading-tight">High Spell Damage</div>
+                        </button>
+                        <!-- Hero 3: Assassin -->
+                        <button onclick="window.selectStarterHero('Shadow Assassin')" id="starter-hero-3" class="p-3 bg-slate-950 border border-slate-700 rounded-xl text-center transition flex flex-col items-center space-y-1.5">
+                            <div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-700 shadow bg-slate-900 flex items-center justify-center">
+                                <img src="image_114c6025.jpg" alt="Assassin" class="w-full h-full object-cover">
+                            </div>
+                            <div class="text-xs font-bold text-white font-cinzel">Assassin</div>
+                            <div class="text-[9px] text-slate-400 leading-tight">Critical Strike Speed</div>
+                        </button>
+                        <!-- Hero 4: Chrono Warden -->
+                        <button onclick="window.selectStarterHero('Chrono Warden')" id="starter-hero-4" class="p-3 bg-slate-950 border border-slate-700 rounded-xl text-center transition flex flex-col items-center space-y-1.5">
+                            <div class="w-12 h-12 rounded-lg overflow-hidden border border-slate-700 shadow bg-slate-900 flex items-center justify-center">
+                                <img src="image_114c6025.jpg" alt="Chrono Warden" class="w-full h-full object-cover">
+                            </div>
+                            <div class="text-xs font-bold text-white font-cinzel">Chrono Warden</div>
+                            <div class="text-[9px] text-slate-400 leading-tight">Control & Shielding</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-center">
+                    <h3 class="font-cinzel text-xs font-bold text-amber-400">ENTER RANKED MATCHMAKING WAGER (AC)</h3>
+                    <p class="text-[10px] text-slate-400">20s Peer Matchmaking -> Bot Fallback (1 AC = ₱1)</p>
+                    <input type="number" id="match-wager-amount" value="50" min="10" class="w-36 mx-auto bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-center text-xs text-white font-bold">
+                    <div>
+                        <button onclick="window.enterMatchmakingQueue()" class="mt-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Find Match & Stake AC</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MATCHMAKING QUEUE -->
+        <div id="view-matchmaking" class="hidden max-w-md w-full mx-auto space-y-4 py-12 text-center bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div class="w-16 h-16 mx-auto border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+            <h3 class="font-cinzel text-lg font-bold text-amber-400">Searching for Opponent...</h3>
+            <p id="matchmaking-status-text" class="text-xs text-slate-400">Searching for human peer (20s)...</p>
+            <button onclick="window.cancelMatchmaking()" class="px-4 py-2 bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold rounded-xl">Cancel Queue</button>
+        </div>
+
+        <!-- 4. BATTLE FIELD ARENA -->
+        <div id="view-battlefield" class="hidden space-y-3 py-2 pb-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <h3 class="font-cinzel text-sm font-bold text-amber-400">⚔️ <span id="battle-hero-name">Knight</span> vs <span id="battle-opponent-name" class="text-red-400">Rival</span></h3>
+                    <div class="flex space-x-2">
+                        <span id="turn-timer-display" class="text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full font-bold">Turn Time: 30s</span>
+                        <span id="battle-turn-indicator" class="text-xs bg-amber-500/20 text-amber-400 px-2.5 py-0.5 rounded-full font-bold">Your Turn</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-slate-950 p-3 rounded-xl border border-blue-500/40 space-y-1">
+                        <span class="text-[10px] text-blue-400 uppercase font-bold">Your HP</span>
+                        <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-700">
+                            <div id="player-hp-fill" class="bg-emerald-500 h-full w-full transition-all"></div>
+                        </div>
+                        <span id="player-hp-text" class="text-xs font-bold text-white">100 / 100 HP</span>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-red-500/40 space-y-1">
+                        <span class="text-[10px] text-red-400 uppercase font-bold">Opponent HP</span>
+                        <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-700">
+                            <div id="enemy-hp-fill" class="bg-red-500 h-full w-full transition-all"></div>
+                        </div>
+                        <span id="enemy-hp-text" class="text-xs font-bold text-white">100 / 100 HP</span>
+                    </div>
+                </div>
+
+                <div id="battle-combat-log" class="bg-slate-950 p-3 rounded-xl border border-slate-800 h-28 overflow-y-auto text-xs text-slate-300 space-y-1 font-mono">
+                    <div>[System]: Match started! 30s turn timer active.</div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <span class="font-cinzel text-xs font-bold text-amber-400">Your Hand Cards (Shuffled Deck):</span>
+                    <div id="battle-hand-container" class="grid grid-cols-3 gap-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. OWNER ADMIN PORTAL VIEW -->
+        <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <h2 class="font-cinzel text-base font-bold text-amber-400">👑 OWNER ADMIN PORTAL</h2>
+                    <div class="space-x-1.5 flex items-center flex-wrap gap-y-1">
+                        <button onclick="window.clearAllTestData()" class="px-2 py-1 bg-red-600/80 hover:bg-red-600 text-white text-[10px] font-bold rounded-lg shadow">🧹 Clear Test Data</button>
+                        <button onclick="window.forceSyncOwnerPortal()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shadow">Force Sync</button>
+                        <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
+                    </div>
+                </div>
+
+                <!-- REGISTERED PLAYERS DIRECTORY -->
+                <div class="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory (<span id="owner-player-count" class="text-amber-400">0</span>)</h3>
+                        <button onclick="window.forceSyncOwnerPortal()" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg shadow">🔄 Refresh</button>
+                    </div>
+                    <div id="owner-players-list" class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Loading players directory...</div>
+                    </div>
+                </div>
+
+                <!-- BATTLE HISTORY -->
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Combat & Battle History Monitoring</h3>
+                    <div id="owner-battle-history-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const EXCLUSIVE_OWNER_EMAIL = 'jcem0615@gmail.com';
+        let currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
+        let registeredPlayersList = [];
+        let selectedStarterHero = 'Aether Knight';
+        let activeMatchWager = 50;
+
+        let matchmakingTimer = null;
+        let matchmakingSecondsLeft = 20;
+
+        let turnTimer = null;
+        let turnSecondsLeft = 30;
+
+        let battleState = {
+            playerHp: 100,
+            enemyHp: 100,
+            isMyTurn: true,
+            hand: []
+        };
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await syncAllRegisteredPlayers();
+
+            if (currentUser && currentUser.email) {
+                if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                    currentUser.role = 'owner';
+                    restoreOwnerSession();
+                } else {
+                    restorePlayerSession();
+                }
+            }
+        });
+
+        async function syncAllRegisteredPlayers() {
+            let playersMap = new Map();
+            ['aetheris_registered_players_db', 'aetheris_registered_users'].forEach(key => {
+                try {
+                    let list = JSON.parse(localStorage.getItem(key)) || [];
+                    list.forEach(item => {
+                        if (item && item.email && item.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                            playersMap.set(item.email.toLowerCase(), item);
+                        }
+                    });
+                } catch(e) {}
+            });
+
+            // Automatically ensure current logged-in player is in the directory
+            if (currentUser && currentUser.email && currentUser.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                playersMap.set(currentUser.email.toLowerCase(), currentUser);
+            }
+
+            registeredPlayersList = Array.from(playersMap.values());
+            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+        }
+
+        function switchAuthTab(tab) {
+            ['signin', 'register'].forEach(t => {
+                document.getElementById(`auth-${t}-box`).classList.toggle('hidden', t !== tab);
+                document.getElementById(`tab-btn-${t}`).className = t === tab ? 'flex-1 py-2 rounded-lg bg-blue-600 text-white transition' : 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+            });
+        }
+        window.switchAuthTab = switchAuthTab;
+
+        function restoreOwnerSession() {
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('nav-role-badge').innerText = '👑 BOSS (ADMIN)';
+            document.getElementById('nav-wallet-display').innerText = 'Owner Command Center';
+            document.getElementById('nav-btn-lobby').classList.remove('hidden');
+            document.getElementById('nav-btn-owner').classList.remove('hidden');
+            switchTab('owner');
+        }
+
+        function restorePlayerSession() {
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('nav-role-badge').innerText = currentUser.nickname || 'PLAYER';
+            document.getElementById('nav-wallet-display').innerText = `Wallet: ${currentUser.wallet || 0} AC`;
+            document.getElementById('nav-btn-lobby').classList.remove('hidden');
+            if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                document.getElementById('nav-btn-owner').classList.remove('hidden');
+            } else {
+                document.getElementById('nav-btn-owner').classList.add('hidden');
+            }
+            switchTab('player-lobby');
+        }
+
+        function switchTab(tabName) {
+            ['view-auth', 'view-player-lobby', 'view-matchmaking', 'view-battlefield', 'view-owner'].forEach(v => {
+                document.getElementById(v).classList.add('hidden');
+            });
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            if (tabName === 'player-lobby') {
+                document.getElementById('lobby-player-stats').innerText = `Wins: ${currentUser.wins || 0} | Wallet: ${currentUser.wallet || 0} AC`;
+                if (currentUser.selectedHero) {
+                    selectStarterHero(currentUser.selectedHero, true);
+                }
+            } else if (tabName === 'owner') {
+                renderOwnerQueues();
+            }
+        }
+        window.switchTab = switchTab;
+
+        function togglePass(inputId, btn) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+            btn.innerText = input.type === 'password' ? 'SHOW' : 'HIDE';
+        }
+        window.togglePass = togglePass;
+
+        function handleUnifiedLogin() {
+            const email = document.getElementById('unified-login-email').value.trim();
+            const pass = document.getElementById('unified-login-pass').value;
+            if (!email || !pass) { alert('Enter email and password.'); return; }
+
+            if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                currentUser = { email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', role: 'owner', status: 'active' };
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+                restoreOwnerSession();
+                return;
+            }
+
+            let db = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let player = db.find(p => p.email.toLowerCase() === email.toLowerCase());
+            
+            if (!player) {
+                // Auto-register session for seamless testing if not explicitly in DB yet
+                player = { id: Date.now(), email, nickname: email.split('@')[0], wallet: 100, wins: 0, password_hash: pass, selectedHero: 'Aether Knight' };
+                db.push(player);
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(db));
+            }
+
+            if (player.password_hash && player.password_hash !== pass) { alert('Incorrect password.'); return; }
+
+            currentUser = { ...player, role: 'player' };
+            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            syncAllRegisteredPlayers();
+            restorePlayerSession();
+        }
+        window.handleUnifiedLogin = handleUnifiedLogin;
+
+        function handleRegister() {
+            const name = document.getElementById('reg-name').value.trim();
+            const nickname = document.getElementById('reg-nickname').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const pass = document.getElementById('reg-pass').value;
+
+            if (!name || !nickname || !email || !pass) { alert('Fill out all required fields.'); return; }
+
+            let db = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let newPlayer = { id: Date.now(), name, nickname, email, password_hash: pass, wallet: 100, wins: 0, selectedHero: 'Aether Knight' };
+            db.push(newPlayer);
+            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(db));
+
+            currentUser = newPlayer;
+            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            syncAllRegisteredPlayers();
+            restorePlayerSession();
+        }
+        window.handleRegister = handleRegister;
+
+        function logoutPlayer() {
+            currentUser = null;
+            localStorage.removeItem('aetheris_current_user');
+            location.reload();
+        }
+        window.logoutPlayer = logoutPlayer;
+
+        // --- 4 STARTER HEROES EXCLUSIVE SELECTION LOGIC ---
+        function selectStarterHero(heroName, skipAlert = false) {
+            selectedStarterHero = heroName;
+            if (currentUser) {
+                currentUser.selectedHero = heroName;
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+                syncAllRegisteredPlayers();
+            }
+
+            const heroList = ['Aether Knight', 'Void Pyromancer', 'Shadow Assassin', 'Chrono Warden'];
+            heroList.forEach((h, idx) => {
+                const btn = document.getElementById(`starter-hero-${idx+1}`);
+                if (btn) {
+                    if (h === heroName) {
+                        btn.className = 'p-3 bg-slate-950 border-2 border-amber-500 rounded-xl text-center transition flex flex-col items-center space-y-1.5 shadow-lg shadow-amber-500/20';
+                    } else {
+                        btn.className = 'p-3 bg-slate-950/60 border border-slate-800 opacity-70 rounded-xl text-center transition flex flex-col items-center space-y-1.5';
+                    }
+                }
+            });
+
+            if (!skipAlert) {
+                // Flash confirmation
+                const statusEl = document.getElementById('hero-lock-status');
+                if (statusEl) {
+                    statusEl.innerText = `Claimed: ${heroName}`;
+                    setTimeout(() => { statusEl.innerText = 'Locked & Claimed'; }, 2000);
+                }
+            }
+        }
+        window.selectStarterHero = selectStarterHero;
+
+        // --- 20-SECOND MATCHMAKING & BOT FALLBACK ---
+        function enterMatchmakingQueue() {
+            const wager = parseFloat(document.getElementById('match-wager-amount').value);
+            if (isNaN(wager) || wager <= 0) { alert('Enter valid wager.'); return; }
+            if ((currentUser.wallet || 0) < wager) { alert('Insufficient AC wallet balance.'); return; }
+
+            activeMatchWager = wager;
+            switchTab('matchmaking');
+            matchmakingSecondsLeft = 20;
+
+            document.getElementById('matchmaking-status-text').innerText = `Searching for human peer (${matchmakingSecondsLeft}s)... Wager: ${wager} AC`;
+
+            matchmakingTimer = setInterval(() => {
+                matchmakingSecondsLeft--;
+                if (matchmakingSecondsLeft > 0) {
+                    document.getElementById('matchmaking-status-text').innerText = `Searching for human peer (${matchmakingSecondsLeft}s)... Wager: ${wager} AC`;
+                } else {
+                    clearInterval(matchmakingTimer);
+                    const botNames = ['ShadowStryke99', 'AetherViper', 'KaelenVoid', 'RogueMage404', 'CelestialX'];
+                    const chosenBot = botNames[Math.floor(Math.random() * botNames.length)];
+                    startBattleSequence(chosenBot);
+                }
+            }, 1000);
+        }
+        window.enterMatchmakingQueue = enterMatchmakingQueue;
+
+        function cancelMatchmaking() {
+            if (matchmakingTimer) clearInterval(matchmakingTimer);
+            switchTab('player-lobby');
+        }
+        window.cancelMatchmaking = cancelMatchmaking;
+
+        function shuffleDeck(deckArray) {
+            let currentIndex = deckArray.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [deckArray[currentIndex], deckArray[randomIndex]] = [deckArray[randomIndex], deckArray[currentIndex]];
+            }
+            return deckArray;
+        }
+
+        function startBattleSequence(opponentName) {
+            switchTab('battlefield');
+            document.getElementById('battle-hero-name').innerText = currentUser.selectedHero || selectedStarterHero;
+            document.getElementById('battle-opponent-name').innerText = opponentName;
+
+            battleState.playerHp = 100;
+            battleState.enemyHp = 100;
+            battleState.isMyTurn = true;
+
+            let rawDeck = [
+                { name: 'Strike', dmg: 18, desc: 'Deal 18 DMG' },
+                { name: 'Fireball', dmg: 28, desc: 'Deal 28 spell DMG' },
+                { name: 'Shield Bash', dmg: 12, desc: 'Deal 12 DMG & block' },
+                { name: 'Aether Slash', dmg: 22, desc: 'Deal 22 tactical DMG' },
+                { name: 'Quick Strike', dmg: 14, desc: 'Fast minor strike' }
+            ];
+            battleState.hand = shuffleDeck([...rawDeck]).slice(0, 3);
+
+            updateBattleUI();
+            logCombat(`Match started against ${opponentName}! Deck shuffled. Your turn.`);
+            startTurnTimer();
+        }
+
+        // --- 30-SECOND TURN TIMER ---
+        function startTurnTimer() {
+            if (turnTimer) clearInterval(turnTimer);
+            turnSecondsLeft = 30;
+            document.getElementById('turn-timer-display').innerText = `Turn Time: ${turnSecondsLeft}s`;
+
+            turnTimer = setInterval(() => {
+                turnSecondsLeft--;
+                const timerEl = document.getElementById('turn-timer-display');
+                if (timerEl) timerEl.innerText = `Turn Time: ${turnSecondsLeft}s`;
+
+                if (turnSecondsLeft <= 0) {
+                    clearInterval(turnTimer);
+                    if (battleState.isMyTurn) {
+                        logCombat('Turn timer (30s) expired! Auto-passing turn.');
+                        passTurn();
+                    }
+                }
+            }, 1000);
+        }
+
+        function passTurn() {
+            if (turnTimer) clearInterval(turnTimer);
+            battleState.isMyTurn = false;
+            updateBattleUI();
+            executeBotTurn();
+        }
+
+        function updateBattleUI() {
+            document.getElementById('player-hp-text').innerText = `${battleState.playerHp} / 100 HP`;
+            document.getElementById('player-hp-fill').style.width = `${battleState.playerHp}%`;
+
+            document.getElementById('enemy-hp-text').innerText = `${battleState.enemyHp} / 100 HP`;
+            document.getElementById('enemy-hp-fill').style.width = `${battleState.enemyHp}%`;
+
+            const handContainer = document.getElementById('battle-hand-container');
+            handContainer.innerHTML = battleState.hand.map((card, idx) => `
+                <button onclick="window.playCard(${idx})" class="p-2 bg-slate-950 border border-amber-500/50 hover:border-amber-400 rounded-xl text-center transition">
+                    <div class="text-[11px] font-bold text-amber-400 font-cinzel">${card.name}</div>
+                    <div class="text-[9px] text-slate-300 mt-1">${card.desc}</div>
+                </button>
+            `).join('');
+
+            document.getElementById('battle-turn-indicator').innerText = battleState.isMyTurn ? 'Your Turn' : "Opponent Turn";
+        }
+
+        function playCard(index) {
+            if (!battleState.isMyTurn) return;
+            if (turnTimer) clearInterval(turnTimer);
+
+            const card = battleState.hand[index];
+            battleState.enemyHp = Math.max(0, battleState.enemyHp - card.dmg);
+            logCombat(`You played ${card.name}, dealing ${card.dmg} damage!`);
+            updateBattleUI();
+
+            if (battleState.enemyHp <= 0) {
+                concludeBattle(true);
+                return;
+            }
+
+            battleState.isMyTurn = false;
+            updateBattleUI();
+            executeBotTurn();
+        }
+        window.playCard = playCard;
+
+        // --- TIERED BOT AI LOGIC (<20 HP, 20-60 HP, >=60 HP) ---
+        function executeBotTurn() {
+            logCombat('Opponent is calculating move...');
+            setTimeout(() => {
+                let botHp = battleState.enemyHp;
+                let actionMsg = '';
+
+                if (botHp < 20) {
+                    let restore = 60;
+                    battleState.enemyHp = Math.min(100, botHp + restore);
+                    actionMsg = `Opponent triggered Revitalize skill! Restored ${restore} HP (Current: ${battleState.enemyHp} HP).`;
+                } else if (botHp >= 20 && botHp < 60) {
+                    let heal = Math.floor(Math.random() * 15) + 12;
+                    battleState.enemyHp = Math.min(100, botHp + heal);
+                    actionMsg = `Opponent executed Recovery Surge! Restored ${heal} HP and gained armor.`;
+                } else {
+                    let dmg = 25;
+                    battleState.playerHp = Math.max(0, battleState.playerHp - dmg);
+                    actionMsg = `Opponent unleashed a standard attack for ${dmg} damage!`;
+                }
+
+                logCombat(actionMsg);
+                updateBattleUI();
+
+                if (battleState.playerHp <= 0) {
+                    concludeBattle(false);
+                } else {
+                    battleState.isMyTurn = true;
+                    updateBattleUI();
+                    startTurnTimer();
+                }
+            }, 1200);
+        }
+
+        function concludeBattle(isVictory) {
+            if (turnTimer) clearInterval(turnTimer);
+            if (matchmakingTimer) clearInterval(matchmakingTimer);
+
+            if (isVictory) {
+                currentUser.wallet = (currentUser.wallet || 0) + activeMatchWager;
+                currentUser.wins = (currentUser.wins || 0) + 1;
+                logCombat(`VICTORY! Won ${activeMatchWager} AC pot!`);
+                alert(`Victory! You won ${activeMatchWager} AC.`);
+            } else {
+                currentUser.wallet = Math.max(0, (currentUser.wallet || 0) - activeMatchWager);
+                logCombat(`DEFEAT! Lost ${activeMatchWager} AC wager.`);
+                alert(`Defeat! You lost ${activeMatchWager} AC.`);
+            }
+
+            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            syncAllRegisteredPlayers();
+
+            let history = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
+            history.unshift({ id: Date.now(), player: currentUser.email, hero: currentUser.selectedHero || selectedStarterHero, result: isVictory ? 'WIN' : 'LOSS', wager: activeMatchWager });
+            localStorage.setItem('aetheris_battle_history', JSON.stringify(history));
+
+            setTimeout(() => { switchTab('player-lobby'); }, 2000);
+        }
+
+        function logCombat(msg) {
+            const logBox = document.getElementById('battle-combat-log');
+            if (logBox) {
+                logBox.innerHTML += `<div>[Combat]: ${msg}</div>`;
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        }
+
+        // --- OWNER PORTAL SYNC ---
+        async function forceSyncOwnerPortal() {
+            await syncAllRegisteredPlayers();
+            renderOwnerQueues();
+            alert('Owner portal force-synced successfully!');
+        }
+        window.forceSyncOwnerPortal = forceSyncOwnerPortal;
+
+        async function renderOwnerQueues() {
+            await syncAllRegisteredPlayers();
+            document.getElementById('owner-player-count').innerText = registeredPlayersList.length;
+
+            const playersList = document.getElementById('owner-players-list');
+            playersList.innerHTML = registeredPlayersList.length === 0 ? '<div class="text-xs text-slate-400 text-center py-2">No registered players.</div>' :
+                registeredPlayersList.map(p => `
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                        <span><strong>${p.nickname || p.email}</strong> (${p.email}) - <span class="text-emerald-400 font-bold">${p.wallet || 0} AC</span> | Hero: <span class="text-amber-400">${p.selectedHero || 'Aether Knight'}</span></span>
+                    </div>
+                `).join('');
+
+            let history = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
+            const historyList = document.getElementById('owner-battle-history-list');
+            historyList.innerHTML = history.length === 0 ? '<div class="text-xs text-slate-400 text-center py-2">No battles recorded.</div>' :
+                history.map(h => `
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                        <span>${h.player || 'Player'} (${h.hero || 'Hero'})</span>
+                        <span class="font-bold ${(h.result || '').toUpperCase() === 'WIN' ? 'text-emerald-400' : 'text-red-400'}">${h.result || 'WIN'} (${h.wager || 50} AC)</span>
+                    </div>
+                `).join('');
+        }
+    </script>
+</body>
+</html>
     <!-- PWA Manifest Link -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
