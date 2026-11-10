@@ -915,7 +915,7 @@
             try {
                 let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
                 localUsers.forEach(item => {
-                    if (item && item.email && item.status === 'active') existingLocalMap.set(item.email.toLowerCase(), item);
+                    if (item && item.email) existingLocalMap.set(item.email.toLowerCase(), item);
                 });
             } catch(e) {}
 
@@ -1031,7 +1031,7 @@
 
         let matchmakingInterval = null;
         let matchmakingElapsedSeconds = 0;
-        let randomBotTriggerSeconds = 6; // Falls back to bot opponent within 6 seconds
+        let randomBotTriggerSeconds = 6;
         let cointossTimerInterval = null;
         let cointossTimeRemaining = 5;
 
@@ -1483,7 +1483,6 @@
             if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
             if (mode === 'register' && registerBox) {
                 registerBox.classList.remove('hidden');
-                // CLEAR OLD REGISTRATION FORM DATA
                 ['reg-name', 'reg-nickname', 'reg-phone', 'reg-email', 'reg-bday', 'reg-pass', 'reg-ref', 'reg-receipt'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.value = '';
@@ -2142,7 +2141,6 @@
             if (betBadge) betBadge.innerText = `Bet: ₱${currentDuelBet}`;
         }
 
-        // ================= BOT AI TURN & HEALTH THRESHOLD LOGIC =================
         function endDuelTurn() {
             const logEl = document.getElementById('fs-battle-log');
             if (logEl) logEl.innerText = `[Arena]: You ended your turn. ${duelState.currentOpponentName} is taking action...`;
@@ -2161,15 +2159,12 @@
         function executeBotTurnAI() {
             const logEl = document.getElementById('fs-battle-log');
 
-            // Bot Health Threshold Logic
             if (duelState.enemyHp < 20) {
-                // Revitalize skill: heals 60 HP to stay in the match
                 let healAmount = 60;
                 duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmount);
                 if (logEl) logEl.innerText = `[Bot AI]: ${duelState.currentOpponentName} activated REVITALIZE! Restored 60 HP.`;
             } 
             else if (duelState.enemyHp < 60) {
-                // Recovery Surge: heals 40, 45, or 50 HP, grants armor, and deals counter damage with poison/burn
                 let heals = [40, 45, 50];
                 let armors = [15, 20, 25];
                 let damages = [20, 25, 30];
@@ -2191,7 +2186,6 @@
                 if (logEl) logEl.innerText = `[Bot AI]: ${duelState.currentOpponentName} triggered RECOVERY SURGE! Healed ${h} HP, gained ${a} Armor, and dealt ${d} damage (${p} burn).`;
             } 
             else {
-                // Standard Attack
                 let standardDmg = 25;
                 let netDmg = Math.max(0, standardDmg - duelState.playerArmor);
                 duelState.playerArmor = Math.max(0, duelState.playerArmor - standardDmg);
@@ -2404,8 +2398,10 @@
             localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
 
             if (supabaseClient) {
-                await supabaseClient.from('profiles').upsert([reg], { onConflict: 'email' });
-                await supabaseClient.from('pending_registrations').delete().eq('email', email);
+                try {
+                    await supabaseClient.from('profiles').upsert([reg], { onConflict: 'email' });
+                    await supabaseClient.from('pending_registrations').delete().eq('email', email);
+                } catch(e) {}
             }
 
             sendPushNotificationToPlayer(email, 'Registration Approved! 🎉', 'Your Aetheris Arena account has been approved.');
