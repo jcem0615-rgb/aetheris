@@ -841,6 +841,7 @@
                         currentUser.wallet = payload.new.wallet;
                         updateWalletDisplay();
                     }
+                    renderOwnerQueues();
                 })
                 .subscribe();
         }
@@ -967,7 +968,7 @@
         }
         window.saveQRCodeImage = saveQRCodeImage;
 
-        async function syncAllRegisteredPlayers(preserveLocalWallets = false) {
+        async function syncAllRegisteredPlayers() {
             let playersMap = new Map();
             let existingLocalMap = new Map();
 
@@ -1016,14 +1017,14 @@
                 });
             }
 
-            if (supabaseClient && !preserveLocalWallets) {
+            // 3. Fetch Supabase profiles so approved players sync properly
+            if (supabaseClient) {
                 try {
                     const sbProfiles = await fetchCollectionFromSupabase('profiles');
                     if (sbProfiles && sbProfiles.length > 0) {
                         sbProfiles.forEach(p => {
                             if (p && p.email) {
                                 const emailKey = p.email.toLowerCase();
-                                if (currentUser && currentUser.email.toLowerCase() === emailKey) return;
                                 let localExisting = playersMap.get(emailKey);
                                 let finalWallet = p.wallet || p.balance || 0;
                                 if (localExisting && localExisting.wallet !== undefined && localExisting.wallet > finalWallet) {
@@ -1232,7 +1233,7 @@
             localStorage.setItem('aetheris_balance_adder_history', JSON.stringify(balanceAdderHistory));
             localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
             
-            await syncAllRegisteredPlayers(true);
+            await syncAllRegisteredPlayers();
             await persistMerchantConfig();
 
             window.dispatchEvent(new Event('aetheris_data_updated'));
@@ -1241,7 +1242,7 @@
         window.addEventListener('storage', (event) => {
             if (['aetheris_current_user', 'aetheris_registered_players_db', 'aetheris_wallet_ledger', 'aetheris_pending_topups', 'aetheris_pending_withdrawals', 'aetheris_pending_registrations', 'aetheris_pending_resets', 'aetheris_support_chats', 'aetheris_registered_users'].includes(event.key)) {
                 walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
-                syncAllRegisteredPlayers(true).then(() => {
+                syncAllRegisteredPlayers().then(() => {
                     const ownerView = document.getElementById('view-owner');
                     if (ownerView && !ownerView.classList.contains('hidden')) {
                         renderOwnerQueues();
@@ -1325,7 +1326,7 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             await loadMerchantConfig();
-            await syncAllRegisteredPlayers(true);
+            await syncAllRegisteredPlayers();
             await updateMerchantPaymentDisplay();
             initSupabaseRealtime();
 
@@ -1516,7 +1517,7 @@
                 if (own) own.classList.remove('hidden');
                 if (btnOwner) { btnOwner.classList.add('bg-blue-600', 'text-white'); btnOwner.classList.remove('text-slate-400'); }
                 await loadMerchantConfig();
-                await syncAllRegisteredPlayers(true);
+                await syncAllRegisteredPlayers();
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
             }
@@ -1524,7 +1525,7 @@
         window.switchTab = switchTab;
 
         async function forceSyncOwnerPortal() {
-            await syncAllRegisteredPlayers(true);
+            await syncAllRegisteredPlayers();
             await loadMerchantConfig();
             renderOwnerQueues();
             alert('Owner Portal synced successfully!');
@@ -2113,7 +2114,7 @@
                 }
 
                 persistLocalStorage();
-                await syncAllRegisteredPlayers(true);
+                await syncAllRegisteredPlayers();
                 renderOwnerQueues();
                 alert('Player account deleted.');
             }
@@ -2124,7 +2125,7 @@
             openModal('leaderboard');
             const list = document.getElementById('leaderboard-list-content');
             if (!list) return;
-            await syncAllRegisteredPlayers(true);
+            await syncAllRegisteredPlayers();
 
             let combinedMap = new Map();
             registeredPlayersList.forEach(p => {
@@ -2400,7 +2401,7 @@
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
         async function renderOwnerQueues() {
-            await syncAllRegisteredPlayers(true);
+            await syncAllRegisteredPlayers();
             const walletLedgerList = document.getElementById('owner-wallet-ledger-list');
             const totalDepositsMetric = document.getElementById('metric-total-deposits');
             const totalWithdrawalsMetric = document.getElementById('metric-total-withdrawals');
@@ -2570,7 +2571,7 @@
 
             sendPushNotificationToPlayer(email, 'Registration Approved! 🎉', 'Your Aetheris Arena account has been approved.');
             persistLocalStorage();
-            await syncAllRegisteredPlayers(true);
+            await syncAllRegisteredPlayers();
             renderOwnerQueues();
             alert(`Approved registration for ${email}`);
         }
