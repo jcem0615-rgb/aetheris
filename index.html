@@ -392,7 +392,7 @@
                     </div>
                 </div>
 
-                <!-- PLAYER DIRECTORY -->
+                <!-- PLAYER DIRECTORY WITH INSPECT, FREEZE & DELETE -->
                 <div class="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
                     <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory (<span id="owner-player-count" class="text-amber-400">0</span>)</h3>
                     <div id="owner-players-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
@@ -811,10 +811,8 @@
         function initSupabaseRealtime() {
             if (!supabaseClient) return;
 
-            // Live Top-Ups (Deposits) Listener
             supabaseClient.channel('public:topups')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'topups' }, payload => {
-                    console.log('Realtime Top-Up event:', payload);
                     if (payload.eventType === 'INSERT') {
                         showRealtimeToast('📥 New Deposit Request', `₱${payload.new.amount} submitted by ${payload.new.nickname || payload.new.email}`);
                     } else if (payload.eventType === 'UPDATE') {
@@ -825,10 +823,8 @@
                 })
                 .subscribe();
 
-            // Live Withdrawals Listener
             supabaseClient.channel('public:withdrawals')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawals' }, payload => {
-                    console.log('Realtime Withdrawal event:', payload);
                     if (payload.eventType === 'INSERT') {
                         showRealtimeToast('📤 New Withdrawal Request', `₱${payload.new.amount} requested by ${payload.new.nickname || payload.new.email}`);
                     } else if (payload.eventType === 'UPDATE') {
@@ -839,7 +835,6 @@
                 })
                 .subscribe();
 
-            // Live Profiles Listener (Wallet Sync)
             supabaseClient.channel('public:profiles')
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
                     if (currentUser && payload.new && payload.new.email.toLowerCase() === currentUser.email.toLowerCase()) {
@@ -975,6 +970,8 @@
         async function syncAllRegisteredPlayers(preserveLocalWallets = false) {
             let playersMap = new Map();
             let existingLocalMap = new Map();
+
+            // 1. Load from registered players DB
             try {
                 let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
                 dbList.forEach(item => {
@@ -982,10 +979,14 @@
                 });
             } catch(e) {}
 
+            // 2. Load from registered users
             try {
                 let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
                 localUsers.forEach(item => {
-                    if (item && item.email) existingLocalMap.set(item.email.toLowerCase(), item);
+                    if (item && item.email) {
+                        let existing = existingLocalMap.get(item.email.toLowerCase()) || {};
+                        existingLocalMap.set(item.email.toLowerCase(), { ...existing, ...item, status: item.status || existing.status || 'active' });
+                    }
                 });
             } catch(e) {}
 
@@ -2034,6 +2035,91 @@
         }
         window.openPlayerProfileModal = openPlayerProfileModal;
 
+        // ================= PLAYER INSPECTION & MANAGEMENT =================
+        function inspectPlayerAccount(email) {
+            const player = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (!player) {
+                alert('Player not found.');
+                return;
+            }
+            openModal('player-details');
+            const content = document.getElementById('player-inspection-content');
+            if (!content) return;
+            content.innerHTML = `
+                <div class="space-y-2">
+                    <p><strong>Name:</strong> ${player.name || 'N/A'}</p>
+                    <p><strong>Username:</strong> ${player.nickname || 'N/A'}</p>
+                    <p><strong>Email:</strong> ${player.email}</p>
+                    <p><strong>Phone:</strong> ${player.phone || 'N/A'}</p>
+                    <p><strong>Wallet Balance:</strong> <span class="text-emerald-400 font-bold">₱${player.wallet || 0}</span></p>
+                    <p><strong>Wins:</strong> ${player.wins || 0}</p>
+                    <p><strong>EXP:</strong> ${player.xp || 0}</p>
+                    <p><strong>Account Status:</strong> <span class="${player.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold uppercase">${player.status || 'active'}</span></p>
+                </div>
+            `;
+        }
+        window.inspectPlayerAccount = inspectPlayerAccount;
+
+        async function toggleFreezePlayerAccount(email) {
+            if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                alert('Cannot freeze owner account.');
+                return;
+            }
+            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let p = dbList.find(item => item.email.toLowerCase() === email.toLowerCase());
+            if (p) {
+                p.status = p.status === 'frozen' ? 'active' : 'frozen';
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+            }
+
+            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+            let u = localUsers.find(item => item.email.toLowerCase() === email.toLowerCase());
+            if (u) {
+                u.status = u.status === 'frozen' ? 'active' : 'frozen';
+                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+            }
+
+            if (supabaseClient) {
+                try {
+                    let newStatus = p ? p.status : 'active';
+                    await supabaseClient.from('profiles').update({ status: newStatus }).eq('email', email);
+                } catch(e) {}
+            }
+
+            persistLocalStorage();
+            renderOwnerQueues();
+            alert(`Player status updated successfully.`);
+        }
+        window.toggleFreezePlayerAccount = toggleFreezePlayerAccount;
+
+        async function deletePlayerAccount(email) {
+            if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                alert('Cannot delete owner account.');
+                return;
+            }
+            if (confirm(`Are you sure you want to delete player ${email}?`)) {
+                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                dbList = dbList.filter(p => p.email.toLowerCase() !== email.toLowerCase());
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+
+                let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+                localUsers = localUsers.filter(u => u.email.toLowerCase() !== email.toLowerCase());
+                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('profiles').delete().eq('email', email);
+                    } catch(e) {}
+                }
+
+                persistLocalStorage();
+                await syncAllRegisteredPlayers(true);
+                renderOwnerQueues();
+                alert('Player account deleted.');
+            }
+        }
+        window.deletePlayerAccount = deletePlayerAccount;
+
         async function openLeaderboardModal() {
             openModal('leaderboard');
             const list = document.getElementById('leaderboard-list-content');
@@ -2368,9 +2454,16 @@
             if (playerCountBadge) playerCountBadge.innerText = registeredPlayersList.length;
             if (playersList) {
                 playersList.innerHTML = registeredPlayersList.map(p => `
-                    <div class="bg-slate-900 p-2 rounded border border-slate-800 text-xs flex justify-between items-center">
-                        <span><strong>${p.nickname || 'Player'}</strong> (${p.email}) - ₱${p.wallet || 0}</span>
-                        <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Delete</button>
+                    <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                        <div>
+                            <strong>${p.nickname || 'Player'}</strong> (${p.email}) - <span class="text-emerald-400 font-bold">₱${p.wallet || 0}</span>
+                            <span class="ml-2 text-[9px] px-1.5 py-0.5 rounded ${p.status === 'frozen' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}">${p.status || 'active'}</span>
+                        </div>
+                        <div class="space-x-1 flex">
+                            <button onclick="window.inspectPlayerAccount('${p.email}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">Inspect</button>
+                            <button onclick="window.toggleFreezePlayerAccount('${p.email}')" class="px-2 py-1 ${p.status === 'frozen' ? 'bg-emerald-600' : 'bg-amber-600'} hover:opacity-90 text-white rounded text-[10px]">${p.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</button>
+                            <button onclick="window.deletePlayerAccount('${p.email}')" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[10px]">Delete</button>
+                        </div>
                     </div>
                 `).join('');
             }
