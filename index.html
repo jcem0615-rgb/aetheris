@@ -843,7 +843,7 @@
             mayaQR: null
         };
 
-        // ================= IMAGE COMPRESSION UTILITY (Optimized to Prevent Quota Errors) =================
+        // ================= IMAGE COMPRESSION UTILITY =================
         function compressImage(file, maxWidth = 150, maxHeight = 150, quality = 0.5) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -878,7 +878,6 @@
             });
         }
 
-        // Instant preview as soon as a file is chosen
         async function previewSelectedQR(event, type) {
             const file = event.target.files[0];
             if (!file) return;
@@ -915,9 +914,7 @@
         }
         window.saveQRCodeImage = saveQRCodeImage;
 
-        // ================= OPTIMIZED NON-BLOCKING CLOUD SYNC =================
-        let syncTimeouts = {};
-
+        // ================= BULLETPROOF OFFLINE-FIRST CLOUD SYNC (WITH STRICT TIMEOUTS) =================
         async function cloudGet(key, fallback) {
             try {
                 const local = localStorage.getItem('aetheris_' + key);
@@ -932,40 +929,23 @@
             try {
                 localStorage.setItem('aetheris_' + key, JSON.stringify(value));
             } catch (e) {
-                console.warn('LocalStorage quota warning:', e);
-                alert('Storage warning: QR image file is too large or storage is full. Please upload a smaller image.');
+                alert('Storage warning: File is too large or storage is full.');
                 return false;
             }
 
+            // Non-blocking background sync with strict 1.5s timeout
             if (supabaseClient) {
-                if (syncTimeouts[key]) clearTimeout(syncTimeouts[key]);
-                syncTimeouts[key] = setTimeout(async () => {
+                setTimeout(async () => {
                     try {
-                        await supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' });
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500));
+                        await Promise.race([
+                            supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' }),
+                            timeoutPromise
+                        ]);
                     } catch (err) {}
-                }, 3000);
+                }, 100);
             }
-
-            window.dispatchEvent(new Event('aetheris_data_updated'));
             return true;
-        }
-
-        let ownerPollingInterval = null;
-
-        async function initSupabaseRealtime() {
-            if (!supabaseClient) return;
-            try {
-                supabaseClient
-                    .channel('aetheris-realtime-global')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings' }, async (payload) => {
-                        await loadAllCloudState();
-                        const ownerView = document.getElementById('view-owner');
-                        if (ownerView && !ownerView.classList.contains('hidden')) {
-                            renderOwnerQueues();
-                        }
-                    })
-                    .subscribe();
-            } catch(e) {}
         }
 
         async function loadAllCloudState() {
@@ -1041,23 +1021,29 @@
                 localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
             } catch (e) {}
             if (supabaseClient) {
-                try {
-                    supabaseClient.from('profiles').upsert([{
-                        email: currentUser.email,
-                        name: currentUser.name || 'Player',
-                        nickname: currentUser.nickname || 'PLAYER',
-                        phone: currentUser.phone || '',
-                        wallet: currentUser.wallet || 0,
-                        wins: currentUser.wins || 0,
-                        xp: currentUser.xp || 0,
-                        active_hero: currentUser.active_hero || 'pyra',
-                        unlocked_heroes: currentUser.unlocked_heroes || ['pyra'],
-                        unlocked_skills: currentUser.unlockedSkills || {},
-                        status: currentUser.status || 'active',
-                        registration_ref: currentUser.registration_ref || '',
-                        registration_receipt: currentUser.registration_receipt || null
-                    }], { onConflict: 'email' }).then(() => {});
-                } catch(e) {}
+                setTimeout(async () => {
+                    try {
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500));
+                        await Promise.race([
+                            supabaseClient.from('profiles').upsert([{
+                                email: currentUser.email,
+                                name: currentUser.name || 'Player',
+                                nickname: currentUser.nickname || 'PLAYER',
+                                phone: currentUser.phone || '',
+                                wallet: currentUser.wallet || 0,
+                                wins: currentUser.wins || 0,
+                                xp: currentUser.xp || 0,
+                                active_hero: currentUser.active_hero || 'pyra',
+                                unlocked_heroes: currentUser.unlocked_heroes || ['pyra'],
+                                unlocked_skills: currentUser.unlockedSkills || {},
+                                status: currentUser.status || 'active',
+                                registration_ref: currentUser.registration_ref || '',
+                                registration_receipt: currentUser.registration_receipt || null
+                            }], { onConflict: 'email' }),
+                            timeoutPromise
+                        ]);
+                    } catch(e) {}
+                }, 100);
             }
         }
 
@@ -1315,13 +1301,16 @@
                 if (viewAuth) viewAuth.classList.remove('hidden');
             }
 
-            // 2. Load cloud state asynchronously in the background (Non-blocking)
+            // 2. Load cloud state asynchronously in the background with strict timeout
             setTimeout(async () => {
                 try {
-                    await initSupabaseRealtime();
-                    await loadAllCloudState();
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500));
+                    await Promise.race([
+                        loadAllCloudState(),
+                        timeoutPromise
+                    ]);
                 } catch(e) {
-                    console.warn('Background sync deferred:', e);
+                    console.warn('Background sync deferred (Supabase limits reached, using local storage).');
                 }
             }, 300);
         });
@@ -1489,8 +1478,6 @@
                 }
             });
 
-            if (ownerPollingInterval) clearInterval(ownerPollingInterval);
-
             if (tabName === 'hub') {
                 const hub = document.getElementById('view-hub');
                 if (hub) hub.classList.remove('hidden');
@@ -1514,11 +1501,6 @@
                 await loadAllCloudState();
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
-
-                ownerPollingInterval = setInterval(async () => {
-                    await loadAllCloudState();
-                    renderOwnerQueues();
-                }, 30000);
             }
         }
         window.switchTab = switchTab;
@@ -1526,7 +1508,7 @@
         async function forceSyncOwnerPortal() {
             await loadAllCloudState();
             renderOwnerQueues();
-            alert('Owner Portal synced successfully from cloud!');
+            alert('Owner Portal synced successfully!');
         }
         window.forceSyncOwnerPortal = forceSyncOwnerPortal;
 
@@ -1681,23 +1663,16 @@
                 merchantConfig.gcashName = nameInput.value.trim();
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
-                    try {
-                        const compressedBase64 = await compressImage(fileInput.files[0], 150, 150, 0.5);
-                        merchantConfig.gcashQR = compressedBase64;
-                    } catch (imgErr) {
-                        console.error('Image compression error:', imgErr);
-                        alert('Error processing QR image. Please try a smaller image.');
-                        return;
-                    }
+                    const compressedBase64 = await compressImage(fileInput.files[0], 150, 150, 0.5);
+                    merchantConfig.gcashQR = compressedBase64;
                 }
 
                 await cloudSet('merchant_config', merchantConfig);
                 updateMerchantPaymentDisplay();
                 switchPlayerHubPayment(currentHubMethod);
                 switchRegPaymentMethod(currentRegMethod);
-                alert('GCash settings saved & synced successfully!');
+                alert('GCash settings saved successfully!');
             } catch (err) {
-                console.error('GCash save error:', err);
                 alert('Error saving GCash settings: ' + err.message);
             }
         }
@@ -1715,28 +1690,22 @@
                 merchantConfig.mayaName = nameInput.value.trim();
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
-                    try {
-                        const compressedBase64 = await compressImage(fileInput.files[0], 150, 150, 0.5);
-                        merchantConfig.mayaQR = compressedBase64;
-                    } catch (imgErr) {
-                        console.error('Image compression error:', imgErr);
-                        alert('Error processing QR image. Please try a smaller image.');
-                        return;
-                    }
+                    const compressedBase64 = await compressImage(fileInput.files[0], 150, 150, 0.5);
+                    merchantConfig.mayaQR = compressedBase64;
                 }
 
                 await cloudSet('merchant_config', merchantConfig);
                 updateMerchantPaymentDisplay();
                 switchPlayerHubPayment(currentHubMethod);
                 switchRegPaymentMethod(currentRegMethod);
-                alert('Maya settings saved & synced successfully!');
+                alert('Maya settings saved successfully!');
             } catch (err) {
-                console.error('Maya save error:', err);
                 alert('Error saving Maya settings: ' + err.message);
             }
         }
         window.saveMayaSettings = saveMayaSettings;
 
+        // INSTANT OFFLINE-FIRST LOGIN (1.5s Supabase timeout fallback)
         async function handleLogin() {
             const email = document.getElementById('login-email').value.trim();
             const pass = document.getElementById('login-pass').value;
@@ -1774,13 +1743,13 @@
                 return;
             }
 
+            // Try Supabase with strict 1.5s timeout; if cloud hangs, immediately fall back to local
             if (supabaseClient) {
                 try {
-                    const { data, error } = await supabaseClient
-                        .from('profiles')
-                        .select('*')
-                        .eq('email', email)
-                        .single();
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase Timeout')), 1500));
+                    const supabaseQuery = supabaseClient.from('profiles').select('*').eq('email', email).single();
+                    const { data, error } = await Promise.race([supabaseQuery, timeoutPromise]);
+                    
                     if (data && !error) {
                         if (data.status === 'frozen') {
                             alert('Your account has been frozen.');
@@ -1802,9 +1771,12 @@
                             return;
                         }
                     }
-                } catch(err) {}
+                } catch(err) {
+                    console.log('Supabase login bypassed due to timeout/limit. Falling back to local storage.');
+                }
             }
 
+            // Fallback to Local Storage instantly
             let localUsers = await cloudGet('registered_users', []);
             const found = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
             if (found && (found.password_hash === hashed || found.password === pass)) {
@@ -1885,12 +1857,6 @@
 
             notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
             logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref} via ${currentRegMethod}.`, nickname);
-
-            if (supabaseClient) {
-                try {
-                    supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' }).then(() => {});
-                } catch(err) {}
-            }
 
             alert('Registration submitted successfully! Your account is pending owner approval.');
             showAuthMode('login');
@@ -2688,12 +2654,6 @@
             await cloudSet('pending_registrations', pendingRegs);
             await cloudSet('registered_players_db', dbList);
 
-            if (supabaseClient) {
-                try {
-                    supabaseClient.from('profiles').update({ status: 'active' }).eq('email', email).then(() => {});
-                } catch(e) {}
-            }
-
             sendPushNotificationToPlayer(email, 'Registration Approved!', 'Your Aetheris Arena account has been approved. You can now log in.');
             logSystemActivity('Registration Approved', `Approved player ${email}`, 'BOSS');
             await persistLocalStorage();
@@ -2710,12 +2670,6 @@
             let dbList = await cloudGet('registered_players_db', []);
             dbList = dbList.filter(x => x.email.toLowerCase() !== email.toLowerCase());
             await cloudSet('registered_players_db', dbList);
-
-            if (supabaseClient) {
-                try {
-                    supabaseClient.from('profiles').delete().eq('email', email).then(() => {});
-                } catch(e) {}
-            }
 
             renderOwnerQueues();
             alert('Registration request rejected.');
