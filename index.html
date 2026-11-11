@@ -829,7 +829,7 @@
             mayaQR: null
         };
 
-        // ================= SUPABASE REALTIME CLOUD STATE SYNC =================
+        // ================= SUPABASE REALTIME & CLOUD STATE SYNC =================
         async function cloudGet(key, fallback) {
             if (supabaseClient) {
                 try {
@@ -858,6 +858,8 @@
             window.dispatchEvent(new Event('aetheris_data_updated'));
         }
 
+        let ownerPollingInterval = null;
+
         async function initSupabaseRealtime() {
             if (!supabaseClient) return;
             try {
@@ -869,11 +871,6 @@
                         if (ownerView && !ownerView.classList.contains('hidden')) {
                             renderOwnerQueues();
                         }
-                        updateWalletDisplay();
-                        const activeModal = document.getElementById('modal-support-chat');
-                        if (activeModal && !activeModal.classList.contains('hidden')) {
-                            renderPlayerChatMessages(true);
-                        }
                     })
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, async (payload) => {
                         await loadAllCloudState();
@@ -881,7 +878,6 @@
                         if (ownerView && !ownerView.classList.contains('hidden')) {
                             renderOwnerQueues();
                         }
-                        updateWalletDisplay();
                     })
                     .subscribe();
             } catch(e) {}
@@ -970,14 +966,17 @@
                         });
                     }
                 } catch(e) {}
-            } else {
-                let dbList = await cloudGet('registered_players_db', []);
-                dbList.forEach(item => {
-                    if (item && item.email) {
+            }
+
+            // Also merge from local registered_players_db and pending_registrations
+            let dbList = await cloudGet('registered_players_db', []);
+            dbList.forEach(item => {
+                if (item && item.email) {
+                    if (!playersMap.has(item.email.toLowerCase())) {
                         playersMap.set(item.email.toLowerCase(), item);
                     }
-                });
-            }
+                }
+            });
 
             registeredPlayersList = Array.from(playersMap.values());
             cloudSet('registered_players_db', registeredPlayersList);
@@ -1462,6 +1461,8 @@
                 }
             });
 
+            if (ownerPollingInterval) clearInterval(ownerPollingInterval);
+
             if (tabName === 'hub') {
                 const hub = document.getElementById('view-hub');
                 if (hub) hub.classList.remove('hidden');
@@ -1485,6 +1486,12 @@
                 await loadAllCloudState();
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
+
+                // Auto-poll every 3 seconds to keep owner portal 100% in sync across browsers
+                ownerPollingInterval = setInterval(async () => {
+                    await loadAllCloudState();
+                    renderOwnerQueues();
+                }, 3000);
             }
         }
         window.switchTab = switchTab;
