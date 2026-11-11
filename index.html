@@ -936,6 +936,7 @@
             }
         }
 
+        // Non-blocking cloud set so UI / saving never hangs or freezes
         async function cloudSet(key, value) {
             try {
                 localStorage.setItem('aetheris_' + key, JSON.stringify(value));
@@ -945,8 +946,9 @@
             }
             if (supabaseClient) {
                 try {
-                    const { error } = await supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' });
-                    if (error) console.error('CloudSet error:', error);
+                    supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' }).then(({ error }) => {
+                        if (error) console.error('CloudSet error:', error);
+                    }).catch(err => console.error('CloudSet exception:', err));
                 } catch(e) {
                     console.error('CloudSet exception:', e);
                 }
@@ -1086,7 +1088,7 @@
             } catch (e) {}
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('profiles').upsert([{
+                    supabaseClient.from('profiles').upsert([{
                         email: currentUser.email,
                         name: currentUser.name || 'Player',
                         nickname: currentUser.nickname || 'PLAYER',
@@ -1100,7 +1102,7 @@
                         status: currentUser.status || 'active',
                         registration_ref: currentUser.registration_ref || '',
                         registration_receipt: currentUser.registration_receipt || null
-                    }], { onConflict: 'email' });
+                    }], { onConflict: 'email' }).then(() => {});
                 } catch(e) {}
             }
         }
@@ -1962,7 +1964,7 @@
 
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' });
+                    supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' }).then(() => {});
                 } catch(err) {}
             }
 
@@ -2763,7 +2765,7 @@
 
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('profiles').update({ status: 'active' }).eq('email', email);
+                    supabaseClient.from('profiles').update({ status: 'active' }).eq('email', email).then(() => {});
                 } catch(e) {}
             }
 
@@ -2786,7 +2788,7 @@
 
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('profiles').delete().eq('email', email);
+                    supabaseClient.from('profiles').delete().eq('email', email).then(() => {});
                 } catch(e) {}
             }
 
