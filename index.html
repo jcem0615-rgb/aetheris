@@ -679,6 +679,16 @@
             </div>
         </div>
 
+        <!-- Player Inspection Modal (Owner View) -->
+        <div id="modal-inspect-player" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">PLAYER INSPECTION</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div id="inspect-player-content" class="space-y-3 text-xs text-slate-300 max-h-80 overflow-y-auto pr-1"></div>
+            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
+        </div>
+
         <!-- Terms and Conditions Modal -->
         <div id="modal-terms" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -1890,7 +1900,7 @@
         function openModal(type) {
             const backdrop = document.getElementById('modal-backdrop');
             if (backdrop) backdrop.classList.remove('hidden');
-            const modals = ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-support-chat', 'modal-terms', 'modal-privacy', 'modal-player-profile', 'modal-leaderboard'];
+            const modals = ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-support-chat', 'modal-inspect-player', 'modal-terms', 'modal-privacy', 'modal-player-profile', 'modal-leaderboard'];
             modals.forEach(m => {
                 const el = document.getElementById(m);
                 if (el) el.classList.add('hidden');
@@ -1953,6 +1963,52 @@
             `;
         }
         window.openPlayerProfileModal = openPlayerProfileModal;
+
+        function inspectPlayer(email) {
+            let p = registeredPlayersList.find(x => x.email.toLowerCase() === email.toLowerCase());
+            if (!p) {
+                alert('Player not found.');
+                return;
+            }
+            openModal('inspect-player');
+            const content = document.getElementById('inspect-player-content');
+            if (!content) return;
+
+            let playerBattles = battleHistoryLog.filter(b => b.playerEmail && b.playerEmail.toLowerCase() === email.toLowerCase());
+
+            content.innerHTML = `
+                <div class="space-y-3">
+                    <div class="space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <p><strong>Full Name:</strong> ${p.name || 'N/A'}</p>
+                        <p><strong>Nickname:</strong> ${p.nickname || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${p.email}</p>
+                        <p><strong>Phone:</strong> ${p.phone || 'N/A'}</p>
+                        <p><strong>Wallet Balance:</strong> ₱${p.wallet || 0}</p>
+                        <p><strong>Wins:</strong> ${p.wins || 0}</p>
+                        <p><strong>EXP:</strong> ${p.xp || 0} (Lv. ${Math.floor((p.xp || 0) / 100) + 1})</p>
+                        <p><strong>Status:</strong> <span class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${p.status || 'active'}</span></p>
+                        <p><strong>Active Hero:</strong> ${p.active_hero || 'pyra'}</p>
+                    </div>
+                    <div class="space-y-1.5">
+                        <h4 class="font-cinzel text-amber-400 font-bold">Battle History (${playerBattles.length})</h4>
+                        ${playerBattles.length === 0 ? '<p class="text-slate-500">No battle records for this player.</p>' :
+                          playerBattles.map(b => `
+                            <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[11px] space-y-0.5">
+                                <div class="flex justify-between text-amber-400 font-bold">
+                                    <span>vs ${b.opponent}</span>
+                                    <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${b.result}</span>
+                                </div>
+                                <div class="text-slate-400 text-[10px]">
+                                    <span>Wager: ₱${b.bet} • Balance: ₱${b.preBalance} ➔ ₱${b.postBalance}</span><br>
+                                    <span>📅 ${b.date} ⏰ ${b.time}</span>
+                                </div>
+                            </div>
+                          `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        window.inspectPlayer = inspectPlayer;
 
         function getRankTier(xp, wins) {
             if (xp >= 2500 || wins >= 25) return 'Platinum I';
@@ -2465,6 +2521,7 @@
                                 <span class="text-[10px] text-slate-400 block">${p.email} • ₱${p.wallet || 0}</span>
                             </div>
                             <div class="flex space-x-1">
+                                <button onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded text-[10px]">Inspect</button>
                                 <button onclick="window.freezePlayer('${p.email}')" class="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded text-[10px]">Freeze</button>
                                 <button onclick="window.deletePlayer('${p.email}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px]">Delete</button>
                             </div>
