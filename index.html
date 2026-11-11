@@ -997,7 +997,7 @@
 
         async function syncUserToSupabase() {
             if (!currentUser || !currentUser.email) return;
-            cloudSet('current_user', currentUser);
+            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
             if (supabaseClient) {
                 try {
                     await supabaseClient.from('profiles').upsert([{
@@ -1054,7 +1054,7 @@
 
         async function persistLocalStorage() {
             if (currentUser) {
-                cloudSet('current_user', currentUser);
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
                 let dbList = await cloudGet('registered_players_db', []);
                 let idx = dbList.findIndex(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
                 if (idx >= 0) {
@@ -1249,7 +1249,7 @@
             await initSupabaseRealtime();
             await loadAllCloudState();
             try {
-                currentUser = await cloudGet('current_user', null);
+                currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
                 if (currentUser && currentUser.email) {
                     const localWallet = currentUser.wallet || 0;
                     const localWins = currentUser.wins || 0;
@@ -1725,7 +1725,7 @@
                     unlocked_heroes: heroes.map(h => h.id),
                     unlockedSkills: {}
                 };
-                await persistLocalStorage();
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
                 restoreUserSession();
                 return;
             }
@@ -1755,7 +1755,7 @@
                                 currentUser.wallet = foundPlayerRecord.wallet;
                             }
                             if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
-                            await persistLocalStorage();
+                            localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
                             restoreUserSession();
                             return;
                         } else {
@@ -1778,7 +1778,7 @@
                     currentUser.wallet = foundPlayerRecord.wallet;
                 }
                 if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
-                await persistLocalStorage();
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
                 restoreUserSession();
             } else {
                 alert('Account not found or invalid credentials. Please check or register.');
