@@ -90,7 +90,7 @@
     <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 flex flex-col justify-center my-auto">
 
         <!-- AUTH VIEW -->
-        <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4">
+        <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4 hidden">
             <div class="text-center space-y-1.5">
                 <div class="w-16 h-16 mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/40 border-2 border-amber-500/60 bg-slate-950 flex items-center justify-center">
                     <img src="image_114c6025.jpg" alt="Aetheris Logo" class="w-full h-full object-cover">
@@ -915,35 +915,20 @@
         }
         window.saveQRCodeImage = saveQRCodeImage;
 
-        // ================= OPTIMIZED DEBOUNCED CLOUD SYNC (Prevents 522 Timeouts) =================
+        // ================= OPTIMIZED NON-BLOCKING CLOUD SYNC =================
         let syncTimeouts = {};
 
         async function cloudGet(key, fallback) {
-            // 1. Always load from LocalStorage first for instant speed and zero egress
             try {
                 const local = localStorage.getItem('aetheris_' + key);
                 if (local !== null && local !== undefined) {
                     return JSON.parse(local);
                 }
             } catch(e) {}
-
-            // 2. Fallback to Supabase only if local is empty
-            if (supabaseClient) {
-                try {
-                    const { data, error } = await supabaseClient.from('app_settings').select('value').eq('key', key).single();
-                    if (data && data.value !== undefined) {
-                        try {
-                            localStorage.setItem('aetheris_' + key, JSON.stringify(data.value));
-                        } catch (e) {}
-                        return data.value;
-                    }
-                } catch(e) {}
-            }
             return fallback;
         }
 
         async function cloudSet(key, value) {
-            // 1. Save to LocalStorage immediately and reliably (Zero network lag)
             try {
                 localStorage.setItem('aetheris_' + key, JSON.stringify(value));
             } catch (e) {
@@ -952,16 +937,13 @@
                 return false;
             }
 
-            // 2. Debounced Background Sync to Supabase (Prevents hammering connection pooler with 522 errors)
             if (supabaseClient) {
                 if (syncTimeouts[key]) clearTimeout(syncTimeouts[key]);
                 syncTimeouts[key] = setTimeout(async () => {
                     try {
                         await supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' });
-                    } catch (err) {
-                        console.warn('Background sync deferred due to connection limit:', err);
-                    }
-                }, 3000); // Waits 3 seconds of inactivity before sending to Supabase
+                    } catch (err) {}
+                }, 3000);
             }
 
             window.dispatchEvent(new Event('aetheris_data_updated'));
@@ -1308,9 +1290,9 @@
             ]
         };
 
-        // ================= BULLETPROOF DOM INITIALIZATION & SESSION RESTORATION =================
+        // ================= INSTANT NON-BLOCKING DOM INITIALIZATION =================
         window.addEventListener('DOMContentLoaded', async () => {
-            // 1. Immediately restore local session first (Zero Logouts)
+            // 1. Instantly restore local session & show login UI (ZERO network lag / Zero blocking)
             try {
                 currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
                 if (currentUser && currentUser.email) {
@@ -1323,14 +1305,25 @@
                         return;
                     }
                     restoreUserSession();
+                } else {
+                    const viewAuth = document.getElementById('view-auth');
+                    if (viewAuth) viewAuth.classList.remove('hidden');
                 }
             } catch (err) {
                 currentUser = null;
+                const viewAuth = document.getElementById('view-auth');
+                if (viewAuth) viewAuth.classList.remove('hidden');
             }
 
-            // 2. Load cloud state & merchant config in background
-            await initSupabaseRealtime();
-            await loadAllCloudState();
+            // 2. Load cloud state asynchronously in the background (Non-blocking)
+            setTimeout(async () => {
+                try {
+                    await initSupabaseRealtime();
+                    await loadAllCloudState();
+                } catch(e) {
+                    console.warn('Background sync deferred:', e);
+                }
+            }, 300);
         });
 
         function restoreUserSession() {
@@ -1522,7 +1515,6 @@
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
 
-                // 30 seconds interval to prevent Supabase connection limits and 522 errors
                 ownerPollingInterval = setInterval(async () => {
                     await loadAllCloudState();
                     renderOwnerQueues();
@@ -2065,7 +2057,6 @@
 
             await syncAllRegisteredPlayers(true);
 
-            // Bot entries explicitly included in the leaderboard with isBot flag
             const botEntries = [
                 { nickname: 'Kenjie', email: 'kenjie@bot.com', xp: 1250, wins: 14, status: 'active', active_hero: 'storm-knight', isBot: true },
                 { nickname: 'Kenneth', email: 'kenneth@bot.com', xp: 980, wins: 10, status: 'active', active_hero: 'sylph', isBot: true },
