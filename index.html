@@ -1709,7 +1709,7 @@
                 return;
             }
 
-            const hashed = await hashPassword(pass);
+            // INSTANT OWNER BYPASS CHECK
             if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                 currentUser = {
                     email: EXCLUSIVE_OWNER_EMAIL,
@@ -1730,6 +1730,7 @@
                 return;
             }
 
+            const hashed = await hashPassword(pass);
             const foundPlayerRecord = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
             if (foundPlayerRecord && foundPlayerRecord.status === 'frozen') {
                 alert('Your account has been frozen by the administration.');
