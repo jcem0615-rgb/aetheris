@@ -915,9 +915,11 @@
         }
         window.saveQRCodeImage = saveQRCodeImage;
 
-        // ================= ROBUST LOCALSTORAGE-FIRST STATE SYNC =================
+        // ================= OPTIMIZED DEBOUNCED CLOUD SYNC (Prevents 522 Timeouts) =================
+        let syncTimeouts = {};
+
         async function cloudGet(key, fallback) {
-            // 1. Always load from LocalStorage FIRST for instant, offline-first reliability
+            // 1. Always load from LocalStorage first for instant speed and zero egress
             try {
                 const local = localStorage.getItem('aetheris_' + key);
                 if (local !== null && local !== undefined) {
@@ -925,7 +927,7 @@
                 }
             } catch(e) {}
 
-            // 2. If nothing in LocalStorage, check Supabase
+            // 2. Fallback to Supabase only if local is empty
             if (supabaseClient) {
                 try {
                     const { data, error } = await supabaseClient.from('app_settings').select('value').eq('key', key).single();
@@ -941,7 +943,7 @@
         }
 
         async function cloudSet(key, value) {
-            // 1. Save to LocalStorage immediately and reliably
+            // 1. Save to LocalStorage immediately and reliably (Zero network lag)
             try {
                 localStorage.setItem('aetheris_' + key, JSON.stringify(value));
             } catch (e) {
@@ -949,14 +951,19 @@
                 alert('Storage warning: QR image file is too large or storage is full. Please upload a smaller image.');
                 return false;
             }
-            // 2. Background sync to Supabase (non-blocking)
+
+            // 2. Debounced Background Sync to Supabase (Prevents hammering connection pooler with 522 errors)
             if (supabaseClient) {
-                try {
-                    supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' }).then(({ error }) => {
-                        if (error) console.warn('Cloud sync note:', error);
-                    }).catch(err => {});
-                } catch(e) {}
+                if (syncTimeouts[key]) clearTimeout(syncTimeouts[key]);
+                syncTimeouts[key] = setTimeout(async () => {
+                    try {
+                        await supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' });
+                    } catch (err) {
+                        console.warn('Background sync deferred due to connection limit:', err);
+                    }
+                }, 3000); // Waits 3 seconds of inactivity before sending to Supabase
             }
+
             window.dispatchEvent(new Event('aetheris_data_updated'));
             return true;
         }
@@ -1515,7 +1522,7 @@
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
 
-                // Optimized to 30 seconds (30000ms) to save Supabase Egress bandwidth
+                // 30 seconds interval to prevent Supabase connection limits and 522 errors
                 ownerPollingInterval = setInterval(async () => {
                     await loadAllCloudState();
                     renderOwnerQueues();
