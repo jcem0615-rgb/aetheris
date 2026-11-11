@@ -1,4 +1,1995 @@
-let sortedLeaderboard = Array.from(combinedMap.values()).sort((a, b) => {
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aetheris Duel Arena</title>
+    <!-- App Icon / Favicon -->
+    <link rel="icon" type="image/jpeg" href="image_114c6025.jpg">
+    <link rel="apple-touch-icon" href="image_114c6025.jpg">
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #07090e; color: #f3f4f6; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .glow-gold { text-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+        .glow-box { box-shadow: 0 0 25px rgba(59, 130, 246, 0.15); }
+        .card-hover { transition: all 0.2s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3); }
+        .fantasy-frame { border: 2px solid #64748b; box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.6); }
+        .legal-modal-content { max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
+
+    <!-- Top Navigation Bar (Mobile Optimized) -->
+    <header id="main-header" class="border-b border-slate-800 bg-slate-950/95 backdrop-blur px-3 py-2 flex flex-col gap-2 shrink-0 z-50 sticky top-0 hidden">
+        <div class="flex items-center justify-between w-full">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl overflow-hidden shadow-lg shadow-blue-500/30 border border-blue-500/50 flex-shrink-0">
+                    <img src="image_114c6025.jpg" alt="Aetheris Emblem" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <h1 class="font-cinzel font-bold text-xs tracking-wider text-amber-400">AETHERIS ARENA</h1>
+                    <p class="text-[9px] text-slate-400">P2P Tactical Card Arena</p>
+                </div>
+            </div>
+
+            <!-- Header Right: Nickname & Wallet Beside Each Other -->
+            <div class="flex items-center space-x-1.5">
+                <button id="btn-install-pwa" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow transition hidden">
+                    <span>Install</span>
+                </button>
+                
+                <!-- Uneditable Player Nickname Badge -->
+                <div id="nav-nickname-container" class="hidden items-center bg-slate-900 border border-amber-500/40 rounded-full px-2.5 py-0.5">
+                    <span id="nav-header-nickname" class="text-xs font-bold font-cinzel text-amber-400 truncate max-w-[90px]">PLAYER</span>
+                </div>
+
+                <!-- Wallet Container -->
+                <div id="nav-wallet-container" class="hidden items-center space-x-1 bg-slate-900 border border-slate-700 rounded-full px-2.5 py-0.5">
+                    <span class="text-[10px] text-slate-400">Bal:</span>
+                    <span id="nav-wallet" class="text-xs font-bold text-emerald-400">₱0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scrollable Navigation Tabs for Mobile -->
+        <nav id="nav-menu" class="hidden flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto w-full no-scrollbar">
+            <button onclick="window.switchTab('hub')" id="btn-hub" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white whitespace-nowrap transition">Home</button>
+            <button onclick="window.switchTab('select')" id="btn-roster" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Roster</button>
+            <button onclick="window.switchTab('shop')" id="btn-shop" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition">Shop</button>
+            <button onclick="window.openPlayerProfileModal()" id="btn-profile" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-amber-400 hover:bg-amber-500/10 whitespace-nowrap transition">Profile</button>
+            <button onclick="window.openLeaderboardModal()" id="btn-leaderboard" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10 whitespace-nowrap transition">Rankings</button>
+            <button onclick="window.openChatModal()" id="btn-support-chat" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-blue-400 hover:bg-blue-500/10 whitespace-nowrap transition">Support Chat</button>
+            <button onclick="window.switchTab('owner')" id="btn-owner" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition hidden">Owner</button>
+            <button onclick="window.logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition ml-auto">Logout</button>
+        </nav>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="app-main" class="flex-1 max-w-4xl w-full mx-auto p-3 flex flex-col justify-center my-auto">
+
+        <!-- AUTH VIEW -->
+        <div id="view-auth" class="max-w-md w-full mx-auto space-y-3 py-4">
+            <div class="text-center space-y-1.5">
+                <div class="w-16 h-16 mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/40 border-2 border-amber-500/60 bg-slate-950 flex items-center justify-center">
+                    <img src="image_114c6025.jpg" alt="Aetheris Logo" class="w-full h-full object-cover">
+                </div>
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">AETHERIS ARENA</h2>
+                <p class="text-xs text-slate-400">Peer-to-Peer Tactical Card & Combat Arena</p>
+            </div>
+
+            <!-- Login Box -->
+            <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
+                    <button id="auth-install-btn" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition hidden">
+                        <span>Install App</span>
+                    </button>
+                </div>
+                <div class="space-y-2.5">
+                    <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <div class="relative">
+                        <input type="password" id="login-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <button type="button" onclick="window.togglePass('login-pass', this)" class="absolute right-3 top-3 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <button onclick="window.showAuthMode('register')" class="text-blue-400 hover:underline">Create Account</button>
+                    <button onclick="window.showAuthMode('forgot')" class="text-amber-400 hover:underline">Forgot Password?</button>
+                </div>
+                <button onclick="window.handleLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer">Sign In</button>
+            </div>
+
+            <!-- Register Box with Payment Method Switcher (QR Only) -->
+            <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
+                <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
+                <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced.</p>
+                
+                <!-- Payment Method Selector Tabs -->
+                <div class="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
+                    <p class="text-[11px] text-amber-400 font-bold text-center">Select Payment Channel & Scan/Save QR to Pay ₱50 Fee:</p>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="window.switchRegPaymentMethod('gcash')" id="btn-reg-gcash" class="flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
+                        <button type="button" onclick="window.switchRegPaymentMethod('maya')" id="btn-reg-maya" class="flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
+                    </div>
+
+                    <!-- QR Display Box Only -->
+                    <div id="reg-payment-display-box" class="p-2 bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2 mt-2">
+                        <div id="reg-active-qr" class="w-36 h-36 bg-slate-950 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <button type="button" onclick="window.saveQRCodeImage(currentRegMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code to Phone</button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <input type="text" id="reg-name" placeholder="Full Legal Name (Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-phone" placeholder="Phone Number (Unique & Locked)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="email" id="reg-email" placeholder="Email Address (Unique)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <div class="space-y-0.5">
+                        <label class="text-[10px] text-slate-400 block">Birthday:</label>
+                        <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
+                        <button type="button" onclick="window.togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
+                    <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <div class="space-y-0.5">
+                        <label class="text-[10px] text-amber-400 block font-bold">Upload Registration Fee Receipt:</label>
+                        <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
+                    </div>
+                </div>
+
+                <!-- Mandatory Notification Permission & Checkboxes for Registration -->
+                <div class="space-y-2.5 pt-1 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
+                    <div class="flex items-center justify-between bg-slate-900 p-2 rounded-lg border border-slate-800">
+                        <div>
+                            <span class="font-bold text-amber-400 block text-xs">Push Notification Setting (Required)</span>
+                            <span class="text-[10px] text-slate-400">Allow notifications to receive approval/rejection updates on your phone.</span>
+                        </div>
+                        <button type="button" onclick="window.requestRegistrationNotificationPermission()" id="btn-enable-notif" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Enable</button>
+                    </div>
+
+                    <label class="flex items-start space-x-2 cursor-pointer">
+                        <input type="checkbox" id="reg-check-terms" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
+                        <span class="text-slate-300 text-[10px]">
+                            I agree to the <button type="button" onclick="window.openLegalModal('terms')" class="text-amber-400 underline hover:text-amber-300">Terms and Conditions</button>, including the strict prohibition of automated scripts.
+                        </span>
+                    </label>
+                    <label class="flex items-start space-x-2 cursor-pointer">
+                        <input type="checkbox" id="reg-check-privacy" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-amber-600 focus:ring-0">
+                        <span class="text-slate-300 text-[10px]">
+                            I have read and accept the <button type="button" onclick="window.openLegalModal('privacy')" class="text-amber-400 underline hover:text-amber-300">Privacy Policy</button> regarding data security and monitoring.
+                        </span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
+                </div>
+                <button onclick="window.handleRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Register Account</button>
+            </div>
+
+            <!-- Forgot Password Box -->
+            <div id="auth-forgot-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
+                <h3 class="font-cinzel text-base font-bold text-white">Request Password Reset</h3>
+                <p class="text-xs text-slate-400">Enter your registered email and birthday to submit a password reset request.</p>
+                <div class="space-y-2.5">
+                    <input type="email" id="forgot-email" placeholder="Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 block">Registered Birthday:</label>
+                        <input type="date" id="forgot-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
+                </div>
+                <button onclick="window.submitResetRequest()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Submit Reset Request</button>
+            </div>
+        </div>
+
+        <!-- Force Change Password View -->
+        <div id="view-force-reset" class="max-w-md mx-auto py-6 space-y-3 hidden">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Force Password Change</h3>
+                <p class="text-xs text-slate-400">Your password reset request was approved. Please verify your identity and enter a new password.</p>
+                <div class="space-y-2.5">
+                    <input type="email" id="force-email" placeholder="Confirm Registered Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 block">Confirm Birthday:</label>
+                        <input type="date" id="force-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="force-newpass" placeholder="New Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white pr-10">
+                        <button type="button" onclick="window.togglePass('force-newpass', this)" class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
+                    </div>
+                </div>
+                <button onclick="window.executeForceReset()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Update Password & Login</button>
+            </div>
+        </div>
+
+        <!-- STARTER HERO SELECTION VIEW (Mandatory First Login Step: Pick 1 Free) -->
+        <div id="view-starter-select" class="max-w-xl mx-auto py-4 space-y-4 hidden">
+            <div class="text-center space-y-1.5">
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold">CHOOSE YOUR FREE STARTER CHAMPION</h2>
+                <p class="text-xs text-slate-400">Pick 1 starter hero for free to begin your journey! The remaining unchosen starter heroes will go on sale in the market.</p>
+            </div>
+            <div id="starter-heroes-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </div>
+
+        <!-- Hero Roster & Rank Unlocks View -->
+        <div id="view-select" class="hidden space-y-3 py-2">
+            <div class="text-center max-w-lg mx-auto mb-2">
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO ROSTER & RANKS</h2>
+                <p class="text-slate-400 text-xs">Inspect all champions. Ranked/Advanced heroes strictly require meeting Win & EXP thresholds before purchase!</p>
+                <div class="mt-2 inline-block bg-slate-900 border border-amber-500/40 rounded-xl p-3 text-xs space-y-1.5 w-full">
+                    <div class="flex items-center justify-between space-x-2">
+                        <span>Rank: <strong id="player-rank-badge" class="text-amber-400">Bronze I</strong></span>
+                        <span>EXP: <strong id="player-explevel-badge" class="text-emerald-400">Lv. 1 (0 XP)</strong></span>
+                        <span>Wins: <strong id="player-wins-badge" class="text-blue-400">0</strong></span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+                        <div id="player-xp-bar" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="hero-cards-container" class="space-y-2.5 pb-6"></div>
+        </div>
+
+        <!-- Skill Shop View -->
+        <div id="view-shop" class="hidden space-y-3 py-2">
+            <div class="text-center max-w-lg mx-auto mb-2">
+                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO SKILL MARKETPLACE</h2>
+                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills (₱150-₱350) and Tier-3 Ultimate Super Skills (₱500) that cost 3 AP to unleash!</p>
+            </div>
+            <div id="shop-skills-container" class="space-y-2.5 pb-6"></div>
+        </div>
+
+        <!-- Player Hub View (Optimized for Mobile Layout) -->
+        <div id="view-hub" class="hidden space-y-3 py-2">
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 glow-box">
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <div id="active-hero-avatar" class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br from-red-950 to-slate-950 border border-red-500/50 flex items-center justify-center p-1 shadow-lg">
+                        <img id="active-hero-img-el" alt="Active Hero" class="w-full h-full object-cover rounded-lg">
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center space-x-1.5 flex-wrap gap-y-0.5">
+                            <span id="player-nickname-badge" class="text-[10px] text-amber-400 font-bold uppercase tracking-wider truncate">Player</span>
+                            <span id="hub-rank-badge" class="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
+                            <span id="hub-explevel-badge" class="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Lv. 1</span>
+                        </div>
+                        <h2 id="active-hero-name" class="font-cinzel text-sm sm:text-base font-bold text-white truncate">PYRA</h2>
+                        <p class="text-[10px] text-slate-400">Active Champion • Ready for Battle</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 w-full sm:w-auto justify-end flex-wrap gap-y-1">
+                    <button onclick="window.openModal('topup')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">+ Top-Up (Min ₱50)</button>
+                    <button onclick="window.openModal('withdraw')" class="flex-1 sm:flex-none px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">Withdraw (Min ₱100)</button>
+                </div>
+            </div>
+
+            <!-- Payment QR Banner for Players (QR Only with Save Button) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="text-center">
+                    <h3 class="font-cinzel font-bold text-amber-400 text-sm">OFFICIAL PAYMENT CHANNELS</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Select a payment method below to scan or save the QR code.</p>
+                </div>
+                
+                <div class="flex space-x-2 max-w-xs mx-auto">
+                    <button onclick="window.switchPlayerHubPayment('gcash')" id="btn-hub-gcash" class="flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
+                    <button onclick="window.switchPlayerHubPayment('maya')" id="btn-hub-maya" class="flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
+                </div>
+
+                <div class="max-w-xs mx-auto bg-slate-950 border border-slate-800 p-3 rounded-2xl flex flex-col items-center text-center space-y-2">
+                    <div id="player-active-qr" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                    <button type="button" onclick="window.saveQRCodeImage(currentHubMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code to Phone</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pb-2">
+                <div onclick="window.openModal('bet')" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-3 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-1 text-xs">⚔</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs">RANKED DUEL</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Select stake & queue for live battles.</p>
+                </div>
+                <div onclick="window.switchTab('shop')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1 text-xs">📜</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs">SKILL SHOP (Tier 2 & 3)</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Buy elite & ₱500 super skills.</p>
+                </div>
+                <div onclick="window.switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-3 cursor-pointer card-hover">
+                    <div class="w-7 h-7 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold mb-1 text-xs">🛡</div>
+                    <h3 class="font-cinzel font-bold text-white text-xs">ROSTER (11)</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Inspect champions & loadouts.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Owner Portal View -->
+        <div id="view-owner" class="hidden space-y-3 py-2 pb-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <h2 class="font-cinzel text-base font-bold text-amber-400">OWNER ADMIN PORTAL</h2>
+                    <div class="space-x-2">
+                        <button onclick="window.forceSyncOwnerPortal()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shadow">Force Sync Data</button>
+                        <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+                        <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
+                        <div class="flex items-center space-x-2 text-xs w-full sm:w-auto">
+                            <span class="text-slate-400 text-[10px]">Filter Date:</span>
+                            <input type="date" id="filter-date" onchange="window.renderOwnerQueues()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+                            <button onclick="document.getElementById('filter-date').value=''; window.renderOwnerQueues();" class="px-2 py-1 bg-slate-800 text-slate-300 rounded-lg text-[10px] hover:bg-slate-700">Clear</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Deposits</span>
+                            <span id="metric-total-deposits" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Withdrawals</span>
+                            <span id="metric-total-withdrawals" class="text-sm font-bold text-amber-400">₱0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MASTER WALLET LEDGER / AUDIT TRAIL (Every Credit & Debit Logged) -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-emerald-500/40 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">📊 Master Wallet Transaction History (Credits & Debits)</h3>
+                        <button onclick="window.clearWalletLedger()" class="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600/40 rounded text-[10px]">Clear Ledger</button>
+                    </div>
+                    <p class="text-[10px] text-slate-400">Complete audit trail of every wallet addition, deduction, wager, prize, and purchase across all players.</p>
+                    <div id="owner-wallet-ledger-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div class="text-[11px] text-slate-500 text-center py-2">No wallet transactions logged yet.</div>
+                    </div>
+                </div>
+
+                <!-- SEPARATE DEPOSIT & WITHDRAWAL HISTORY WITH DATE, TIME & ACTOR -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                        <h3 class="font-cinzel text-xs font-bold text-emerald-400">📥 Deposit History (With Date, Time & Actor)</h3>
+                        <div id="owner-deposit-history-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                            <div class="text-[11px] text-slate-500 text-center py-2">No deposit history yet.</div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">📤 Withdrawal History (With Date, Time & Actor)</h3>
+                        <div id="owner-withdraw-history-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                            <div class="text-[11px] text-slate-500 text-center py-2">No withdrawal history yet.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EMERGENCY MANUAL WALLET ADDER & HISTORY -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/40 space-y-2">
+                    <h3 class="font-cinzel text-xs font-bold text-amber-400">⚡ Emergency Manual Wallet Balance Adder</h3>
+                    <p class="text-[10px] text-slate-400">Add or adjust a player's wallet balance manually for emergency support purposes.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input type="email" id="manual-wallet-email" placeholder="Player Email Address" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <input type="number" id="manual-wallet-amount" placeholder="Amount (e.g. 300 or -100)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <button onclick="window.executeManualWalletAdjustment()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg py-1.5 shadow">Apply Balance</button>
+                    </div>
+                    <div class="pt-2">
+                        <span class="font-cinzel text-[10px] font-bold text-slate-400 block mb-1">Balance Adder History (Date, Time & Actor):</span>
+                        <div id="owner-balance-adder-history" class="space-y-1 max-h-32 overflow-y-auto pr-1">
+                            <div class="text-[10px] text-slate-500 text-center py-1">No manual balance adjustments logged.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PLAYER LIST & COUNT DIRECTORY -->
+                <div class="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-cinzel text-xs font-bold text-white">Registered Players Directory (<span id="owner-player-count" class="text-amber-400">0</span>)</h3>
+                    </div>
+                    <div id="owner-players-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Loading players directory...</div>
+                    </div>
+                </div>
+
+                <!-- CUSTOMER SERVICE CHAT PORTAL -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-blue-500/40 space-y-2">
+                    <h3 class="font-cinzel text-xs font-bold text-blue-400">💬 Customer Service Support Tickets</h3>
+                    <p class="text-[10px] text-slate-400">Select an active player ticket to review messages and reply in real-time.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div id="owner-chat-threads-list" class="space-y-1 max-h-48 overflow-y-auto pr-1 bg-slate-900 p-2 rounded-lg border border-slate-800">
+                            <div class="text-xs text-slate-500 text-center py-4">No support chats.</div>
+                        </div>
+                        <div class="sm:col-span-2 bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex flex-col justify-between h-48">
+                            <div id="owner-active-chat-box" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs text-slate-300">
+                                <div class="text-center text-slate-500 py-10">Select a player ticket on the left to start chatting.</div>
+                            </div>
+                            <div class="flex space-x-2 pt-2 border-t border-slate-800">
+                                <input type="text" id="owner-chat-input" placeholder="Type reply as Owner..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                                <button onclick="window.sendOwnerChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SYSTEM ACTIVITY & AUDIT LOG -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">System Activity & Audit Log (With Date, Time & Actor)</h3>
+                    </div>
+                    <div id="owner-system-audit-log" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>
+                    </div>
+                </div>
+
+                <!-- BATTLE HISTORY -->
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Combat & Battle History Monitoring</h3>
+                    <div id="owner-battle-history-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history logged yet.</div>
+                    </div>
+                </div>
+
+                <!-- Merchant E-Wallet Credentials & Large Scannable QRs -->
+                <div class="space-y-2">
+                    <h3 class="font-cinzel text-xs font-bold text-amber-400">Merchant E-Wallet Credentials & Scannable QR Codes</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
+                            <span class="text-xs font-bold text-blue-400 self-start">GCash Account & QR</span>
+                            <div id="owner-gcash-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                            <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="file" id="input-gcash-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
+                            <button onclick="window.saveGcashSettings()" class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow">Save GCash Settings</button>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
+                            <span class="text-xs font-bold text-teal-400 self-start">Maya Account & QR</span>
+                            <div id="owner-maya-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                            <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <input type="file" id="input-maya-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
+                            <button onclick="window.saveMayaSettings()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg shadow">Save Maya Settings</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Registration Approvals (₱50 Fee Receipt)</h3>
+                    <div id="owner-registration-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Password Reset Requests</h3>
+                    <div id="owner-reset-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals (Min ₱50)</h3>
+                    <div id="owner-deposit-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending top-ups.</div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5 pb-2">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals (Min ₱100 • Zero Fee)</h3>
+                    <div id="owner-withdraw-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawals.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FULL-SCREEN PVP BATTLE ARENA VIEW -->
+    <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-3 hidden overflow-hidden">
+        <!-- Top Battle Bar -->
+        <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-3 py-2 backdrop-blur shrink-0">
+            <div class="flex items-center space-x-2">
+                <h2 class="font-cinzel font-bold text-xs sm:text-sm text-amber-400 glow-gold">DUEL ARENA</h2>
+                <span id="fullscreen-bet-badge" class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="window.surrenderDuel()" class="px-2.5 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[10px] font-bold rounded-xl transition">Surrender</button>
+            </div>
+        </div>
+
+        <!-- Main Combat Stage with Uploaded Battlefield Background Image -->
+        <div class="flex-1 my-2 border border-slate-800/80 rounded-3xl p-3 flex flex-col justify-between relative overflow-hidden shadow-2xl" style="background-image: url('image_911bbe0e%20%281%29.jpg'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-black/40 pointer-events-none"></div>
+
+            <!-- Opponent Stage Area (Top) -->
+            <div class="flex flex-col items-center space-y-1 z-10">
+                <div class="w-full max-w-xs bg-slate-950/90 border border-red-900/50 rounded-xl p-2 space-y-1 shadow-lg backdrop-blur">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <span id="fs-enemy-title" class="text-red-400 truncate">OPPONENT</span>
+                        <span id="fs-enemy-hp-text" class="text-emerald-400">100/100</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                        <div id="fs-enemy-hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[9px] text-slate-300 pt-1 border-t border-slate-800" id="fs-enemy-status-badges">
+                        <span class="text-blue-400">Armor: <strong id="fs-enemy-armor">0</strong></span>
+                        <span class="text-orange-400">Poison/Burn: <strong id="fs-enemy-poison">0</strong></span>
+                    </div>
+                </div>
+                <div id="fs-enemy-sprite" class="w-20 h-20 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.2)] p-1">
+                    <img id="fs-enemy-img-el" alt="Opponent Champion" class="w-12 h-12 object-cover rounded-xl shadow-lg">
+                    <span id="fs-enemy-name-label" class="font-cinzel text-[9px] font-bold text-amber-300 mt-0.5">OPPONENT</span>
+                </div>
+            </div>
+
+            <!-- Central Battle Log Floating Pill -->
+            <div class="self-center z-20 max-w-sm w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-2.5 py-1 text-center text-[10px] text-amber-300 font-mono shadow-xl backdrop-blur" id="fs-battle-log">
+                [Arena]: Match connected! Choose tactical skills.
+            </div>
+
+            <!-- Player Stage Area (Bottom) -->
+            <div class="flex flex-col items-center space-y-1 z-10">
+                <div id="fs-player-sprite" class="w-20 h-20 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.2)] p-1">
+                    <img id="fs-player-img-el" alt="Pyra" class="w-12 h-12 object-cover rounded-xl shadow-lg mb-0.5">
+                    <span id="fs-player-avatar-username" class="font-cinzel text-[9px] font-bold text-amber-300 uppercase truncate">PLAYER</span>
+                </div>
+                <div class="w-full max-w-xs bg-slate-950/90 border border-blue-900/50 rounded-xl p-2 space-y-1 shadow-lg backdrop-blur">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <span id="fs-player-name" class="text-blue-400 uppercase truncate">PLAYER</span>
+                        <span id="fs-player-hp-text" class="text-emerald-400">100/100</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                        <div id="fs-player-hp-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[9px] text-slate-300 pt-1 border-t border-slate-800" id="fs-player-status-badges">
+                        <span class="text-blue-400">Armor: <strong id="fs-player-armor">0</strong></span>
+                        <span class="text-orange-400">Poison/Burn: <strong id="fs-player-poison">0</strong></span>
+                    </div>
+                    <div class="flex justify-between text-[9px] text-slate-300 text-center pt-0.5">
+                        <span>AP: <strong id="fs-player-ap" class="text-amber-400">3</strong>/3</span>
+                        <span>Timer: <strong id="fs-turn-timer" class="text-amber-400 font-bold">30s</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Shuffled Action Cards Deck -->
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-2.5 space-y-1.5 backdrop-blur shrink-0">
+            <div class="flex justify-between items-center px-1">
+                <span class="font-cinzel text-[10px] font-bold text-amber-400">SKILL DECK (SHUFFLED)</span>
+                <button onclick="window.endDuelTurn()" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-xl shadow transition">End Turn & Attack</button>
+            </div>
+            <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
+        <!-- Top-up Modal with Payment Tabs (QR Only) -->
+        <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
+            <h3 class="font-cinzel text-base font-bold text-amber-400 text-center">Submit Top-Up Request (Min ₱50)</h3>
+            
+            <div class="space-y-2">
+                <p class="text-[11px] text-slate-400 text-center">1. Select payment channel & scan/save QR:</p>
+                
+                <div class="flex space-x-2 max-w-xs mx-auto">
+                    <button type="button" onclick="window.switchTopUpPaymentMethod('gcash')" id="btn-topup-gcash" class="flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
+                    <button type="button" onclick="window.switchTopUpPaymentMethod('maya')" id="btn-topup-maya" class="flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
+                </div>
+
+                <div class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2">
+                    <div id="topup-active-qr" class="w-32 h-32 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                    <button type="button" onclick="window.saveQRCodeImage(currentTopupMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code to Phone</button>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-slate-400 text-center">2. Enter amount (Minimum ₱50), reference number & upload receipt:</p>
+            <div class="space-y-2.5">
+                <input type="number" id="topup-amount" placeholder="Amount Sent (₱50 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-400 block">Upload Receipt Screenshot:</label>
+                    <input type="file" id="topup-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-600 file:text-white">
+                </div>
+            </div>
+            <div class="flex space-x-2 pt-1">
+                <button onclick="window.submitTopUp()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow">Submit Top-Up</button>
+                <button onclick="window.closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Withdrawal Modal (Min ₱100 • Zero Fee) -->
+        <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">Withdrawal Request (Min ₱100 • Zero Fee)</h3>
+            <p class="text-xs text-slate-400">Payouts are locked strictly to your registered phone number and legal name.</p>
+            <div class="space-y-2.5">
+                <input type="number" id="withdraw-amount" placeholder="Amount (₱100 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <select id="withdraw-method" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <option value="GCash">GCash</option>
+                    <option value="Maya">Maya</option>
+                </select>
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-400 block">Locked Account Number:</label>
+                    <input type="text" id="withdraw-account" readonly class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 cursor-not-allowed">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-400 block">Locked Account Name:</label>
+                    <input type="text" id="withdraw-name" readonly class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 cursor-not-allowed">
+                </div>
+            </div>
+            <div class="flex space-x-2 pt-1">
+                <button onclick="window.submitWithdrawal()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl">Submit Withdrawal</button>
+                <button onclick="window.closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Ranked Matchmaking Wager Modal -->
+        <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">RANKED WAGER</h3>
+            <p class="text-xs text-slate-400">Choose your match stake. Winner takes prize pool minus a 5% platform fee!</p>
+            <div class="grid grid-cols-3 gap-2 pt-1">
+                <button onclick="window.startRankedMatchmaking(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
+                <button onclick="window.startRankedMatchmaking(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
+                <button onclick="window.startRankedMatchmaking(200)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱200</button>
+                <button onclick="window.startRankedMatchmaking(500)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱500</button>
+                <button onclick="window.startRankedMatchmaking(1000)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs col-span-2">₱1,000</button>
+            </div>
+            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-1">Cancel</button>
+        </div>
+
+        <!-- Matchmaking Loading Modal -->
+        <div id="modal-matchmaking" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 w-full max-w-md space-y-4 hidden text-center">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING FOR OPPONENT</h3>
+            <div class="py-3 space-y-3">
+                <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Searching active player queue...</p>
+                <p id="matchmaking-countdown" class="text-[11px] text-amber-400 font-bold">Elapsed time: 0s</p>
+            </div>
+            <div class="space-y-2">
+                <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Wager</button>
+            </div>
+        </div>
+
+        <!-- Customer Service Chat Modal (Player View) -->
+        <div id="modal-support-chat" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden flex flex-col h-[420px]">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-blue-400">💬 Customer Service Support</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div id="player-chat-messages-box" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <div class="text-slate-400 text-center py-2">Loading support messages...</div>
+            </div>
+            <div class="flex space-x-2 pt-1">
+                <input type="text" id="player-chat-input" placeholder="Type your message to support..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <button onclick="window.sendPlayerChatMessage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow">Send</button>
+            </div>
+        </div>
+
+        <!-- Terms and Conditions Modal -->
+        <div id="modal-terms" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Terms and Conditions</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div class="legal-modal-content space-y-2 text-[11px] text-slate-300 pr-1">
+                <p><strong>1. Acceptance of Terms:</strong> By registering, accessing, or playing on Aetheris Arena, you agree to be bound by these Terms and Conditions.</p>
+                <p><strong>2. Fair Play Policy:</strong> To ensure a fair competitive environment, automated scripts, macro tools, and third-party exploits are strictly prohibited.</p>
+                <p><strong>3. Account Registration & P50 Fee:</strong> Accounts require accurate legal identification and a verified ₱50.00 registration fee receipt.</p>
+                <p><strong>4. Wagers & Platform Fees:</strong> Duels involve wagers. The platform deducts a standard 5% operational fee from the total prize pool upon match settlement.</p>
+                <p><strong>5. Financial Transactions:</strong> Top-ups and withdrawals are processed through verified official merchant channels.</p>
+            </div>
+            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
+        </div>
+
+        <!-- Privacy Policy Modal -->
+        <div id="modal-privacy" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">Privacy Policy</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div class="legal-modal-content space-y-2 text-[11px] text-slate-300 pr-1">
+                <p><strong>1. Information Collection:</strong> We collect personal details provided during registration, including your legal name, email address, phone number, birthday, and payment receipts.</p>
+                <p><strong>2. Security & Monitoring:</strong> We monitor platform traffic and gameplay sessions to protect platform security and ensure integrity.</p>
+                <p><strong>3. Data Usage:</strong> Your data is used exclusively to manage your player profile, process secure wagers, and provide customer support.</p>
+                <p><strong>4. Data Protection:</strong> We employ robust encryption to safeguard your personal information.</p>
+            </div>
+            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
+        </div>
+
+        <!-- Player Profile & History Modal -->
+        <div id="modal-player-profile" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">PLAYER PROFILE & HISTORY</h3>
+                <span id="profile-modal-rank" class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Bronze I</span>
+            </div>
+            <div id="player-profile-content" class="space-y-3 text-xs text-slate-300 max-h-80 overflow-y-auto pr-1"></div>
+            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Profile</button>
+        </div>
+
+        <!-- Top 10 Leaderboard Modal -->
+        <div id="modal-leaderboard" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400 flex items-center space-x-1.5">
+                    <span>🏆</span><span>TOP 10 RANKED LEADERBOARD</span>
+                </h3>
+                <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">Live Season</span>
+            </div>
+            <p class="text-slate-400 text-[11px]">Global ranking based on total EXP level, rank tier, and match victories.</p>
+            <div id="leaderboard-list-content" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+            <button onclick="window.closeModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close Leaderboard</button>
+        </div>
+    </div>
+
+    <script>
+        // ================= SUPABASE CONFIGURATION =================
+        const SUPABASE_URL = 'https://qocrpleireoffykeendn.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_MzwC0zj5QfPLNvTkcphyww_5pObb4cM';
+        
+        let supabaseClient = null;
+        try {
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch(e) {
+            console.error('Supabase initialization error:', e);
+        }
+
+        const EXCLUSIVE_OWNER_EMAIL = 'jcem0615@gmail.com';
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('btn-install-pwa');
+            const authInstallBtn = document.getElementById('auth-install-btn');
+            if (installBtn) { installBtn.classList.remove('hidden'); installBtn.classList.add('flex'); }
+            if (authInstallBtn) { authInstallBtn.classList.remove('hidden'); authInstallBtn.classList.add('flex'); }
+        });
+
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') console.log('User accepted install');
+                deferredPrompt = null;
+            } else {
+                alert('To install Aetheris Arena:\n\n• On Mobile (Chrome/Safari): Tap your browser menu and select "Add to Home Screen".\n• On Desktop (Chrome/Edge): Click the install icon in your browser address bar.');
+            }
+        }
+        window.installPWA = installPWA;
+
+        async function hashPassword(password) {
+            try {
+                const msgBuffer = new TextEncoder().encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            } catch (err) {
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    hash = ((hash << 5) - hash) + password.charCodeAt(i);
+                    hash |= 0;
+                }
+                return 'fallback_' + Math.abs(hash);
+            }
+        }
+
+        let currentUser = null;
+        try {
+            currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
+        } catch(err) {
+            currentUser = null;
+        }
+
+        let currentDuelBet = 50;
+        let preBattleWallet = 0;
+        let battleHistoryLog = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
+        let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
+        let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
+        let balanceAdderHistory = JSON.parse(localStorage.getItem('aetheris_balance_adder_history')) || [];
+        let walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
+        
+        let registeredPlayersList = [];
+
+        function logWalletTransaction(email, nickname, type, amount, preBalance, postBalance, reason) {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toLocaleTimeString();
+            const tx = {
+                id: Date.now() + Math.random(),
+                timestamp: `${dateStr} ${timeStr}`,
+                date: dateStr,
+                time: timeStr,
+                email,
+                nickname: nickname || email,
+                type, 
+                amount,
+                preBalance,
+                postBalance,
+                reason
+            };
+            walletTransactionLedger.unshift(tx);
+            localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
+            logSystemActivity('Wallet ' + type, `${nickname || email}: ${type === 'CREDIT' ? '+' : '-'}₱${amount} (₱${preBalance} ➔ ₱${postBalance}) | Reason: ${reason}`, nickname || email);
+            window.dispatchEvent(new Event('aetheris_data_updated'));
+        }
+
+        function clearWalletLedger() {
+            if (confirm('Are you sure you want to clear the entire wallet transaction ledger?')) {
+                walletTransactionLedger = [];
+                localStorage.removeItem('aetheris_wallet_ledger');
+                renderOwnerQueues();
+            }
+        }
+        window.clearWalletLedger = clearWalletLedger;
+        
+        async function syncAllRegisteredPlayers(preserveLocalWallets = false) {
+            let playersMap = new Map();
+
+            playersMap.set(EXCLUSIVE_OWNER_EMAIL.toLowerCase(), {
+                id: 1, email: EXCLUSIVE_OWNER_EMAIL, name: 'John Carlo Estrada Morales', nickname: 'BOSS', phone: '09923978537', wallet: 999999, status: 'active', role: 'owner'
+            });
+
+            if (currentUser && currentUser.email) {
+                playersMap.set(currentUser.email.toLowerCase(), currentUser);
+            }
+
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from('profiles').select('*');
+                    if (data && !error) {
+                        data.forEach(p => {
+                            if (p && p.email) {
+                                const emailKey = p.email.toLowerCase();
+                                let localExisting = playersMap.get(emailKey);
+                                let finalWallet = p.wallet || p.balance || 0;
+                                if (localExisting && localExisting.wallet !== undefined && localExisting.wallet > finalWallet) {
+                                    finalWallet = localExisting.wallet;
+                                }
+
+                                playersMap.set(emailKey, {
+                                    id: p.id || (localExisting ? localExisting.id : Date.now()),
+                                    email: p.email,
+                                    name: p.name || p.fullName || (localExisting ? localExisting.name : 'Player'),
+                                    nickname: p.nickname || p.username || (localExisting ? localExisting.nickname : 'PLAYER'),
+                                    phone: p.phone || (localExisting ? localExisting.phone : ''),
+                                    wallet: finalWallet,
+                                    wins: Math.max(p.wins || 0, localExisting ? (localExisting.wins || 0) : 0),
+                                    xp: Math.max(p.xp || 0, localExisting ? (localExisting.xp || 0) : 0),
+                                    active_hero: p.active_hero || (localExisting ? localExisting.active_hero : 'pyra'),
+                                    status: p.status || (localExisting ? localExisting.status : 'active')
+                                });
+                            }
+                        });
+                    }
+                } catch(e) {}
+            } else {
+                try {
+                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                    dbList.forEach(item => {
+                        if (item && item.email) {
+                            playersMap.set(item.email.toLowerCase(), item);
+                        }
+                    });
+                } catch(e) {}
+            }
+
+            registeredPlayersList = Array.from(playersMap.values());
+            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+        }
+
+        async function syncUserToSupabase() {
+            if (!currentUser || !currentUser.email || !supabaseClient) return;
+            try {
+                await supabaseClient.from('profiles').upsert([{
+                    email: currentUser.email,
+                    name: currentUser.name || 'Player',
+                    nickname: currentUser.nickname || 'PLAYER',
+                    phone: currentUser.phone || '',
+                    wallet: currentUser.wallet || 0,
+                    wins: currentUser.wins || 0,
+                    xp: currentUser.xp || 0,
+                    active_hero: currentUser.active_hero || 'pyra',
+                    unlocked_heroes: currentUser.unlocked_heroes || ['pyra'],
+                    unlocked_skills: currentUser.unlockedSkills || {},
+                    status: currentUser.status || 'active'
+                }], { onConflict: 'email' });
+            } catch(e) {}
+        }
+
+        let merchantConfig = {
+            gcashNum: '09923978537',
+            gcashName: 'John Carlo Estrada Morales',
+            gcashQR: null,
+            mayaNum: '09923978537',
+            mayaName: 'John Carlo Estrada Morales',
+            mayaQR: null
+        };
+
+        async function loadMerchantConfig() {
+            if (supabaseClient) {
+                try {
+                    const { data } = await supabaseClient.from('app_settings').select('*').eq('key', 'merchant_config').single();
+                    if (data && data.value) {
+                        merchantConfig = data.value;
+                        localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
+                        return;
+                    }
+                } catch(e) {}
+            }
+            try {
+                const stored = localStorage.getItem('aetheris_merchant_config');
+                if (stored) merchantConfig = JSON.parse(stored);
+            } catch(e) {}
+        }
+
+        async function persistMerchantConfig() {
+            localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('app_settings').upsert([{ key: 'merchant_config', value: merchantConfig }], { onConflict: 'key' });
+                } catch(e) {}
+            }
+        }
+
+        const humanBotNames = ['Kenjie', 'Kenneth', 'Clyde', 'Joana', 'Glenda', 'Glenn', 'Mark', 'Jessa', 'Bryan', 'Rica', 'Christian', 'Nicole', 'Jomar', 'Kaye', 'Roldan'];
+        function getRandomHumanBotName() {
+            return humanBotNames[Math.floor(Math.random() * humanBotNames.length)];
+        }
+
+        let duelState = { 
+            playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
+            enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
+            turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, currentOpponentName: 'Kenjie', enemyHero: null, enemyDeck: [], isPlayerTurn: true
+        };
+
+        let playerDeck = [];
+        let playerHand = [];
+        let playerDiscard = [];
+        
+        let matchmakingElapsedTimer = null;
+        let matchmakingElapsedSeconds = 0;
+        let cointossTimerInterval = null;
+
+        let currentRegMethod = 'gcash';
+        let currentHubMethod = 'gcash';
+        let currentTopupMethod = 'gcash';
+
+        function logSystemActivity(action, details, actor = 'System') {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toLocaleTimeString();
+            systemAuditLogs.unshift({
+                id: Date.now(),
+                timestamp: `${dateStr} ${timeStr}`, date: dateStr, time: timeStr, actor, action, details
+            });
+            persistLocalStorage();
+        }
+
+        function persistLocalStorage() {
+            if (currentUser) {
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                let idx = dbList.findIndex(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+                if (idx >= 0) {
+                    dbList[idx].wallet = currentUser.wallet;
+                    dbList[idx].nickname = currentUser.nickname;
+                    dbList[idx].wins = currentUser.wins;
+                    dbList[idx].xp = currentUser.xp;
+                } else {
+                    dbList.push({
+                        id: currentUser.id || Date.now(),
+                        email: currentUser.email,
+                        name: currentUser.name,
+                        nickname: currentUser.nickname,
+                        phone: currentUser.phone,
+                        wallet: currentUser.wallet,
+                        wins: currentUser.wins,
+                        xp: currentUser.xp,
+                        status: currentUser.status || 'active'
+                    });
+                }
+                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+            } else {
+                localStorage.removeItem('aetheris_current_user');
+            }
+            localStorage.setItem('aetheris_battle_history', JSON.stringify(battleHistoryLog));
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
+            localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
+            localStorage.setItem('aetheris_balance_adder_history', JSON.stringify(balanceAdderHistory));
+            localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
+            syncAllRegisteredPlayers(true);
+            persistMerchantConfig();
+
+            window.dispatchEvent(new Event('aetheris_data_updated'));
+        }
+
+        window.addEventListener('storage', (event) => {
+            if (['aetheris_current_user', 'aetheris_registered_players_db', 'aetheris_wallet_ledger', 'aetheris_pending_topups', 'aetheris_pending_withdrawals', 'aetheris_pending_registrations', 'aetheris_pending_resets', 'aetheris_support_chats', 'aetheris_registered_users'].includes(event.key)) {
+                walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
+                syncAllRegisteredPlayers(true).then(() => {
+                    if (currentUser && currentUser.email) {
+                        let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                        let found = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+                        if (found && found.wallet !== currentUser.wallet) {
+                            currentUser.wallet = found.wallet;
+                            updateWalletDisplay();
+                        }
+                    }
+                    const ownerView = document.getElementById('view-owner');
+                    if (ownerView && !ownerView.classList.contains('hidden')) {
+                        renderOwnerQueues();
+                    }
+                });
+            }
+        });
+
+        window.addEventListener('aetheris_data_updated', () => {
+            const ownerView = document.getElementById('view-owner');
+            if (ownerView && !ownerView.classList.contains('hidden')) {
+                renderOwnerQueues();
+            }
+        });
+
+        async function requestRegistrationNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('This browser does not support notifications.');
+                return;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const btn = document.getElementById('btn-enable-notif');
+                if (btn) {
+                    btn.innerText = 'Enabled ✓';
+                    btn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+                    btn.classList.add('bg-emerald-600');
+                }
+                alert('Notification permission granted successfully!');
+                new Notification('Aetheris Arena', { body: 'Notifications enabled successfully!' });
+            } else {
+                alert('Notification permission denied.');
+            }
+        }
+        window.requestRegistrationNotificationPermission = requestRegistrationNotificationPermission;
+
+        function sendPushNotificationToPlayer(playerEmail, title, body) {
+            if (currentUser && currentUser.email === playerEmail && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: 'image_114c6025.jpg' });
+            }
+        }
+
+        function notifyOwner(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: 'image_114c6025.jpg' });
+            }
+        }
+
+        const heroes = [
+            { id: 'pyra', name: 'PYRA', role: 'Fire Mage', rarity: 'STARTER (Basic)', desc: 'Fire-elemental spellcaster with explosive burn damage.', bg: 'from-red-950 to-slate-950', border: 'border-red-500/50', iconImg: 'image_b2781538.jpg', price: 200, requiredWins: 0, requiredXp: 0, isStarter: true, baseSkills: [
+                { id: 'pyra-1', type: 'strike', name: 'FLAME DART', ap: 1, color: 'red', damage: 28, desc: 'Deal 28 Fire true damage (Armor piercing).' },
+                { id: 'pyra-2', type: 'defend', name: 'FIRE SHIELD', ap: 1, color: 'red', armor: 14, desc: 'Gain 14 Armor block.' },
+                { id: 'pyra-3', type: 'poison', name: 'SCORCH', ap: 2, color: 'orange', damage: 32, poison: 10, desc: 'Deal 32 true damage & apply 10 Burn stacks.' },
+                { id: 'pyra-4', type: 'heal', name: 'BLAZING HEAL', ap: 2, color: 'emerald', heal: 20, desc: 'Restore 20 HP.' }
+            ]},
+            { id: 'sylph', name: 'SYLPH', role: 'Wind Ranger', rarity: 'STARTER (Basic)', desc: 'Agile archer with high movement and gale evasion.', bg: 'from-emerald-950 to-slate-950', border: 'border-emerald-500/50', iconImg: 'image_e51741b7.jpg', price: 200, requiredWins: 0, requiredXp: 0, isStarter: true, baseSkills: [
+                { id: 'sylph-1', type: 'strike', name: 'GALE SLASH', ap: 1, color: 'emerald', damage: 28, desc: 'Deal 28 Wind true damage.' },
+                { id: 'sylph-2', type: 'defend', name: 'WIND STEP', ap: 1, color: 'emerald', armor: 15, desc: 'Gain 15 Armor block.' },
+                { id: 'sylph-3', type: 'poison', name: 'GALE ARROW', ap: 2, color: 'teal', damage: 32, poison: 10, desc: 'Deal 32 true damage & apply 10 Poison.' },
+                { id: 'sylph-4', type: 'heal', name: 'WIND MEND', ap: 2, color: 'emerald', heal: 20, desc: 'Restore 20 HP.' }
+            ]},
+            { id: 'valen', name: 'VALEN', role: 'Iron Guardian', rarity: 'STARTER (Basic)', desc: 'Holy tank with impenetrable defense and holy barrier.', bg: 'from-blue-950 to-slate-950', border: 'border-blue-500/50', iconImg: 'image_4b6fe95a.jpg', price: 200, requiredWins: 0, requiredXp: 0, isStarter: true, baseSkills: [
+                { id: 'valen-1', type: 'strike', name: 'SHIELD BASH', ap: 1, color: 'blue', damage: 26, desc: 'Deal 26 Physical true damage.' },
+                { id: 'valen-2', type: 'defend', name: 'IRON BASTION', ap: 1, color: 'blue', armor: 18, desc: 'Gain 18 Armor block.' },
+                { id: 'valen-3', type: 'debuff', name: 'HEAVY SLAM', ap: 2, color: 'indigo', damage: 35, desc: 'Deal 35 true damage & shatter defenses.' },
+                { id: 'valen-4', type: 'heal', name: 'FORTIFY', ap: 2, color: 'emerald', armor: 12, heal: 15, desc: 'Gain 12 Armor & restore 15 HP.' }
+            ]},
+            { id: 'nyx', name: 'NYX', role: 'Shadow Assassin', rarity: 'STARTER (Basic)', desc: 'Deadly operative with stealth and shadow-strike bursts.', bg: 'from-purple-950 to-slate-950', border: 'border-purple-500/50', iconImg: 'image_a9978665.jpg', price: 200, requiredWins: 0, requiredXp: 0, isStarter: true, baseSkills: [
+                { id: 'nyx-1', type: 'strike', name: 'SHADOW STAB', ap: 1, color: 'purple', damage: 30, desc: 'Deal 30 Dark true damage.' },
+                { id: 'nyx-2', type: 'defend', name: 'SMOKE CLOAK', ap: 1, color: 'purple', armor: 14, desc: 'Gain 14 Armor block.' },
+                { id: 'nyx-3', type: 'poison', name: 'VENOM BLADE', ap: 2, color: 'purple', damage: 32, poison: 12, desc: 'Deal 32 true damage & apply 12 Poison.' },
+                { id: 'nyx-4', type: 'heal', name: 'LIFE SIPHON', ap: 2, color: 'emerald', damage: 20, heal: 18, desc: 'Deal 20 true damage & restore 18 HP.' }
+            ]},
+            { id: 'storm-knight', name: 'STORM KNIGHT', role: 'Electric Knight', rarity: 'RANKED (Silver I)', desc: 'Electric armored duelist wielding powerful lightning strikes.', bg: 'from-amber-950 to-slate-950', border: 'border-amber-500/50', iconImg: 'image_d3c262a5.jpg', price: 350, requiredWins: 2, requiredXp: 150, isStarter: false, baseSkills: [
+                { id: 'storm-1', type: 'strike', name: 'SPARK STRIKE', ap: 1, color: 'amber', damage: 34, desc: 'Deal 34 Electric true damage.' },
+                { id: 'storm-2', type: 'defend', name: 'STATIC GUARD', ap: 1, color: 'amber', armor: 20, desc: 'Gain 20 Armor block.' },
+                { id: 'storm-3', type: 'debuff', name: 'LIGHTNING BOLT', ap: 2, color: 'yellow', damage: 45, desc: 'Deal 45 true damage & shock target.' },
+                { id: 'storm-4', type: 'heal', name: 'ELECTRO MEND', ap: 2, color: 'emerald', heal: 25, desc: 'Restore 25 HP.' }
+            ]},
+            { id: 'ironclad-titan', name: 'IRONCLAD TITAN', role: 'Earth Titan', rarity: 'RANKED (Silver II)', desc: 'Colossal earth juggernaut with earth-shattering slams.', bg: 'from-stone-950 to-slate-950', border: 'border-stone-500/50', iconImg: 'image_e1196f4d.jpg', price: 500, requiredWins: 4, requiredXp: 350, isStarter: false, baseSkills: [
+                { id: 'titan-1', type: 'strike', name: 'STONE SMASH', ap: 1, color: 'stone', damage: 36, desc: 'Deal 36 Earth true damage.' },
+                { id: 'titan-2', type: 'defend', name: 'TECTONIC BLOCK', ap: 1, color: 'stone', armor: 25, desc: 'Gain 25 Armor block.' },
+                { id: 'titan-3', type: 'debuff', name: 'EARTHQUAKE', ap: 2, color: 'stone', damage: 50, desc: 'Deal 50 true damage & shatter defenses.' },
+                { id: 'titan-4', type: 'heal', name: 'TITAN MEND', ap: 2, color: 'emerald', heal: 25, armor: 15, desc: 'Restore 25 HP & 15 Armor.' }
+            ]},
+            { id: 'chrono-warden', name: 'CHRONO WARDEN', role: 'Time Mage', rarity: 'RANKED (Gold I)', desc: 'Time controller manipulating action queues and powerful hourglass rays.', bg: 'from-yellow-950 to-slate-950', border: 'border-yellow-500/50', iconImg: 'image_a4f1655c.jpg', price: 750, requiredWins: 7, requiredXp: 600, isStarter: false, baseSkills: [
+                { id: 'chrono-1', type: 'strike', name: 'TIME SLASH', ap: 1, color: 'yellow', damage: 38, desc: 'Deal 38 Temporal true damage.' },
+                { id: 'chrono-2', type: 'defend', name: 'TEMPORAL WARD', ap: 1, color: 'yellow', armor: 22, desc: 'Gain 22 Armor block.' },
+                { id: 'chrono-3', type: 'debuff', name: 'TIME WARP', ap: 2, color: 'amber', damage: 55, desc: 'Deal 55 true damage & inflict Armor-Break.' },
+                { id: 'chrono-4', type: 'heal', name: 'HOURGLASS HEAL', ap: 2, color: 'emerald', heal: 30, desc: 'Restore 30 HP.' }
+            ]},
+            { id: 'sky-valkyrie', name: 'SKY VALKYRIE', role: 'Light Warrior', rarity: 'RANKED (Gold II)', desc: 'Aerial divine warrior with celestial holy judgment capabilities.', bg: 'from-orange-950 to-slate-950', border: 'border-orange-500/50', iconImg: 'image_9b984ce7.jpg', price: 1000, requiredWins: 10, requiredXp: 950, isStarter: false, baseSkills: [
+                { id: 'valkyrie-1', type: 'strike', name: 'HOLY SPEAR', ap: 1, color: 'orange', damage: 40, desc: 'Deal 40 Light true damage.' },
+                { id: 'valkyrie-2', type: 'defend', name: 'RADIANT SHIELD', ap: 1, color: 'orange', armor: 24, desc: 'Gain 24 Armor block.' },
+                { id: 'valkyrie-3', type: 'debuff', name: 'CELESTIAL STRIKE', ap: 2, color: 'amber', damage: 60, desc: 'Deal 60 holy judgment true damage.' },
+                { id: 'valkyrie-4', type: 'heal', name: 'DIVINE MEND', ap: 2, color: 'emerald', heal: 35, desc: 'Restore 35 HP.' }
+            ]},
+            { id: 'void-necromancer', name: 'VOID NECROMANCER', role: 'Void Sorcerer', rarity: 'RANKED (Platinum I)', desc: 'Dark sorcerer capable of devastating plague waves and life draining.', bg: 'from-violet-950 to-slate-950', border: 'border-violet-500/50', iconImg: 'image_42205d6.jpg', price: 1500, requiredWins: 15, requiredXp: 1400, isStarter: false, baseSkills: [
+                { id: 'void-1', type: 'strike', name: 'DARK BOLT', ap: 1, color: 'violet', damage: 42, desc: 'Deal 42 Void true damage.' },
+                { id: 'void-2', type: 'defend', name: 'SOUL BARRIER', ap: 1, color: 'violet', armor: 25, desc: 'Gain 25 Armor block.' },
+                { id: 'void-3', type: 'poison', name: 'PLAGUE WAVE', ap: 2, color: 'purple', damage: 45, poison: 18, desc: 'Deal 45 true damage & apply 18 Poison.' },
+                { id: 'void-4', type: 'heal', name: 'ABYSSAL DRAIN', ap: 2, color: 'emerald', damage: 45, heal: 25, desc: 'Deal 45 true damage & restore 25 HP.' }
+            ]},
+            { id: 'blood-berserker', name: 'BLOOD BERSERKER', role: 'Blood Brawler', rarity: 'ADVANCED (Elite)', desc: 'Furious warrior with devastating high-damage blood rampages.', bg: 'from-rose-950 to-slate-950', border: 'border-rose-500/50', iconImg: 'image_2e90c1d9.jpg', price: 2500, requiredWins: 25, requiredXp: 2500, isStarter: false, baseSkills: [
+                { id: 'berserk-1', type: 'strike', name: 'BLOOD AXE', ap: 1, color: 'rose', damage: 46, desc: 'Deal 46 Physical true damage.' },
+                { id: 'berserk-2', type: 'defend', name: 'FRENZIED BLOCK', ap: 1, color: 'rose', armor: 22, desc: 'Gain 22 Armor block.' },
+                { id: 'berserk-3', type: 'debuff', name: 'BLOODY RAMPAGE', ap: 2, color: 'red', damage: 65, desc: 'Deal 65 brutal true damage.' },
+                { id: 'berserk-4', type: 'heal', name: 'BLOOD FEAST', ap: 2, color: 'emerald', damage: 35, heal: 35, desc: 'Deal 35 true damage & restore 35 HP.' }
+            ]},
+            { id: 'astral-archmage', name: 'ASTRAL ARCHMAGE', role: 'Cosmic Sorcerer', rarity: 'ADVANCED (Elite)', desc: 'Cosmic spellcaster wielding galaxy collapse and supernova powers.', bg: 'from-indigo-950 to-slate-950', border: 'border-indigo-500/50', iconImg: 'image_1d431b92.jpg', price: 3500, requiredWins: 30, requiredXp: 3200, isStarter: false, baseSkills: [
+                { id: 'astral-1', type: 'strike', name: 'STELLAR RAY', ap: 1, color: 'indigo', damage: 50, desc: 'Deal 50 Cosmic true damage.' },
+                { id: 'astral-2', type: 'defend', name: 'COSMIC BARRIER', ap: 1, color: 'indigo', armor: 30, desc: 'Gain 30 Armor block.' },
+                { id: 'astral-3', type: 'debuff', name: 'SUPERNOVA', ap: 2, color: 'blue', damage: 75, desc: 'Deal 75 cosmic cataclysm true damage.' },
+                { id: 'astral-4', type: 'heal', name: 'ASTRAL MEND', ap: 2, color: 'emerald', heal: 40, desc: 'Restore 40 HP.' }
+            ]}
+        ];
+
+        const shopSkillsMap = {
+            'pyra': [
+                { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 2, color: 'red', damage: 55, poison: 15, cost: 150, desc: 'Tier-2 Elite: Deal 55 Fire true damage & apply 15 Burn stacks.' },
+                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 3, color: 'red', damage: 95, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to deal 95 solar fire true damage!' }
+            ],
+            'sylph': [
+                { id: 'shop-sylph-2', name: 'HURRICANE BARRAGE', type: 'strike', ap: 2, color: 'emerald', damage: 58, cost: 150, desc: 'Tier-2 Elite: Unleash rapid wind strikes totaling 58 true damage.' },
+                { id: 'shop-sylph-3', name: 'HURRICANE APOCALYPSE', type: 'strike', ap: 3, color: 'emerald', damage: 90, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 90 wind true damage!' }
+            ],
+            'valen': [
+                { id: 'shop-valen-2', name: 'AEGIS FORTRESS', type: 'heal', ap: 2, color: 'blue', armor: 35, heal: 20, cost: 150, desc: 'Tier-2 Elite: Fortify stance with 35 Armor block & restore 20 HP.' },
+                { id: 'shop-valen-3', name: 'DIVINE INVINCIBILITY', type: 'heal', ap: 3, color: 'blue', armor: 60, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to gain 60 Armor block!' }
+            ],
+            'nyx': [
+                { id: 'shop-nyx-2', name: 'SHADOW ASSASSINATION', type: 'strike', ap: 2, color: 'purple', damage: 62, cost: 150, desc: 'Tier-2 Elite: Strike from the shadows for 62 critical dark true damage.' },
+                { id: 'shop-nyx-3', name: 'ABSOLUTE SHADOW ECLIPSE', type: 'poison', ap: 3, color: 'purple', damage: 95, poison: 20, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 95 lethal dark true damage!' }
+            ],
+            'storm-knight': [
+                { id: 'shop-storm-2', name: 'THUNDER GODS WRATH', type: 'debuff', ap: 2, color: 'amber', damage: 65, cost: 200, desc: 'Tier-2 Elite: Summon divine lightning for 65 true damage & shock.' },
+                { id: 'shop-storm-3', name: 'ZEUS THUNDERSTORM', type: 'debuff', ap: 3, color: 'amber', damage: 100, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to strike with 100 electrical true damage!' }
+            ],
+            'ironclad-titan': [
+                { id: 'shop-titan-2', name: 'CONTINENTAL CRUSH', type: 'strike', ap: 2, color: 'stone', damage: 68, cost: 200, desc: 'Tier-2 Elite: Crush target with tectonic force for 68 earth true damage.' },
+                { id: 'shop-titan-3', name: 'WORLD SHATTERING METEOR', type: 'strike', ap: 3, color: 'stone', damage: 105, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to drop a colossal meteor for true damage!' }
+            ],
+            'chrono-warden': [
+                { id: 'shop-chrono-2', name: 'TEMPORAL REWIND', type: 'heal', ap: 2, color: 'yellow', heal: 45, cost: 250, desc: 'Tier-2 Elite: Rewind timeline to restore 45 HP & cleanse debuffs.' },
+                { id: 'shop-chrono-3', name: 'ETERNAL TIME COLLAPSE', type: 'heal', ap: 3, color: 'yellow', heal: 75, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to restore 75 HP!' }
+            ],
+            'sky-valkyrie': [
+                { id: 'shop-valkyrie-2', name: 'DIVINE JUDGMENT', type: 'debuff', ap: 2, color: 'orange', damage: 70, cost: 250, desc: 'Tier-2 Elite: Bring celestial judgment dealing 70 holy true damage.' },
+                { id: 'shop-valkyrie-3', name: 'HEAVENLY RAGNAROK', type: 'debuff', ap: 3, color: 'orange', damage: 105, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 105 holy true damage!' }
+            ],
+            'void-necromancer': [
+                { id: 'shop-void-2', name: 'SOUL HARVEST', type: 'poison', ap: 2, color: 'violet', damage: 65, heal: 25, cost: 300, desc: 'Tier-2 Elite: Harvest life force for 65 true damage & 25 HP drain.' },
+                { id: 'shop-void-3', name: 'VOID REALM ANNIHILATION', type: 'poison', ap: 3, color: 'violet', damage: 110, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 110 dark true damage!' }
+            ],
+            'blood-berserker': [
+                { id: 'shop-berserk-2', name: 'APOCALYPSE FRENZY', type: 'strike', ap: 2, color: 'rose', damage: 75, cost: 300, desc: 'Tier-2 Elite: Berserk rampage dealing 75 brutal physical true damage.' },
+                { id: 'shop-berserk-3', name: 'RAGING BLOOD GOD RAMPAGE', type: 'strike', ap: 3, color: 'rose', damage: 115, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 115 blood fury true damage!' }
+            ],
+            'astral-archmage': [
+                { id: 'shop-astral-2', name: 'GALAXY COLLAPSE', type: 'debuff', ap: 2, color: 'indigo', damage: 80, cost: 350, desc: 'Tier-2 Elite: Collapse cosmic orbits for 80 cosmic true damage.' },
+                { id: 'shop-astral-3', name: 'BIG BANG UNIVERSE STRIKE', type: 'debuff', ap: 3, color: 'indigo', damage: 120, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to unleash Big Bang true damage!' }
+            ]
+        };
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadMerchantConfig();
+            await syncAllRegisteredPlayers(true);
+            await updateMerchantPaymentDisplay();
+            try {
+                if (currentUser && currentUser.email) {
+                    const localWallet = currentUser.wallet || 0;
+                    const localWins = currentUser.wins || 0;
+                    const localXp = currentUser.xp || 0;
+
+                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                    let foundRecord = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+                    if (foundRecord && (foundRecord.wallet || 0) > localWallet) {
+                        currentUser.wallet = foundRecord.wallet;
+                    }
+
+                    if (supabaseClient) {
+                        const { data, error } = await supabaseClient
+                            .from('profiles')
+                            .select('*')
+                            .eq('email', currentUser.email)
+                            .single();
+                        if (data && !error) {
+                            currentUser = data;
+                            if (foundRecord && (foundRecord.wallet || 0) > (currentUser.wallet || 0)) {
+                                currentUser.wallet = foundRecord.wallet;
+                            }
+                            if (localWallet > (currentUser.wallet || 0) || localWins > (currentUser.wins || 0)) {
+                                currentUser.wallet = Math.max(localWallet, currentUser.wallet || 0);
+                                currentUser.wins = Math.max(localWins, currentUser.wins || 0);
+                                currentUser.xp = Math.max(localXp, currentUser.xp || 0);
+                                persistLocalStorage();
+                                await syncUserToSupabase();
+                            }
+
+                            if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                                currentUser.role = 'owner';
+                            }
+                            if (currentUser.status === 'frozen') {
+                                alert('Your account has been frozen by the administration.');
+                                logoutPlayer();
+                                return;
+                            }
+                            if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
+                            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [];
+                            restoreUserSession();
+                        } else {
+                            if (currentUser.email) {
+                                if (currentUser.status === 'frozen') {
+                                    alert('Your account has been frozen.');
+                                    logoutPlayer();
+                                    return;
+                                }
+                                restoreUserSession();
+                            } else {
+                                currentUser = null;
+                                localStorage.removeItem('aetheris_current_user');
+                            }
+                        }
+                    } else if (currentUser.email) {
+                        restoreUserSession();
+                    }
+                }
+            } catch (err) {}
+
+            setInterval(async () => {
+                if (currentUser && currentUser.email) {
+                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                    let me = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+                    if (me && me.wallet !== currentUser.wallet) {
+                        currentUser.wallet = me.wallet;
+                        updateWalletDisplay();
+                    }
+
+                    if (supabaseClient) {
+                        try {
+                            const { data } = await supabaseClient.from('profiles').select('wallet, wins, xp, status').eq('email', currentUser.email).single();
+                            if (data) {
+                                if (me && me.wallet > data.wallet) {
+                                    currentUser.wallet = me.wallet;
+                                    await syncUserToSupabase();
+                                    updateWalletDisplay();
+                                } else if (data.wallet > currentUser.wallet) {
+                                    currentUser.wallet = data.wallet;
+                                    currentUser.wins = data.wins;
+                                    currentUser.xp = data.xp;
+                                    updateWalletDisplay();
+                                    persistLocalStorage();
+                                } else if (data.wallet !== currentUser.wallet) {
+                                    await syncUserToSupabase();
+                                }
+                                if (data.status === 'frozen') {
+                                    alert('Your account has been frozen by the administration.');
+                                    logoutPlayer();
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                }
+
+                if (currentUser) {
+                    const activeModal = document.getElementById('modal-support-chat');
+                    if (activeModal && !activeModal.classList.contains('hidden')) {
+                        renderPlayerChatMessages(true);
+                    }
+                    const ownerView = document.getElementById('view-owner');
+                    if (ownerView && !ownerView.classList.contains('hidden')) {
+                        renderOwnerQueues();
+                    }
+                }
+            }, 1000);
+        });
+
+        function restoreUserSession() {
+            try {
+                const viewAuth = document.getElementById('view-auth');
+                if (viewAuth) viewAuth.classList.add('hidden');
+
+                if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase() || currentUser.role === 'owner') {
+                    currentUser.role = 'owner';
+                    const mainHeader = document.getElementById('main-header');
+                    const navWallet = document.getElementById('nav-wallet-container');
+                    const navNick = document.getElementById('nav-nickname-container');
+                    const navMenu = document.getElementById('nav-menu');
+                    const btnOwner = document.getElementById('btn-owner');
+                    if (mainHeader) mainHeader.classList.remove('hidden');
+                    if (navWallet) navWallet.classList.remove('hidden');
+                    if (navNick) navNick.classList.remove('hidden');
+                    if (navMenu) navMenu.classList.remove('hidden');
+                    const btnHub = document.getElementById('btn-hub');
+                    const btnRoster = document.getElementById('btn-roster');
+                    const btnShop = document.getElementById('btn-shop');
+                    const btnProfile = document.getElementById('btn-profile');
+                    const btnLeaderboard = document.getElementById('btn-leaderboard');
+                    const btnChat = document.getElementById('btn-support-chat');
+                    if (btnHub) btnHub.classList.add('hidden');
+                    if (btnRoster) btnRoster.classList.add('hidden');
+                    if (btnShop) btnShop.classList.add('hidden');
+                    if (btnProfile) btnProfile.classList.add('hidden');
+                    if (btnLeaderboard) btnLeaderboard.classList.add('hidden');
+                    if (btnChat) btnChat.classList.add('hidden');
+                    if (btnOwner) btnOwner.classList.remove('hidden');
+                    updateHeaderUserInfo();
+                    switchTab('owner');
+                    return;
+                }
+
+                const activeHero = currentUser.active_hero || currentUser.activeHero || 'pyra';
+                if (!activeHero) {
+                    const mainHeader = document.getElementById('main-header');
+                    const viewStarter = document.getElementById('view-starter-select');
+                    if (mainHeader) mainHeader.classList.add('hidden');
+                    if (viewStarter) viewStarter.classList.remove('hidden');
+                    renderStarterHeroesSelection();
+                    return;
+                }
+
+                const mainHeader = document.getElementById('main-header');
+                const navWallet = document.getElementById('nav-wallet-container');
+                const navNick = document.getElementById('nav-nickname-container');
+                const navMenu = document.getElementById('nav-menu');
+                if (mainHeader) mainHeader.classList.remove('hidden');
+                if (navWallet) navWallet.classList.remove('hidden');
+                if (navNick) navNick.classList.remove('hidden');
+                if (navMenu) navMenu.classList.remove('hidden');
+
+                updateHeaderUserInfo();
+                updateWalletDisplay();
+                setActiveHeroUI(activeHero);
+
+                const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
+                const hubExp = document.getElementById('hub-explevel-badge');
+                if (hubExp) hubExp.innerText = `Lv. ${expLevel}`;
+
+                const btnOwner = document.getElementById('btn-owner');
+                const btnHub = document.getElementById('btn-hub');
+                const btnRoster = document.getElementById('btn-roster');
+                const btnShop = document.getElementById('btn-shop');
+                const btnProfile = document.getElementById('btn-profile');
+                const btnLeaderboard = document.getElementById('btn-leaderboard');
+                const btnChat = document.getElementById('btn-support-chat');
+                if (btnOwner) btnOwner.classList.add('hidden');
+                if (btnHub) btnHub.classList.remove('hidden');
+                if (btnRoster) btnRoster.classList.remove('hidden');
+                if (btnShop) btnShop.classList.remove('hidden');
+                if (btnProfile) btnProfile.classList.remove('hidden');
+                if (btnLeaderboard) btnLeaderboard.classList.remove('hidden');
+                if (btnChat) btnChat.classList.remove('hidden');
+                switchTab('hub');
+            } catch(err) {}
+        }
+
+        function updateHeaderUserInfo() {
+            if (!currentUser) return;
+            const nickText = currentUser.nickname || 'PLAYER';
+            const navHeaderNick = document.getElementById('nav-header-nickname');
+            if (navHeaderNick) navHeaderNick.innerText = nickText;
+
+            const nickBadge = document.getElementById('player-nickname-badge');
+            const fsPlayerName = document.getElementById('fs-player-name');
+            const fsPlayerAvatar = document.getElementById('fs-player-avatar-username');
+            if (nickBadge) nickBadge.innerText = nickText;
+            if (fsPlayerName) fsPlayerName.innerText = nickText.toUpperCase();
+            if (fsPlayerAvatar) fsPlayerAvatar.innerText = nickText.toUpperCase();
+        }
+
+        function renderStarterHeroesSelection() {
+            const starterHeroes = heroes.filter(h => h.isStarter);
+            const container = document.getElementById('starter-heroes-container');
+            if (!container) return;
+            container.innerHTML = starterHeroes.map(h => `
+                <div onclick="window.chooseStarterHero('${h.id}')" class="bg-slate-900 border border-slate-800 hover:border-amber-500 rounded-2xl p-4 cursor-pointer card-hover flex items-center space-x-3.5">
+                    <div class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-xl">
+                        <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">${h.role}</span>
+                        <h3 class="font-cinzel font-bold text-white text-sm">${h.name}</h3>
+                        <p class="text-[11px] text-slate-400 truncate">${h.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function chooseStarterHero(heroId) {
+            if (!currentUser) return;
+            currentUser.active_hero = heroId;
+            currentUser.unlocked_heroes = [heroId];
+            persistLocalStorage();
+            await syncUserToSupabase();
+            const viewStarter = document.getElementById('view-starter-select');
+            if (viewStarter) viewStarter.classList.add('hidden');
+            restoreUserSession();
+        }
+        window.chooseStarterHero = chooseStarterHero;
+
+        function updateWalletDisplay() {
+            if (!currentUser) return;
+            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let found = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
+            if (found && found.wallet !== undefined && found.wallet > currentUser.wallet) {
+                currentUser.wallet = found.wallet;
+            }
+            const bal = currentUser.wallet || currentUser.balance || 0;
+            const navWallet = document.getElementById('nav-wallet');
+            if (navWallet) navWallet.innerText = `₱${Number(bal).toFixed(2)}`;
+            const withdrawAcct = document.getElementById('withdraw-account');
+            const withdrawName = document.getElementById('withdraw-name');
+            if (withdrawAcct) withdrawAcct.value = currentUser.phone || '';
+            if (withdrawName) withdrawName.value = currentUser.name || '';
+        }
+
+        function setActiveHeroUI(heroId) {
+            const hero = heroes.find(h => h.id === heroId) || heroes[0];
+            const activeName = document.getElementById('active-hero-name');
+            const activeImg = document.getElementById('active-hero-img-el');
+            const fsPlayerImg = document.getElementById('fs-player-img-el');
+            if (activeName) activeName.innerText = hero.name;
+            if (activeImg) activeImg.src = hero.iconImg;
+            if (fsPlayerImg) fsPlayerImg.src = hero.iconImg;
+        }
+
+        async function switchTab(tabName) {
+            const views = ['view-hub', 'view-select', 'view-shop', 'view-owner', 'view-auth', 'view-starter-select'];
+            views.forEach(v => {
+                const el = document.getElementById(v);
+                if (el) el.classList.add('hidden');
+            });
+
+            const btnHub = document.getElementById('btn-hub');
+            const btnRoster = document.getElementById('btn-roster');
+            const btnShop = document.getElementById('btn-shop');
+            const btnOwner = document.getElementById('btn-owner');
+
+            [btnHub, btnRoster, btnShop, btnOwner].forEach(b => {
+                if (b) {
+                    b.classList.remove('bg-blue-600', 'text-white');
+                    b.classList.add('text-slate-400');
+                }
+            });
+
+            if (tabName === 'hub') {
+                const hub = document.getElementById('view-hub');
+                if (hub) hub.classList.remove('hidden');
+                if (btnHub) { btnHub.classList.add('bg-blue-600', 'text-white'); btnHub.classList.remove('text-slate-400'); }
+                await loadMerchantConfig();
+                updateWalletDisplay();
+                switchPlayerHubPayment('gcash');
+            } else if (tabName === 'select') {
+                const sel = document.getElementById('view-select');
+                if (sel) sel.classList.remove('hidden');
+                if (btnRoster) { btnRoster.classList.add('bg-blue-600', 'text-white'); btnRoster.classList.remove('text-slate-400'); }
+                renderHeroRoster();
+            } else if (tabName === 'shop') {
+                const shp = document.getElementById('view-shop');
+                if (shp) shp.classList.remove('hidden');
+                if (btnShop) { btnShop.classList.add('bg-blue-600', 'text-white'); btnShop.classList.remove('text-slate-400'); }
+                renderShopSkills();
+            } else if (tabName === 'owner') {
+                const own = document.getElementById('view-owner');
+                if (own) own.classList.remove('hidden');
+                if (btnOwner) { btnOwner.classList.add('bg-blue-600', 'text-white'); btnOwner.classList.remove('text-slate-400'); }
+                await loadMerchantConfig();
+                await syncAllRegisteredPlayers(true);
+                renderOwnerQueues();
+                updateMerchantPaymentDisplay();
+            }
+        }
+        window.switchTab = switchTab;
+
+        async function forceSyncOwnerPortal() {
+            await syncAllRegisteredPlayers(true);
+            await loadMerchantConfig();
+            renderOwnerQueues();
+            alert('Owner Portal synced successfully!');
+        }
+        window.forceSyncOwnerPortal = forceSyncOwnerPortal;
+
+        function togglePass(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerText = 'HIDE';
+            } else {
+                input.type = 'password';
+                btn.innerText = 'SHOW';
+            }
+        }
+        window.togglePass = togglePass;
+
+        async function showAuthMode(mode) {
+            const loginBox = document.getElementById('auth-login-box');
+            const registerBox = document.getElementById('auth-register-box');
+            const forgotBox = document.getElementById('auth-forgot-box');
+            if (loginBox) loginBox.classList.add('hidden');
+            if (registerBox) registerBox.classList.add('hidden');
+            if (forgotBox) forgotBox.classList.add('hidden');
+
+            if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
+            if (mode === 'register' && registerBox) {
+                registerBox.classList.remove('hidden');
+                await loadMerchantConfig();
+                switchRegPaymentMethod('gcash');
+            }
+            if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
+        }
+        window.showAuthMode = showAuthMode;
+
+        async function switchRegPaymentMethod(method) {
+            currentRegMethod = method;
+            await loadMerchantConfig();
+            const btnGcash = document.getElementById('btn-reg-gcash');
+            const btnMaya = document.getElementById('btn-reg-maya');
+            const qrBox = document.getElementById('reg-active-qr');
+
+            if (method === 'gcash') {
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.gcashQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No GCash QR';
+                }
+            } else {
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.mayaQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No Maya QR';
+                }
+            }
+        }
+        window.switchRegPaymentMethod = switchRegPaymentMethod;
+
+        async function switchTopUpPaymentMethod(method) {
+            currentTopupMethod = method;
+            await loadMerchantConfig();
+            const btnGcash = document.getElementById('btn-topup-gcash');
+            const btnMaya = document.getElementById('btn-topup-maya');
+            const qrBox = document.getElementById('topup-active-qr');
+
+            if (method === 'gcash') {
+                if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.gcashQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No GCash QR';
+                }
+            } else {
+                if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.mayaQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No Maya QR';
+                }
+            }
+        }
+        window.switchTopUpPaymentMethod = switchTopUpPaymentMethod;
+
+        async function switchPlayerHubPayment(method) {
+            currentHubMethod = method;
+            await loadMerchantConfig();
+            const btnGcash = document.getElementById('btn-hub-gcash');
+            const btnMaya = document.getElementById('btn-hub-maya');
+            const qrBox = document.getElementById('player-active-qr');
+
+            if (method === 'gcash') {
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.gcashQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No GCash QR';
+                }
+            } else {
+                if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
+                if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
+                if (merchantConfig.mayaQR && qrBox) {
+                    qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+                } else if (qrBox) {
+                    qrBox.innerHTML = 'No Maya QR';
+                }
+            }
+        }
+        window.switchPlayerHubPayment = switchPlayerHubPayment;
+
+        async function updateMerchantPaymentDisplay() {
+            await loadMerchantConfig();
+            const inputGcashNum = document.getElementById('input-gcash-num');
+            const inputGcashName = document.getElementById('input-gcash-name');
+            const inputMayaNum = document.getElementById('input-maya-num');
+            const inputMayaName = document.getElementById('input-maya-name');
+            const ownerGcashPreview = document.getElementById('owner-gcash-qr-preview');
+            const ownerMayaPreview = document.getElementById('owner-maya-qr-preview');
+
+            if (inputGcashNum) inputGcashNum.value = merchantConfig.gcashNum;
+            if (inputGcashName) inputGcashName.value = merchantConfig.gcashName;
+            if (inputMayaNum) inputMayaNum.value = merchantConfig.mayaNum;
+            if (inputMayaName) inputMayaName.value = merchantConfig.mayaName;
+
+            if (merchantConfig.gcashQR && ownerGcashPreview) {
+                ownerGcashPreview.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
+            } else if (ownerGcashPreview) {
+                ownerGcashPreview.innerHTML = 'No QR';
+            }
+
+            if (merchantConfig.mayaQR && ownerMayaPreview) {
+                ownerMayaPreview.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
+            } else if (ownerMayaPreview) {
+                ownerMayaPreview.innerHTML = 'No QR';
+            }
+        }
+
+        async function saveGcashSettings() {
+            const num = document.getElementById('input-gcash-num').value.trim();
+            const name = document.getElementById('input-gcash-name').value.trim();
+            const fileInput = document.getElementById('input-gcash-qr');
+
+            if (num) merchantConfig.gcashNum = num;
+            if (name) merchantConfig.gcashName = name;
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    merchantConfig.gcashQR = e.target.result;
+                    await persistMerchantConfig();
+                    updateMerchantPaymentDisplay();
+                    alert('GCash settings and QR saved & synced successfully!');
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                await persistMerchantConfig();
+                updateMerchantPaymentDisplay();
+                alert('GCash settings saved & synced successfully!');
+            }
+        }
+        window.saveGcashSettings = saveGcashSettings;
+
+        async function saveMayaSettings() {
+            const num = document.getElementById('input-maya-num').value.trim();
+            const name = document.getElementById('input-maya-name').value.trim();
+            const fileInput = document.getElementById('input-maya-qr');
+
+            if (num) merchantConfig.mayaNum = num;
+            if (name) merchantConfig.mayaName = name;
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    merchantConfig.mayaQR = e.target.result;
+                    await persistMerchantConfig();
+                    updateMerchantPaymentDisplay();
+                    alert('Maya settings and QR saved & synced successfully!');
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                await persistMerchantConfig();
+                updateMerchantPaymentDisplay();
+                alert('Maya settings saved & synced successfully!');
+            }
+        }
+        window.saveMayaSettings = saveMayaSettings;
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            if (!email || !pass) {
+                alert('Please enter your email and password.');
+                return;
+            }
+
+            const hashed = await hashPassword(pass);
+            if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                currentUser = {
+                    email: EXCLUSIVE_OWNER_EMAIL,
+                    name: 'John Carlo Estrada Morales',
+                    nickname: 'BOSS',
+                    phone: '09923978537',
+                    role: 'owner',
+                    status: 'active',
+                    wallet: 999999,
+                    wins: 999,
+                    xp: 5000,
+                    active_hero: 'pyra',
+                    unlocked_heroes: heroes.map(h => h.id),
+                    unlockedSkills: {}
+                };
+                persistLocalStorage();
+                restoreUserSession();
+                return;
+            }
+
+            const foundPlayerRecord = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
+            if (foundPlayerRecord && foundPlayerRecord.status === 'frozen') {
+                alert('Your account has been frozen by the administration.');
+                return;
+            }
+
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .eq('email', email)
+                        .single();
+                    if (data && !error) {
+                        if (data.status === 'frozen') {
+                            alert('Your account has been frozen.');
+                            return;
+                        }
+                        if (data.password_hash === hashed || data.password === pass) {
+                            currentUser = data;
+                            if (foundPlayerRecord && (foundPlayerRecord.wallet || 0) > (currentUser.wallet || 0)) {
+                                currentUser.wallet = foundPlayerRecord.wallet;
+                            }
+                            if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
+                            persistLocalStorage();
+                            restoreUserSession();
+                            return;
+                        } else {
+                            alert('Invalid password.');
+                            return;
+                        }
+                    }
+                } catch(err) {}
+            }
+
+            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+            const found = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+            if (found && (found.password_hash === hashed || found.password === pass)) {
+                if (found.status === 'frozen') {
+                    alert('Your account has been frozen.');
+                    return;
+                }
+                currentUser = found;
+                if (foundPlayerRecord && (foundPlayerRecord.wallet || 0) > (currentUser.wallet || 0)) {
+                    currentUser.wallet = foundPlayerRecord.wallet;
+                }
+                if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
+                persistLocalStorage();
+                restoreUserSession();
+            } else {
+                alert('Account not found or invalid credentials. Please check or register.');
+            }
+        }
+        window.handleLogin = handleLogin;
+
+        async function handleRegister() {
+            const name = document.getElementById('reg-name').value.trim();
+            const nickname = document.getElementById('reg-nickname').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const bday = document.getElementById('reg-bday').value;
+            const pass = document.getElementById('reg-pass').value;
+            const ref = document.getElementById('reg-ref').value.trim();
+            const receiptFile = document.getElementById('reg-receipt').files[0];
+            const checkTerms = document.getElementById('reg-check-terms').checked;
+            const checkPrivacy = document.getElementById('reg-check-privacy').checked;
+
+            if (!name || !nickname || !phone || !email || !bday || !pass || !ref) {
+                alert('Please fill out all registration fields.');
+                return;
+            }
+            if (!checkTerms || !checkPrivacy) {
+                alert('You must accept the Terms and Conditions and Privacy Policy.');
+                return;
+            }
+
+            let receiptBase64 = null;
+            if (receiptFile) {
+                receiptBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(receiptFile);
+                });
+            }
+
+            const hashedPassword = await hashPassword(pass);
+            const now = new Date();
+            const newUserData = {
+                id: Date.now(),
+                name, nickname, phone, email, birthday: bday,
+                password_hash: hashedPassword,
+                wallet: 0, wins: 0, xp: 0,
+                active_hero: null,
+                unlocked_heroes: [],
+                unlockedSkills: {},
+                registration_ref: ref,
+                registration_receipt: receiptBase64,
+                payment_method: currentRegMethod,
+                status: 'pending_registration',
+                first_fight_done: false,
+                registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
+            };
+
+            let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            pendingRegs.push(newUserData);
+            localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
+
+            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+            if (!localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+                localUsers.push(newUserData);
+                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+            } else {
+                localUsers = localUsers.map(u => u.email.toLowerCase() === email.toLowerCase() ? newUserData : u);
+                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+            }
+
+            notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
+            logSystemActivity('Registration Submitted', `Player ${nickname} (${email}) submitted registration request with ref ${ref} via ${currentRegMethod}.`, nickname);
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' });
+                } catch(err) {}
+            }
+
+            window.dispatchEvent(new Event('aetheris_data_updated'));
+
+            alert('Registration submitted successfully! Your account is pending owner approval.');
+            showAuthMode('login');
+        }
+        window.handleRegister = handleRegister;
+
+        function submitResetRequest() {
+            const email = document.getElementById('forgot-email').value.trim();
+            const bday = document.getElementById('forgot-bday').value;
+            if (!email || !bday) {
+                alert('Please provide your registered email and birthday.');
+                return;
+            }
+            pendingResets.push({ email, birthday: bday, timestamp: Date.now() });
+            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
+            persistLocalStorage();
+            
+            window.dispatchEvent(new Event('aetheris_data_updated'));
+
+            alert('Password reset request submitted to owner for verification.');
+            showAuthMode('login');
+        }
+        window.submitResetRequest = submitResetRequest;
+
+        function logoutPlayer() {
+            currentUser = null;
+            localStorage.removeItem('aetheris_current_user');
+            location.reload();
+        }
+        window.logoutPlayer = logoutPlayer;
+
+        function openModal(type) {
+            const backdrop = document.getElementById('modal-backdrop');
+            if (backdrop) backdrop.classList.remove('hidden');
+            const modals = ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-support-chat', 'modal-terms', 'modal-privacy', 'modal-player-profile', 'modal-leaderboard'];
+            modals.forEach(m => {
+                const el = document.getElementById(m);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(`modal-${type}`);
+            if (target) target.classList.remove('hidden');
+
+            if (type === 'topup') {
+                switchTopUpPaymentMethod('gcash');
+            }
+            if (type === 'support-chat') {
+                renderPlayerChatMessages();
+            }
+        }
+        window.openModal = openModal;
+
+        function closeModal() {
+            const backdrop = document.getElementById('modal-backdrop');
+            if (backdrop) backdrop.classList.add('hidden');
+        }
+        window.closeModal = closeModal;
+
+        function openLegalModal(type) {
+            openModal(type);
+        }
+        window.openLegalModal = openLegalModal;
+
+        function openPlayerProfileModal() {
+            openModal('player-profile');
+            const content = document.getElementById('player-profile-content');
+            if (!content || !currentUser) return;
+            const playerBattles = battleHistoryLog.filter(b => b.playerEmail && currentUser.email && b.playerEmail.toLowerCase() === currentUser.email.toLowerCase());
+            content.innerHTML = `
+                <div class="space-y-3">
+                    <div class="space-y-1">
+                        <p><strong>Name:</strong> ${currentUser.name}</p>
+                        <p><strong>Username:</strong> ${currentUser.nickname}</p>
+                        <p><strong>Email:</strong> ${currentUser.email}</p>
+                        <p><strong>Phone:</strong> ${currentUser.phone}</p>
+                        <p><strong>Wins:</strong> ${currentUser.wins || 0}</p>
+                        <p><strong>EXP:</strong> ${currentUser.xp || 0}</p>
+                    </div>
+                    <div class="border-t border-slate-800 pt-2 space-y-1.5">
+                        <h4 class="font-cinzel text-amber-400 font-bold">Your Battle History (${playerBattles.length})</h4>
+                        ${playerBattles.length === 0 ? '<p class="text-slate-500">No battles recorded yet.</p>':
+                          playerBattles.map(b => `
+                            <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[11px] space-y-0.5">
+                                <div class="flex justify-between text-amber-400 font-bold">
+                                    <span>vs ${b.opponent}</span>
+                                    <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${b.result}</span>
+                                </div>
+                                <div class="text-slate-400 text-[10px]">
+                                    <span>Balance: ₱${b.preBalance} ➔ ₱${b.postBalance}</span><br>
+                                    <span>📅 ${b.date} ⏰ ${b.time}</span>
+                                </div>
+                            </div>
+                          `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        window.openPlayerProfileModal = openPlayerProfileModal;
+
+        function getRankTier(xp, wins) {
+            if (xp >= 2500 || wins >= 25) return 'Platinum I';
+            if (xp >= 1400 || wins >= 15) return 'Gold II';
+            if (xp >= 950 || wins >= 10) return 'Gold I';
+            if (xp >= 600 || wins >= 7) return 'Silver II';
+            if (xp >= 350 || wins >= 4) return 'Silver I';
+            return 'Bronze I';
+        }
+
+        async function openLeaderboardModal() {
+            openModal('leaderboard');
+            const list = document.getElementById('leaderboard-list-content');
+            if (!list) return;
+
+            await syncAllRegisteredPlayers(true);
+
+            const botEntries = [
+                { nickname: 'Kenjie', email: 'kenjie@bot.com', xp: 1250, wins: 14, status: 'active', active_hero: 'storm-knight' },
+                { nickname: 'Kenneth', email: 'kenneth@bot.com', xp: 980, wins: 10, status: 'active', active_hero: 'sylph' },
+                { nickname: 'Clyde', email: 'clyde@bot.com', xp: 850, wins: 8, status: 'active', active_hero: 'valen' },
+                { nickname: 'Joana', email: 'joana@bot.com', xp: 720, wins: 7, status: 'active', active_hero: 'pyra' },
+                { nickname: 'Glenda', email: 'glenda@bot.com', xp: 600, wins: 5, status: 'active', active_hero: 'nyx' },
+                { nickname: 'Glenn', email: 'glenn@bot.com', xp: 450, wins: 4, status: 'active', active_hero: 'titan-1' },
+                { nickname: 'Mark', email: 'mark@bot.com', xp: 320, wins: 3, status: 'active', active_hero: 'pyra' },
+                { nickname: 'Rica', email: 'rica@bot.com', xp: 210, wins: 2, status: 'active', active_hero: 'sylph' }
+            ];
+
+            let combinedMap = new Map();
+            botEntries.forEach(b => combinedMap.set(b.email.toLowerCase(), b));
+            registeredPlayersList.forEach(p => {
+                if (p.email.toLowerCase() !== EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                    combinedMap.set(p.email.toLowerCase(), p);
+                }
+            });
+
+            let sortedLeaderboard = Array.from(combinedMap.values()).sort((a, b) => {
                 if ((b.xp || 0) !== (a.xp || 0)) return (b.xp || 0) - (a.xp || 0);
                 return (b.wins || 0) - (a.wins || 0);
             }).slice(0, 10);
