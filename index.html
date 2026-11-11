@@ -460,7 +460,7 @@
                             <div id="owner-gcash-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                             <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="file" id="input-gcash-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
+                            <input type="file" id="input-gcash-qr" accept="image/*" onchange="window.previewSelectedQR(event, 'gcash')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
                             <button onclick="window.saveGcashSettings()" class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow">Save GCash Settings</button>
                         </div>
                         <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
@@ -468,7 +468,7 @@
                             <div id="owner-maya-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
                             <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                            <input type="file" id="input-maya-qr" accept="image/*" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
+                            <input type="file" id="input-maya-qr" accept="image/*" onchange="window.previewSelectedQR(event, 'maya')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
                             <button onclick="window.saveMayaSettings()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg shadow">Save Maya Settings</button>
                         </div>
                     </div>
@@ -877,6 +877,28 @@
                 reader.readAsDataURL(file);
             });
         }
+
+        // Instant preview as soon as a file is chosen
+        async function previewSelectedQR(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+            try {
+                const base64 = await compressImage(file, 200, 200, 0.6);
+                if (type === 'gcash') {
+                    merchantConfig.gcashQR = base64;
+                    const preview = document.getElementById('owner-gcash-qr-preview');
+                    if (preview) preview.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-lg">`;
+                } else {
+                    merchantConfig.mayaQR = base64;
+                    const preview = document.getElementById('owner-maya-qr-preview');
+                    if (preview) preview.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-lg">`;
+                }
+            } catch(err) {
+                console.error('Preview error:', err);
+                alert('Could not preview image.');
+            }
+        }
+        window.previewSelectedQR = previewSelectedQR;
 
         function saveQRCodeImage(method) {
             const qrData = method === 'gcash' ? merchantConfig.gcashQR : merchantConfig.mayaQR;
