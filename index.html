@@ -814,11 +814,11 @@
 
         let currentDuelBet = 50;
         let preBattleWallet = 0;
-        let battleHistoryLog = JSON.parse(localStorage.getItem('aetheris_battle_history')) || [];
-        let pendingResets = JSON.parse(localStorage.getItem('aetheris_pending_resets')) || [];
-        let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
-        let balanceAdderHistory = JSON.parse(localStorage.getItem('aetheris_balance_adder_history')) || [];
-        let walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
+        let battleHistoryLog = [];
+        let pendingResets = [];
+        let systemAuditLogs = [];
+        let balanceAdderHistory = [];
+        let walletTransactionLedger = [];
         let registeredPlayersList = [];
         let merchantConfig = {
             gcashNum: '09923978537',
@@ -862,7 +862,7 @@
             if (!supabaseClient) return;
             try {
                 supabaseClient
-                    .channel('aetheris-realtime')
+                    .channel('aetheris-realtime-global')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings' }, async (payload) => {
                         await loadAllCloudState();
                         const ownerView = document.getElementById('view-owner');
@@ -881,17 +881,18 @@
                         if (ownerView && !ownerView.classList.contains('hidden')) {
                             renderOwnerQueues();
                         }
+                        updateWalletDisplay();
                     })
                     .subscribe();
             } catch(e) {}
         }
 
         async function loadAllCloudState() {
-            battleHistoryLog = await cloudGet('battle_history', battleHistoryLog);
-            pendingResets = await cloudGet('pending_resets', pendingResets);
-            systemAuditLogs = await cloudGet('audit_logs', systemAuditLogs);
-            balanceAdderHistory = await cloudGet('balance_adder_history', balanceAdderHistory);
-            walletTransactionLedger = await cloudGet('wallet_ledger', walletTransactionLedger);
+            battleHistoryLog = await cloudGet('battle_history', []);
+            pendingResets = await cloudGet('pending_resets', []);
+            systemAuditLogs = await cloudGet('audit_logs', []);
+            balanceAdderHistory = await cloudGet('balance_adder_history', []);
+            walletTransactionLedger = await cloudGet('wallet_ledger', []);
             merchantConfig = await cloudGet('merchant_config', merchantConfig);
             await syncAllRegisteredPlayers(true);
         }
@@ -1080,6 +1081,7 @@
             if (ownerView && !ownerView.classList.contains('hidden')) {
                 renderOwnerQueues();
             }
+            updateWalletDisplay();
         });
 
         async function requestRegistrationNotificationPermission() {
@@ -1819,9 +1821,6 @@
             if (!localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
                 localUsers.push(newUserData);
                 await cloudSet('registered_users', localUsers);
-            } else {
-                localUsers = localUsers.map(u => u.email.toLowerCase() === email.toLowerCase() ? newUserData : u);
-                await cloudSet('registered_users', localUsers);
             }
 
             notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
@@ -1830,9 +1829,7 @@
             if (supabaseClient) {
                 try {
                     await supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' });
-                } catch(err) {
-                    console.error('Supabase registration profile sync error:', err);
-                }
+                } catch(err) {}
             }
 
             alert('Registration submitted successfully! Your account is pending owner approval.');
@@ -2378,10 +2375,6 @@
                 let logMsg = '';
                 let enemyDmg = 0;
 
-                // Bot Tiered Health Logic:
-                // - Below 20 HP: Heals 60 HP and attacks for 25 damage
-                // - Below 60 HP (between 20 and 59): Recovery Surge (healing + armor)
-                // - 60 HP or more: Standard attack (25 damage or card damage)
                 if (duelState.enemyHp < 20) {
                     const healAmt = 60;
                     duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmt);
@@ -2446,7 +2439,7 @@
             const timeStr = now.toLocaleTimeString();
 
             const preBal = currentUser.wallet || 0;
-            let prize = currentDuelBet * 2 * 0.95; // 5% fee
+            let prize = currentDuelBet * 2 * 0.95;
 
             if (isVictory) {
                 currentUser.wallet = preBal + prize;
