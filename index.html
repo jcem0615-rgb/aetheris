@@ -866,8 +866,11 @@
             localStorage.setItem('aetheris_' + key, JSON.stringify(value));
             if (supabaseClient) {
                 try {
-                    await supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' });
-                } catch(e) {}
+                    const { error } = await supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' });
+                    if (error) console.error('CloudSet error:', error);
+                } catch(e) {
+                    console.error('CloudSet exception:', e);
+                }
             }
             window.dispatchEvent(new Event('aetheris_data_updated'));
         }
@@ -1633,10 +1636,10 @@
             const ownerGcashPreview = document.getElementById('owner-gcash-qr-preview');
             const ownerMayaPreview = document.getElementById('owner-maya-qr-preview');
 
-            if (inputGcashNum) inputGcashNum.value = merchantConfig.gcashNum;
-            if (inputGcashName) inputGcashName.value = merchantConfig.gcashName;
-            if (inputMayaNum) inputMayaNum.value = merchantConfig.mayaNum;
-            if (inputMayaName) inputMayaName.value = merchantConfig.mayaName;
+            if (inputGcashNum) inputGcashNum.value = merchantConfig.gcashNum || '';
+            if (inputGcashName) inputGcashName.value = merchantConfig.gcashName || '';
+            if (inputMayaNum) inputMayaNum.value = merchantConfig.mayaNum || '';
+            if (inputMayaName) inputMayaName.value = merchantConfig.mayaName || '';
 
             if (merchantConfig.gcashQR && ownerGcashPreview) {
                 ownerGcashPreview.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
@@ -1652,51 +1655,71 @@
         }
 
         async function saveGcashSettings() {
-            const num = document.getElementById('input-gcash-num').value.trim();
-            const name = document.getElementById('input-gcash-name').value.trim();
-            const fileInput = document.getElementById('input-gcash-qr');
+            try {
+                const num = document.getElementById('input-gcash-num').value.trim();
+                const name = document.getElementById('input-gcash-name').value.trim();
+                const fileInput = document.getElementById('input-gcash-qr');
 
-            if (num) merchantConfig.gcashNum = num;
-            if (name) merchantConfig.gcashName = name;
+                merchantConfig.gcashNum = num;
+                merchantConfig.gcashName = name;
 
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    merchantConfig.gcashQR = e.target.result;
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            merchantConfig.gcashQR = e.target.result;
+                            await cloudSet('merchant_config', merchantConfig);
+                            updateMerchantPaymentDisplay();
+                            alert('GCash settings and QR saved & synced successfully!');
+                        } catch (err) {
+                            console.error('GCash save error:', err);
+                            alert('Error saving GCash settings: ' + err.message);
+                        }
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
                     await cloudSet('merchant_config', merchantConfig);
                     updateMerchantPaymentDisplay();
-                    alert('GCash settings and QR saved & synced to cloud!');
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                await cloudSet('merchant_config', merchantConfig);
-                updateMerchantPaymentDisplay();
-                alert('GCash settings saved & synced to cloud!');
+                    alert('GCash settings saved & synced successfully!');
+                }
+            } catch (err) {
+                console.error('GCash save error:', err);
+                alert('Error saving GCash settings: ' + err.message);
             }
         }
         window.saveGcashSettings = saveGcashSettings;
 
         async function saveMayaSettings() {
-            const num = document.getElementById('input-maya-num').value.trim();
-            const name = document.getElementById('input-maya-name').value.trim();
-            const fileInput = document.getElementById('input-maya-qr');
+            try {
+                const num = document.getElementById('input-maya-num').value.trim();
+                const name = document.getElementById('input-maya-name').value.trim();
+                const fileInput = document.getElementById('input-maya-qr');
 
-            if (num) merchantConfig.mayaNum = num;
-            if (name) merchantConfig.mayaName = name;
+                merchantConfig.mayaNum = num;
+                merchantConfig.mayaName = name;
 
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    merchantConfig.mayaQR = e.target.result;
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            merchantConfig.mayaQR = e.target.result;
+                            await cloudSet('merchant_config', merchantConfig);
+                            updateMerchantPaymentDisplay();
+                            alert('Maya settings and QR saved & synced successfully!');
+                        } catch (err) {
+                            console.error('Maya save error:', err);
+                            alert('Error saving Maya settings: ' + err.message);
+                        }
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
                     await cloudSet('merchant_config', merchantConfig);
                     updateMerchantPaymentDisplay();
-                    alert('Maya settings and QR saved & synced to cloud!');
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                await cloudSet('merchant_config', merchantConfig);
-                updateMerchantPaymentDisplay();
-                alert('Maya settings saved & synced to cloud!');
+                    alert('Maya settings saved & synced successfully!');
+                }
+            } catch (err) {
+                console.error('Maya save error:', err);
+                alert('Error saving Maya settings: ' + err.message);
             }
         }
         window.saveMayaSettings = saveMayaSettings;
