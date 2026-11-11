@@ -843,8 +843,8 @@
             mayaQR: null
         };
 
-        // ================= IMAGE COMPRESSION UTILITY =================
-        function compressImage(file, maxWidth = 300, maxHeight = 300, quality = 0.8) {
+        // ================= IMAGE COMPRESSION UTILITY (Optimized to Prevent Quota Errors) =================
+        function compressImage(file, maxWidth = 150, maxHeight = 150, quality = 0.5) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -883,7 +883,7 @@
             const file = event.target.files[0];
             if (!file) return;
             try {
-                const base64 = await compressImage(file, 200, 200, 0.6);
+                const base64 = await compressImage(file, 150, 150, 0.5);
                 if (type === 'gcash') {
                     merchantConfig.gcashQR = base64;
                     const preview = document.getElementById('owner-gcash-qr-preview');
@@ -915,8 +915,17 @@
         }
         window.saveQRCodeImage = saveQRCodeImage;
 
-        // ================= SUPABASE REALTIME & CLOUD STATE SYNC =================
+        // ================= ROBUST LOCALSTORAGE-FIRST STATE SYNC =================
         async function cloudGet(key, fallback) {
+            // 1. Always load from LocalStorage FIRST for instant, offline-first reliability
+            try {
+                const local = localStorage.getItem('aetheris_' + key);
+                if (local !== null && local !== undefined) {
+                    return JSON.parse(local);
+                }
+            } catch(e) {}
+
+            // 2. If nothing in LocalStorage, check Supabase
             if (supabaseClient) {
                 try {
                     const { data, error } = await supabaseClient.from('app_settings').select('value').eq('key', key).single();
@@ -928,32 +937,28 @@
                     }
                 } catch(e) {}
             }
-            try {
-                const local = localStorage.getItem('aetheris_' + key);
-                return local ? JSON.parse(local) : fallback;
-            } catch(e) {
-                return fallback;
-            }
+            return fallback;
         }
 
-        // Non-blocking cloud set so UI / saving never hangs or freezes
         async function cloudSet(key, value) {
+            // 1. Save to LocalStorage immediately and reliably
             try {
                 localStorage.setItem('aetheris_' + key, JSON.stringify(value));
             } catch (e) {
                 console.warn('LocalStorage quota warning:', e);
-                alert('Warning: Storage quota exceeded! The QR image file may be too large. Try uploading a smaller or more compressed image.');
+                alert('Storage warning: QR image file is too large or storage is full. Please upload a smaller image.');
+                return false;
             }
+            // 2. Background sync to Supabase (non-blocking)
             if (supabaseClient) {
                 try {
                     supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' }).then(({ error }) => {
-                        if (error) console.error('CloudSet error:', error);
-                    }).catch(err => console.error('CloudSet exception:', err));
-                } catch(e) {
-                    console.error('CloudSet exception:', e);
-                }
+                        if (error) console.warn('Cloud sync note:', error);
+                    }).catch(err => {});
+                } catch(e) {}
             }
             window.dispatchEvent(new Event('aetheris_data_updated'));
+            return true;
         }
 
         let ownerPollingInterval = null;
@@ -964,13 +969,6 @@
                 supabaseClient
                     .channel('aetheris-realtime-global')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings' }, async (payload) => {
-                        await loadAllCloudState();
-                        const ownerView = document.getElementById('view-owner');
-                        if (ownerView && !ownerView.classList.contains('hidden')) {
-                            renderOwnerQueues();
-                        }
-                    })
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, async (payload) => {
                         await loadAllCloudState();
                         const ownerView = document.getElementById('view-owner');
                         if (ownerView && !ownerView.classList.contains('hidden')) {
@@ -1033,39 +1031,6 @@
 
             if (currentUser && currentUser.email) {
                 playersMap.set(currentUser.email.toLowerCase(), currentUser);
-            }
-
-            if (supabaseClient) {
-                try {
-                    const { data, error } = await supabaseClient.from('profiles').select('*');
-                    if (data && !error) {
-                        data.forEach(p => {
-                            if (p && p.email) {
-                                const emailKey = p.email.toLowerCase();
-                                let localExisting = playersMap.get(emailKey);
-                                let finalWallet = p.wallet || p.balance || 0;
-                                if (localExisting && localExisting.wallet !== undefined && localExisting.wallet > finalWallet) {
-                                    finalWallet = localExisting.wallet;
-                                }
-
-                                playersMap.set(emailKey, {
-                                    id: p.id || (localExisting ? localExisting.id : Date.now()),
-                                    email: p.email,
-                                    name: p.name || p.fullName || (localExisting ? localExisting.name : 'Player'),
-                                    nickname: p.nickname || p.username || (localExisting ? localExisting.nickname : 'PLAYER'),
-                                    phone: p.phone || (localExisting ? localExisting.phone : ''),
-                                    wallet: finalWallet,
-                                    wins: Math.max(p.wins || 0, localExisting ? (localExisting.wins || 0) : 0),
-                                    xp: Math.max(p.xp || 0, localExisting ? (localExisting.xp || 0) : 0),
-                                    active_hero: p.active_hero || (localExisting ? localExisting.active_hero : 'pyra'),
-                                    status: p.status || (localExisting ? localExisting.status : 'active'),
-                                    registration_ref: p.registration_ref || (localExisting ? localExisting.registration_ref : ''),
-                                    registration_receipt: p.registration_receipt || (localExisting ? localExisting.registration_receipt : null)
-                                });
-                            }
-                        });
-                    }
-                } catch(e) {}
             }
 
             let dbList = await cloudGet('registered_players_db', []);
@@ -1336,70 +1301,29 @@
             ]
         };
 
+        // ================= BULLETPROOF DOM INITIALIZATION & SESSION RESTORATION =================
         window.addEventListener('DOMContentLoaded', async () => {
-            await initSupabaseRealtime();
-            await loadAllCloudState();
+            // 1. Immediately restore local session first (Zero Logouts)
             try {
                 currentUser = JSON.parse(localStorage.getItem('aetheris_current_user')) || null;
                 if (currentUser && currentUser.email) {
-                    const localWallet = currentUser.wallet || 0;
-                    const localWins = currentUser.wins || 0;
-                    const localXp = currentUser.xp || 0;
-
-                    let dbList = await cloudGet('registered_players_db', []);
-                    let foundRecord = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
-                    if (foundRecord && (foundRecord.wallet || 0) > localWallet) {
-                        currentUser.wallet = foundRecord.wallet;
+                    if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                        currentUser.role = 'owner';
                     }
-
-                    if (supabaseClient) {
-                        const { data, error } = await supabaseClient
-                            .from('profiles')
-                            .select('*')
-                            .eq('email', currentUser.email)
-                            .single();
-                        if (data && !error) {
-                            currentUser = data;
-                            if (foundRecord && (foundRecord.wallet || 0) > (currentUser.wallet || 0)) {
-                                currentUser.wallet = foundRecord.wallet;
-                            }
-                            if (localWallet > (currentUser.wallet || 0) || localWins > (currentUser.wins || 0)) {
-                                currentUser.wallet = Math.max(localWallet, currentUser.wallet || 0);
-                                currentUser.wins = Math.max(localWins, currentUser.wins || 0);
-                                currentUser.xp = Math.max(localXp, currentUser.xp || 0);
-                                await persistLocalStorage();
-                                await syncUserToSupabase();
-                            }
-
-                            if (currentUser.email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
-                                currentUser.role = 'owner';
-                            }
-                            if (currentUser.status === 'frozen') {
-                                alert('Your account has been frozen by the administration.');
-                                logoutPlayer();
-                                return;
-                            }
-                            if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
-                            if (!currentUser.unlocked_heroes) currentUser.unlocked_heroes = [];
-                            restoreUserSession();
-                        } else {
-                            if (currentUser.email) {
-                                if (currentUser.status === 'frozen') {
-                                    alert('Your account has been frozen.');
-                                    logoutPlayer();
-                                    return;
-                                }
-                                restoreUserSession();
-                            } else {
-                                currentUser = null;
-                                localStorage.removeItem('aetheris_current_user');
-                            }
-                        }
-                    } else if (currentUser.email) {
-                        restoreUserSession();
+                    if (currentUser.status === 'frozen') {
+                        alert('Your account has been frozen by the administration.');
+                        logoutPlayer();
+                        return;
                     }
+                    restoreUserSession();
                 }
-            } catch (err) {}
+            } catch (err) {
+                currentUser = null;
+            }
+
+            // 2. Load cloud state & merchant config in background
+            await initSupabaseRealtime();
+            await loadAllCloudState();
         });
 
         function restoreUserSession() {
@@ -1758,11 +1682,11 @@
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     try {
-                        const compressedBase64 = await compressImage(fileInput.files[0], 200, 200, 0.6);
+                        const compressedBase64 = await compressImage(fileInput.files[0], 150, 150, 0.5);
                         merchantConfig.gcashQR = compressedBase64;
                     } catch (imgErr) {
                         console.error('Image compression error:', imgErr);
-                        alert('Error processing QR image. Please try a different image.');
+                        alert('Error processing QR image. Please try a smaller image.');
                         return;
                     }
                 }
@@ -1792,11 +1716,11 @@
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     try {
-                        const compressedBase64 = await compressImage(fileInput.files[0], 200, 200, 0.6);
+                        const compressedBase64 = await compressImage(fileInput.files[0], 150, 150, 0.5);
                         merchantConfig.mayaQR = compressedBase64;
                     } catch (imgErr) {
                         console.error('Image compression error:', imgErr);
-                        alert('Error processing QR image. Please try a different image.');
+                        alert('Error processing QR image. Please try a smaller image.');
                         return;
                     }
                 }
@@ -1927,7 +1851,7 @@
             let receiptBase64 = null;
             if (receiptFile) {
                 try {
-                    receiptBase64 = await compressImage(receiptFile, 400, 400, 0.7);
+                    receiptBase64 = await compressImage(receiptFile, 200, 200, 0.5);
                 } catch(e) {}
             }
 
@@ -2936,7 +2860,7 @@
 
             if (receiptFile) {
                 try {
-                    const compressedReceipt = await compressImage(receiptFile, 400, 400, 0.7);
+                    const compressedReceipt = await compressImage(receiptFile, 200, 200, 0.5);
                     await saveTopUpRequest(amount, ref, compressedReceipt);
                 } catch(e) {
                     await saveTopUpRequest(amount, ref, null);
