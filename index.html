@@ -586,6 +586,20 @@
 
     <!-- Modals -->
     <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-3">
+        <!-- Receipt Image Viewer Modal -->
+        <div id="modal-receipt-viewer" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="font-cinzel text-base font-bold text-amber-400">PAYMENT RECEIPT VERIFICATION</h3>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+            <div class="flex flex-col items-center justify-center space-y-2">
+                <div class="w-full max-h-96 overflow-auto bg-black/50 p-2 rounded-xl border border-slate-700 flex items-center justify-center">
+                    <img id="receipt-viewer-img" src="" alt="Payment Receipt" class="max-w-full h-auto object-contain rounded-lg">
+                </div>
+            </div>
+            <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
+        </div>
+
         <!-- Top-up Modal with Payment Tabs (QR Only) -->
         <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400 text-center">Submit Top-Up Request (Min ₱50)</h3>
@@ -968,7 +982,6 @@
                 } catch(e) {}
             }
 
-            // Also merge from local registered_players_db and pending_registrations
             let dbList = await cloudGet('registered_players_db', []);
             dbList.forEach(item => {
                 if (item && item.email) {
@@ -1869,7 +1882,7 @@
         function openModal(type) {
             const backdrop = document.getElementById('modal-backdrop');
             if (backdrop) backdrop.classList.remove('hidden');
-            const modals = ['modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-support-chat', 'modal-inspect-player', 'modal-terms', 'modal-privacy', 'modal-player-profile', 'modal-leaderboard'];
+            const modals = ['modal-receipt-viewer', 'modal-topup', 'modal-withdraw', 'modal-bet', 'modal-matchmaking', 'modal-support-chat', 'modal-inspect-player', 'modal-terms', 'modal-privacy', 'modal-player-profile', 'modal-leaderboard'];
             modals.forEach(m => {
                 const el = document.getElementById(m);
                 if (el) el.classList.add('hidden');
@@ -1891,6 +1904,13 @@
             if (backdrop) backdrop.classList.add('hidden');
         }
         window.closeModal = closeModal;
+
+        function openReceiptModal(receiptUrl) {
+            openModal('receipt-viewer');
+            const imgEl = document.getElementById('receipt-viewer-img');
+            if (imgEl) imgEl.src = receiptUrl || '';
+        }
+        window.openReceiptModal = openReceiptModal;
 
         function openLegalModal(type) {
             openModal(type);
@@ -1958,7 +1978,7 @@
                         <p><strong>Status:</strong> <span class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${p.status || 'active'}</span></p>
                         <p><strong>Active Hero:</strong> ${p.active_hero || 'pyra'}</p>
                         ${p.registration_ref ? `<p><strong>Ref No:</strong> ${p.registration_ref}</p>` : ''}
-                        ${p.registration_receipt ? `<div class="mt-2"><strong class="block mb-1 text-amber-400">Fee Receipt:</strong><img src="${p.registration_receipt}" class="w-full h-32 object-contain bg-black rounded-lg border border-slate-700"></div>` : ''}
+                        ${p.registration_receipt ? `<div class="mt-2"><strong class="block mb-1 text-amber-400">Fee Receipt:</strong><button onclick="window.openReceiptModal('${p.registration_receipt}')" class="px-3 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg shadow">View Receipt Image</button></div>` : ''}
                     </div>
                     <div class="space-y-1.5">
                         <h4 class="font-cinzel text-amber-400 font-bold">Battle History (${playerBattles.length})</h4>
@@ -2522,7 +2542,8 @@
                                 <span class="font-bold text-amber-400">₱${t.amount} top-up</span>
                                 <span class="text-[10px] text-slate-400 block">${t.email} • Ref: ${t.ref}</span>
                             </div>
-                            <div class="flex space-x-1">
+                            <div class="flex space-x-1 items-center">
+                                ${t.receipt ? `<button onclick="window.openReceiptModal('${t.receipt}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">View Receipt</button>` : ''}
                                 <button onclick="window.approveTopup(${idx})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
                                 <button onclick="window.rejectTopup(${idx})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
                             </div>
@@ -2557,14 +2578,15 @@
             if (ownerRegList) {
                 ownerRegList.innerHTML = combinedPendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
                     combinedPendingRegs.map((r, idx) => `
-                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
                             <div>
                                 <span class="font-bold text-amber-400">${r.nickname || r.name} (${r.name})</span>
-                                <span class="text-[10px] text-slate-400 block">${r.email} • Ref: ${r.registration_ref || 'N/A'}</span>
+                                <span class="text-[10px] text-slate-400 block">${r.email} • Ref: ${r.registration_ref || r.registrationRef || 'N/A'}</span>
                             </div>
-                            <div class="flex space-x-1">
-                                <button onclick="window.approveRegistrationByEmail('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
-                                <button onclick="window.rejectRegistrationByEmail('${r.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
+                            <div class="flex items-center space-x-1.5 flex-wrap">
+                                ${r.registration_receipt || r.registrationReceipt ? `<button onclick="window.openReceiptModal('${r.registration_receipt || r.registrationReceipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-[10px]">View Receipt</button>` : '<span class="text-[10px] text-slate-500">No Receipt</span>'}
+                                <button onclick="window.approveRegistrationByEmail('${r.email}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[10px]">Approve</button>
+                                <button onclick="window.rejectRegistrationByEmail('${r.email}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-[10px]">Reject</button>
                             </div>
                         </div>
                     `).join('');
@@ -2643,6 +2665,10 @@
             let pendingRegs = await cloudGet('pending_registrations', []);
             pendingRegs = pendingRegs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
             await cloudSet('pending_registrations', pendingRegs);
+
+            let dbList = await cloudGet('registered_players_db', []);
+            dbList = dbList.filter(x => x.email.toLowerCase() !== email.toLowerCase());
+            await cloudSet('registered_players_db', dbList);
 
             if (supabaseClient) {
                 try {
