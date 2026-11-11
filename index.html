@@ -2065,15 +2065,16 @@
 
             await syncAllRegisteredPlayers(true);
 
+            // Bot entries explicitly included in the leaderboard with isBot flag
             const botEntries = [
-                { nickname: 'Kenjie', email: 'kenjie@bot.com', xp: 1250, wins: 14, status: 'active', active_hero: 'storm-knight' },
-                { nickname: 'Kenneth', email: 'kenneth@bot.com', xp: 980, wins: 10, status: 'active', active_hero: 'sylph' },
-                { nickname: 'Clyde', email: 'clyde@bot.com', xp: 850, wins: 8, status: 'active', active_hero: 'valen' },
-                { nickname: 'Joana', email: 'joana@bot.com', xp: 720, wins: 7, status: 'active', active_hero: 'pyra' },
-                { nickname: 'Glenda', email: 'glenda@bot.com', xp: 600, wins: 5, status: 'active', active_hero: 'nyx' },
-                { nickname: 'Glenn', email: 'glenn@bot.com', xp: 450, wins: 4, status: 'active', active_hero: 'titan-1' },
-                { nickname: 'Mark', email: 'mark@bot.com', xp: 320, wins: 3, status: 'active', active_hero: 'pyra' },
-                { nickname: 'Rica', email: 'rica@bot.com', xp: 210, wins: 2, status: 'active', active_hero: 'sylph' }
+                { nickname: 'Kenjie', email: 'kenjie@bot.com', xp: 1250, wins: 14, status: 'active', active_hero: 'storm-knight', isBot: true },
+                { nickname: 'Kenneth', email: 'kenneth@bot.com', xp: 980, wins: 10, status: 'active', active_hero: 'sylph', isBot: true },
+                { nickname: 'Clyde', email: 'clyde@bot.com', xp: 850, wins: 8, status: 'active', active_hero: 'valen', isBot: true },
+                { nickname: 'Joana', email: 'joana@bot.com', xp: 720, wins: 7, status: 'active', active_hero: 'pyra', isBot: true },
+                { nickname: 'Glenda', email: 'glenda@bot.com', xp: 600, wins: 5, status: 'active', active_hero: 'nyx', isBot: true },
+                { nickname: 'Glenn', email: 'glenn@bot.com', xp: 450, wins: 4, status: 'active', active_hero: 'titan-1', isBot: true },
+                { nickname: 'Mark', email: 'mark@bot.com', xp: 320, wins: 3, status: 'active', active_hero: 'pyra', isBot: true },
+                { nickname: 'Rica', email: 'rica@bot.com', xp: 210, wins: 2, status: 'active', active_hero: 'sylph', isBot: true }
             ];
 
             let combinedMap = new Map();
@@ -2097,12 +2098,13 @@
             list.innerHTML = sortedLeaderboard.map((p, idx) => {
                 const rankName = getRankTier(p.xp || 0, p.wins || 0);
                 const medalColor = idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-slate-300 font-bold' : idx === 2 ? 'text-amber-600 font-bold' : 'text-slate-400';
+                const isBot = p.isBot || (p.email && p.email.includes('@bot.com'));
                 return `
                     <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                         <div class="flex items-center space-x-3">
                             <span class="${medalColor} w-6 text-center">#${idx + 1}</span>
                             <div>
-                                <span class="font-bold text-white">${p.nickname || p.name || 'Player'}</span>
+                                <span class="font-bold text-white">${p.nickname || p.name || 'Player'} ${isBot ? '<span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded ml-1 border border-slate-700">CPU</span>' : ''}</span>
                                 <span class="text-[10px] text-slate-400 block">Rank: <strong class="text-amber-400">${rankName}</strong></span>
                             </div>
                         </div>
