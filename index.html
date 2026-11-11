@@ -812,8 +812,82 @@
         let systemAuditLogs = JSON.parse(localStorage.getItem('aetheris_audit_logs')) || [];
         let balanceAdderHistory = JSON.parse(localStorage.getItem('aetheris_balance_adder_history')) || [];
         let walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
-        
         let registeredPlayersList = [];
+        let merchantConfig = {
+            gcashNum: '09923978537',
+            gcashName: 'John Carlo Estrada Morales',
+            gcashQR: null,
+            mayaNum: '09923978537',
+            mayaName: 'John Carlo Estrada Morales',
+            mayaQR: null
+        };
+
+        // ================= SUPABASE REALTIME CLOUD STATE SYNC =================
+        async function cloudGet(key, fallback) {
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from('app_settings').select('value').eq('key', key).single();
+                    if (data && data.value !== undefined) {
+                        localStorage.setItem('aetheris_' + key, JSON.stringify(data.value));
+                        return data.value;
+                    }
+                } catch(e) {}
+            }
+            try {
+                const local = localStorage.getItem('aetheris_' + key);
+                return local ? JSON.parse(local) : fallback;
+            } catch(e) {
+                return fallback;
+            }
+        }
+
+        async function cloudSet(key, value) {
+            localStorage.setItem('aetheris_' + key, JSON.stringify(value));
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' });
+                } catch(e) {}
+            }
+            window.dispatchEvent(new Event('aetheris_data_updated'));
+        }
+
+        async function initSupabaseRealtime() {
+            if (!supabaseClient) return;
+            try {
+                supabaseClient
+                    .channel('aetheris-realtime')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings' }, async (payload) => {
+                        await loadAllCloudState();
+                        const ownerView = document.getElementById('view-owner');
+                        if (ownerView && !ownerView.classList.contains('hidden')) {
+                            renderOwnerQueues();
+                        }
+                        updateWalletDisplay();
+                        const activeModal = document.getElementById('modal-support-chat');
+                        if (activeModal && !activeModal.classList.contains('hidden')) {
+                            renderPlayerChatMessages(true);
+                        }
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, async (payload) => {
+                        await loadAllCloudState();
+                        const ownerView = document.getElementById('view-owner');
+                        if (ownerView && !ownerView.classList.contains('hidden')) {
+                            renderOwnerQueues();
+                        }
+                    })
+                    .subscribe();
+            } catch(e) {}
+        }
+
+        async function loadAllCloudState() {
+            battleHistoryLog = await cloudGet('battle_history', battleHistoryLog);
+            pendingResets = await cloudGet('pending_resets', pendingResets);
+            systemAuditLogs = await cloudGet('audit_logs', systemAuditLogs);
+            balanceAdderHistory = await cloudGet('balance_adder_history', balanceAdderHistory);
+            walletTransactionLedger = await cloudGet('wallet_ledger', walletTransactionLedger);
+            merchantConfig = await cloudGet('merchant_config', merchantConfig);
+            await syncAllRegisteredPlayers(true);
+        }
 
         function logWalletTransaction(email, nickname, type, amount, preBalance, postBalance, reason) {
             const now = new Date();
@@ -833,15 +907,14 @@
                 reason
             };
             walletTransactionLedger.unshift(tx);
-            localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
+            cloudSet('wallet_ledger', walletTransactionLedger);
             logSystemActivity('Wallet ' + type, `${nickname || email}: ${type === 'CREDIT' ? '+' : '-'}₱${amount} (₱${preBalance} ➔ ₱${postBalance}) | Reason: ${reason}`, nickname || email);
-            window.dispatchEvent(new Event('aetheris_data_updated'));
         }
 
         function clearWalletLedger() {
             if (confirm('Are you sure you want to clear the entire wallet transaction ledger?')) {
                 walletTransactionLedger = [];
-                localStorage.removeItem('aetheris_wallet_ledger');
+                cloudSet('wallet_ledger', walletTransactionLedger);
                 renderOwnerQueues();
             }
         }
@@ -881,77 +954,47 @@
                                     wins: Math.max(p.wins || 0, localExisting ? (localExisting.wins || 0) : 0),
                                     xp: Math.max(p.xp || 0, localExisting ? (localExisting.xp || 0) : 0),
                                     active_hero: p.active_hero || (localExisting ? localExisting.active_hero : 'pyra'),
-                                    status: p.status || (localExisting ? localExisting.status : 'active')
+                                    status: p.status || (localExisting ? localExisting.status : 'active'),
+                                    registration_ref: p.registration_ref || (localExisting ? localExisting.registration_ref : ''),
+                                    registration_receipt: p.registration_receipt || (localExisting ? localExisting.registration_receipt : null)
                                 });
                             }
                         });
                     }
                 } catch(e) {}
             } else {
-                try {
-                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                    dbList.forEach(item => {
-                        if (item && item.email) {
-                            playersMap.set(item.email.toLowerCase(), item);
-                        }
-                    });
-                } catch(e) {}
+                let dbList = await cloudGet('registered_players_db', []);
+                dbList.forEach(item => {
+                    if (item && item.email) {
+                        playersMap.set(item.email.toLowerCase(), item);
+                    }
+                });
             }
 
             registeredPlayersList = Array.from(playersMap.values());
-            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(registeredPlayersList));
+            cloudSet('registered_players_db', registeredPlayersList);
         }
 
         async function syncUserToSupabase() {
-            if (!currentUser || !currentUser.email || !supabaseClient) return;
-            try {
-                await supabaseClient.from('profiles').upsert([{
-                    email: currentUser.email,
-                    name: currentUser.name || 'Player',
-                    nickname: currentUser.nickname || 'PLAYER',
-                    phone: currentUser.phone || '',
-                    wallet: currentUser.wallet || 0,
-                    wins: currentUser.wins || 0,
-                    xp: currentUser.xp || 0,
-                    active_hero: currentUser.active_hero || 'pyra',
-                    unlocked_heroes: currentUser.unlocked_heroes || ['pyra'],
-                    unlocked_skills: currentUser.unlockedSkills || {},
-                    status: currentUser.status || 'active'
-                }], { onConflict: 'email' });
-            } catch(e) {}
-        }
-
-        let merchantConfig = {
-            gcashNum: '09923978537',
-            gcashName: 'John Carlo Estrada Morales',
-            gcashQR: null,
-            mayaNum: '09923978537',
-            mayaName: 'John Carlo Estrada Morales',
-            mayaQR: null
-        };
-
-        async function loadMerchantConfig() {
+            if (!currentUser || !currentUser.email) return;
+            cloudSet('current_user', currentUser);
             if (supabaseClient) {
                 try {
-                    const { data } = await supabaseClient.from('app_settings').select('*').eq('key', 'merchant_config').single();
-                    if (data && data.value) {
-                        merchantConfig = data.value;
-                        localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
-                        return;
-                    }
-                } catch(e) {}
-            }
-            try {
-                const stored = localStorage.getItem('aetheris_merchant_config');
-                if (stored) merchantConfig = JSON.parse(stored);
-            } catch(e) {}
-        }
-
-        async function persistMerchantConfig() {
-            localStorage.setItem('aetheris_merchant_config', JSON.stringify(merchantConfig));
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('app_settings').upsert([{ key: 'merchant_config', value: merchantConfig }], { onConflict: 'key' });
+                    await supabaseClient.from('profiles').upsert([{
+                        email: currentUser.email,
+                        name: currentUser.name || 'Player',
+                        nickname: currentUser.nickname || 'PLAYER',
+                        phone: currentUser.phone || '',
+                        wallet: currentUser.wallet || 0,
+                        wins: currentUser.wins || 0,
+                        xp: currentUser.xp || 0,
+                        active_hero: currentUser.active_hero || 'pyra',
+                        unlocked_heroes: currentUser.unlocked_heroes || ['pyra'],
+                        unlocked_skills: currentUser.unlockedSkills || {},
+                        status: currentUser.status || 'active',
+                        registration_ref: currentUser.registration_ref || '',
+                        registration_receipt: currentUser.registration_receipt || null
+                    }], { onConflict: 'email' });
                 } catch(e) {}
             }
         }
@@ -973,7 +1016,6 @@
         
         let matchmakingElapsedTimer = null;
         let matchmakingElapsedSeconds = 0;
-        let cointossTimerInterval = null;
 
         let currentRegMethod = 'gcash';
         let currentHubMethod = 'gcash';
@@ -987,13 +1029,13 @@
                 id: Date.now(),
                 timestamp: `${dateStr} ${timeStr}`, date: dateStr, time: timeStr, actor, action, details
             });
-            persistLocalStorage();
+            cloudSet('audit_logs', systemAuditLogs);
         }
 
-        function persistLocalStorage() {
+        async function persistLocalStorage() {
             if (currentUser) {
-                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
-                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                cloudSet('current_user', currentUser);
+                let dbList = await cloudGet('registered_players_db', []);
                 let idx = dbList.findIndex(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
                 if (idx >= 0) {
                     dbList[idx].wallet = currentUser.wallet;
@@ -1013,40 +1055,18 @@
                         status: currentUser.status || 'active'
                     });
                 }
-                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+                cloudSet('registered_players_db', dbList);
             } else {
                 localStorage.removeItem('aetheris_current_user');
             }
-            localStorage.setItem('aetheris_battle_history', JSON.stringify(battleHistoryLog));
-            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
-            localStorage.setItem('aetheris_audit_logs', JSON.stringify(systemAuditLogs));
-            localStorage.setItem('aetheris_balance_adder_history', JSON.stringify(balanceAdderHistory));
-            localStorage.setItem('aetheris_wallet_ledger', JSON.stringify(walletTransactionLedger));
-            syncAllRegisteredPlayers(true);
-            persistMerchantConfig();
-
-            window.dispatchEvent(new Event('aetheris_data_updated'));
+            cloudSet('battle_history', battleHistoryLog);
+            cloudSet('pending_resets', pendingResets);
+            cloudSet('audit_logs', systemAuditLogs);
+            cloudSet('balance_adder_history', balanceAdderHistory);
+            cloudSet('wallet_ledger', walletTransactionLedger);
+            cloudSet('merchant_config', merchantConfig);
+            await syncAllRegisteredPlayers(true);
         }
-
-        window.addEventListener('storage', (event) => {
-            if (['aetheris_current_user', 'aetheris_registered_players_db', 'aetheris_wallet_ledger', 'aetheris_pending_topups', 'aetheris_pending_withdrawals', 'aetheris_pending_registrations', 'aetheris_pending_resets', 'aetheris_support_chats', 'aetheris_registered_users'].includes(event.key)) {
-                walletTransactionLedger = JSON.parse(localStorage.getItem('aetheris_wallet_ledger')) || [];
-                syncAllRegisteredPlayers(true).then(() => {
-                    if (currentUser && currentUser.email) {
-                        let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                        let found = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
-                        if (found && found.wallet !== currentUser.wallet) {
-                            currentUser.wallet = found.wallet;
-                            updateWalletDisplay();
-                        }
-                    }
-                    const ownerView = document.getElementById('view-owner');
-                    if (ownerView && !ownerView.classList.contains('hidden')) {
-                        renderOwnerQueues();
-                    }
-                });
-            }
-        });
 
         window.addEventListener('aetheris_data_updated', () => {
             const ownerView = document.getElementById('view-owner');
@@ -1205,16 +1225,16 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
-            await loadMerchantConfig();
-            await syncAllRegisteredPlayers(true);
-            await updateMerchantPaymentDisplay();
+            await initSupabaseRealtime();
+            await loadAllCloudState();
             try {
+                currentUser = await cloudGet('current_user', null);
                 if (currentUser && currentUser.email) {
                     const localWallet = currentUser.wallet || 0;
                     const localWins = currentUser.wins || 0;
                     const localXp = currentUser.xp || 0;
 
-                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                    let dbList = await cloudGet('registered_players_db', []);
                     let foundRecord = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
                     if (foundRecord && (foundRecord.wallet || 0) > localWallet) {
                         currentUser.wallet = foundRecord.wallet;
@@ -1235,7 +1255,7 @@
                                 currentUser.wallet = Math.max(localWallet, currentUser.wallet || 0);
                                 currentUser.wins = Math.max(localWins, currentUser.wins || 0);
                                 currentUser.xp = Math.max(localXp, currentUser.xp || 0);
-                                persistLocalStorage();
+                                await persistLocalStorage();
                                 await syncUserToSupabase();
                             }
 
@@ -1268,53 +1288,6 @@
                     }
                 }
             } catch (err) {}
-
-            setInterval(async () => {
-                if (currentUser && currentUser.email) {
-                    let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-                    let me = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
-                    if (me && me.wallet !== currentUser.wallet) {
-                        currentUser.wallet = me.wallet;
-                        updateWalletDisplay();
-                    }
-
-                    if (supabaseClient) {
-                        try {
-                            const { data } = await supabaseClient.from('profiles').select('wallet, wins, xp, status').eq('email', currentUser.email).single();
-                            if (data) {
-                                if (me && me.wallet > data.wallet) {
-                                    currentUser.wallet = me.wallet;
-                                    await syncUserToSupabase();
-                                    updateWalletDisplay();
-                                } else if (data.wallet > currentUser.wallet) {
-                                    currentUser.wallet = data.wallet;
-                                    currentUser.wins = data.wins;
-                                    currentUser.xp = data.xp;
-                                    updateWalletDisplay();
-                                    persistLocalStorage();
-                                } else if (data.wallet !== currentUser.wallet) {
-                                    await syncUserToSupabase();
-                                }
-                                if (data.status === 'frozen') {
-                                    alert('Your account has been frozen by the administration.');
-                                    logoutPlayer();
-                                }
-                            }
-                        } catch(e) {}
-                    }
-                }
-
-                if (currentUser) {
-                    const activeModal = document.getElementById('modal-support-chat');
-                    if (activeModal && !activeModal.classList.contains('hidden')) {
-                        renderPlayerChatMessages(true);
-                    }
-                    const ownerView = document.getElementById('view-owner');
-                    if (ownerView && !ownerView.classList.contains('hidden')) {
-                        renderOwnerQueues();
-                    }
-                }
-            }, 1000);
         });
 
         function restoreUserSession() {
@@ -1432,7 +1405,7 @@
             if (!currentUser) return;
             currentUser.active_hero = heroId;
             currentUser.unlocked_heroes = [heroId];
-            persistLocalStorage();
+            await persistLocalStorage();
             await syncUserToSupabase();
             const viewStarter = document.getElementById('view-starter-select');
             if (viewStarter) viewStarter.classList.add('hidden');
@@ -1442,11 +1415,6 @@
 
         function updateWalletDisplay() {
             if (!currentUser) return;
-            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-            let found = dbList.find(p => p.email.toLowerCase() === currentUser.email.toLowerCase());
-            if (found && found.wallet !== undefined && found.wallet > currentUser.wallet) {
-                currentUser.wallet = found.wallet;
-            }
             const bal = currentUser.wallet || currentUser.balance || 0;
             const navWallet = document.getElementById('nav-wallet');
             if (navWallet) navWallet.innerText = `₱${Number(bal).toFixed(2)}`;
@@ -1489,7 +1457,6 @@
                 const hub = document.getElementById('view-hub');
                 if (hub) hub.classList.remove('hidden');
                 if (btnHub) { btnHub.classList.add('bg-blue-600', 'text-white'); btnHub.classList.remove('text-slate-400'); }
-                await loadMerchantConfig();
                 updateWalletDisplay();
                 switchPlayerHubPayment('gcash');
             } else if (tabName === 'select') {
@@ -1506,8 +1473,7 @@
                 const own = document.getElementById('view-owner');
                 if (own) own.classList.remove('hidden');
                 if (btnOwner) { btnOwner.classList.add('bg-blue-600', 'text-white'); btnOwner.classList.remove('text-slate-400'); }
-                await loadMerchantConfig();
-                await syncAllRegisteredPlayers(true);
+                await loadAllCloudState();
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
             }
@@ -1515,10 +1481,9 @@
         window.switchTab = switchTab;
 
         async function forceSyncOwnerPortal() {
-            await syncAllRegisteredPlayers(true);
-            await loadMerchantConfig();
+            await loadAllCloudState();
             renderOwnerQueues();
-            alert('Owner Portal synced successfully!');
+            alert('Owner Portal synced successfully from cloud!');
         }
         window.forceSyncOwnerPortal = forceSyncOwnerPortal;
 
@@ -1546,7 +1511,6 @@
             if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
             if (mode === 'register' && registerBox) {
                 registerBox.classList.remove('hidden');
-                await loadMerchantConfig();
                 switchRegPaymentMethod('gcash');
             }
             if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
@@ -1555,7 +1519,6 @@
 
         async function switchRegPaymentMethod(method) {
             currentRegMethod = method;
-            await loadMerchantConfig();
             const btnGcash = document.getElementById('btn-reg-gcash');
             const btnMaya = document.getElementById('btn-reg-maya');
             const qrBox = document.getElementById('reg-active-qr');
@@ -1582,7 +1545,6 @@
 
         async function switchTopUpPaymentMethod(method) {
             currentTopupMethod = method;
-            await loadMerchantConfig();
             const btnGcash = document.getElementById('btn-topup-gcash');
             const btnMaya = document.getElementById('btn-topup-maya');
             const qrBox = document.getElementById('topup-active-qr');
@@ -1609,7 +1571,6 @@
 
         async function switchPlayerHubPayment(method) {
             currentHubMethod = method;
-            await loadMerchantConfig();
             const btnGcash = document.getElementById('btn-hub-gcash');
             const btnMaya = document.getElementById('btn-hub-maya');
             const qrBox = document.getElementById('player-active-qr');
@@ -1635,7 +1596,7 @@
         window.switchPlayerHubPayment = switchPlayerHubPayment;
 
         async function updateMerchantPaymentDisplay() {
-            await loadMerchantConfig();
+            merchantConfig = await cloudGet('merchant_config', merchantConfig);
             const inputGcashNum = document.getElementById('input-gcash-num');
             const inputGcashName = document.getElementById('input-gcash-name');
             const inputMayaNum = document.getElementById('input-maya-num');
@@ -1673,15 +1634,15 @@
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     merchantConfig.gcashQR = e.target.result;
-                    await persistMerchantConfig();
+                    await cloudSet('merchant_config', merchantConfig);
                     updateMerchantPaymentDisplay();
-                    alert('GCash settings and QR saved & synced successfully!');
+                    alert('GCash settings and QR saved & synced to cloud!');
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
-                await persistMerchantConfig();
+                await cloudSet('merchant_config', merchantConfig);
                 updateMerchantPaymentDisplay();
-                alert('GCash settings saved & synced successfully!');
+                alert('GCash settings saved & synced to cloud!');
             }
         }
         window.saveGcashSettings = saveGcashSettings;
@@ -1698,15 +1659,15 @@
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     merchantConfig.mayaQR = e.target.result;
-                    await persistMerchantConfig();
+                    await cloudSet('merchant_config', merchantConfig);
                     updateMerchantPaymentDisplay();
-                    alert('Maya settings and QR saved & synced successfully!');
+                    alert('Maya settings and QR saved & synced to cloud!');
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
-                await persistMerchantConfig();
+                await cloudSet('merchant_config', merchantConfig);
                 updateMerchantPaymentDisplay();
-                alert('Maya settings saved & synced successfully!');
+                alert('Maya settings saved & synced to cloud!');
             }
         }
         window.saveMayaSettings = saveMayaSettings;
@@ -1735,7 +1696,7 @@
                     unlocked_heroes: heroes.map(h => h.id),
                     unlockedSkills: {}
                 };
-                persistLocalStorage();
+                await persistLocalStorage();
                 restoreUserSession();
                 return;
             }
@@ -1764,7 +1725,7 @@
                                 currentUser.wallet = foundPlayerRecord.wallet;
                             }
                             if (!currentUser.unlockedSkills) currentUser.unlockedSkills = currentUser.unlocked_skills || {};
-                            persistLocalStorage();
+                            await persistLocalStorage();
                             restoreUserSession();
                             return;
                         } else {
@@ -1775,7 +1736,7 @@
                 } catch(err) {}
             }
 
-            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+            let localUsers = await cloudGet('registered_users', []);
             const found = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
             if (found && (found.password_hash === hashed || found.password === pass)) {
                 if (found.status === 'frozen') {
@@ -1787,7 +1748,7 @@
                     currentUser.wallet = foundPlayerRecord.wallet;
                 }
                 if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
-                persistLocalStorage();
+                await persistLocalStorage();
                 restoreUserSession();
             } else {
                 alert('Account not found or invalid credentials. Please check or register.');
@@ -1843,17 +1804,17 @@
                 registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
             };
 
-            let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            let pendingRegs = await cloudGet('pending_registrations', []);
             pendingRegs.push(newUserData);
-            localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
+            await cloudSet('pending_registrations', pendingRegs);
 
-            let localUsers = JSON.parse(localStorage.getItem('aetheris_registered_users')) || [];
+            let localUsers = await cloudGet('registered_users', []);
             if (!localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
                 localUsers.push(newUserData);
-                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+                await cloudSet('registered_users', localUsers);
             } else {
                 localUsers = localUsers.map(u => u.email.toLowerCase() === email.toLowerCase() ? newUserData : u);
-                localStorage.setItem('aetheris_registered_users', JSON.stringify(localUsers));
+                await cloudSet('registered_users', localUsers);
             }
 
             notifyOwner('New Player Registration', `Player ${nickname} (${email}) has submitted a registration request using ${currentRegMethod.toUpperCase()}.`);
@@ -1862,17 +1823,17 @@
             if (supabaseClient) {
                 try {
                     await supabaseClient.from('profiles').upsert([newUserData], { onConflict: 'email' });
-                } catch(err) {}
+                } catch(err) {
+                    console.error('Supabase registration profile sync error:', err);
+                }
             }
-
-            window.dispatchEvent(new Event('aetheris_data_updated'));
 
             alert('Registration submitted successfully! Your account is pending owner approval.');
             showAuthMode('login');
         }
         window.handleRegister = handleRegister;
 
-        function submitResetRequest() {
+        async function submitResetRequest() {
             const email = document.getElementById('forgot-email').value.trim();
             const bday = document.getElementById('forgot-bday').value;
             if (!email || !bday) {
@@ -1880,10 +1841,7 @@
                 return;
             }
             pendingResets.push({ email, birthday: bday, timestamp: Date.now() });
-            localStorage.setItem('aetheris_pending_resets', JSON.stringify(pendingResets));
-            persistLocalStorage();
-            
-            window.dispatchEvent(new Event('aetheris_data_updated'));
+            await cloudSet('pending_resets', pendingResets);
 
             alert('Password reset request submitted to owner for verification.');
             showAuthMode('login');
@@ -1988,6 +1946,8 @@
                         <p><strong>EXP:</strong> ${p.xp || 0} (Lv. ${Math.floor((p.xp || 0) / 100) + 1})</p>
                         <p><strong>Status:</strong> <span class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${p.status || 'active'}</span></p>
                         <p><strong>Active Hero:</strong> ${p.active_hero || 'pyra'}</p>
+                        ${p.registration_ref ? `<p><strong>Ref No:</strong> ${p.registration_ref}</p>` : ''}
+                        ${p.registration_receipt ? `<div class="mt-2"><strong class="block mb-1 text-amber-400">Fee Receipt:</strong><img src="${p.registration_receipt}" class="w-full h-32 object-contain bg-black rounded-lg border border-slate-700"></div>` : ''}
                     </div>
                     <div class="space-y-1.5">
                         <h4 class="font-cinzel text-amber-400 font-bold">Battle History (${playerBattles.length})</h4>
@@ -2120,7 +2080,7 @@
         async function setActiveHero(heroId) {
             if (!currentUser) return;
             currentUser.active_hero = heroId;
-            persistLocalStorage();
+            await persistLocalStorage();
             await syncUserToSupabase();
             setActiveHeroUI(heroId);
             renderHeroRoster();
@@ -2148,7 +2108,7 @@
             currentUser.active_hero = heroId;
 
             logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', price, preBal, currentUser.wallet, `Purchased Hero: ${heroId}`);
-            persistLocalStorage();
+            await persistLocalStorage();
             await syncUserToSupabase();
             updateWalletDisplay();
             setActiveHeroUI(heroId);
@@ -2202,7 +2162,7 @@
             currentUser.unlockedSkills[skillId] = true;
 
             logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', cost, preBal, currentUser.wallet, `Purchased Skill: ${skillId}`);
-            persistLocalStorage();
+            await persistLocalStorage();
             await syncUserToSupabase();
             updateWalletDisplay();
             renderShopSkills();
@@ -2224,7 +2184,6 @@
             preBattleWallet = bal;
             openModal('matchmaking');
             matchmakingElapsedSeconds = 0;
-            const statusEl = document.getElementById('matchmaking-status');
             const countdownEl = document.getElementById('matchmaking-countdown');
 
             if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
@@ -2412,7 +2371,7 @@
                 let logMsg = '';
                 let enemyDmg = 0;
 
-                // Updated Bot Tiered Health Logic:
+                // Bot Tiered Health Logic:
                 // - Below 20 HP: Heals 60 HP and attacks for 25 damage
                 // - Below 60 HP (between 20 and 59): Recovery Surge (healing + armor)
                 // - 60 HP or more: Standard attack (25 damage or card damage)
@@ -2507,7 +2466,7 @@
                 time: timeStr
             });
 
-            persistLocalStorage();
+            await persistLocalStorage();
             await syncUserToSupabase();
             updateWalletDisplay();
             switchTab('hub');
@@ -2515,10 +2474,9 @@
 
         // OWNER PORTAL QUEUES & LOGS
         async function renderOwnerQueues() {
+            await loadAllCloudState();
             await syncAllRegisteredPlayers(true);
 
-            const totalDepositsEl = document.getElementById('metric-total-deposits');
-            const totalWithdrawalsEl = document.getElementById('metric-total-withdrawals');
             const ownerPlayersList = document.getElementById('owner-players-list');
             const ownerPlayerCount = document.getElementById('owner-player-count');
             const ownerDepositList = document.getElementById('owner-deposit-list');
@@ -2526,12 +2484,7 @@
             const ownerRegList = document.getElementById('owner-registration-list');
             const ownerResetList = document.getElementById('owner-reset-list');
             const auditLogEl = document.getElementById('owner-system-audit-log');
-            const battleHistoryEl = document.getElementById('owner-battle-history-list');
             const walletLedgerEl = document.getElementById('owner-wallet-ledger-list');
-            const depositHistoryEl = document.getElementById('owner-deposit-history-list');
-            const withdrawHistoryEl = document.getElementById('owner-withdraw-history-list');
-            const balanceAdderHistoryEl = document.getElementById('owner-balance-adder-history');
-            const chatThreadsList = document.getElementById('owner-chat-threads-list');
 
             if (ownerPlayerCount) ownerPlayerCount.innerText = registeredPlayersList.length;
 
@@ -2541,10 +2494,11 @@
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
                                 <span class="font-bold text-white">${p.nickname || p.name}</span>
-                                <span class="text-[10px] text-slate-400 block">${p.email} • ₱${p.wallet || 0}</span>
+                                <span class="text-[10px] text-slate-400 block">${p.email} • ₱${p.wallet || 0} • Status: <strong class="${p.status === 'pending_registration' ? 'text-amber-400' : 'text-emerald-400'}">${p.status || 'active'}</strong></span>
                             </div>
                             <div class="flex space-x-1">
                                 <button onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded text-[10px]">Inspect</button>
+                                ${p.status === 'pending_registration' ? `<button onclick="window.approveRegistrationByEmail('${p.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>` : ''}
                                 <button onclick="window.freezePlayer('${p.email}')" class="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded text-[10px]">Freeze</button>
                                 <button onclick="window.deletePlayer('${p.email}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px]">Delete</button>
                             </div>
@@ -2552,7 +2506,7 @@
                     `).join('');
             }
 
-            let pendingTopups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
+            let pendingTopups = await cloudGet('pending_topups', []);
             if (ownerDepositList) {
                 ownerDepositList.innerHTML = pendingTopups.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending top-ups.</div>' :
                     pendingTopups.map((t, idx) => `
@@ -2569,7 +2523,7 @@
                     `).join('');
             }
 
-            let pendingWithdrawals = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
+            let pendingWithdrawals = await cloudGet('pending_withdrawals', []);
             if (ownerWithdrawList) {
                 ownerWithdrawList.innerHTML = pendingWithdrawals.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawals.</div>' :
                     pendingWithdrawals.map((w, idx) => `
@@ -2586,18 +2540,25 @@
                     `).join('');
             }
 
-            let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
+            // Pull pending registrations from both cloud pending_registrations and profiles table status === 'pending_registration'
+            let pendingRegs = await cloudGet('pending_registrations', []);
+            const profilePending = registeredPlayersList.filter(p => p.status === 'pending_registration');
+            let regMap = new Map();
+            pendingRegs.forEach(r => regMap.set(r.email.toLowerCase(), r));
+            profilePending.forEach(p => regMap.set(p.email.toLowerCase(), p));
+            let combinedPendingRegs = Array.from(regMap.values());
+
             if (ownerRegList) {
-                ownerRegList.innerHTML = pendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
-                    pendingRegs.map((r, idx) => `
+                ownerRegList.innerHTML = combinedPendingRegs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>' :
+                    combinedPendingRegs.map((r, idx) => `
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
-                                <span class="font-bold text-amber-400">${r.nickname} (${r.name})</span>
-                                <span class="text-[10px] text-slate-400 block">${r.email} • Ref: ${r.registration_ref}</span>
+                                <span class="font-bold text-amber-400">${r.nickname || r.name} (${r.name})</span>
+                                <span class="text-[10px] text-slate-400 block">${r.email} • Ref: ${r.registration_ref || 'N/A'}</span>
                             </div>
                             <div class="flex space-x-1">
-                                <button onclick="window.approveRegistration(${idx})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
-                                <button onclick="window.rejectRegistration(${idx})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
+                                <button onclick="window.approveRegistrationByEmail('${r.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
+                                <button onclick="window.rejectRegistrationByEmail('${r.email}')" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
                             </div>
                         </div>
                     `).join('');
@@ -2647,106 +2608,114 @@
         }
         window.renderOwnerQueues = renderOwnerQueues;
 
-        async function approveRegistration(idx) {
-            let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            const reg = pendingRegs[idx];
-            if (!reg) return;
+        async function approveRegistrationByEmail(email) {
+            let dbList = await cloudGet('registered_players_db', []);
+            let p = dbList.find(x => x.email.toLowerCase() === email.toLowerCase());
+            if (p) {
+                p.status = 'active';
+            }
+            let pendingRegs = await cloudGet('pending_registrations', []);
+            pendingRegs = pendingRegs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+            await cloudSet('pending_registrations', pendingRegs);
+            await cloudSet('registered_players_db', dbList);
 
-            reg.status = 'active';
-            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
-            dbList.push(reg);
-            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('profiles').update({ status: 'active' }).eq('email', email);
+                } catch(e) {}
+            }
 
-            pendingRegs.splice(idx, 1);
-            localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
-
-            sendPushNotificationToPlayer(reg.email, 'Registration Approved!', 'Your Aetheris Arena account has been approved. You can now log in.');
-            logSystemActivity('Registration Approved', `Approved player ${reg.nickname} (${reg.email})`, 'BOSS');
-            persistLocalStorage();
-            await syncAllRegisteredPlayers(true);
+            sendPushNotificationToPlayer(email, 'Registration Approved!', 'Your Aetheris Arena account has been approved. You can now log in.');
+            logSystemActivity('Registration Approved', `Approved player ${email}`, 'BOSS');
+            await persistLocalStorage();
             renderOwnerQueues();
-            alert(`Player ${reg.nickname} approved successfully!`);
+            alert(`Player approved successfully!`);
         }
-        window.approveRegistration = approveRegistration;
+        window.approveRegistrationByEmail = approveRegistrationByEmail;
 
-        function rejectRegistration(idx) {
-            let pendingRegs = JSON.parse(localStorage.getItem('aetheris_pending_registrations')) || [];
-            pendingRegs.splice(idx, 1);
-            localStorage.setItem('aetheris_pending_registrations', JSON.stringify(pendingRegs));
+        async function rejectRegistrationByEmail(email) {
+            let pendingRegs = await cloudGet('pending_registrations', []);
+            pendingRegs = pendingRegs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+            await cloudSet('pending_registrations', pendingRegs);
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('profiles').delete().eq('email', email);
+                } catch(e) {}
+            }
+
             renderOwnerQueues();
             alert('Registration request rejected.');
         }
-        window.rejectRegistration = rejectRegistration;
+        window.rejectRegistrationByEmail = rejectRegistrationByEmail;
 
         async function approveTopup(idx) {
-            let pendingTopups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
+            let pendingTopups = await cloudGet('pending_topups', []);
             const t = pendingTopups[idx];
             if (!t) return;
 
-            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let dbList = await cloudGet('registered_players_db', []);
             let p = dbList.find(x => x.email.toLowerCase() === t.email.toLowerCase());
             let preBal = p ? (p.wallet || 0) : 0;
             let postBal = preBal + t.amount;
 
             if (p) p.wallet = postBal;
-            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+            await cloudSet('registered_players_db', dbList);
 
             logWalletTransaction(t.email, p ? p.nickname : t.email, 'CREDIT', t.amount, preBal, postBal, `Top-Up Approved (Ref: ${t.ref})`);
 
             pendingTopups.splice(idx, 1);
-            localStorage.setItem('aetheris_pending_topups', JSON.stringify(pendingTopups));
+            await cloudSet('pending_topups', pendingTopups);
 
-            persistLocalStorage();
-            await syncAllRegisteredPlayers(true);
+            await persistLocalStorage();
             renderOwnerQueues();
             alert(`Approved ₱${t.amount} top-up for ${t.email}`);
         }
         window.approveTopup = approveTopup;
 
-        function rejectTopup(idx) {
-            let pendingTopups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
+        async function rejectTopup(idx) {
+            let pendingTopups = await cloudGet('pending_topups', []);
             pendingTopups.splice(idx, 1);
-            localStorage.setItem('aetheris_pending_topups', JSON.stringify(pendingTopups));
+            await cloudSet('pending_topups', pendingTopups);
             renderOwnerQueues();
             alert('Top-up rejected.');
         }
         window.rejectTopup = rejectTopup;
 
         async function approveWithdrawal(idx) {
-            let pendingWithdrawals = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
+            let pendingWithdrawals = await cloudGet('pending_withdrawals', []);
             const w = pendingWithdrawals[idx];
             if (!w) return;
 
-            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let dbList = await cloudGet('registered_players_db', []);
             let p = dbList.find(x => x.email.toLowerCase() === w.email.toLowerCase());
             let preBal = p ? (p.wallet || 0) : 0;
             let postBal = Math.max(0, preBal - w.amount);
 
             if (p) p.wallet = postBal;
-            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+            await cloudSet('registered_players_db', dbList);
 
             logWalletTransaction(w.email, p ? p.nickname : w.email, 'DEBIT', w.amount, preBal, postBal, `Withdrawal Approved (${w.method} - ${w.account})`);
 
             pendingWithdrawals.splice(idx, 1);
-            localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(pendingWithdrawals));
+            await cloudSet('pending_withdrawals', pendingWithdrawals);
 
-            persistLocalStorage();
-            await syncAllRegisteredPlayers(true);
+            await persistLocalStorage();
             renderOwnerQueues();
             alert(`Approved withdrawal of ₱${w.amount} for ${w.email}`);
         }
         window.approveWithdrawal = approveWithdrawal;
 
-        function rejectWithdrawal(idx) {
-            let pendingWithdrawals = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
+        async function rejectWithdrawal(idx) {
+            let pendingWithdrawals = await cloudGet('pending_withdrawals', []);
             pendingWithdrawals.splice(idx, 1);
-            localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(pendingWithdrawals));
+            await cloudSet('pending_withdrawals', pendingWithdrawals);
             renderOwnerQueues();
             alert('Withdrawal rejected.');
         }
         window.rejectWithdrawal = rejectWithdrawal;
 
-        function executeManualWalletAdjustment() {
+        async function executeManualWalletAdjustment() {
             const email = document.getElementById('manual-wallet-email').value.trim();
             const amount = parseFloat(document.getElementById('manual-wallet-amount').value);
             if (!email || isNaN(amount)) {
@@ -2754,7 +2723,7 @@
                 return;
             }
 
-            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+            let dbList = await cloudGet('registered_players_db', []);
             let p = dbList.find(x => x.email.toLowerCase() === email.toLowerCase());
             if (!p) {
                 alert('Player not found in directory.');
@@ -2764,7 +2733,7 @@
             let preBal = p.wallet || 0;
             let postBal = preBal + amount;
             p.wallet = postBal;
-            localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+            await cloudSet('registered_players_db', dbList);
 
             logWalletTransaction(p.email, p.nickname, amount >= 0 ? 'CREDIT' : 'DEBIT', Math.abs(amount), preBal, postBal, 'Manual Emergency Balance Adjustment by Owner');
             balanceAdderHistory.unshift({
@@ -2774,19 +2743,20 @@
                 preBalance: preBal,
                 postBalance: postBal
             });
+            await cloudSet('balance_adder_history', balanceAdderHistory);
 
-            persistLocalStorage();
+            await persistLocalStorage();
             renderOwnerQueues();
             alert(`Successfully adjusted wallet balance for ${p.nickname} (₱${preBal} ➔ ₱${postBal})`);
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
-        function freezePlayer(email) {
-            let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+        async function freezePlayer(email) {
+            let dbList = await cloudGet('registered_players_db', []);
             let p = dbList.find(x => x.email.toLowerCase() === email.toLowerCase());
             if (p) {
                 p.status = 'frozen';
-                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+                await cloudSet('registered_players_db', dbList);
                 logSystemActivity('Account Frozen', `Frozen player account: ${email}`, 'BOSS');
                 renderOwnerQueues();
                 alert(`Player ${email} has been frozen.`);
@@ -2794,11 +2764,11 @@
         }
         window.freezePlayer = freezePlayer;
 
-        function deletePlayer(email) {
+        async function deletePlayer(email) {
             if (confirm(`Are you sure you want to permanently delete player account ${email}?`)) {
-                let dbList = JSON.parse(localStorage.getItem('aetheris_registered_players_db')) || [];
+                let dbList = await cloudGet('registered_players_db', []);
                 dbList = dbList.filter(x => x.email.toLowerCase() !== email.toLowerCase());
-                localStorage.setItem('aetheris_registered_players_db', JSON.stringify(dbList));
+                await cloudSet('registered_players_db', dbList);
                 logSystemActivity('Account Deleted', `Deleted player account: ${email}`, 'BOSS');
                 renderOwnerQueues();
                 alert('Player account deleted.');
@@ -2806,7 +2776,7 @@
         }
         window.deletePlayer = deletePlayer;
 
-        function submitTopUp() {
+        async function submitTopUp() {
             const amount = parseFloat(document.getElementById('topup-amount').value);
             const ref = document.getElementById('topup-ref').value.trim();
             const receiptFile = document.getElementById('topup-receipt').files[0];
@@ -2816,23 +2786,21 @@
                 return;
             }
 
-            let receiptBase64 = null;
             if (receiptFile) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    receiptBase64 = e.target.result;
-                    saveTopUpRequest(amount, ref, receiptBase64);
+                reader.onload = async (e) => {
+                    await saveTopUpRequest(amount, ref, e.target.result);
                 };
                 reader.readAsDataURL(receiptFile);
             } else {
-                saveTopUpRequest(amount, ref, null);
+                await saveTopUpRequest(amount, ref, null);
             }
         }
         window.submitTopUp = submitTopUp;
 
-        function saveTopUpRequest(amount, ref, receipt) {
+        async function saveTopUpRequest(amount, ref, receipt) {
             if (!currentUser) return;
-            let pendingTopups = JSON.parse(localStorage.getItem('aetheris_pending_topups')) || [];
+            let pendingTopups = await cloudGet('pending_topups', []);
             pendingTopups.push({
                 email: currentUser.email,
                 nickname: currentUser.nickname,
@@ -2842,13 +2810,13 @@
                 method: currentTopupMethod,
                 timestamp: Date.now()
             });
-            localStorage.setItem('aetheris_pending_topups', JSON.stringify(pendingTopups));
+            await cloudSet('pending_topups', pendingTopups);
             notifyOwner('Top-Up Request', `Player ${currentUser.nickname} requested top-up of ₱${amount} via ${currentTopupMethod.toUpperCase()}.`);
             closeModal();
             alert('Top-up request submitted successfully! Pending owner verification.');
         }
 
-        function submitWithdrawal() {
+        async function submitWithdrawal() {
             const amount = parseFloat(document.getElementById('withdraw-amount').value);
             const method = document.getElementById('withdraw-method').value;
             if (isNaN(amount) || amount < 100) {
@@ -2860,7 +2828,7 @@
                 return;
             }
 
-            let pendingWithdrawals = JSON.parse(localStorage.getItem('aetheris_pending_withdrawals')) || [];
+            let pendingWithdrawals = await cloudGet('pending_withdrawals', []);
             pendingWithdrawals.push({
                 email: currentUser.email,
                 nickname: currentUser.nickname,
@@ -2870,7 +2838,7 @@
                 name: currentUser.name,
                 timestamp: Date.now()
             });
-            localStorage.setItem('aetheris_pending_withdrawals', JSON.stringify(pendingWithdrawals));
+            await cloudSet('pending_withdrawals', pendingWithdrawals);
             notifyOwner('Withdrawal Request', `Player ${currentUser.nickname} requested withdrawal of ₱${amount} via ${method}.`);
             closeModal();
             alert('Withdrawal request submitted successfully! Zero fees applied.');
@@ -2882,10 +2850,10 @@
         }
         window.openChatModal = openChatModal;
 
-        function renderPlayerChatMessages(silent = false) {
+        async function renderPlayerChatMessages(silent = false) {
             const box = document.getElementById('player-chat-messages-box');
             if (!box || !currentUser) return;
-            let chats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
+            let chats = await cloudGet('support_chats', {});
             let userChat = chats[currentUser.email.toLowerCase()] || [];
 
             box.innerHTML = userChat.length === 0 ? '<div class="text-slate-500 text-center py-6">No messages yet. Send a message to contact owner support.</div>' :
@@ -2900,12 +2868,12 @@
             if (!silent) box.scrollTop = box.scrollHeight;
         }
 
-        function sendPlayerChatMessage() {
+        async function sendPlayerChatMessage() {
             const input = document.getElementById('player-chat-input');
             const msg = input.value.trim();
             if (!msg || !currentUser) return;
 
-            let chats = JSON.parse(localStorage.getItem('aetheris_support_chats')) || {};
+            let chats = await cloudGet('support_chats', {});
             if (!chats[currentUser.email.toLowerCase()]) chats[currentUser.email.toLowerCase()] = [];
 
             const now = new Date();
@@ -2914,7 +2882,7 @@
                 message: msg,
                 time: now.toLocaleTimeString()
             });
-            localStorage.setItem('aetheris_support_chats', JSON.stringify(chats));
+            await cloudSet('support_chats', chats);
             input.value = '';
             renderPlayerChatMessages();
             notifyOwner('Support Message', `Player ${currentUser.nickname} sent a support message.`);
