@@ -1515,10 +1515,11 @@
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
 
+                // Optimized to 30 seconds (30000ms) to save Supabase Egress bandwidth
                 ownerPollingInterval = setInterval(async () => {
                     await loadAllCloudState();
                     renderOwnerQueues();
-                }, 3000);
+                }, 30000);
             }
         }
         window.switchTab = switchTab;
