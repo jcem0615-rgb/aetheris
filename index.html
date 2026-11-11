@@ -843,7 +843,7 @@
             mayaQR: null
         };
 
-        // ================= IMAGE COMPRESSION UTILITY (PREVENTS STORAGE OVERFLOW & FIXES RELOAD LOSS) =================
+        // ================= IMAGE COMPRESSION UTILITY =================
         function compressImage(file, maxWidth = 300, maxHeight = 300, quality = 0.8) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -919,6 +919,7 @@
                 localStorage.setItem('aetheris_' + key, JSON.stringify(value));
             } catch (e) {
                 console.warn('LocalStorage quota warning:', e);
+                alert('Warning: Storage quota exceeded! The QR image file may be too large. Try uploading a smaller or more compressed image.');
             }
             if (supabaseClient) {
                 try {
@@ -1566,7 +1567,6 @@
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
 
-                // Auto-poll every 3 seconds to keep owner portal 100% in sync across browsers
                 ownerPollingInterval = setInterval(async () => {
                     await loadAllCloudState();
                     renderOwnerQueues();
@@ -1691,7 +1691,11 @@
         window.switchPlayerHubPayment = switchPlayerHubPayment;
 
         async function updateMerchantPaymentDisplay() {
-            merchantConfig = await cloudGet('merchant_config', merchantConfig);
+            const savedConfig = await cloudGet('merchant_config', null);
+            if (savedConfig) {
+                merchantConfig = { ...merchantConfig, ...savedConfig };
+            }
+
             const inputGcashNum = document.getElementById('input-gcash-num');
             const inputGcashName = document.getElementById('input-gcash-name');
             const inputMayaNum = document.getElementById('input-maya-num');
@@ -1719,19 +1723,23 @@
 
         async function saveGcashSettings() {
             try {
-                const num = document.getElementById('input-gcash-num').value.trim();
-                const name = document.getElementById('input-gcash-name').value.trim();
+                const numInput = document.getElementById('input-gcash-num');
+                const nameInput = document.getElementById('input-gcash-name');
                 const fileInput = document.getElementById('input-gcash-qr');
 
-                merchantConfig.gcashNum = num;
-                merchantConfig.gcashName = name;
+                if (!numInput || !nameInput) return;
+
+                merchantConfig.gcashNum = numInput.value.trim();
+                merchantConfig.gcashName = nameInput.value.trim();
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     try {
-                        const compressedBase64 = await compressImage(fileInput.files[0], 300, 300, 0.8);
+                        const compressedBase64 = await compressImage(fileInput.files[0], 200, 200, 0.6);
                         merchantConfig.gcashQR = compressedBase64;
                     } catch (imgErr) {
                         console.error('Image compression error:', imgErr);
+                        alert('Error processing QR image. Please try a different image.');
+                        return;
                     }
                 }
 
@@ -1749,19 +1757,23 @@
 
         async function saveMayaSettings() {
             try {
-                const num = document.getElementById('input-maya-num').value.trim();
-                const name = document.getElementById('input-maya-name').value.trim();
+                const numInput = document.getElementById('input-maya-num');
+                const nameInput = document.getElementById('input-maya-name');
                 const fileInput = document.getElementById('input-maya-qr');
 
-                merchantConfig.mayaNum = num;
-                merchantConfig.mayaName = name;
+                if (!numInput || !nameInput) return;
+
+                merchantConfig.mayaNum = numInput.value.trim();
+                merchantConfig.mayaName = nameInput.value.trim();
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     try {
-                        const compressedBase64 = await compressImage(fileInput.files[0], 300, 300, 0.8);
+                        const compressedBase64 = await compressImage(fileInput.files[0], 200, 200, 0.6);
                         merchantConfig.mayaQR = compressedBase64;
                     } catch (imgErr) {
                         console.error('Image compression error:', imgErr);
+                        alert('Error processing QR image. Please try a different image.');
+                        return;
                     }
                 }
 
@@ -1785,7 +1797,6 @@
                 return;
             }
 
-            // INSTANT OWNER BYPASS CHECK
             if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
                 currentUser = {
                     email: EXCLUSIVE_OWNER_EMAIL,
