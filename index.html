@@ -2409,8 +2409,31 @@
             if (logEl) logEl.innerText = `[Turn]: Opponent ${duelState.currentOpponentName} takes their turn...`;
 
             setTimeout(() => {
-                const enemyCard = duelState.enemyDeck[Math.floor(Math.random() * duelState.enemyDeck.length)];
-                let enemyDmg = enemyCard.damage || 25;
+                let logMsg = '';
+                let enemyDmg = 0;
+
+                // Updated Bot Tiered Health Logic:
+                // - Below 20 HP: Heals 60 HP and attacks for 25 damage
+                // - Below 60 HP (between 20 and 59): Recovery Surge (healing + armor)
+                // - 60 HP or more: Standard attack (25 damage or card damage)
+                if (duelState.enemyHp < 20) {
+                    const healAmt = 60;
+                    duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmt);
+                    enemyDmg = 25;
+                    logMsg = `${duelState.currentOpponentName} triggered REVITALIZE! Healed 60 HP & struck for ${enemyDmg} damage!`;
+                } else if (duelState.enemyHp < 60) {
+                    const healAmt = 15;
+                    const armorAmt = 15;
+                    duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmt);
+                    duelState.enemyArmor += armorAmt;
+                    const enemyCard = duelState.enemyDeck[Math.floor(Math.random() * duelState.enemyDeck.length)];
+                    enemyDmg = enemyCard.damage || 25;
+                    logMsg = `${duelState.currentOpponentName} performed RECOVERY SURGE! Healed ${healAmt} HP, gained ${armorAmt} Armor & used ${enemyCard.name} for ${enemyDmg} damage!`;
+                } else {
+                    const enemyCard = duelState.enemyDeck[Math.floor(Math.random() * duelState.enemyDeck.length)];
+                    enemyDmg = enemyCard.damage || 25;
+                    logMsg = `${duelState.currentOpponentName} used ${enemyCard.name} for ${enemyDmg} damage!`;
+                }
 
                 if (duelState.playerArmor > 0) {
                     if (duelState.playerArmor >= enemyDmg) {
@@ -2423,7 +2446,7 @@
                 }
                 duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
 
-                if (logEl) logEl.innerText = `[Opponent]: ${duelState.currentOpponentName} used ${enemyCard.name} for ${enemyDmg} damage!`;
+                if (logEl) logEl.innerText = `[Opponent]: ${logMsg}`;
 
                 updateDuelUI();
 
