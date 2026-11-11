@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aetheris Duel Arena</title>
+    <title>Aetheris Arena</title>
+    
     <!-- App Icon / Favicon -->
     <link rel="icon" type="image/jpeg" href="image_114c6025.jpg">
     <link rel="apple-touch-icon" href="image_114c6025.jpg">
+    
+    <!-- iOS Safari PWA Optimization & Standalone Mode -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Aetheris Arena">
+
     <!-- PWA Manifest Link -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -777,7 +784,7 @@
                 if (outcome === 'accepted') console.log('User accepted install');
                 deferredPrompt = null;
             } else {
-                alert('To install Aetheris Arena:\n\n• On Mobile (Chrome/Safari): Tap your browser menu and select "Add to Home Screen".\n• On Desktop (Chrome/Edge): Click the install icon in your browser address bar.');
+                alert('To install Aetheris Arena:\n\n• On iPhone/iPad (Safari): Tap the Share button at the bottom and select "Add to Home Screen".\n• On Android/PC (Chrome/Edge): Tap your browser menu or address bar icon.');
             }
         }
         window.installPWA = installPWA;
@@ -2540,7 +2547,6 @@
                     `).join('');
             }
 
-            // Pull pending registrations from both cloud pending_registrations and profiles table status === 'pending_registration'
             let pendingRegs = await cloudGet('pending_registrations', []);
             const profilePending = registeredPlayersList.filter(p => p.status === 'pending_registration');
             let regMap = new Map();
