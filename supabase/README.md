@@ -13,18 +13,22 @@ The game's money and combat run on Supabase, not in the browser.
 All three require a valid JWT. `admin-actions` additionally checks the caller
 is in `public.admins`.
 
-**The sources are deployed but not yet committed here.** Pull them into git:
+Sources live in `supabase/functions/<name>/index.ts` and match what is
+deployed. To work on them:
 
 ```bash
 supabase link --project-ref qocrpleireoffykeendn
 ```
 
 ```bash
-supabase functions download duel && supabase functions download shop && supabase functions download admin-actions
+supabase functions deploy duel
 ```
 
-Then commit `supabase/functions/`, and deploy future changes with
-`supabase functions deploy <name>`.
+To confirm the repo still matches production before you change anything:
+
+```bash
+supabase functions download duel --output-dir /tmp/live && diff /tmp/live/duel/index.ts supabase/functions/duel/index.ts
+```
 
 ## Invariants the database enforces
 

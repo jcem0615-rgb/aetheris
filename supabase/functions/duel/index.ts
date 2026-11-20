@@ -1,0 +1,332 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2.49.4";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const PLATFORM_FEE = 0.05;
+const ALLOWED_STAKES = [50, 100, 200, 500, 1000];
+const MAX_HP = 100;
+const AP_PER_TURN = 3;
+const HAND_SIZE = 4;
+
+// The server's own copy of every card's effect, generated from the game
+// tables. The browser receives card IDs only and looks names up locally for
+// display; every number below is applied here and never trusted from input.
+const CARD_TABLE = "pyra-1,1,28,0,0,0,FLAME DART|pyra-2,1,0,14,0,0,FIRE SHIELD|pyra-3,2,32,0,0,10,SCORCH|pyra-4,2,0,0,20,0,BLAZING HEAL|sylph-1,1,28,0,0,0,GALE SLASH|sylph-2,1,0,15,0,0,WIND STEP|sylph-3,2,32,0,0,10,GALE ARROW|sylph-4,2,0,0,20,0,WIND MEND|valen-1,1,26,0,0,0,SHIELD BASH|valen-2,1,0,18,0,0,IRON BASTION|valen-3,2,35,0,0,0,HEAVY SLAM|valen-4,2,0,12,15,0,FORTIFY|nyx-1,1,30,0,0,0,SHADOW STAB|nyx-2,1,0,14,0,0,SMOKE CLOAK|nyx-3,2,32,0,0,12,VENOM BLADE|nyx-4,2,20,0,18,0,LIFE SIPHON|storm-1,1,34,0,0,0,SPARK STRIKE|storm-2,1,0,20,0,0,STATIC GUARD|storm-3,2,45,0,0,0,LIGHTNING BOLT|storm-4,2,0,0,25,0,ELECTRO MEND|titan-1,1,36,0,0,0,STONE SMASH|titan-2,1,0,25,0,0,TECTONIC BLOCK|titan-3,2,50,0,0,0,EARTHQUAKE|titan-4,2,0,15,25,0,TITAN MEND|chrono-1,1,38,0,0,0,TIME SLASH|chrono-2,1,0,22,0,0,TEMPORAL WARD|chrono-3,2,55,0,0,0,TIME WARP|chrono-4,2,0,0,30,0,HOURGLASS HEAL|valkyrie-1,1,40,0,0,0,HOLY SPEAR|valkyrie-2,1,0,24,0,0,RADIANT SHIELD|valkyrie-3,2,60,0,0,0,CELESTIAL STRIKE|valkyrie-4,2,0,0,35,0,DIVINE MEND|void-1,1,42,0,0,0,DARK BOLT|void-2,1,0,25,0,0,SOUL BARRIER|void-3,2,45,0,0,18,PLAGUE WAVE|void-4,2,45,0,25,0,ABYSSAL DRAIN|berserk-1,1,46,0,0,0,BLOOD AXE|berserk-2,1,0,22,0,0,FRENZIED BLOCK|berserk-3,2,65,0,0,0,BLOODY RAMPAGE|berserk-4,2,35,0,35,0,BLOOD FEAST|astral-1,1,50,0,0,0,STELLAR RAY|astral-2,1,0,30,0,0,COSMIC BARRIER|astral-3,2,75,0,0,0,SUPERNOVA|astral-4,2,0,0,40,0,ASTRAL MEND|shop-pyra-2,2,55,0,0,15,INFERNAL HELLFIRE|shop-pyra-3,3,95,0,0,0,SOLAR SUPERNOVA|shop-sylph-2,2,58,0,0,0,HURRICANE BARRAGE|shop-sylph-3,3,90,0,0,0,HURRICANE APOCALYPSE|shop-valen-2,2,0,35,20,0,AEGIS FORTRESS|shop-valen-3,3,0,60,0,0,DIVINE INVINCIBILITY|shop-nyx-2,2,62,0,0,0,SHADOW ASSASSINATION|shop-nyx-3,3,95,0,0,20,ABSOLUTE SHADOW ECLIPSE|shop-storm-2,2,65,0,0,0,THUNDER GODS WRATH|shop-storm-3,3,100,0,0,0,ZEUS THUNDERSTORM|shop-titan-2,2,68,0,0,0,CONTINENTAL CRUSH|shop-titan-3,3,105,0,0,0,WORLD SHATTERING METEOR|shop-chrono-2,2,0,0,45,0,TEMPORAL REWIND|shop-chrono-3,3,0,0,75,0,ETERNAL TIME COLLAPSE|shop-valkyrie-2,2,70,0,0,0,DIVINE JUDGMENT|shop-valkyrie-3,3,105,0,0,0,HEAVENLY RAGNAROK|shop-void-2,2,65,0,25,0,SOUL HARVEST|shop-void-3,3,110,0,0,0,VOID REALM ANNIHILATION|shop-berserk-2,2,75,0,0,0,APOCALYPSE FRENZY|shop-berserk-3,3,115,0,0,0,RAGING BLOOD GOD RAMPAGE|shop-astral-2,2,80,0,0,0,GALAXY COLLAPSE|shop-astral-3,3,120,0,0,0,BIG BANG UNIVERSE STRIKE";
+
+const BASE_TABLE = "pyra:pyra-1,pyra-2,pyra-3,pyra-4|sylph:sylph-1,sylph-2,sylph-3,sylph-4|valen:valen-1,valen-2,valen-3,valen-4|nyx:nyx-1,nyx-2,nyx-3,nyx-4|storm-knight:storm-1,storm-2,storm-3,storm-4|ironclad-titan:titan-1,titan-2,titan-3,titan-4|chrono-warden:chrono-1,chrono-2,chrono-3,chrono-4|sky-valkyrie:valkyrie-1,valkyrie-2,valkyrie-3,valkyrie-4|void-necromancer:void-1,void-2,void-3,void-4|blood-berserker:berserk-1,berserk-2,berserk-3,berserk-4|astral-archmage:astral-1,astral-2,astral-3,astral-4";
+
+const SHOP_TABLE = "pyra:shop-pyra-2,shop-pyra-3|sylph:shop-sylph-2,shop-sylph-3|valen:shop-valen-2,shop-valen-3|nyx:shop-nyx-2,shop-nyx-3|storm-knight:shop-storm-2,shop-storm-3|ironclad-titan:shop-titan-2,shop-titan-3|chrono-warden:shop-chrono-2,shop-chrono-3|sky-valkyrie:shop-valkyrie-2,shop-valkyrie-3|void-necromancer:shop-void-2,shop-void-3|blood-berserker:shop-berserk-2,shop-berserk-3|astral-archmage:shop-astral-2,shop-astral-3";
+
+interface Card { ap: number; damage: number; armor: number; heal: number; poison: number; name: string }
+
+const CARDS: Record<string, Card> = {};
+for (const row of CARD_TABLE.split("|")) {
+  const p = row.split(",");
+  CARDS[p[0]] = { ap: +p[1], damage: +p[2], armor: +p[3], heal: +p[4], poison: +p[5], name: p[6] };
+}
+
+function parseDecks(table: string): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const row of table.split("|")) {
+    const [hero, ids] = row.split(":");
+    out[hero] = ids.split(",");
+  }
+  return out;
+}
+const HERO_BASE = parseDecks(BASE_TABLE);
+const HERO_SHOP = parseDecks(SHOP_TABLE);
+
+const BOT_NAMES = ["Kenjie","Kenneth","Clyde","Joana","Glenda","Glenn","Mark","Jessa","Bryan","Rica","Christian","Nicole","Jomar","Kaye","Roldan"];
+
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+const json = (b: unknown, s = 200) =>
+  new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
+
+const db = () => createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+
+// Server-side RNG: the client cannot predict or steer a shuffle or a bot move.
+function rnd(n: number) {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0] % n;
+}
+function pick<T>(a: T[]): T { return a[rnd(a.length)]; }
+
+interface State {
+  heroId: string; enemyHeroId: string; opponent: string;
+  playerHp: number; playerArmor: number; playerAp: number; playerPoison: number;
+  enemyHp: number; enemyArmor: number; enemyPoison: number;
+  deck: string[]; hand: string[]; turn: number; log: string;
+}
+
+function deckFor(heroId: string, owned: Record<string, boolean>): string[] {
+  const deck = [...(HERO_BASE[heroId] ?? HERO_BASE["pyra"])];
+  for (const id of (HERO_SHOP[heroId] ?? [])) {
+    if (owned && owned[id]) deck.push(id);
+  }
+  return deck;
+}
+
+function deal(deck: string[]): string[] {
+  const pool = [...deck];
+  const hand: string[] = [];
+  for (let i = 0; i < Math.min(HAND_SIZE, pool.length); i++) {
+    hand.push(pool.splice(rnd(pool.length), 1)[0]);
+  }
+  return hand;
+}
+
+// Armour absorbs damage first, exactly as the UI shows.
+function hit(dmg: number, armor: number) {
+  if (armor >= dmg) return { dmg: 0, armor: armor - dmg };
+  return { dmg: dmg - armor, armor: 0 };
+}
+
+function publicState(s: State, duelId: string, seq: number, stake: number) {
+  return {
+    duelId, seq, stake,
+    heroId: s.heroId, enemyHeroId: s.enemyHeroId, opponent: s.opponent,
+    playerHp: s.playerHp, playerMaxHp: MAX_HP, playerArmor: s.playerArmor,
+    playerAp: s.playerAp, playerPoison: s.playerPoison,
+    enemyHp: s.enemyHp, enemyMaxHp: MAX_HP, enemyArmor: s.enemyArmor,
+    enemyPoison: s.enemyPoison, hand: s.hand, turn: s.turn, log: s.log,
+  };
+}
+
+// deno-lint-ignore no-explicit-any
+async function settle(sb: any, duel: any, profile: any, won: boolean) {
+  const stake = Number(duel.stake);
+  const payout = won ? stake * 2 * (1 - PLATFORM_FEE) : 0;
+
+  const { data: upd } = await sb.from("duel_sessions")
+    .update({ status: "settled", result: won ? "VICTORY" : "DEFEAT", payout, settled_at: new Date().toISOString() })
+    .eq("id", duel.id).eq("status", "active").select("id");
+
+  if (!upd || upd.length === 0) return null;
+
+  let balance = Number(profile.wallet);
+  if (won) {
+    const { data: bal } = await sb.rpc("apply_wallet_delta", {
+      p_user_id: profile.user_id, p_delta: payout,
+      p_reason: `Ranked Duel Victory vs ${duel.opponent} (stake returned + winnings)`, p_type: "CREDIT",
+    });
+    balance = Number(bal?.[0]?.post_balance ?? balance);
+    await sb.from("profiles")
+      .update({ wins: Number(profile.wins ?? 0) + 1, xp: Number(profile.xp ?? 0) + 100 })
+      .eq("user_id", profile.user_id);
+  }
+
+  await sb.from("battle_history").insert([{
+    user_id: profile.user_id, player_email: profile.email, player_name: profile.nickname,
+    opponent: duel.opponent ?? "Opponent", result: won ? "VICTORY" : "DEFEAT",
+    wager: stake, bet: stake, pre_balance: Number(profile.wallet) + stake, post_balance: balance,
+    date: new Date().toISOString().split("T")[0], time: new Date().toTimeString().slice(0, 8),
+  }]);
+
+  return { finished: true, result: won ? "VICTORY" : "DEFEAT", payout,
+           netGain: won ? payout - stake : -stake, balance };
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method !== "POST") return json({ error: "POST only" }, 405);
+
+  const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
+  const sb = db();
+  const { data: authData } = await sb.auth.getUser(token);
+  if (!authData?.user) return json({ error: "Not signed in" }, 401);
+  const uid = authData.user.id;
+
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return json({ error: "Invalid JSON body" }, 400); }
+  const action = String(body.action ?? "");
+
+  const { data: profile } = await sb.from("profiles")
+    .select("user_id, email, nickname, wallet, wins, xp, approved, frozen, active_hero, unlocked_skills")
+    .eq("user_id", uid).maybeSingle();
+
+  if (!profile) return json({ error: "No profile" }, 403);
+  if (profile.frozen) return json({ error: "Account is frozen" }, 403);
+  if (!profile.approved) return json({ error: "Account is not approved yet" }, 403);
+
+  // ---- start: take the stake and build the opening board ------------------
+  if (action === "escrow") {
+    const stake = Number(body.stake);
+    if (!ALLOWED_STAKES.includes(stake)) return json({ error: "Invalid stake" }, 400);
+    if (Number(profile.wallet) < stake) return json({ error: "Insufficient balance" }, 400);
+
+    await sb.rpc("expire_stale_duels");
+
+    const heroId = profile.active_hero ?? "pyra";
+    const enemyHeroId = pick(Object.keys(HERO_BASE));
+    const opponent = pick(BOT_NAMES);
+    const deck = deckFor(heroId, (profile.unlocked_skills ?? {}) as Record<string, boolean>);
+
+    const state: State = {
+      heroId, enemyHeroId, opponent,
+      playerHp: MAX_HP, playerArmor: 0, playerAp: AP_PER_TURN, playerPoison: 0,
+      enemyHp: MAX_HP, enemyArmor: 0, enemyPoison: 0,
+      deck, hand: deal(deck), turn: 1, log: "Match connected! Choose tactical skills.",
+    };
+
+    const { data: duel, error: duelErr } = await sb.from("duel_sessions")
+      .insert([{ user_id: uid, stake, opponent, state, seq: 0 }])
+      .select("id, stake").single();
+
+    if (duelErr) return json({ error: "You already have a duel in progress" }, 409);
+
+    const { data: bal, error: balErr } = await sb.rpc("apply_wallet_delta", {
+      p_user_id: uid, p_delta: -stake,
+      p_reason: `Ranked Duel wager escrowed (₱${stake} stake)`, p_type: "DEBIT",
+    });
+    if (balErr) {
+      await sb.from("duel_sessions").delete().eq("id", duel.id);
+      return json({ error: balErr.message }, 400);
+    }
+
+    return json({ ...publicState(state, duel.id, 0, stake), balance: bal?.[0]?.post_balance });
+  }
+
+  const { data: duel } = await sb.from("duel_sessions")
+    .select("id, stake, status, opponent, state, seq").eq("id", String(body.duelId ?? ""))
+    .eq("user_id", uid).maybeSingle();
+
+  if (!duel) return json({ error: "Duel not found" }, 404);
+  if (duel.status !== "active") return json({ error: "Duel already finished" }, 409);
+
+  const s: State = duel.state as State;
+  const stake = Number(duel.stake);
+
+  if (action === "getState") return json(publicState(s, duel.id, duel.seq, stake));
+
+  if (action === "cancel") {
+    if (duel.seq > 0) return json({ error: "The duel has already started" }, 409);
+    const { data: upd } = await sb.from("duel_sessions")
+      .update({ status: "cancelled", settled_at: new Date().toISOString() })
+      .eq("id", duel.id).eq("status", "active").select("id");
+    if (!upd?.length) return json({ error: "Duel already settled" }, 409);
+
+    const { data: bal } = await sb.rpc("apply_wallet_delta", {
+      p_user_id: uid, p_delta: stake,
+      p_reason: "Ranked Duel wager refunded (queue cancelled)", p_type: "CREDIT",
+    });
+    return json({ cancelled: true, refunded: stake, balance: bal?.[0]?.post_balance });
+  }
+
+  if (action === "surrender") {
+    const out = await settle(sb, duel, profile, false);
+    return out ? json(out) : json({ error: "Duel already settled" }, 409);
+  }
+
+  // Replay guard: the client echoes the seq it rendered, so a resent or
+  // out-of-order request can never apply the same action twice.
+  const clientSeq = Number(body.seq ?? -1);
+  if (clientSeq !== duel.seq) {
+    return json({ error: "Out of sync", resync: publicState(s, duel.id, duel.seq, stake) }, 409);
+  }
+
+  if (action === "playCard") {
+    const idx = Number(body.handIndex);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= s.hand.length) {
+      return json({ error: "No such card in hand" }, 400);
+    }
+    const card = CARDS[s.hand[idx]];
+    if (!card) return json({ error: "Unknown card" }, 400);
+    if (s.playerAp < card.ap) return json({ error: "Not enough Action Points" }, 400);
+
+    s.playerAp -= card.ap;
+    let msg = `You played ${card.name}! `;
+
+    if (card.damage) {
+      const r = hit(card.damage, s.enemyArmor);
+      s.enemyArmor = r.armor;
+      s.enemyHp = Math.max(0, s.enemyHp - r.dmg);
+      msg += `Dealt ${r.dmg} damage. `;
+    }
+    if (card.armor)  { s.playerArmor += card.armor; msg += `Gained ${card.armor} armor. `; }
+    if (card.heal)   { s.playerHp = Math.min(MAX_HP, s.playerHp + card.heal); msg += `Restored ${card.heal} HP. `; }
+    if (card.poison) { s.enemyPoison += card.poison; msg += `Applied ${card.poison} burn/poison. `; }
+
+    s.hand.splice(idx, 1);
+    s.log = msg;
+
+    if (s.enemyHp <= 0) {
+      const out = await settle(sb, duel, profile, true);
+      return json({ ...publicState(s, duel.id, duel.seq + 1, stake), ...(out ?? {}) });
+    }
+
+    await sb.from("duel_sessions")
+      .update({ state: s, seq: duel.seq + 1, last_action_at: new Date().toISOString() })
+      .eq("id", duel.id);
+    return json(publicState(s, duel.id, duel.seq + 1, stake));
+  }
+
+  if (action === "endTurn") {
+    let msg = "";
+
+    // Burn/poison now actually damages, as every card's text promises.
+    if (s.enemyPoison > 0) {
+      s.enemyHp = Math.max(0, s.enemyHp - s.enemyPoison);
+      msg += `Burn/poison dealt ${s.enemyPoison} to ${s.opponent}. `;
+      s.enemyPoison = Math.max(0, s.enemyPoison - 2);
+    }
+    if (s.enemyHp <= 0) {
+      s.log = msg;
+      const out = await settle(sb, duel, profile, true);
+      return json({ ...publicState(s, duel.id, duel.seq + 1, stake), ...(out ?? {}) });
+    }
+
+    const enemyDeck = HERO_BASE[s.enemyHeroId] ?? HERO_BASE["pyra"];
+    let dmg = 0;
+
+    if (s.enemyHp < 20) {
+      s.enemyHp = Math.min(MAX_HP, s.enemyHp + 60);
+      dmg = 25;
+      msg += `${s.opponent} triggered REVITALIZE! Healed 60 HP & struck for ${dmg}. `;
+    } else if (s.enemyHp < 60) {
+      s.enemyHp = Math.min(MAX_HP, s.enemyHp + 15);
+      s.enemyArmor += 15;
+      const c = CARDS[pick(enemyDeck)];
+      dmg = c?.damage || 25;
+      msg += `${s.opponent} used RECOVERY SURGE and ${c?.name ?? "a strike"} for ${dmg}. `;
+    } else {
+      const c = CARDS[pick(enemyDeck)];
+      dmg = c?.damage || 25;
+      msg += `${s.opponent} used ${c?.name ?? "a strike"} for ${dmg}. `;
+    }
+
+    const r = hit(dmg, s.playerArmor);
+    s.playerArmor = r.armor;
+    s.playerHp = Math.max(0, s.playerHp - r.dmg);
+
+    if (s.playerPoison > 0) {
+      s.playerHp = Math.max(0, s.playerHp - s.playerPoison);
+      msg += `You took ${s.playerPoison} poison damage. `;
+      s.playerPoison = Math.max(0, s.playerPoison - 2);
+    }
+
+    s.log = msg;
+
+    if (s.playerHp <= 0) {
+      const out = await settle(sb, duel, profile, false);
+      return json({ ...publicState(s, duel.id, duel.seq + 1, stake), ...(out ?? {}) });
+    }
+
+    s.turn += 1;
+    s.playerAp = AP_PER_TURN;
+    s.hand = deal(s.deck);
+
+    await sb.from("duel_sessions")
+      .update({ state: s, seq: duel.seq + 1, last_action_at: new Date().toISOString() })
+      .eq("id", duel.id);
+    return json(publicState(s, duel.id, duel.seq + 1, stake));
+  }
+
+  return json({ error: `Unknown action: ${action}` }, 400);
+});
