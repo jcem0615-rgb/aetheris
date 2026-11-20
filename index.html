@@ -1207,15 +1207,13 @@
             }).eq('user_id', authSession.user.id));
         }
 
-        const humanBotNames = ['Kenjie', 'Kenneth', 'Clyde', 'Joana', 'Glenda', 'Glenn', 'Mark', 'Jessa', 'Bryan', 'Rica', 'Christian', 'Nicole', 'Jomar', 'Kaye', 'Roldan'];
-        function getRandomHumanBotName() {
-            return humanBotNames[Math.floor(Math.random() * humanBotNames.length)];
-        }
-
-        let duelState = { 
-            playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0, 
-            enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, enemyDebuff: 'None',
-            turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, currentOpponentName: 'Kenjie', enemyHero: null, enemyDeck: [], isPlayerTurn: true
+        // Mirrors the board the server sends back. The deck, the enemy's hand
+        // and the opponent's identity all live server-side.
+        let duelState = {
+            playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
+            enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0,
+            opponent: '', hand: [], turn: 1, log: '',
+            turnTimeRemaining: 30, turnTimerInterval: null
         };
 
         // Deck, hand and discard now live in the server's duel state.
@@ -2408,12 +2406,10 @@
                 return;
             }
 
-            const botName = getRandomHumanBotName();
-
-            // The server takes the stake and opens the duel. If this fails,
-            // no match starts, so a stake can never be wagered twice.
+            // The server takes the stake, picks the opponent and opens the duel.
+            // If this fails, no match starts, so a stake is never wagered twice.
             const { data, error } = await callFunction('duel', {
-                action: 'escrow', stake: amount, opponent: botName
+                action: 'escrow', stake: amount
             });
             if (error) {
                 alert(error);
@@ -2440,7 +2436,7 @@
                 if (matchmakingElapsedSeconds >= 6) {
                     clearInterval(matchmakingElapsedTimer);
                     closeModal();
-                    startLiveDuelMatch(botName);
+                    startLiveDuelMatch();
                 }
             }, 1000);
         }
@@ -2485,9 +2481,9 @@
             updateDuelUI();
         }
 
-        function startLiveDuelMatch(botName) {
+        function startLiveDuelMatch() {
             const enemyHero = heroes.find(h => h.id === duelState.enemyHeroId) || heroes[0];
-            const name = (duelState.opponent || botName || 'OPPONENT').toUpperCase();
+            const name = (duelState.opponent || 'OPPONENT').toUpperCase();
 
             const fsEnemyName = document.getElementById('fs-enemy-title');
             const fsEnemyLabel = document.getElementById('fs-enemy-name-label');
