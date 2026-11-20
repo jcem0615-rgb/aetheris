@@ -1218,9 +1218,7 @@
             turnTimeRemaining: 30, turnTimerInterval: null, isBotMatch: true, currentOpponentName: 'Kenjie', enemyHero: null, enemyDeck: [], isPlayerTurn: true
         };
 
-        let playerDeck = [];
-        let playerHand = [];
-        let playerDiscard = [];
+        // Deck, hand and discard now live in the server's duel state.
         
         let matchmakingElapsedTimer = null;
         let matchmakingElapsedSeconds = 0;
@@ -2428,6 +2426,9 @@
             currentUser.wallet = Number(data.balance);
             updateWalletDisplay();
 
+            // The escrow response already carries the opening board.
+            applyServerDuelState(data);
+
             openModal('matchmaking');
             matchmakingElapsedSeconds = 0;
             const countdownEl = document.getElementById('matchmaking-countdown');
@@ -2463,143 +2464,122 @@
         }
         window.cancelMatchmakingQueue = cancelMatchmakingQueue;
 
+        // ================= DUEL CLIENT (thin renderer) =================
+        // The server owns the board. This file only draws what it is told and
+        // forwards the player's intent. No damage, healing, shuffling or bot
+        // decision is computed here any more.
+        let duelSeq = 0;
+
+        // Card metadata for display only; effects come from the server.
+        const CARD_INDEX = (() => {
+            const map = {};
+            heroes.forEach(h => h.baseSkills.forEach(c => { map[c.id] = c; }));
+            Object.values(shopSkillsMap).forEach(list => list.forEach(c => { map[c.id] = c; }));
+            return map;
+        })();
+
+        function applyServerDuelState(st) {
+            duelState = Object.assign({}, duelState, st);
+            duelSeq = st.seq;
+            if (st.duelId) activeDuelId = st.duelId;
+            updateDuelUI();
+        }
+
         function startLiveDuelMatch(botName) {
-            botName = botName || getRandomHumanBotName();
-            const activeHeroId = currentUser.active_hero || 'pyra';
-            const baseHero = heroes.find(h => h.id === activeHeroId) || heroes[0];
-            const enemyHero = heroes[Math.floor(Math.random() * heroes.length)];
-
-            duelState = {
-                playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
-                enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0, debuff: 'None',
-                turnTimeRemaining: 30, isBotMatch: true, currentOpponentName: botName, enemyHero, enemyDeck: enemyHero.baseSkills, isPlayerTurn: true
-            };
-
-            playerDeck = [...baseHero.baseSkills];
-            if (currentUser.unlockedSkills) {
-                const activeShopSkills = shopSkillsMap[activeHeroId] || [];
-                activeShopSkills.forEach(s => {
-                    if (currentUser.unlockedSkills[s.id]) {
-                        playerDeck.push(s);
-                    }
-                });
-            }
-
-            dealPlayerHand();
-            const viewFullscreen = document.getElementById('view-duel-fullscreen');
-            if (viewFullscreen) viewFullscreen.classList.remove('hidden');
+            const enemyHero = heroes.find(h => h.id === duelState.enemyHeroId) || heroes[0];
+            const name = (duelState.opponent || botName || 'OPPONENT').toUpperCase();
 
             const fsEnemyName = document.getElementById('fs-enemy-title');
             const fsEnemyLabel = document.getElementById('fs-enemy-name-label');
             const fsEnemyImg = document.getElementById('fs-enemy-img-el');
             const fsBetBadge = document.getElementById('fullscreen-bet-badge');
 
-            if (fsEnemyName) fsEnemyName.innerText = botName.toUpperCase();
-            if (fsEnemyLabel) fsEnemyLabel.innerText = botName.toUpperCase();
+            if (fsEnemyName) fsEnemyName.innerText = name;
+            if (fsEnemyLabel) fsEnemyLabel.innerText = name;
             if (fsEnemyImg) fsEnemyImg.src = enemyHero.iconImg;
             if (fsBetBadge) fsBetBadge.innerText = `Bet: ₱${currentDuelBet}`;
+
+            const viewFullscreen = document.getElementById('view-duel-fullscreen');
+            if (viewFullscreen) viewFullscreen.classList.remove('hidden');
 
             updateDuelUI();
             startTurnTimer();
         }
 
-        function dealPlayerHand() {
-            playerHand = [];
-            let pool = [...playerDeck];
-            for (let i = 0; i < Math.min(4, pool.length); i++) {
-                const idx = Math.floor(Math.random() * pool.length);
-                playerHand.push(pool.splice(idx, 1)[0]);
-            }
-        }
-
         function updateDuelUI() {
-            const pHpBar = document.getElementById('fs-player-hp-bar');
-            const pHpText = document.getElementById('fs-player-hp-text');
-            const pArmor = document.getElementById('fs-player-armor');
-            const pPoison = document.getElementById('fs-player-poison');
-            const pAp = document.getElementById('fs-player-ap');
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+            const maxP = duelState.playerMaxHp || 100;
+            const maxE = duelState.enemyMaxHp || 100;
 
-            const eHpBar = document.getElementById('fs-enemy-hp-bar');
-            const eHpText = document.getElementById('fs-enemy-hp-text');
-            const eArmor = document.getElementById('fs-enemy-armor');
-            const ePoison = document.getElementById('fs-enemy-poison');
+            const pBar = document.getElementById('fs-player-hp-bar');
+            if (pBar) pBar.style.width = `${Math.max(0, (duelState.playerHp / maxP) * 100)}%`;
+            set('fs-player-hp-text', `${duelState.playerHp}/${maxP}`);
+            set('fs-player-armor', duelState.playerArmor);
+            set('fs-player-poison', duelState.playerPoison);
+            set('fs-player-ap', duelState.playerAp);
 
-            if (pHpBar) pHpBar.style.width = `${Math.max(0, (duelState.playerHp / duelState.playerMaxHp) * 100)}%`;
-            if (pHpText) pHpText.innerText = `${duelState.playerHp}/${duelState.playerMaxHp}`;
-            if (pArmor) pArmor.innerText = duelState.playerArmor;
-            if (pPoison) pPoison.innerText = duelState.playerPoison;
-            if (pAp) pAp.innerText = duelState.playerAp;
+            const eBar = document.getElementById('fs-enemy-hp-bar');
+            if (eBar) eBar.style.width = `${Math.max(0, (duelState.enemyHp / maxE) * 100)}%`;
+            set('fs-enemy-hp-text', `${duelState.enemyHp}/${maxE}`);
+            set('fs-enemy-armor', duelState.enemyArmor);
+            set('fs-enemy-poison', duelState.enemyPoison);
 
-            if (eHpBar) eHpBar.style.width = `${Math.max(0, (duelState.enemyHp / duelState.enemyMaxHp) * 100)}%`;
-            if (eHpText) eHpText.innerText = `${duelState.enemyHp}/${duelState.enemyMaxHp}`;
-            if (eArmor) eArmor.innerText = duelState.enemyArmor;
-            if (ePoison) ePoison.innerText = duelState.enemyPoison;
+            if (duelState.log) set('fs-battle-log', `[Arena]: ${duelState.log}`);
 
             const handContainer = document.getElementById('shuffled-hand-container');
-            if (handContainer) {
-                handContainer.innerHTML = playerHand.map((card, idx) => `
-                    <div onclick="window.playDuelCard(${idx})" class="bg-slate-900 border border-slate-700 hover:border-amber-500 rounded-xl p-2 cursor-pointer card-hover flex flex-col justify-between">
+            if (!handContainer) return;
+
+            const hand = duelState.hand || [];
+            handContainer.innerHTML = hand.map((cardId, idx) => {
+                const card = CARD_INDEX[cardId] || { name: cardId, desc: '', ap: 0, type: 'skill' };
+                const affordable = (duelState.playerAp || 0) >= card.ap;
+                return `
+                    <div onclick="window.playDuelCard(${idx})" class="bg-slate-900 border ${affordable ? 'border-slate-700 hover:border-amber-500' : 'border-slate-800 opacity-50'} rounded-xl p-2 cursor-pointer card-hover flex flex-col justify-between">
                         <div>
                             <div class="flex justify-between items-center text-[9px] text-amber-400 font-bold">
                                 <span>AP: ${card.ap}</span>
-                                <span>${card.type.toUpperCase()}</span>
+                                <span>${(card.type || '').toUpperCase()}</span>
                             </div>
                             <h4 class="font-cinzel text-[11px] font-bold text-white mt-1">${card.name}</h4>
-                            <p class="text-[9px] text-slate-400 mt-0.5 line-clamp-2">${card.desc}</p>
+                            <p class="text-[9px] text-slate-400 mt-0.5 line-clamp-2">${card.desc || ''}</p>
                         </div>
-                        <button class="mt-2 w-full py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg">Play Card</button>
+                        <button class="mt-2 w-full py-1 ${affordable ? 'bg-blue-600 hover:bg-blue-500' : 'bg-slate-800'} text-white font-bold text-[10px] rounded-lg">Play Card</button>
                     </div>
-                `).join('');
+                `;
+            }).join('');
+        }
+
+        let duelBusy = false;
+
+        // Every move is a server call; `seq` makes a replayed request a no-op.
+        async function duelAction(payload) {
+            if (duelBusy || !activeDuelId) return null;
+            duelBusy = true;
+            try {
+                const { data, error } = await callFunction('duel',
+                    Object.assign({ duelId: activeDuelId, seq: duelSeq }, payload));
+
+                if (error) {
+                    const log = document.getElementById('fs-battle-log');
+                    if (log) log.innerText = `[Arena]: ${error}`;
+                    return null;
+                }
+
+                applyServerDuelState(data);
+
+                if (data.finished) {
+                    await finishDuel(data);
+                    return null;
+                }
+                return data;
+            } finally {
+                duelBusy = false;
             }
         }
 
-        function playDuelCard(cardIndex) {
-            const card = playerHand[cardIndex];
-            if (!card) return;
-            if (duelState.playerAp < card.ap) {
-                alert('Not enough Action Points (AP)!');
-                return;
-            }
-
-            duelState.playerAp -= card.ap;
-            let logMsg = `You played ${card.name}! `;
-
-            if (card.damage) {
-                let actualDmg = card.damage;
-                if (duelState.enemyArmor > 0) {
-                    if (duelState.enemyArmor >= actualDmg) {
-                        duelState.enemyArmor -= actualDmg;
-                        actualDmg = 0;
-                    } else {
-                        actualDmg -= duelState.enemyArmor;
-                        duelState.enemyArmor = 0;
-                    }
-                }
-                duelState.enemyHp = Math.max(0, duelState.enemyHp - actualDmg);
-                logMsg += `Dealt ${actualDmg} damage. `;
-            }
-            if (card.armor) {
-                duelState.playerArmor += card.armor;
-                logMsg += `Gained ${card.armor} armor. `;
-            }
-            if (card.heal) {
-                duelState.playerHp = Math.min(duelState.playerMaxHp, duelState.playerHp + card.heal);
-                logMsg += `Restored ${card.heal} HP. `;
-            }
-            if (card.poison) {
-                duelState.enemyPoison += card.poison;
-                logMsg += `Applied ${card.poison} burn/poison. `;
-            }
-
-            playerHand.splice(cardIndex, 1);
-            const logEl = document.getElementById('fs-battle-log');
-            if (logEl) logEl.innerText = `[Action]: ${logMsg}`;
-
-            updateDuelUI();
-
-            if (duelState.enemyHp <= 0) {
-                endDuelMatch(true);
-            }
+        async function playDuelCard(cardIndex) {
+            if (duelState.turnTimerInterval) { /* timer keeps running between cards */ }
+            await duelAction({ action: 'playCard', handIndex: cardIndex });
         }
         window.playDuelCard = playDuelCard;
 
@@ -2618,103 +2598,52 @@
             }, 1000);
         }
 
-        function endDuelTurn() {
+        async function endDuelTurn() {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-            const logEl = document.getElementById('fs-battle-log');
-            if (logEl) logEl.innerText = `[Turn]: Opponent ${duelState.currentOpponentName} takes their turn...`;
+            const log = document.getElementById('fs-battle-log');
+            if (log) log.innerText = `[Turn]: ${duelState.opponent || 'Opponent'} takes their turn...`;
 
-            setTimeout(() => {
-                let logMsg = '';
-                let enemyDmg = 0;
-
-                if (duelState.enemyHp < 20) {
-                    const healAmt = 60;
-                    duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmt);
-                    enemyDmg = 25;
-                    logMsg = `${duelState.currentOpponentName} triggered REVITALIZE! Healed 60 HP & struck for ${enemyDmg} damage!`;
-                } else if (duelState.enemyHp < 60) {
-                    const healAmt = 15;
-                    const armorAmt = 15;
-                    duelState.enemyHp = Math.min(duelState.enemyMaxHp, duelState.enemyHp + healAmt);
-                    duelState.enemyArmor += armorAmt;
-                    const enemyCard = duelState.enemyDeck[Math.floor(Math.random() * duelState.enemyDeck.length)];
-                    enemyDmg = enemyCard.damage || 25;
-                    logMsg = `${duelState.currentOpponentName} performed RECOVERY SURGE! Healed ${healAmt} HP, gained ${armorAmt} Armor & used ${enemyCard.name} for ${enemyDmg} damage!`;
-                } else {
-                    const enemyCard = duelState.enemyDeck[Math.floor(Math.random() * duelState.enemyDeck.length)];
-                    enemyDmg = enemyCard.damage || 25;
-                    logMsg = `${duelState.currentOpponentName} used ${enemyCard.name} for ${enemyDmg} damage!`;
-                }
-
-                if (duelState.playerArmor > 0) {
-                    if (duelState.playerArmor >= enemyDmg) {
-                        duelState.playerArmor -= enemyDmg;
-                        enemyDmg = 0;
-                    } else {
-                        enemyDmg -= duelState.playerArmor;
-                        duelState.playerArmor = 0;
-                    }
-                }
-                duelState.playerHp = Math.max(0, duelState.playerHp - enemyDmg);
-
-                if (logEl) logEl.innerText = `[Opponent]: ${logMsg}`;
-
-                updateDuelUI();
-
-                if (duelState.playerHp <= 0) {
-                    endDuelMatch(false);
-                    return;
-                }
-
-                duelState.playerAp = 3;
-                dealPlayerHand();
-                updateDuelUI();
-                startTurnTimer();
-            }, 1200);
+            const next = await duelAction({ action: 'endTurn' });
+            if (next) startTurnTimer();
         }
         window.endDuelTurn = endDuelTurn;
 
-        function surrenderDuel() {
-            if (confirm('Are you sure you want to surrender this duel? You will forfeit your wager.')) {
-                endDuelMatch(false);
+        async function surrenderDuel() {
+            if (!confirm('Are you sure you want to surrender this duel? You will forfeit your wager.')) return;
+            if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+
+            const { data, error } = await callFunction('duel', { action: 'surrender', duelId: activeDuelId });
+            if (error) {
+                alert(error);
+                return;
             }
+            await finishDuel(data);
         }
         window.surrenderDuel = surrenderDuel;
 
-        async function endDuelMatch(isVictory) {
+        // The server decided the outcome and already moved the money; this only
+        // closes the arena and reports what came back.
+        async function finishDuel(result) {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             const viewFullscreen = document.getElementById('view-duel-fullscreen');
             if (viewFullscreen) viewFullscreen.classList.add('hidden');
 
-            if (!activeDuelId) {
-                switchTab('hub');
-                return;
-            }
-
-            // The server owns the payout. It settles each duel exactly once.
-            const { data, error } = await callFunction('duel', {
-                action: 'settle',
-                duelId: activeDuelId,
-                result: isVictory ? 'VICTORY' : 'DEFEAT'
-            });
             activeDuelId = null;
+            duelSeq = 0;
 
-            if (error) {
-                alert('Could not settle the duel: ' + error);
-                await refreshProfile();
-                switchTab('hub');
-                return;
+            if (result && result.balance !== undefined) {
+                currentUser.wallet = Number(result.balance);
             }
 
-            currentUser.wallet = Number(data.balance);
-            if (isVictory) {
+            if (result && result.result === 'VICTORY') {
                 currentUser.wins = (currentUser.wins || 0) + 1;
                 currentUser.xp = (currentUser.xp || 0) + 100;
-                alert(`VICTORY! Prize pool ₱${Number(data.payout).toFixed(2)} paid out (net +₱${Number(data.netGain).toFixed(2)} after the 5% platform fee) and you gained 100 EXP!`);
+                alert(`VICTORY! Prize pool ₱${Number(result.payout).toFixed(2)} paid out (net +₱${Number(result.netGain).toFixed(2)} after the 5% platform fee) and you gained 100 EXP!`);
             } else {
                 alert(`DEFEAT! You forfeited your ₱${currentDuelBet} wager.`);
             }
 
+            await refreshProfile();
             updateWalletDisplay();
             updateRankAndExpBadges();
             switchTab('hub');
