@@ -834,6 +834,12 @@
         let balanceAdderHistory = [];
         let walletTransactionLedger = [];
         let registeredPlayersList = [];
+        let depositHistory = [];
+        let withdrawHistory = [];
+        let approvedResets = [];
+        let supportChatsCache = {};
+        let activeOwnerChatEmail = null;
+        let lastPersistedPlayersJson = null;
         let merchantConfig = {
             gcashNum: '09923978537',
             gcashName: 'John Carlo Estrada Morales',
@@ -878,6 +884,26 @@
             });
         }
 
+        // Resolves a merchant QR to a URL: Storage path first, legacy base64 second.
+        function merchantQrSrc(method) {
+            const path = method === 'gcash' ? merchantConfig.gcashQrPath : merchantConfig.mayaQrPath;
+            const version = method === 'gcash' ? merchantConfig.gcashQrVersion : merchantConfig.mayaQrVersion;
+            if (path) {
+                const url = qrPublicUrl(path);
+                if (url) return version ? `${url}?v=${version}` : url;
+            }
+            return method === 'gcash' ? merchantConfig.gcashQR : merchantConfig.mayaQR;
+        }
+
+        function paintQrInto(elementId, method, emptyLabel) {
+            const box = document.getElementById(elementId);
+            if (!box) return;
+            const src = merchantQrSrc(method);
+            box.innerHTML = src
+                ? `<img src="${src}" loading="lazy" class="w-full h-full object-cover rounded-lg">`
+                : emptyLabel;
+        }
+
         async function previewSelectedQR(event, type) {
             const file = event.target.files[0];
             if (!file) return;
@@ -900,13 +926,15 @@
         window.previewSelectedQR = previewSelectedQR;
 
         function saveQRCodeImage(method) {
-            const qrData = method === 'gcash' ? merchantConfig.gcashQR : merchantConfig.mayaQR;
+            const qrData = merchantQrSrc(method);
             if (!qrData) {
                 alert(`No ${method.toUpperCase()} QR code uploaded yet.`);
                 return;
             }
             const a = document.createElement('a');
             a.href = qrData;
+            a.target = '_blank';
+            a.rel = 'noopener';
             a.download = `${method}_qr_code.jpg`;
             document.body.appendChild(a);
             a.click();
@@ -914,7 +942,159 @@
         }
         window.saveQRCodeImage = saveQRCodeImage;
 
-        // ================= BULLETPROOF OFFLINE-FIRST CLOUD SYNC (WITH STRICT TIMEOUTS) =================
+        // ================= SUPABASE REMOTE LAYER (EGRESS-CONSCIOUS) =================
+        // Three rules keep egress flat, and every one of them was broken before:
+        //   1. Image BYTES live in Storage, never in a table column or in
+        //      localStorage. Base64 in a row means every read of that row ships
+        //      the whole picture again.
+        //   2. Never SELECT * on a table that holds a large column. List views
+        //      ask only for the handful of columns they actually render.
+        //   3. Nothing polls. The owner portal refreshes on demand.
+        const REMOTE_TIMEOUT_MS = 6000;
+        const QR_BUCKET = 'qr-codes';
+        const RECEIPT_BUCKET = 'receipts';
+
+        // Debounce handles for the few settings that sync to app_settings.
+        let syncTimeouts = {};
+
+        function withTimeout(promise, ms = REMOTE_TIMEOUT_MS) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), ms))
+            ]);
+        }
+
+        // Every Supabase call funnels through here so a failure degrades to
+        // local-only behaviour instead of throwing into the UI.
+        async function remote(fn) {
+            if (!supabaseClient) return null;
+            try {
+                const res = await withTimeout(Promise.resolve(fn(supabaseClient)));
+                if (!res) return null;
+                if (res.error) {
+                    console.warn('[supabase]', res.error.message || res.error);
+                    return null;
+                }
+                return res.data === undefined ? null : res.data;
+            } catch (err) {
+                console.warn('[supabase]', err && err.message ? err.message : err);
+                return null;
+            }
+        }
+
+        // ---- Storage helpers -------------------------------------------------
+        function compressImageToBlob(file, maxWidth, maxHeight, quality) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width, height = img.height;
+                        const scale = Math.min(1, maxWidth / width, maxHeight / height);
+                        width = Math.round(width * scale);
+                        height = Math.round(height * scale);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        canvas.toBlob(
+                            blob => blob ? resolve(blob) : reject(new Error('Could not encode image')),
+                            'image/jpeg',
+                            quality
+                        );
+                    };
+                    img.onerror = reject;
+                    img.src = event.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function uploadImage(bucket, path, file, maxWidth, maxHeight, quality) {
+            if (!supabaseClient || !file) return null;
+            try {
+                const blob = await compressImageToBlob(file, maxWidth, maxHeight, quality);
+                const ok = await remote(c => c.storage.from(bucket).upload(path, blob, {
+                    contentType: 'image/jpeg',
+                    upsert: true
+                }));
+                return ok ? path : null;
+            } catch (err) {
+                console.warn('[storage] upload failed', err);
+                return null;
+            }
+        }
+
+        // QR codes are public, so the CDN serves them and repeat views cost nothing.
+        function qrPublicUrl(path) {
+            if (!path || !supabaseClient) return null;
+            try {
+                const { data } = supabaseClient.storage.from(QR_BUCKET).getPublicUrl(path);
+                return data ? data.publicUrl : null;
+            } catch (e) { return null; }
+        }
+
+        // Receipts are private and fetched only when the owner clicks to view one.
+        async function receiptSignedUrl(path) {
+            if (!path) return null;
+            const data = await remote(c => c.storage.from(RECEIPT_BUCKET).createSignedUrl(path, 120));
+            return data && data.signedUrl ? data.signedUrl : null;
+        }
+
+        // ---- Queue reads -----------------------------------------------------
+        // Each select names its columns. receipt_path is a short string; the
+        // image itself is only fetched when the owner clicks "View Receipt".
+        let ownerQueueCache = { topups: [], withdrawals: [], registrations: [], resets: [] };
+
+        function mergeQueues(remoteRows, localRows, keyOf) {
+            const seen = new Set();
+            const out = [];
+            (remoteRows || []).forEach(r => { seen.add(keyOf(r)); out.push(r); });
+            (localRows || []).forEach(r => { if (!seen.has(keyOf(r))) out.push(r); });
+            return out;
+        }
+
+        async function fetchPendingTopups() {
+            const rows = await remote(c => c.from('topup_requests')
+                .select('id, email, nickname, amount, ref, method, receipt_path, date, created_at')
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+                .limit(200));
+            const local = await cloudGet('pending_topups', []);
+            return mergeQueues(rows, local, r => `${r.email}|${r.ref}`);
+        }
+
+        async function fetchPendingWithdrawals() {
+            const rows = await remote(c => c.from('withdrawal_requests')
+                .select('id, email, nickname, amount, method, account, name, date, created_at')
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+                .limit(200));
+            const local = await cloudGet('pending_withdrawals', []);
+            return mergeQueues(rows, local, r => `${r.email}|${r.amount}|${r.account || ''}`);
+        }
+
+        async function fetchPendingRegistrations() {
+            const rows = await remote(c => c.from('pending_registrations')
+                .select('email, name, nickname, phone, registration_ref, receipt_path, payment_method, status, created_at')
+                .eq('status', 'pending_registration')
+                .order('created_at', { ascending: false })
+                .limit(200));
+            const local = await cloudGet('pending_registrations', []);
+            return mergeQueues(rows, local, r => (r.email || '').toLowerCase());
+        }
+
+        async function fetchPendingResets() {
+            const rows = await remote(c => c.from('resets')
+                .select('id, email, bday, status')
+                .eq('status', 'pending')
+                .limit(200));
+            const mapped = (rows || []).map(r => ({ id: r.id, email: r.email, birthday: r.bday, remote: true }));
+            return mergeQueues(mapped, pendingResets, r => (r.email || '').toLowerCase());
+        }
+
+        // ================= LOCAL CACHE (offline-first, unchanged semantics) =================
         async function cloudGet(key, fallback) {
             try {
                 const local = localStorage.getItem('aetheris_' + key);
@@ -925,27 +1105,49 @@
             return fallback;
         }
 
+        // Keys small enough to live in app_settings as JSON. Anything holding an
+        // image is deliberately absent from this list.
+        const REMOTE_SETTING_KEYS = ['merchant_config', 'owner_password_hash'];
+
         async function cloudSet(key, value) {
             try {
                 localStorage.setItem('aetheris_' + key, JSON.stringify(value));
             } catch (e) {
-                alert('Storage warning: File is too large or storage is full.');
-                return false;
+                // A full quota used to make every cached read fail, which in turn
+                // made the old 3s poll re-download everything from Supabase for
+                // ever. Drop the big replayable logs instead of alerting.
+                try {
+                    ['aetheris_wallet_ledger', 'aetheris_audit_logs', 'aetheris_battle_history'].forEach(k => localStorage.removeItem(k));
+                    localStorage.setItem('aetheris_' + key, JSON.stringify(value));
+                } catch (e2) {
+                    console.warn('[cache] storage full, keeping ' + key + ' in memory only');
+                }
             }
 
-            // Non-blocking background sync with strict 1.5s timeout
-            if (supabaseClient) {
-                setTimeout(async () => {
-                    try {
-                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500));
-                        await Promise.race([
-                            supabaseClient.from('app_settings').upsert([{ key, value }], { onConflict: 'key' }),
-                            timeoutPromise
-                        ]);
-                    } catch (err) {}
-                }, 100);
+            if (REMOTE_SETTING_KEYS.includes(key)) {
+                if (syncTimeouts[key]) clearTimeout(syncTimeouts[key]);
+                syncTimeouts[key] = setTimeout(() => {
+                    remote(c => c.from('app_settings').upsert([{ key, value }], { onConflict: 'key' }));
+                }, 800);
             }
+
+            window.dispatchEvent(new Event('aetheris_data_updated'));
             return true;
+        }
+
+        // Pull the few shared settings. Called on demand, never on a timer.
+        async function pullRemoteSettings() {
+            const rows = await remote(c => c.from('app_settings').select('key, value').in('key', REMOTE_SETTING_KEYS));
+            if (!rows) return;
+            rows.forEach(row => {
+                if (!row || row.value === null || row.value === undefined) return;
+                try {
+                    localStorage.setItem('aetheris_' + row.key, JSON.stringify(row.value));
+                } catch (e) {}
+                if (row.key === 'merchant_config') {
+                    merchantConfig = Object.assign({}, merchantConfig, row.value);
+                }
+            });
         }
 
         async function loadAllCloudState() {
@@ -954,10 +1156,18 @@
             systemAuditLogs = await cloudGet('audit_logs', []);
             balanceAdderHistory = await cloudGet('balance_adder_history', []);
             walletTransactionLedger = await cloudGet('wallet_ledger', []);
+            depositHistory = await cloudGet('deposit_history', []);
+            withdrawHistory = await cloudGet('withdraw_history', []);
+            approvedResets = await cloudGet('approved_resets', []);
+            supportChatsCache = await cloudGet('support_chats', {});
             merchantConfig = await cloudGet('merchant_config', merchantConfig);
+            await pullRemoteSettings();
             await syncAllRegisteredPlayers(true);
             updateMerchantPaymentDisplay();
-            updatePlayerHubPayment(currentHubMethod);
+            // was updatePlayerHubPayment(): no such function, so this line threw a
+            // ReferenceError every time and aborted loadAllCloudState() before
+            // switchTab('owner') could reach renderOwnerQueues().
+            switchPlayerHubPayment(currentHubMethod);
         }
 
         function logWalletTransaction(email, nickname, type, amount, preBalance, postBalance, reason) {
@@ -979,6 +1189,11 @@
             };
             walletTransactionLedger.unshift(tx);
             cloudSet('wallet_ledger', walletTransactionLedger);
+            remote(c => c.from('wallet_ledger').insert([{
+                timestamp: tx.timestamp, date: dateStr, time: timeStr,
+                email, nickname: tx.nickname, type, amount,
+                pre_balance: preBalance, post_balance: postBalance, reason
+            }]));
             logSystemActivity('Wallet ' + type, `${nickname || email}: ${type === 'CREDIT' ? '+' : '-'}₱${amount} (₱${preBalance} ➔ ₱${postBalance}) | Reason: ${reason}`, nickname || email);
         }
 
@@ -1012,7 +1227,14 @@
             });
 
             registeredPlayersList = Array.from(playersMap.values());
-            cloudSet('registered_players_db', registeredPlayersList);
+
+            // Only persist when something actually changed. The old unconditional
+            // write ran on every poll tick and re-shipped the whole roster.
+            const serialised = JSON.stringify(registeredPlayersList);
+            if (serialised !== lastPersistedPlayersJson) {
+                lastPersistedPlayersJson = serialised;
+                cloudSet('registered_players_db', registeredPlayersList);
+            }
         }
 
         async function syncUserToSupabase() {
@@ -1038,7 +1260,10 @@
                                 unlocked_skills: currentUser.unlockedSkills || {},
                                 status: currentUser.status || 'active',
                                 registration_ref: currentUser.registration_ref || '',
-                                registration_receipt: currentUser.registration_receipt || null
+                                password_hash: currentUser.password_hash || null,
+                                birthday: currentUser.birthday || null
+                                // registration_receipt is deliberately NOT sent:
+                                // the image lives in the receipts bucket.
                             }], { onConflict: 'email' }),
                             timeoutPromise
                         ]);
@@ -1372,9 +1597,7 @@
                 updateWalletDisplay();
                 setActiveHeroUI(activeHero);
 
-                const expLevel = Math.floor((currentUser.xp || 0) / 100) + 1;
-                const hubExp = document.getElementById('hub-explevel-badge');
-                if (hubExp) hubExp.innerText = `Lv. ${expLevel}`;
+                updateRankAndExpBadges();
 
                 const btnOwner = document.getElementById('btn-owner');
                 const btnHub = document.getElementById('btn-hub');
@@ -1483,11 +1706,13 @@
                 if (hub) hub.classList.remove('hidden');
                 if (btnHub) { btnHub.classList.add('bg-blue-600', 'text-white'); btnHub.classList.remove('text-slate-400'); }
                 updateWalletDisplay();
+                updateRankAndExpBadges();
                 switchPlayerHubPayment('gcash');
             } else if (tabName === 'select') {
                 const sel = document.getElementById('view-select');
                 if (sel) sel.classList.remove('hidden');
                 if (btnRoster) { btnRoster.classList.add('bg-blue-600', 'text-white'); btnRoster.classList.remove('text-slate-400'); }
+                updateRankAndExpBadges();
                 renderHeroRoster();
             } else if (tabName === 'shop') {
                 const shp = document.getElementById('view-shop');
@@ -1551,19 +1776,11 @@
             if (method === 'gcash') {
                 if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (merchantConfig.gcashQR && qrBox) {
-                    qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
-                } else if (qrBox) {
-                    qrBox.innerHTML = 'No GCash QR';
-                }
+                paintQrInto('reg-active-qr', 'gcash', 'No GCash QR');
             } else {
                 if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (merchantConfig.mayaQR && qrBox) {
-                    qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
-                } else if (qrBox) {
-                    qrBox.innerHTML = 'No Maya QR';
-                }
+                paintQrInto('reg-active-qr', 'maya', 'No Maya QR');
             }
         }
         window.switchRegPaymentMethod = switchRegPaymentMethod;
@@ -1577,19 +1794,11 @@
             if (method === 'gcash') {
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (merchantConfig.gcashQR && qrBox) {
-                    qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
-                } else if (qrBox) {
-                    qrBox.innerHTML = 'No GCash QR';
-                }
+                paintQrInto('topup-active-qr', 'gcash', 'No GCash QR');
             } else {
                 if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (merchantConfig.mayaQR && qrBox) {
-                    qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
-                } else if (qrBox) {
-                    qrBox.innerHTML = 'No Maya QR';
-                }
+                paintQrInto('topup-active-qr', 'maya', 'No Maya QR');
             }
         }
         window.switchTopUpPaymentMethod = switchTopUpPaymentMethod;
@@ -1603,19 +1812,11 @@
             if (method === 'gcash') {
                 if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (merchantConfig.gcashQR && qrBox) {
-                    qrBox.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
-                } else if (qrBox) {
-                    qrBox.innerHTML = 'No GCash QR';
-                }
+                paintQrInto('player-active-qr', 'gcash', 'No GCash QR');
             } else {
                 if (btnMaya) btnMaya.className = 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnGcash) btnGcash.className = 'flex-1 py-1.5 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                if (merchantConfig.mayaQR && qrBox) {
-                    qrBox.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
-                } else if (qrBox) {
-                    qrBox.innerHTML = 'No Maya QR';
-                }
+                paintQrInto('player-active-qr', 'maya', 'No Maya QR');
             }
         }
         window.switchPlayerHubPayment = switchPlayerHubPayment;
@@ -1638,17 +1839,8 @@
             if (inputMayaNum && document.activeElement !== inputMayaNum) inputMayaNum.value = merchantConfig.mayaNum || '';
             if (inputMayaName && document.activeElement !== inputMayaName) inputMayaName.value = merchantConfig.mayaName || '';
 
-            if (merchantConfig.gcashQR && ownerGcashPreview) {
-                ownerGcashPreview.innerHTML = `<img src="${merchantConfig.gcashQR}" class="w-full h-full object-cover rounded-lg">`;
-            } else if (ownerGcashPreview) {
-                ownerGcashPreview.innerHTML = 'No QR';
-            }
-
-            if (merchantConfig.mayaQR && ownerMayaPreview) {
-                ownerMayaPreview.innerHTML = `<img src="${merchantConfig.mayaQR}" class="w-full h-full object-cover rounded-lg">`;
-            } else if (ownerMayaPreview) {
-                ownerMayaPreview.innerHTML = 'No QR';
-            }
+            paintQrInto('owner-gcash-qr-preview', 'gcash', 'No QR');
+            paintQrInto('owner-maya-qr-preview', 'maya', 'No QR');
         }
 
         async function saveGcashSettings() {
@@ -1663,8 +1855,17 @@
                 merchantConfig.gcashName = nameInput.value.trim();
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
-                    const compressedBase64 = await compressImage(fileInput.files[0], 150, 150, 0.5);
-                    merchantConfig.gcashQR = compressedBase64;
+                    // Bytes go to Storage; the row keeps a short path. Storing the
+                    // base64 here is what used to re-ship the image on every read.
+                    const path = await uploadImage(QR_BUCKET, 'gcash-qr.jpg', fileInput.files[0], 512, 512, 0.8);
+                    if (path) {
+                        merchantConfig.gcashQrPath = path;
+                        merchantConfig.gcashQrVersion = Date.now();
+                        merchantConfig.gcashQR = null;
+                    } else {
+                        alert('Could not upload the QR image to storage. Check your connection and try again.');
+                        return;
+                    }
                 }
 
                 await cloudSet('merchant_config', merchantConfig);
@@ -1690,8 +1891,17 @@
                 merchantConfig.mayaName = nameInput.value.trim();
 
                 if (fileInput && fileInput.files && fileInput.files[0]) {
-                    const compressedBase64 = await compressImage(fileInput.files[0], 150, 150, 0.5);
-                    merchantConfig.mayaQR = compressedBase64;
+                    // Bytes go to Storage; the row keeps a short path. Storing the
+                    // base64 here is what used to re-ship the image on every read.
+                    const path = await uploadImage(QR_BUCKET, 'maya-qr.jpg', fileInput.files[0], 512, 512, 0.8);
+                    if (path) {
+                        merchantConfig.mayaQrPath = path;
+                        merchantConfig.mayaQrVersion = Date.now();
+                        merchantConfig.mayaQR = null;
+                    } else {
+                        alert('Could not upload the QR image to storage. Check your connection and try again.');
+                        return;
+                    }
                 }
 
                 await cloudSet('merchant_config', merchantConfig);
@@ -1715,6 +1925,25 @@
             }
 
             if (email.toLowerCase() === EXCLUSIVE_OWNER_EMAIL.toLowerCase()) {
+                // The owner account must present a real password. On the very
+                // first sign-in there is no stored hash yet, so the password
+                // typed here becomes the owner password (confirmed explicitly).
+                const typedHash = await hashPassword(pass);
+                let storedOwnerHash = await cloudGet('owner_password_hash', null);
+
+                if (!storedOwnerHash) {
+                    const confirmed = confirm('No owner password has been set yet.\n\nUse the password you just typed as the permanent owner password?\n\nChoose Cancel to type a different one first.');
+                    if (!confirmed) return;
+                    await cloudSet('owner_password_hash', typedHash);
+                    storedOwnerHash = typedHash;
+                    logSystemActivity('Owner Password Set', 'Owner password hash created on first sign-in.', 'BOSS');
+                    alert('Owner password set. Keep it safe — it is required for every future owner sign-in.');
+                } else if (storedOwnerHash !== typedHash) {
+                    alert('Invalid owner password.');
+                    logSystemActivity('Owner Login Failed', 'An owner sign-in attempt was rejected for a wrong password.', 'System');
+                    return;
+                }
+
                 currentUser = {
                     email: EXCLUSIVE_OWNER_EMAIL,
                     name: 'John Carlo Estrada Morales',
@@ -1737,6 +1966,15 @@
             }
 
             const hashed = await hashPassword(pass);
+
+            // A player whose reset request the owner approved is sent to the
+            // force-change-password screen instead of a normal sign-in.
+            approvedResets = await cloudGet('approved_resets', []);
+            if (approvedResets.some(r => r.email && r.email.toLowerCase() === email.toLowerCase())) {
+                showForceResetView(email);
+                return;
+            }
+
             const foundPlayerRecord = registeredPlayersList.find(p => p.email.toLowerCase() === email.toLowerCase());
             if (foundPlayerRecord && foundPlayerRecord.status === 'frozen') {
                 alert('Your account has been frozen by the administration.');
@@ -1820,11 +2058,13 @@
                 return;
             }
 
-            let receiptBase64 = null;
+            let receiptPath = null;
             if (receiptFile) {
-                try {
-                    receiptBase64 = await compressImage(receiptFile, 200, 200, 0.5);
-                } catch(e) {}
+                receiptPath = await uploadImage(
+                    RECEIPT_BUCKET,
+                    `registration/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`,
+                    receiptFile, 1000, 1000, 0.7
+                );
             }
 
             const hashedPassword = await hashPassword(pass);
@@ -1838,16 +2078,32 @@
                 unlocked_heroes: [],
                 unlockedSkills: {},
                 registration_ref: ref,
-                registration_receipt: receiptBase64,
+                receipt_path: receiptPath,
                 payment_method: currentRegMethod,
                 status: 'pending_registration',
                 first_fight_done: false,
                 registered_at: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
             };
 
-            let pendingRegs = await cloudGet('pending_registrations', []);
-            pendingRegs.push(newUserData);
-            await cloudSet('pending_registrations', pendingRegs);
+            const savedReg = await remote(c => c.from('pending_registrations').upsert([{
+                email: newUserData.email,
+                name: newUserData.name,
+                nickname: newUserData.nickname,
+                phone: newUserData.phone,
+                birthday: newUserData.birthday,
+                password_hash: newUserData.password_hash,
+                registration_ref: newUserData.registration_ref,
+                receipt_path: receiptPath,
+                payment_method: newUserData.payment_method,
+                status: 'pending_registration',
+                registered_at: newUserData.registered_at
+            }], { onConflict: 'email' }));
+
+            if (savedReg === null) {
+                let pendingRegs = await cloudGet('pending_registrations', []);
+                pendingRegs.push(newUserData);
+                await cloudSet('pending_registrations', pendingRegs);
+            }
 
             let localUsers = await cloudGet('registered_users', []);
             if (!localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
@@ -1870,8 +2126,13 @@
                 alert('Please provide your registered email and birthday.');
                 return;
             }
-            pendingResets.push({ email, birthday: bday, timestamp: Date.now() });
-            await cloudSet('pending_resets', pendingResets);
+            const savedReset = await remote(c => c.from('resets').insert([{
+                email, bday, status: 'pending', timestamp: new Date().toISOString()
+            }]));
+            if (savedReset === null) {
+                pendingResets.push({ email, birthday: bday, timestamp: Date.now() });
+                await cloudSet('pending_resets', pendingResets);
+            }
 
             alert('Password reset request submitted to owner for verification.');
             showAuthMode('login');
@@ -1911,10 +2172,24 @@
         }
         window.closeModal = closeModal;
 
-        function openReceiptModal(receiptUrl) {
+        async function openReceiptModal(receiptRef) {
             openModal('receipt-viewer');
             const imgEl = document.getElementById('receipt-viewer-img');
-            if (imgEl) imgEl.src = receiptUrl || '';
+            if (!imgEl) return;
+            imgEl.removeAttribute('src');
+
+            if (!receiptRef) return;
+            // Legacy rows still hold an inline data: URL.
+            if (receiptRef.startsWith('data:')) {
+                imgEl.src = receiptRef;
+                return;
+            }
+            const signed = await receiptSignedUrl(receiptRef);
+            if (signed) {
+                imgEl.src = signed;
+            } else {
+                alert('Could not load that receipt image.');
+            }
         }
         window.openReceiptModal = openReceiptModal;
 
@@ -1925,6 +2200,7 @@
 
         function openPlayerProfileModal() {
             openModal('player-profile');
+            updateRankAndExpBadges();
             const content = document.getElementById('player-profile-content');
             if (!content || !currentUser) return;
             const playerBattles = battleHistoryLog.filter(b => b.playerEmail && currentUser.email && b.playerEmail.toLowerCase() === currentUser.email.toLowerCase());
@@ -1984,7 +2260,7 @@
                         <p><strong>Status:</strong> <span class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${p.status || 'active'}</span></p>
                         <p><strong>Active Hero:</strong> ${p.active_hero || 'pyra'}</p>
                         ${p.registration_ref ? `<p><strong>Ref No:</strong> ${p.registration_ref}</p>` : ''}
-                        ${p.registration_receipt ? `<div class="mt-2"><strong class="block mb-1 text-amber-400">Fee Receipt:</strong><button onclick="window.openReceiptModal('${p.registration_receipt}')" class="px-3 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg shadow">View Receipt Image</button></div>` : ''}
+                        ${(p.receipt_path || p.registration_receipt) ? `<div class="mt-2"><strong class="block mb-1 text-amber-400">Fee Receipt:</strong><button onclick="window.openReceiptModal('${p.receipt_path || p.registration_receipt}')" class="px-3 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg shadow">View Receipt Image</button></div>` : ''}
                     </div>
                     <div class="space-y-1.5">
                         <h4 class="font-cinzel text-amber-400 font-bold">Battle History (${playerBattles.length})</h4>
@@ -2220,6 +2496,14 @@
             }
             currentDuelBet = amount;
             preBattleWallet = bal;
+
+            // Escrow the stake up front so the prize math is correct and a
+            // player cannot queue the same balance into two matches.
+            currentUser.wallet = bal - amount;
+            logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', amount, bal, currentUser.wallet, `Ranked Duel wager escrowed (₱${amount} stake)`);
+            persistLocalStorage();
+            updateWalletDisplay();
+
             openModal('matchmaking');
             matchmakingElapsedSeconds = 0;
             const countdownEl = document.getElementById('matchmaking-countdown');
@@ -2238,10 +2522,19 @@
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
 
-        function cancelMatchmakingQueue() {
+        async function cancelMatchmakingQueue() {
             if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
             closeModal();
-            alert('Matchmaking cancelled.');
+
+            // Give the escrowed stake back.
+            if (currentUser && currentDuelBet > 0) {
+                const preBal = currentUser.wallet || 0;
+                currentUser.wallet = preBal + currentDuelBet;
+                logWalletTransaction(currentUser.email, currentUser.nickname, 'CREDIT', currentDuelBet, preBal, currentUser.wallet, 'Ranked Duel wager refunded (queue cancelled)');
+                await persistLocalStorage();
+                updateWalletDisplay();
+            }
+            alert(`Matchmaking cancelled. Your ₱${currentDuelBet} wager has been refunded.`);
         }
         window.cancelMatchmakingQueue = cancelMatchmakingQueue;
 
@@ -2472,19 +2765,21 @@
             const dateStr = now.toISOString().split('T')[0];
             const timeStr = now.toLocaleTimeString();
 
+            // The stake was already escrowed at queue time, so a win pays the
+            // whole pool back out and a loss simply forfeits what was held.
             const preBal = currentUser.wallet || 0;
-            let prize = currentDuelBet * 2 * 0.95;
+            const prize = currentDuelBet * 2 * 0.95;
+            const netGain = prize - currentDuelBet;
 
             if (isVictory) {
                 currentUser.wallet = preBal + prize;
                 currentUser.wins = (currentUser.wins || 0) + 1;
                 currentUser.xp = (currentUser.xp || 0) + 100;
-                logWalletTransaction(currentUser.email, currentUser.nickname, 'CREDIT', prize, preBal, currentUser.wallet, `Ranked Duel Victory vs ${duelState.currentOpponentName}`);
-                alert(`VICTORY! You won ₱${prize.toFixed(2)} (Net of 5% fee) and gained 100 EXP!`);
+                logWalletTransaction(currentUser.email, currentUser.nickname, 'CREDIT', prize, preBal, currentUser.wallet, `Ranked Duel Victory vs ${duelState.currentOpponentName} (₱${currentDuelBet} stake returned + ₱${netGain.toFixed(2)} winnings)`);
+                alert(`VICTORY! Prize pool ₱${prize.toFixed(2)} paid out (net +₱${netGain.toFixed(2)} after the 5% platform fee) and you gained 100 EXP!`);
             } else {
-                currentUser.wallet = Math.max(0, preBal - currentDuelBet);
-                logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', currentDuelBet, preBal, currentUser.wallet, `Ranked Duel Defeat vs ${duelState.currentOpponentName}`);
-                alert(`DEFEAT! You lost your ₱${currentDuelBet} wager.`);
+                logWalletTransaction(currentUser.email, currentUser.nickname, 'DEBIT', 0, preBal, currentUser.wallet, `Ranked Duel Defeat vs ${duelState.currentOpponentName} (₱${currentDuelBet} escrowed stake forfeited)`);
+                alert(`DEFEAT! You forfeited your ₱${currentDuelBet} wager.`);
             }
 
             battleHistoryLog.unshift({
@@ -2494,7 +2789,7 @@
                 opponent: duelState.currentOpponentName,
                 result: isVictory ? 'VICTORY' : 'DEFEAT',
                 bet: currentDuelBet,
-                preBalance: preBal,
+                preBalance: preBattleWallet,
                 postBalance: currentUser.wallet,
                 date: dateStr,
                 time: timeStr
@@ -2503,6 +2798,7 @@
             await persistLocalStorage();
             await syncUserToSupabase();
             updateWalletDisplay();
+            updateRankAndExpBadges();
             switchTab('hub');
         }
 
@@ -2540,7 +2836,8 @@
                     `).join('');
             }
 
-            let pendingTopups = await cloudGet('pending_topups', []);
+            let pendingTopups = await fetchPendingTopups();
+            ownerQueueCache.topups = pendingTopups;
             if (ownerDepositList) {
                 ownerDepositList.innerHTML = pendingTopups.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending top-ups.</div>' :
                     pendingTopups.map((t, idx) => `
@@ -2550,7 +2847,7 @@
                                 <span class="text-[10px] text-slate-400 block">${t.email} • Ref: ${t.ref}</span>
                             </div>
                             <div class="flex space-x-1 items-center">
-                                ${t.receipt ? `<button onclick="window.openReceiptModal('${t.receipt}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">View Receipt</button>` : ''}
+                                ${(t.receipt_path || t.receipt) ? `<button onclick="window.openReceiptModal('${t.receipt_path || t.receipt}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">View Receipt</button>` : ''}
                                 <button onclick="window.approveTopup(${idx})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
                                 <button onclick="window.rejectTopup(${idx})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
                             </div>
@@ -2558,7 +2855,8 @@
                     `).join('');
             }
 
-            let pendingWithdrawals = await cloudGet('pending_withdrawals', []);
+            let pendingWithdrawals = await fetchPendingWithdrawals();
+            ownerQueueCache.withdrawals = pendingWithdrawals;
             if (ownerWithdrawList) {
                 ownerWithdrawList.innerHTML = pendingWithdrawals.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawals.</div>' :
                     pendingWithdrawals.map((w, idx) => `
@@ -2575,7 +2873,7 @@
                     `).join('');
             }
 
-            let pendingRegs = await cloudGet('pending_registrations', []);
+            let pendingRegs = await fetchPendingRegistrations();
             const profilePending = registeredPlayersList.filter(p => p.status === 'pending_registration');
             let regMap = new Map();
             pendingRegs.forEach(r => regMap.set(r.email.toLowerCase(), r));
@@ -2591,7 +2889,7 @@
                                 <span class="text-[10px] text-slate-400 block">${r.email} • Ref: ${r.registration_ref || r.registrationRef || 'N/A'}</span>
                             </div>
                             <div class="flex items-center space-x-1.5 flex-wrap">
-                                ${r.registration_receipt || r.registrationReceipt ? `<button onclick="window.openReceiptModal('${r.registration_receipt || r.registrationReceipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-[10px]">View Receipt</button>` : '<span class="text-[10px] text-slate-500">No Receipt</span>'}
+                                ${(r.receipt_path || r.registration_receipt || r.registrationReceipt) ? `<button onclick="window.openReceiptModal('${r.receipt_path || r.registration_receipt || r.registrationReceipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-[10px]">View Receipt</button>` : '<span class="text-[10px] text-slate-500">No Receipt</span>'}
                                 <button onclick="window.approveRegistrationByEmail('${r.email}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[10px]">Approve</button>
                                 <button onclick="window.rejectRegistrationByEmail('${r.email}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-[10px]">Reject</button>
                             </div>
@@ -2599,6 +2897,9 @@
                     `).join('');
             }
 
+            const resetQueue = await fetchPendingResets();
+            ownerQueueCache.resets = resetQueue;
+            pendingResets = resetQueue;
             if (ownerResetList) {
                 ownerResetList.innerHTML = pendingResets.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No password reset requests.</div>' :
                     pendingResets.map((rst, idx) => `
@@ -2612,9 +2913,13 @@
                     `).join('');
             }
 
+            const ownerFilterDate = getOwnerFilterDate();
+            const filteredLedger = ownerFilterDate ? walletTransactionLedger.filter(tx => tx.date === ownerFilterDate) : walletTransactionLedger;
+            const filteredAudit = ownerFilterDate ? systemAuditLogs.filter(log => log.date === ownerFilterDate) : systemAuditLogs;
+
             if (walletLedgerEl) {
-                walletLedgerEl.innerHTML = walletTransactionLedger.length === 0 ? '<div class="text-[11px] text-slate-500 text-center py-2">No wallet transactions logged yet.</div>' :
-                    walletTransactionLedger.map(tx => `
+                walletLedgerEl.innerHTML = filteredLedger.length === 0 ? `<div class="text-[11px] text-slate-500 text-center py-2">No wallet transactions${ownerFilterDate ? ' for ' + ownerFilterDate : ''} logged yet.</div>` :
+                    filteredLedger.map(tx => `
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[11px] flex items-center justify-between">
                             <div>
                                 <span class="font-bold text-white">${tx.nickname || tx.email}</span>
@@ -2629,8 +2934,8 @@
             }
 
             if (auditLogEl) {
-                auditLogEl.innerHTML = systemAuditLogs.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity recorded yet.</div>' :
-                    systemAuditLogs.map(log => `
+                auditLogEl.innerHTML = filteredAudit.length === 0 ? `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No activity${ownerFilterDate ? ' for ' + ownerFilterDate : ''} recorded yet.</div>` :
+                    filteredAudit.map(log => `
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[11px] space-y-0.5">
                             <div class="flex justify-between text-amber-400 font-bold">
                                 <span>${log.action}</span>
@@ -2640,6 +2945,10 @@
                         </div>
                     `).join('');
             }
+
+            renderOwnerHistoryPanels();
+            await renderOwnerChatThreads();
+            renderOwnerActiveChat();
         }
         window.renderOwnerQueues = renderOwnerQueues;
 
@@ -2653,6 +2962,9 @@
             pendingRegs = pendingRegs.filter(r => r.email.toLowerCase() !== email.toLowerCase());
             await cloudSet('pending_registrations', pendingRegs);
             await cloudSet('registered_players_db', dbList);
+
+            await remote(c => c.from('pending_registrations').update({ status: 'active' }).eq('email', email));
+            await remote(c => c.from('profiles').update({ status: 'active' }).eq('email', email));
 
             sendPushNotificationToPlayer(email, 'Registration Approved!', 'Your Aetheris Arena account has been approved. You can now log in.');
             logSystemActivity('Registration Approved', `Approved player ${email}`, 'BOSS');
@@ -2671,72 +2983,147 @@
             dbList = dbList.filter(x => x.email.toLowerCase() !== email.toLowerCase());
             await cloudSet('registered_players_db', dbList);
 
+            await remote(c => c.from('pending_registrations').update({ status: 'rejected' }).eq('email', email));
+
             renderOwnerQueues();
             alert('Registration request rejected.');
         }
         window.rejectRegistrationByEmail = rejectRegistrationByEmail;
 
+        // Settles a queue row: marks the remote row decided, or drops the local
+        // fallback copy when the row never made it to Supabase.
+        async function settleQueueRow(table, row, localKey, status) {
+            if (row && row.id !== undefined && row.id !== null) {
+                const ok = await remote(c => c.from(table).update({
+                    status,
+                    decided_at: new Date().toISOString(),
+                    decided_by: (currentUser && (currentUser.nickname || currentUser.email)) || 'BOSS'
+                }).eq('id', row.id));
+                if (ok !== null) return true;
+            }
+            const local = await cloudGet(localKey, []);
+            const i = local.findIndex(r =>
+                r.email === row.email &&
+                Number(r.amount) === Number(row.amount) &&
+                (r.ref || '') === (row.ref || ''));
+            if (i >= 0) {
+                local.splice(i, 1);
+                await cloudSet(localKey, local);
+            }
+            return true;
+        }
+
+        // Applies a wallet delta to the shared profile row as well as the local cache.
+        async function applyWalletDelta(email, delta) {
+            let dbList = await cloudGet('registered_players_db', []);
+            let p = dbList.find(x => x.email && x.email.toLowerCase() === email.toLowerCase());
+            const preBal = p ? Number(p.wallet || 0) : 0;
+            const postBal = Math.max(0, preBal + Number(delta));
+
+            if (p) {
+                p.wallet = postBal;
+                await cloudSet('registered_players_db', dbList);
+            }
+            await remote(c => c.from('profiles').update({ wallet: postBal }).eq('email', email));
+
+            if (currentUser && currentUser.email && currentUser.email.toLowerCase() === email.toLowerCase()) {
+                currentUser.wallet = postBal;
+                updateWalletDisplay();
+            }
+            return { preBal, postBal, nickname: p ? p.nickname : email };
+        }
+
         async function approveTopup(idx) {
-            let pendingTopups = await cloudGet('pending_topups', []);
-            const t = pendingTopups[idx];
+            const t = ownerQueueCache.topups[idx];
             if (!t) return;
 
-            let dbList = await cloudGet('registered_players_db', []);
-            let p = dbList.find(x => x.email.toLowerCase() === t.email.toLowerCase());
-            let preBal = p ? (p.wallet || 0) : 0;
-            let postBal = preBal + t.amount;
+            const amount = Number(t.amount);
+            const { preBal, postBal, nickname } = await applyWalletDelta(t.email, amount);
 
-            if (p) p.wallet = postBal;
-            await cloudSet('registered_players_db', dbList);
+            logWalletTransaction(t.email, nickname || t.email, 'CREDIT', amount, preBal, postBal, `Top-Up Approved (Ref: ${t.ref})`);
+            recordTransactionHistory('deposit', {
+                email: t.email,
+                nickname: nickname || t.email,
+                amount,
+                ref: t.ref,
+                method: t.method,
+                status: 'approved',
+                preBalance: preBal,
+                postBalance: postBal
+            });
 
-            logWalletTransaction(t.email, p ? p.nickname : t.email, 'CREDIT', t.amount, preBal, postBal, `Top-Up Approved (Ref: ${t.ref})`);
-
-            pendingTopups.splice(idx, 1);
-            await cloudSet('pending_topups', pendingTopups);
+            await settleQueueRow('topup_requests', t, 'pending_topups', 'approved');
+            sendPushNotificationToPlayer(t.email, 'Top-Up Approved', `₱${amount} has been credited to your wallet.`);
 
             await persistLocalStorage();
             renderOwnerQueues();
-            alert(`Approved ₱${t.amount} top-up for ${t.email}`);
+            alert(`Approved ₱${amount} top-up for ${t.email}`);
         }
         window.approveTopup = approveTopup;
 
         async function rejectTopup(idx) {
-            let pendingTopups = await cloudGet('pending_topups', []);
-            pendingTopups.splice(idx, 1);
-            await cloudSet('pending_topups', pendingTopups);
+            const rejected = ownerQueueCache.topups[idx];
+            if (rejected) {
+                recordTransactionHistory('deposit', {
+                    email: rejected.email,
+                    nickname: rejected.nickname || rejected.email,
+                    amount: rejected.amount,
+                    ref: rejected.ref,
+                    method: rejected.method,
+                    status: 'rejected'
+                });
+                sendPushNotificationToPlayer(rejected.email, 'Top-Up Rejected', `Your ₱${rejected.amount} top-up request was rejected.`);
+                logSystemActivity('Top-Up Rejected', `Rejected ₱${rejected.amount} top-up for ${rejected.email} (Ref: ${rejected.ref})`, 'BOSS');
+                await settleQueueRow('topup_requests', rejected, 'pending_topups', 'rejected');
+            }
             renderOwnerQueues();
             alert('Top-up rejected.');
         }
         window.rejectTopup = rejectTopup;
 
         async function approveWithdrawal(idx) {
-            let pendingWithdrawals = await cloudGet('pending_withdrawals', []);
-            const w = pendingWithdrawals[idx];
+            const w = ownerQueueCache.withdrawals[idx];
             if (!w) return;
 
-            let dbList = await cloudGet('registered_players_db', []);
-            let p = dbList.find(x => x.email.toLowerCase() === w.email.toLowerCase());
-            let preBal = p ? (p.wallet || 0) : 0;
-            let postBal = Math.max(0, preBal - w.amount);
+            const amount = Number(w.amount);
+            const { preBal, postBal, nickname } = await applyWalletDelta(w.email, -amount);
 
-            if (p) p.wallet = postBal;
-            await cloudSet('registered_players_db', dbList);
+            logWalletTransaction(w.email, nickname || w.email, 'DEBIT', amount, preBal, postBal, `Withdrawal Approved (${w.method} - ${w.account})`);
+            recordTransactionHistory('withdrawal', {
+                email: w.email,
+                nickname: nickname || w.email,
+                amount,
+                method: w.method,
+                account: w.account,
+                status: 'approved',
+                preBalance: preBal,
+                postBalance: postBal
+            });
 
-            logWalletTransaction(w.email, p ? p.nickname : w.email, 'DEBIT', w.amount, preBal, postBal, `Withdrawal Approved (${w.method} - ${w.account})`);
-
-            pendingWithdrawals.splice(idx, 1);
-            await cloudSet('pending_withdrawals', pendingWithdrawals);
+            await settleQueueRow('withdrawal_requests', w, 'pending_withdrawals', 'approved');
+            sendPushNotificationToPlayer(w.email, 'Withdrawal Approved', `₱${amount} is on its way via ${w.method}.`);
 
             await persistLocalStorage();
             renderOwnerQueues();
-            alert(`Approved withdrawal of ₱${w.amount} for ${w.email}`);
+            alert(`Approved withdrawal of ₱${amount} for ${w.email}`);
         }
         window.approveWithdrawal = approveWithdrawal;
 
         async function rejectWithdrawal(idx) {
-            let pendingWithdrawals = await cloudGet('pending_withdrawals', []);
-            pendingWithdrawals.splice(idx, 1);
-            await cloudSet('pending_withdrawals', pendingWithdrawals);
+            const rejected = ownerQueueCache.withdrawals[idx];
+            if (rejected) {
+                recordTransactionHistory('withdrawal', {
+                    email: rejected.email,
+                    nickname: rejected.nickname || rejected.email,
+                    amount: rejected.amount,
+                    method: rejected.method,
+                    account: rejected.account,
+                    status: 'rejected'
+                });
+                sendPushNotificationToPlayer(rejected.email, 'Withdrawal Rejected', `Your ₱${rejected.amount} withdrawal request was rejected.`);
+                logSystemActivity('Withdrawal Rejected', `Rejected ₱${rejected.amount} withdrawal for ${rejected.email}`, 'BOSS');
+                await settleQueueRow('withdrawal_requests', rejected, 'pending_withdrawals', 'rejected');
+            }
             renderOwnerQueues();
             alert('Withdrawal rejected.');
         }
@@ -2763,9 +3150,15 @@
             await cloudSet('registered_players_db', dbList);
 
             logWalletTransaction(p.email, p.nickname, amount >= 0 ? 'CREDIT' : 'DEBIT', Math.abs(amount), preBal, postBal, 'Manual Emergency Balance Adjustment by Owner');
+            const adjNow = new Date();
             balanceAdderHistory.unshift({
-                timestamp: new Date().toLocaleString(),
+                id: Date.now() + Math.random(),
+                timestamp: `${adjNow.toISOString().split('T')[0]} ${adjNow.toLocaleTimeString()}`,
+                date: adjNow.toISOString().split('T')[0],
+                time: adjNow.toLocaleTimeString(),
+                actor: (currentUser && (currentUser.nickname || currentUser.email)) || 'BOSS',
                 email: p.email,
+                nickname: p.nickname || p.email,
                 amount,
                 preBalance: preBal,
                 postBalance: postBal
@@ -2813,32 +3206,41 @@
                 return;
             }
 
-            if (receiptFile) {
-                try {
-                    const compressedReceipt = await compressImage(receiptFile, 200, 200, 0.5);
-                    await saveTopUpRequest(amount, ref, compressedReceipt);
-                } catch(e) {
-                    await saveTopUpRequest(amount, ref, null);
-                }
-            } else {
-                await saveTopUpRequest(amount, ref, null);
-            }
+            await saveTopUpRequest(amount, ref, receiptFile || null);
         }
         window.submitTopUp = submitTopUp;
 
-        async function saveTopUpRequest(amount, ref, receipt) {
+        async function saveTopUpRequest(amount, ref, receiptFile) {
             if (!currentUser) return;
-            let pendingTopups = await cloudGet('pending_topups', []);
-            pendingTopups.push({
+
+            let receiptPath = null;
+            if (receiptFile) {
+                receiptPath = await uploadImage(
+                    RECEIPT_BUCKET,
+                    `topup/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`,
+                    receiptFile, 1000, 1000, 0.7
+                );
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const row = {
                 email: currentUser.email,
-                nickname: currentUser.nickname,
+                nickname: currentUser.nickname || currentUser.email,
                 amount,
                 ref,
-                receipt,
+                receipt_path: receiptPath,
                 method: currentTopupMethod,
-                timestamp: Date.now()
-            });
-            await cloudSet('pending_topups', pendingTopups);
+                status: 'pending',
+                date: today
+            };
+
+            const saved = await remote(c => c.from('topup_requests').insert([row]));
+            if (saved === null) {
+                // Offline or rejected: keep it locally so nothing is lost.
+                let pendingTopups = await cloudGet('pending_topups', []);
+                pendingTopups.push(Object.assign({ timestamp: Date.now() }, row));
+                await cloudSet('pending_topups', pendingTopups);
+            }
             notifyOwner('Top-Up Request', `Player ${currentUser.nickname} requested top-up of ₱${amount} via ${currentTopupMethod.toUpperCase()}.`);
             closeModal();
             alert('Top-up request submitted successfully! Pending owner verification.');
@@ -2856,22 +3258,410 @@
                 return;
             }
 
-            let pendingWithdrawals = await cloudGet('pending_withdrawals', []);
-            pendingWithdrawals.push({
+            const row = {
                 email: currentUser.email,
-                nickname: currentUser.nickname,
+                nickname: currentUser.nickname || currentUser.email,
                 amount,
                 method,
                 account: currentUser.phone,
                 name: currentUser.name,
-                timestamp: Date.now()
-            });
-            await cloudSet('pending_withdrawals', pendingWithdrawals);
+                status: 'pending',
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            const saved = await remote(c => c.from('withdrawal_requests').insert([row]));
+            if (saved === null) {
+                let pendingWithdrawals = await cloudGet('pending_withdrawals', []);
+                pendingWithdrawals.push(Object.assign({ timestamp: Date.now() }, row));
+                await cloudSet('pending_withdrawals', pendingWithdrawals);
+            }
             notifyOwner('Withdrawal Request', `Player ${currentUser.nickname} requested withdrawal of ₱${amount} via ${method}.`);
             closeModal();
             alert('Withdrawal request submitted successfully! Zero fees applied.');
         }
         window.submitWithdrawal = submitWithdrawal;
+
+
+        // ================= RANK / EXP BADGES =================
+        function updateRankAndExpBadges() {
+            if (!currentUser) return;
+            const xp = currentUser.xp || 0;
+            const wins = currentUser.wins || 0;
+            const rank = getRankTier(xp, wins);
+            const level = Math.floor(xp / 100) + 1;
+            const intoLevel = xp % 100;
+
+            const set = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            };
+
+            set('player-rank-badge', rank);
+            set('player-explevel-badge', `Lv. ${level} (${xp} XP)`);
+            set('player-wins-badge', String(wins));
+            set('hub-rank-badge', rank);
+            set('hub-explevel-badge', `Lv. ${level}`);
+            set('profile-modal-rank', rank);
+
+            const bar = document.getElementById('player-xp-bar');
+            if (bar) bar.style.width = `${intoLevel}%`;
+        }
+        window.updateRankAndExpBadges = updateRankAndExpBadges;
+
+        // ================= PASSWORD RESET COMPLETION =================
+        function showForceResetView(email) {
+            const views = ['view-auth', 'view-hub', 'view-select', 'view-shop', 'view-owner', 'view-starter-select'];
+            views.forEach(v => {
+                const el = document.getElementById(v);
+                if (el) el.classList.add('hidden');
+            });
+            const header = document.getElementById('main-header');
+            if (header) header.classList.add('hidden');
+            const forceView = document.getElementById('view-force-reset');
+            if (forceView) forceView.classList.remove('hidden');
+            const emailInput = document.getElementById('force-email');
+            if (emailInput && email) emailInput.value = email;
+            alert('Your password reset request was approved. Please confirm your details and set a new password.');
+        }
+        window.showForceResetView = showForceResetView;
+
+        async function approveReset(idx) {
+            const req = pendingResets[idx];
+            if (!req) return;
+
+            approvedResets = await cloudGet('approved_resets', []);
+            if (!approvedResets.some(r => r.email && r.email.toLowerCase() === req.email.toLowerCase())) {
+                approvedResets.push({
+                    email: req.email,
+                    birthday: req.birthday,
+                    approvedAt: new Date().toISOString()
+                });
+            }
+            await cloudSet('approved_resets', approvedResets);
+
+            if (req.id !== undefined && req.id !== null) {
+                await remote(c => c.from('resets').update({ status: 'approved' }).eq('id', req.id));
+            }
+            pendingResets.splice(idx, 1);
+            await cloudSet('pending_resets', pendingResets);
+
+            sendPushNotificationToPlayer(req.email, 'Password Reset Approved', 'Sign in with your email to set a new password.');
+            logSystemActivity('Password Reset Approved', `Approved password reset for ${req.email}`, 'BOSS');
+            renderOwnerQueues();
+            alert(`Password reset approved for ${req.email}. They can now sign in to set a new password.`);
+        }
+        window.approveReset = approveReset;
+
+        async function executeForceReset() {
+            const email = (document.getElementById('force-email').value || '').trim();
+            const bday = document.getElementById('force-bday').value;
+            const newPass = document.getElementById('force-newpass').value;
+
+            if (!email || !bday || !newPass) {
+                alert('Please confirm your email and birthday, and enter a new password.');
+                return;
+            }
+            if (newPass.length < 6) {
+                alert('Please choose a password of at least 6 characters.');
+                return;
+            }
+
+            approvedResets = await cloudGet('approved_resets', []);
+            const approval = approvedResets.find(r => r.email && r.email.toLowerCase() === email.toLowerCase());
+            if (!approval) {
+                alert('No approved password reset was found for that email address.');
+                return;
+            }
+            if (approval.birthday && approval.birthday !== bday) {
+                alert('The birthday does not match the approved reset request.');
+                return;
+            }
+
+            const newHash = await hashPassword(newPass);
+
+            let localUsers = await cloudGet('registered_users', []);
+            const userIdx = localUsers.findIndex(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+            if (userIdx < 0) {
+                alert('No player account was found for that email address.');
+                return;
+            }
+            localUsers[userIdx].password_hash = newHash;
+            delete localUsers[userIdx].password;
+            await cloudSet('registered_users', localUsers);
+
+            approvedResets = approvedResets.filter(r => !r.email || r.email.toLowerCase() !== email.toLowerCase());
+            await cloudSet('approved_resets', approvedResets);
+
+            currentUser = localUsers[userIdx];
+            if (!currentUser.unlockedSkills) currentUser.unlockedSkills = {};
+            try {
+                localStorage.setItem('aetheris_current_user', JSON.stringify(currentUser));
+            } catch (e) {}
+
+            await syncUserToSupabase();
+            logSystemActivity('Password Reset Completed', `${email} set a new password.`, currentUser.nickname || email);
+
+            const forceView = document.getElementById('view-force-reset');
+            if (forceView) forceView.classList.add('hidden');
+            alert('Password updated successfully. Signing you in now.');
+            restoreUserSession();
+        }
+        window.executeForceReset = executeForceReset;
+
+        // ================= SUPPORT CHAT (shared table) =================
+        // Messages are short text rows — cheap to read, and the only thing that
+        // has to cross between a player's phone and the owner's portal.
+        async function loadSupportChats(email) {
+            const rows = await remote(c => {
+                let q = c.from('support_messages')
+                    .select('email, nickname, sender, message, created_at')
+                    .order('created_at', { ascending: true })
+                    .limit(500);
+                if (email) q = q.eq('email', email);
+                return q;
+            });
+
+            if (rows === null) {
+                supportChatsCache = await cloudGet('support_chats', {});
+                return supportChatsCache;
+            }
+
+            const grouped = email ? Object.assign({}, supportChatsCache) : {};
+            if (email) grouped[email.toLowerCase()] = [];
+
+            rows.forEach(r => {
+                const key = (r.email || '').toLowerCase();
+                if (!grouped[key]) grouped[key] = [];
+                const when = r.created_at ? new Date(r.created_at) : new Date();
+                grouped[key].push({
+                    sender: r.sender,
+                    message: r.message,
+                    nickname: r.nickname,
+                    time: when.toLocaleTimeString(),
+                    ts: when.getTime()
+                });
+            });
+
+            supportChatsCache = grouped;
+            await cloudSet('support_chats', supportChatsCache);
+            return supportChatsCache;
+        }
+
+        async function postSupportMessage(email, nickname, sender, message) {
+            const saved = await remote(c => c.from('support_messages').insert([{
+                email, nickname: nickname || null, sender, message
+            }]));
+
+            const key = email.toLowerCase();
+            if (!supportChatsCache[key]) supportChatsCache[key] = [];
+            const now = new Date();
+            supportChatsCache[key].push({
+                sender, message, nickname,
+                time: now.toLocaleTimeString(),
+                ts: now.getTime()
+            });
+            await cloudSet('support_chats', supportChatsCache);
+            return saved !== null;
+        }
+
+        // ================= OWNER SUPPORT CHAT =================
+        async function renderOwnerChatThreads() {
+            const list = document.getElementById('owner-chat-threads-list');
+            if (!list) return;
+
+            await loadSupportChats();
+            const emails = Object.keys(supportChatsCache).filter(k => (supportChatsCache[k] || []).length > 0);
+
+            if (emails.length === 0) {
+                list.innerHTML = '<div class="text-xs text-slate-500 text-center py-4">No support chats.</div>';
+                return;
+            }
+
+            emails.sort((a, b) => {
+                const am = supportChatsCache[a];
+                const bm = supportChatsCache[b];
+                return (bm[bm.length - 1].ts || 0) - (am[am.length - 1].ts || 0);
+            });
+
+            list.innerHTML = emails.map(email => {
+                const msgs = supportChatsCache[email] || [];
+                const last = msgs[msgs.length - 1];
+                const awaiting = last && last.sender === 'player';
+                const isActive = activeOwnerChatEmail === email;
+                const player = registeredPlayersList.find(p => p.email && p.email.toLowerCase() === email);
+                const label = (player && (player.nickname || player.name)) || email;
+                return `
+                    <div onclick="window.openOwnerChatThread('${email}')" class="p-2 rounded-lg border cursor-pointer transition ${isActive ? 'bg-blue-600/20 border-blue-500/50' : 'bg-slate-950 border-slate-800 hover:border-slate-700'}">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white text-[11px] truncate">${label}</span>
+                            ${awaiting ? '<span class="text-[8px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-500/30 flex-shrink-0 ml-1">NEW</span>' : ''}
+                        </div>
+                        <span class="text-[9px] text-slate-400 block truncate">${last ? last.message : ''}</span>
+                        <span class="text-[8px] text-slate-500 block">${msgs.length} message${msgs.length === 1 ? '' : 's'}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        window.renderOwnerChatThreads = renderOwnerChatThreads;
+
+        async function openOwnerChatThread(email) {
+            activeOwnerChatEmail = email;
+            await renderOwnerChatThreads();
+            renderOwnerActiveChat();
+        }
+        window.openOwnerChatThread = openOwnerChatThread;
+
+        function renderOwnerActiveChat() {
+            const box = document.getElementById('owner-active-chat-box');
+            if (!box) return;
+
+            if (!activeOwnerChatEmail) {
+                box.innerHTML = '<div class="text-center text-slate-500 py-10">Select a player ticket on the left to start chatting.</div>';
+                return;
+            }
+
+            const msgs = supportChatsCache[activeOwnerChatEmail] || [];
+            if (msgs.length === 0) {
+                box.innerHTML = '<div class="text-center text-slate-500 py-10">No messages in this ticket yet.</div>';
+                return;
+            }
+
+            box.innerHTML = msgs.map(m => `
+                <div class="flex flex-col ${m.sender === 'owner' ? 'items-end' : 'items-start'}">
+                    <div class="max-w-[80%] p-2 rounded-xl text-[11px] ${m.sender === 'owner' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">
+                        <p>${m.message}</p>
+                        <span class="text-[9px] text-slate-300 block text-right mt-0.5">${m.time}</span>
+                    </div>
+                </div>
+            `).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function sendOwnerChatMessage() {
+            const input = document.getElementById('owner-chat-input');
+            if (!input) return;
+            const msg = input.value.trim();
+            if (!msg) return;
+            if (!activeOwnerChatEmail) {
+                alert('Select a player ticket first.');
+                return;
+            }
+
+            await postSupportMessage(activeOwnerChatEmail, 'BOSS', 'owner', msg);
+
+            input.value = '';
+            renderOwnerActiveChat();
+            await renderOwnerChatThreads();
+            sendPushNotificationToPlayer(activeOwnerChatEmail, 'Support Reply', msg);
+            logSystemActivity('Support Reply Sent', `Owner replied to ${activeOwnerChatEmail}`, 'BOSS');
+        }
+        window.sendOwnerChatMessage = sendOwnerChatMessage;
+
+        // ================= OWNER TRANSACTION HISTORY & METRICS =================
+        function getOwnerFilterDate() {
+            const el = document.getElementById('filter-date');
+            return el && el.value ? el.value : '';
+        }
+
+        function recordTransactionHistory(kind, entry) {
+            const now = new Date();
+            const row = Object.assign({
+                id: Date.now() + Math.random(),
+                date: now.toISOString().split('T')[0],
+                time: now.toLocaleTimeString(),
+                timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`,
+                actor: (currentUser && (currentUser.nickname || currentUser.email)) || 'BOSS'
+            }, entry);
+
+            if (kind === 'deposit') {
+                depositHistory.unshift(row);
+                cloudSet('deposit_history', depositHistory);
+            } else {
+                withdrawHistory.unshift(row);
+                cloudSet('withdraw_history', withdrawHistory);
+            }
+            return row;
+        }
+
+        function renderOwnerHistoryPanels() {
+            const filterDate = getOwnerFilterDate();
+            const byDate = rows => filterDate ? rows.filter(r => r.date === filterDate) : rows;
+
+            const deposits = byDate(depositHistory);
+            const withdrawals = byDate(withdrawHistory);
+
+            const approvedDeposits = deposits.filter(d => d.status === 'approved');
+            const approvedWithdrawals = withdrawals.filter(w => w.status === 'approved');
+
+            const totalDep = approvedDeposits.reduce((s, d) => s + Number(d.amount || 0), 0);
+            const totalWit = approvedWithdrawals.reduce((s, w) => s + Number(w.amount || 0), 0);
+
+            const depMetric = document.getElementById('metric-total-deposits');
+            const witMetric = document.getElementById('metric-total-withdrawals');
+            if (depMetric) depMetric.innerText = `₱${totalDep.toFixed(2)}`;
+            if (witMetric) witMetric.innerText = `₱${totalWit.toFixed(2)}`;
+
+            const historyRow = (r, accent) => `
+                <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[11px]">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-white truncate">${r.nickname || r.email}</span>
+                        <span class="${r.status === 'approved' ? accent : 'text-red-400'} font-bold">${r.status === 'approved' ? '' : 'REJECTED '}₱${Number(r.amount || 0).toFixed(2)}</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400 block truncate">${r.method ? r.method.toUpperCase() + ' • ' : ''}${r.ref ? 'Ref: ' + r.ref : ''}${r.account ? 'To: ' + r.account : ''}</span>
+                    <span class="text-[9px] text-slate-500 block">📅 ${r.date} ⏰ ${r.time} • by ${r.actor}</span>
+                </div>
+            `;
+
+            const depList = document.getElementById('owner-deposit-history-list');
+            if (depList) {
+                depList.innerHTML = deposits.length === 0
+                    ? `<div class="text-[11px] text-slate-500 text-center py-2">No deposit history${filterDate ? ' for ' + filterDate : ''} yet.</div>`
+                    : deposits.map(d => historyRow(d, 'text-emerald-400')).join('');
+            }
+
+            const witList = document.getElementById('owner-withdraw-history-list');
+            if (witList) {
+                witList.innerHTML = withdrawals.length === 0
+                    ? `<div class="text-[11px] text-slate-500 text-center py-2">No withdrawal history${filterDate ? ' for ' + filterDate : ''} yet.</div>`
+                    : withdrawals.map(w => historyRow(w, 'text-amber-400')).join('');
+            }
+
+            const adderList = document.getElementById('owner-balance-adder-history');
+            if (adderList) {
+                const adjustments = byDate(balanceAdderHistory);
+                adderList.innerHTML = adjustments.length === 0
+                    ? `<div class="text-[10px] text-slate-500 text-center py-1">No manual balance adjustments${filterDate ? ' for ' + filterDate : ''} logged.</div>`
+                    : adjustments.map(a => `
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[10px] flex items-center justify-between">
+                            <div class="min-w-0">
+                                <span class="font-bold text-white truncate block">${a.nickname || a.email}</span>
+                                <span class="text-slate-400">₱${a.preBalance} ➔ ₱${a.postBalance}</span>
+                            </div>
+                            <div class="text-right flex-shrink-0 ml-2">
+                                <span class="${Number(a.amount) >= 0 ? 'text-emerald-400' : 'text-amber-400'} font-bold">${Number(a.amount) >= 0 ? '+' : ''}₱${a.amount}</span>
+                                <span class="text-[9px] text-slate-500 block">${a.date || ''} ${a.time || a.timestamp || ''} • by ${a.actor || 'BOSS'}</span>
+                            </div>
+                        </div>
+                    `).join('');
+            }
+
+            const battleList = document.getElementById('owner-battle-history-list');
+            if (battleList) {
+                const battles = byDate(battleHistoryLog);
+                battleList.innerHTML = battles.length === 0
+                    ? `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No battle history${filterDate ? ' for ' + filterDate : ''} logged yet.</div>`
+                    : battles.map(b => `
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[11px]">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-white truncate">${b.playerName || b.playerEmail} <span class="text-slate-500">vs</span> ${b.opponent}</span>
+                                <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'} font-bold flex-shrink-0 ml-2">${b.result}</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block">Wager: ₱${b.bet} • Balance: ₱${b.preBalance} ➔ ₱${b.postBalance}</span>
+                            <span class="text-[9px] text-slate-500 block">📅 ${b.date} ⏰ ${b.time}</span>
+                        </div>
+                    `).join('');
+            }
+        }
 
         function openChatModal() {
             openModal('support-chat');
@@ -2881,8 +3671,8 @@
         async function renderPlayerChatMessages(silent = false) {
             const box = document.getElementById('player-chat-messages-box');
             if (!box || !currentUser) return;
-            let chats = await cloudGet('support_chats', {});
-            let userChat = chats[currentUser.email.toLowerCase()] || [];
+            await loadSupportChats(currentUser.email);
+            let userChat = supportChatsCache[currentUser.email.toLowerCase()] || [];
 
             box.innerHTML = userChat.length === 0 ? '<div class="text-slate-500 text-center py-6">No messages yet. Send a message to contact owner support.</div>' :
                 userChat.map(m => `
@@ -2901,16 +3691,7 @@
             const msg = input.value.trim();
             if (!msg || !currentUser) return;
 
-            let chats = await cloudGet('support_chats', {});
-            if (!chats[currentUser.email.toLowerCase()]) chats[currentUser.email.toLowerCase()] = [];
-
-            const now = new Date();
-            chats[currentUser.email.toLowerCase()].push({
-                sender: 'player',
-                message: msg,
-                time: now.toLocaleTimeString()
-            });
-            await cloudSet('support_chats', chats);
+            await postSupportMessage(currentUser.email, currentUser.nickname, 'player', msg);
             input.value = '';
             renderPlayerChatMessages();
             notifyOwner('Support Message', `Player ${currentUser.nickname} sent a support message.`);

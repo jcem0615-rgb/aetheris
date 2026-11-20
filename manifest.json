@@ -1,0 +1,15 @@
+{
+  "name": "Aetheris Arena",
+  "short_name": "Aetheris",
+  "description": "Peer-to-Peer Tactical Card & Combat Arena",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07090e",
+  "theme_color": "#07090e",
+  "icons": [
+    { "src": "image_114c6025.jpg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any" },
+    { "src": "image_114c6025.jpg", "sizes": "512x512", "type": "image/jpeg", "purpose": "maskable" }
+  ]
+}
