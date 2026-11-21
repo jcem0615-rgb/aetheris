@@ -48,7 +48,10 @@
             width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:9999px;
             background:radial-gradient(circle at 35% 35%, #fff, var(--fx-color) 55%, transparent 72%);
             box-shadow:0 0 12px 3px var(--fx-color);
-            animation:fx-travel var(--fx-dur,420ms) cubic-bezier(.45,.05,.55,.95) forwards;
+            /* Close to constant speed with a slight bite at the end. A heavy
+               ease-in left the first half looking stationary; a heavy ease-out
+               made it decelerate into the target and sapped the impact. */
+            animation:fx-travel var(--fx-dur,230ms) cubic-bezier(.4,.25,.75,.65) forwards;
         }
         .fx-bolt.is-ult { width:26px; height:26px; margin:-13px 0 0 -13px; box-shadow:0 0 26px 8px var(--fx-color); }
 
@@ -100,7 +103,7 @@
 
         @keyframes fx-travel {
             from { transform:translate3d(0,0,0) scale(.55); opacity:0; }
-            18%  { opacity:1; }
+            12%  { opacity:1; }
             to   { transform:translate3d(var(--fx-dx),var(--fx-dy),0) scale(1); opacity:1; }
         }
         @keyframes fx-ring  { from{transform:scale(.35);opacity:1} to{transform:scale(1.9);opacity:0} }
@@ -2738,7 +2741,7 @@
             const layer = document.getElementById('fx-layer');
             const a = fxCenter(fromEl, layer), b = fxCenter(toEl, layer);
             if (!a || !b) return 0;
-            const dur = ultimate ? 560 : 400;
+            const dur = ultimate ? 340 : 230;
             fxSpawn('fx-bolt' + (ultimate ? ' is-ult' : ''), {
                 left: a.x + 'px', top: a.y + 'px',
                 '--fx-color': color, '--fx-dur': dur + 'ms',
