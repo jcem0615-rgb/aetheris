@@ -2692,6 +2692,18 @@
             src.start(t0); src.stop(t0 + o.dur + 0.02);
         }
 
+        // A plain gain, deliberately. A DynamicsCompressor on the bus squashed
+        // the short percussive peaks (strike fell from 0.21 to 0.10) while
+        // sustained tones rode under it, and the transient is the impact.
+        // Levels are kept under 1.0 by construction instead; the loudest
+        // voice measures about 0.82.
+        function sfxBuildBus(ctx) {
+            const gain = ctx.createGain();
+            gain.gain.value = 0.85;
+            gain.connect(ctx.destination);
+            return gain;
+        }
+
         // One voice per card type, plus an ultimate variant of each.
         const SFX_VOICES = {
             cast(c, d, t, ult) {
@@ -2705,7 +2717,7 @@
                 sfxNoise(c, d, t, { dur: ult ? 0.32 : 0.17, gain: 0.55, f0: 5200, f1: 260 });
                 sfxTone(c, d, t, { type: 'square', f0: ult ? 190 : 250, f1: ult ? 42 : 70,
                     dur: ult ? 0.34 : 0.19, gain: 0.26 });
-                if (ult) sfxTone(c, d, t, { type: 'sine', f0: 95, f1: 28, dur: 0.66, gain: 0.5 });
+                if (ult) sfxTone(c, d, t, { type: 'sine', f0: 95, f1: 28, dur: 0.66, gain: 0.38 });
             },
             debuff(c, d, t, ult) {
                 // Grindier than a clean strike: detuned pair plus a low sweep.
@@ -2766,9 +2778,7 @@
                         const AC = window.AudioContext || window.webkitAudioContext;
                         if (!AC) return null;
                         ctx = new AC();
-                        master = ctx.createGain();
-                        master.gain.value = 0.42;
-                        master.connect(ctx.destination);
+                        master = sfxBuildBus(ctx);
                     }
                     if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
                     return ctx;
