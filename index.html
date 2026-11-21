@@ -37,6 +37,100 @@
         .animate-float { animation: float 3s ease-in-out infinite; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* ===== Skill FX =================================================== */
+        /* Everything animates transform/opacity only, so it stays smooth on a
+           phone. Colour and travel vector come in as CSS custom properties. */
+        #fx-layer { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:30; }
+        .fx { position:absolute; pointer-events:none; will-change:transform,opacity; }
+
+        .fx-bolt {
+            width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:9999px;
+            background:radial-gradient(circle at 35% 35%, #fff, var(--fx-color) 55%, transparent 72%);
+            box-shadow:0 0 12px 3px var(--fx-color);
+            animation:fx-travel var(--fx-dur,420ms) cubic-bezier(.45,.05,.55,.95) forwards;
+        }
+        .fx-bolt.is-ult { width:26px; height:26px; margin:-13px 0 0 -13px; box-shadow:0 0 26px 8px var(--fx-color); }
+
+        .fx-ring {
+            /* Sized past the 80px sprite so the ring visibly sweeps out of it
+               rather than expanding inside and blending into its glow. */
+            width:76px; height:76px; margin:-38px 0 0 -38px; border-radius:9999px;
+            border:3px solid var(--fx-color); box-shadow:0 0 18px 3px var(--fx-color);
+            animation:fx-ring 480ms ease-out forwards;
+        }
+        .fx-ring.is-ult { width:120px; height:120px; margin:-60px 0 0 -60px; border-width:4px; }
+
+        .fx-shard {
+            width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:1px;
+            background:var(--fx-color); box-shadow:0 0 8px var(--fx-color);
+            animation:fx-shard 520ms ease-out forwards;
+        }
+
+        .fx-mote {
+            width:7px; height:7px; margin:-3.5px 0 0 -3.5px; border-radius:9999px;
+            background:var(--fx-color); box-shadow:0 0 10px 2px var(--fx-color);
+            animation:fx-mote 820ms ease-out forwards;
+        }
+
+        .fx-shield {
+            width:66px; height:66px; margin:-33px 0 0 -33px; border-radius:9999px;
+            border:3px solid var(--fx-color);
+            background:radial-gradient(circle, transparent 58%, var(--fx-color) 100%);
+            opacity:0; animation:fx-shield 700ms ease-out forwards;
+        }
+
+        .fx-num {
+            margin-left:-28px; width:56px; text-align:center;
+            font-family:'Cinzel',serif; font-weight:700; font-size:15px; line-height:1;
+            text-shadow:0 2px 5px rgba(0,0,0,.95), 0 0 10px currentColor;
+            animation:fx-num 1000ms cubic-bezier(.2,.7,.3,1) forwards;
+        }
+        .fx-num.is-crit { font-size:21px; }
+
+        .fx-flash {
+            inset:0; width:100%; height:100%; left:0; top:0;
+            background:radial-gradient(circle at 50% 50%, var(--fx-color), transparent 70%);
+            animation:fx-flash 460ms ease-out forwards;
+        }
+
+        .fx-lunge-down { animation:fx-lunge-down 380ms ease-in-out; }
+        .fx-lunge-up   { animation:fx-lunge-up   380ms ease-in-out; }
+        .fx-hurt       { animation:fx-hurt 420ms ease-out; }
+
+        @keyframes fx-travel {
+            from { transform:translate3d(0,0,0) scale(.55); opacity:0; }
+            18%  { opacity:1; }
+            to   { transform:translate3d(var(--fx-dx),var(--fx-dy),0) scale(1); opacity:1; }
+        }
+        @keyframes fx-ring  { from{transform:scale(.35);opacity:1} to{transform:scale(1.9);opacity:0} }
+        @keyframes fx-shard { from{transform:translate3d(0,0,0) scale(1);opacity:1}
+                              to{transform:translate3d(var(--fx-dx),var(--fx-dy),0) scale(.2);opacity:0} }
+        @keyframes fx-mote  { from{transform:translateY(12px) scale(.3);opacity:0}
+                              35%{opacity:1} to{transform:translateY(-36px) scale(1);opacity:0} }
+        @keyframes fx-shield{ from{transform:scale(.45);opacity:0} 35%{opacity:.9}
+                              to{transform:scale(1.45);opacity:0} }
+        @keyframes fx-num   { 0%{transform:translateY(4px) scale(.6);opacity:0}
+                              18%{transform:translateY(-6px) scale(1.2);opacity:1}
+                              100%{transform:translateY(-42px) scale(1);opacity:0} }
+        @keyframes fx-flash { from{opacity:.7} to{opacity:0} }
+        @keyframes fx-lunge-down { 50%{transform:translateY(16px) scale(1.07)} }
+        @keyframes fx-lunge-up   { 50%{transform:translateY(-16px) scale(1.07)} }
+        @keyframes fx-hurt  { 0%,100%{filter:none} 30%{filter:brightness(2.4) saturate(.4)} }
+        @keyframes fx-shake {
+            10%,90%{transform:translate3d(calc(var(--fx-amp)*-1),0,0)}
+            20%,80%{transform:translate3d(var(--fx-amp),0,0)}
+            30%,50%,70%{transform:translate3d(calc(var(--fx-amp)*-2),1px,0)}
+            40%,60%{transform:translate3d(calc(var(--fx-amp)*2),-1px,0)}
+        }
+        .fx-shaking { animation:fx-shake 420ms cubic-bezier(.36,.07,.19,.97); }
+
+        /* Players who ask for less motion keep the numbers, lose the motion. */
+        @media (prefers-reduced-motion: reduce) {
+            .fx-bolt, .fx-shard, .fx-mote, .fx-flash, .fx-shaking,
+            .fx-lunge-down, .fx-lunge-up { animation:none !important; opacity:0 !important; }
+            .fx-num { animation-duration:700ms; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
@@ -519,8 +613,9 @@
         </div>
 
         <!-- Main Combat Stage with Uploaded Battlefield Background Image -->
-        <div class="flex-1 my-2 border border-slate-800/80 rounded-3xl p-3 flex flex-col justify-between relative overflow-hidden shadow-2xl" style="background-image: url('image_911bbe0e%20%281%29.jpg'); background-size: cover; background-position: center;">
+        <div id="fs-combat-stage" class="flex-1 my-2 border border-slate-800/80 rounded-3xl p-3 flex flex-col justify-between relative overflow-hidden shadow-2xl" style="background-image: url('image_911bbe0e%20%281%29.jpg'); background-size: cover; background-position: center;">
             <div class="absolute inset-0 bg-black/40 pointer-events-none"></div>
+            <div id="fx-layer"></div>
 
             <!-- Opponent Stage Area (Top) -->
             <div class="flex flex-col items-center space-y-1 z-10">
@@ -2545,7 +2640,215 @@
             }).join('');
         }
 
+        // ================= SKILL FX ENGINE =================
+        // Driven by each card's own `type` and `color`, so all 66 skills get a
+        // fitting effect without hand-authoring one per card. 3-AP skills are
+        // flagged as ultimates and get the heavier treatment.
+        const FX_COLORS = {
+            red:'#ef4444', orange:'#fb923c', emerald:'#34d399', teal:'#2dd4bf',
+            blue:'#60a5fa', indigo:'#818cf8', purple:'#c084fc', amber:'#fbbf24',
+            yellow:'#facc15', stone:'#d6d3d1', violet:'#a78bfa', rose:'#fb7185'
+        };
+        const fxColor = c => FX_COLORS[c] || '#fbbf24';
+        const fxReduced = () => window.matchMedia
+            && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Each hero's own element, used for the opponent's effects.
+        const HERO_COLOR = (() => {
+            const m = {};
+            heroes.forEach(h => { m[h.id] = (h.baseSkills[0] || {}).color || 'amber'; });
+            return m;
+        })();
+
+        function fxCenter(el, layer) {
+            if (!el || !layer) return null;
+            const a = el.getBoundingClientRect(), b = layer.getBoundingClientRect();
+            return { x: a.left - b.left + a.width / 2, y: a.top - b.top + a.height / 2 };
+        }
+
+        function fxSpawn(className, style, lifeMs) {
+            const layer = document.getElementById('fx-layer');
+            if (!layer) return null;
+            const el = document.createElement('div');
+            el.className = 'fx ' + className;
+            // Custom properties must go through setProperty; assigning them on
+            // the style object is silently ignored, which leaves every
+            // var(--fx-color) unresolved and the effect invisible.
+            Object.keys(style).forEach(k => {
+                if (k.charAt(0) === '-') el.style.setProperty(k, style[k]);
+                else el.style[k] = style[k];
+            });
+            layer.appendChild(el);
+            setTimeout(() => el.remove(), lifeMs);
+            return el;
+        }
+
+        function fxShake(amp) {
+            if (fxReduced()) return;
+            const stage = document.getElementById('fs-combat-stage');
+            if (!stage) return;
+            stage.style.setProperty('--fx-amp', amp + 'px');
+            stage.classList.remove('fx-shaking');
+            void stage.offsetWidth;            // restart the animation
+            stage.classList.add('fx-shaking');
+            setTimeout(() => stage.classList.remove('fx-shaking'), 440);
+        }
+
+        function fxNumber(targetEl, text, color, crit) {
+            const layer = document.getElementById('fx-layer');
+            const p = fxCenter(targetEl, layer);
+            if (!p) return;
+            const el = fxSpawn('fx-num' + (crit ? ' is-crit' : ''), {
+                left: p.x + 'px', top: (p.y - 26) + 'px', color
+            }, 1050);
+            if (el) el.textContent = text;
+        }
+
+        function fxBurst(point, color, count, spread, cls) {
+            for (let i = 0; i < count; i++) {
+                const ang = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+                const dist = spread * (0.55 + Math.random() * 0.75);
+                fxSpawn(cls, {
+                    left: point.x + 'px', top: point.y + 'px',
+                    '--fx-color': color,
+                    '--fx-dx': Math.cos(ang) * dist + 'px',
+                    '--fx-dy': Math.sin(ang) * dist + 'px',
+                    animationDelay: (Math.random() * 70) + 'ms'
+                }, 700);
+            }
+        }
+
+        function fxImpact(targetEl, color, ultimate) {
+            const layer = document.getElementById('fx-layer');
+            const p = fxCenter(targetEl, layer);
+            if (!p) return;
+            fxSpawn('fx-ring' + (ultimate ? ' is-ult' : ''),
+                { left: p.x + 'px', top: p.y + 'px', '--fx-color': color }, 520);
+            fxBurst(p, color, ultimate ? 14 : 9, ultimate ? 104 : 66, 'fx-shard');
+            if (targetEl) {
+                targetEl.classList.remove('fx-hurt');
+                void targetEl.offsetWidth;
+                targetEl.classList.add('fx-hurt');
+                setTimeout(() => targetEl.classList.remove('fx-hurt'), 440);
+            }
+        }
+
+        function fxProjectile(fromEl, toEl, color, ultimate) {
+            if (fxReduced()) return 0;
+            const layer = document.getElementById('fx-layer');
+            const a = fxCenter(fromEl, layer), b = fxCenter(toEl, layer);
+            if (!a || !b) return 0;
+            const dur = ultimate ? 560 : 400;
+            fxSpawn('fx-bolt' + (ultimate ? ' is-ult' : ''), {
+                left: a.x + 'px', top: a.y + 'px',
+                '--fx-color': color, '--fx-dur': dur + 'ms',
+                '--fx-dx': (b.x - a.x) + 'px', '--fx-dy': (b.y - a.y) + 'px'
+            }, dur + 60);
+            return dur;
+        }
+
+        function fxLunge(spriteEl, downward) {
+            if (fxReduced() || !spriteEl) return;
+            const cls = downward ? 'fx-lunge-down' : 'fx-lunge-up';
+            spriteEl.classList.remove(cls);
+            void spriteEl.offsetWidth;
+            spriteEl.classList.add(cls);
+            setTimeout(() => spriteEl.classList.remove(cls), 400);
+        }
+
+        function fxFlash(color) {
+            if (fxReduced()) return;
+            fxSpawn('fx-flash', { '--fx-color': color }, 500);
+        }
+
+        // Plays one skill. `deltas` carries the real numbers the server applied.
+        function playSkillFx(opts) {
+            const { type, color, ultimate, fromPlayer, deltas } = opts;
+            const tint = fxColor(color);
+            const playerSprite = document.getElementById('fs-player-sprite');
+            const enemySprite  = document.getElementById('fs-enemy-sprite');
+            const caster = fromPlayer ? playerSprite : enemySprite;
+            const target = fromPlayer ? enemySprite : playerSprite;
+            const layer  = document.getElementById('fx-layer');
+
+            if (ultimate) fxFlash(tint);
+
+            // Self-targeted effects: no projectile, the glow stays on the caster.
+            if (type === 'defend' || type === 'heal') {
+                const c = fxCenter(caster, layer);
+                if (c) {
+                    if (type === 'defend') {
+                        fxSpawn('fx-shield', { left: c.x + 'px', top: c.y + 'px', '--fx-color': tint }, 740);
+                    } else {
+                        for (let i = 0; i < 7; i++) {
+                            fxSpawn('fx-mote', {
+                                left: (c.x + (Math.random() - 0.5) * 56) + 'px',
+                                top: (c.y + 14) + 'px',
+                                '--fx-color': tint,
+                                animationDelay: (i * 55) + 'ms'
+                            }, 900 + i * 55);
+                        }
+                    }
+                }
+                if (deltas.armor > 0) fxNumber(caster, `+${deltas.armor} ARMOR`, '#60a5fa', false);
+                if (deltas.heal  > 0) fxNumber(caster, `+${deltas.heal} HP`, '#34d399', false);
+                // A drain card both heals and hits.
+                if (deltas.damage > 0) {
+                    fxLunge(caster, fromPlayer);
+                    setTimeout(() => {
+                        fxImpact(target, tint, ultimate);
+                        fxNumber(target, `-${deltas.damage}`, tint, ultimate);
+                        fxShake(ultimate ? 7 : 4);
+                    }, fxProjectile(caster, target, tint, ultimate));
+                }
+                return;
+            }
+
+            // Offensive effects travel to the target and land.
+            fxLunge(caster, fromPlayer);
+            const travel = fxProjectile(caster, target, tint, ultimate);
+
+            setTimeout(() => {
+                fxImpact(target, tint, ultimate);
+                fxShake(ultimate ? 9 : (type === 'debuff' ? 7 : 5));
+
+                if (deltas.damage > 0) {
+                    fxNumber(target, `-${deltas.damage}`, tint, ultimate || deltas.damage >= 60);
+                } else if (deltas.blocked) {
+                    fxNumber(target, 'BLOCKED', '#60a5fa', false);
+                }
+
+                if (deltas.poison > 0) {
+                    const t = fxCenter(target, layer);
+                    if (t) fxBurst(t, tint, 7, 58, 'fx-mote');
+                    setTimeout(() => fxNumber(target, `+${deltas.poison} POISON`, tint, false), 180);
+                }
+                if (deltas.heal > 0) fxNumber(caster, `+${deltas.heal} HP`, '#34d399', false);
+            }, travel);
+        }
+
+        // Works out what actually happened from the two server states, so the
+        // numbers on screen are the server's, never a local guess.
+        function fxDeltas(prev, next, fromPlayer) {
+            const tHp = fromPlayer ? 'enemyHp' : 'playerHp';
+            const tAr = fromPlayer ? 'enemyArmor' : 'playerArmor';
+            const tPo = fromPlayer ? 'enemyPoison' : 'playerPoison';
+            const cHp = fromPlayer ? 'playerHp' : 'enemyHp';
+            const cAr = fromPlayer ? 'playerArmor' : 'enemyArmor';
+
+            const damage = Math.max(0, (prev[tHp] ?? 0) - (next[tHp] ?? 0));
+            const armorLost = Math.max(0, (prev[tAr] ?? 0) - (next[tAr] ?? 0));
+            return {
+                damage,
+                heal:   Math.max(0, (next[cHp] ?? 0) - (prev[cHp] ?? 0)),
+                armor:  Math.max(0, (next[cAr] ?? 0) - (prev[cAr] ?? 0)),
+                poison: Math.max(0, (next[tPo] ?? 0) - (prev[tPo] ?? 0)),
+                blocked: damage === 0 && armorLost > 0
+            };
+        }
+
         let duelBusy = false;
+        let lastDuelResponse = null;
 
         // Every move is a server call; `seq` makes a replayed request a no-op.
         async function duelAction(payload) {
@@ -2561,6 +2864,7 @@
                     return null;
                 }
 
+                lastDuelResponse = data;
                 applyServerDuelState(data);
 
                 if (data.finished) {
@@ -2574,8 +2878,22 @@
         }
 
         async function playDuelCard(cardIndex) {
-            if (duelState.turnTimerInterval) { /* timer keeps running between cards */ }
-            await duelAction({ action: 'playCard', handIndex: cardIndex });
+            const cardId = (duelState.hand || [])[cardIndex];
+            const card = CARD_INDEX[cardId];
+            // Snapshot before the server moves anything, so the numbers shown
+            // are the real difference the server applied.
+            const before = Object.assign({}, duelState);
+
+            const next = await duelAction({ action: 'playCard', handIndex: cardIndex });
+            if (!card || !lastDuelResponse) return;
+
+            playSkillFx({
+                type: card.type,
+                color: card.color,
+                ultimate: card.ap >= 3,
+                fromPlayer: true,
+                deltas: fxDeltas(before, lastDuelResponse, true)
+            });
         }
         window.playDuelCard = playDuelCard;
 
@@ -2599,7 +2917,25 @@
             const log = document.getElementById('fs-battle-log');
             if (log) log.innerText = `[Turn]: ${duelState.opponent || 'Opponent'} takes their turn...`;
 
+            const before = Object.assign({}, duelState);
             const next = await duelAction({ action: 'endTurn' });
+
+            if (lastDuelResponse) {
+                const d = fxDeltas(before, lastDuelResponse, false);
+                // The server does not name the opponent's card, so the shape of
+                // the turn tells us which effect to play.
+                let type = 'strike';
+                if (d.damage === 0 && (d.heal > 0 || d.armor > 0)) type = 'heal';
+                else if (d.armor > 0) type = 'defend';
+                playSkillFx({
+                    type,
+                    color: HERO_COLOR[duelState.enemyHeroId] || 'amber',
+                    ultimate: false,
+                    fromPlayer: false,
+                    deltas: d
+                });
+            }
+
             if (next) startTurnTimer();
         }
         window.endDuelTurn = endDuelTurn;
@@ -2626,6 +2962,7 @@
 
             activeDuelId = null;
             duelSeq = 0;
+            lastDuelResponse = null;
 
             if (result && result.balance !== undefined) {
                 currentUser.wallet = Number(result.balance);
