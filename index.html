@@ -620,6 +620,7 @@
                 <span id="fullscreen-bet-badge" class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
             </div>
             <div class="flex items-center space-x-2">
+                <button id="btn-sound" onclick="window.toggleSound()" class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold rounded-xl transition">Sound On</button>
                 <button onclick="window.surrenderDuel()" class="px-2.5 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-[10px] font-bold rounded-xl transition">Surrender</button>
             </div>
         </div>
@@ -2605,6 +2606,7 @@
             const viewFullscreen = document.getElementById('view-duel-fullscreen');
             if (viewFullscreen) viewFullscreen.classList.remove('hidden');
 
+            updateSoundButton();
             updateDuelUI();
             startTurnTimer();
         }
@@ -2651,6 +2653,160 @@
                 `;
             }).join('');
         }
+
+        // ================= SOUND =================
+        // Synthesised with Web Audio rather than shipped as audio files: no
+        // extra page weight, no network, and it works offline. Every voice is
+        // a pure function of (ctx, destination, startTime) so the same code can
+        // be rendered into an OfflineAudioContext for testing.
+        function sfxTone(ctx, dest, t0, o) {
+            const osc = ctx.createOscillator(), g = ctx.createGain();
+            osc.type = o.type || 'sine';
+            osc.frequency.setValueAtTime(o.f0, t0);
+            if (o.f1 && o.f1 !== o.f0) {
+                osc.frequency.exponentialRampToValueAtTime(Math.max(1, o.f1), t0 + o.dur);
+            }
+            const peak = o.gain == null ? 0.3 : o.gain;
+            g.gain.setValueAtTime(0.0001, t0);
+            g.gain.linearRampToValueAtTime(peak, t0 + (o.attack == null ? 0.006 : o.attack));
+            g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
+            osc.connect(g); g.connect(dest);
+            osc.start(t0); osc.stop(t0 + o.dur + 0.02);
+        }
+
+        function sfxNoise(ctx, dest, t0, o) {
+            const len = Math.max(1, Math.floor(ctx.sampleRate * o.dur));
+            const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+            const src = ctx.createBufferSource(); src.buffer = buf;
+            const flt = ctx.createBiquadFilter();
+            flt.type = o.filter || 'lowpass';
+            flt.Q.value = o.q == null ? 1 : o.q;
+            flt.frequency.setValueAtTime(o.f0, t0);
+            flt.frequency.exponentialRampToValueAtTime(Math.max(40, o.f1), t0 + o.dur);
+            const g = ctx.createGain();
+            g.gain.setValueAtTime(o.gain == null ? 0.3 : o.gain, t0);
+            g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
+            src.connect(flt); flt.connect(g); g.connect(dest);
+            src.start(t0); src.stop(t0 + o.dur + 0.02);
+        }
+
+        // One voice per card type, plus an ultimate variant of each.
+        const SFX_VOICES = {
+            cast(c, d, t, ult) {
+                // Wide band and a high gain: a narrow bandpass on a short noise
+                // burst passes almost no energy and the whoosh went inaudible.
+                sfxNoise(c, d, t, { dur: ult ? 0.30 : 0.18, gain: 0.85,
+                    filter: 'bandpass', q: 0.7, f0: 420, f1: ult ? 3000 : 2200 });
+                if (ult) sfxTone(c, d, t, { type: 'sawtooth', f0: 110, f1: 440, dur: 0.3, gain: 0.2 });
+            },
+            strike(c, d, t, ult) {
+                sfxNoise(c, d, t, { dur: ult ? 0.32 : 0.17, gain: 0.55, f0: 5200, f1: 260 });
+                sfxTone(c, d, t, { type: 'square', f0: ult ? 190 : 250, f1: ult ? 42 : 70,
+                    dur: ult ? 0.34 : 0.19, gain: 0.26 });
+                if (ult) sfxTone(c, d, t, { type: 'sine', f0: 95, f1: 28, dur: 0.66, gain: 0.5 });
+            },
+            debuff(c, d, t, ult) {
+                // Grindier than a clean strike: detuned pair plus a low sweep.
+                sfxTone(c, d, t, { type: 'sawtooth', f0: ult ? 150 : 200, f1: 38, dur: ult ? 0.42 : 0.26, gain: 0.22 });
+                sfxTone(c, d, t, { type: 'sawtooth', f0: ult ? 156 : 207, f1: 40, dur: ult ? 0.42 : 0.26, gain: 0.2 });
+                sfxNoise(c, d, t, { dur: ult ? 0.36 : 0.2, gain: 0.4, f0: 2600, f1: 180 });
+                if (ult) sfxTone(c, d, t, { type: 'sine', f0: 80, f1: 24, dur: 0.75, gain: 0.52 });
+            },
+            poison(c, d, t, ult) {
+                sfxNoise(c, d, t, { dur: 0.16, gain: 0.45, filter: 'lowpass', f0: 1800, f1: 300 });
+                // bubbling: short rising blips at irregular pitches
+                const n = ult ? 7 : 5;
+                for (let i = 0; i < n; i++) {
+                    const at = t + 0.05 + i * 0.055;
+                    const base = 180 + Math.random() * 260;
+                    sfxTone(c, d, at, { type: 'sine', f0: base, f1: base * 2.1, dur: 0.1, gain: 0.36 });
+                }
+                if (ult) sfxTone(c, d, t, { type: 'sine', f0: 90, f1: 30, dur: 0.6, gain: 0.4 });
+            },
+            defend(c, d, t, ult) {
+                // Metallic ring: resonant filtered noise plus a struck partial.
+                sfxNoise(c, d, t, { dur: 0.1, gain: 0.3, filter: 'highpass', f0: 1800, f1: 3200 });
+                sfxTone(c, d, t, { type: 'triangle', f0: ult ? 520 : 660, f1: ult ? 500 : 640,
+                    dur: ult ? 0.7 : 0.45, gain: ult ? 0.34 : 0.26, attack: 0.002 });
+                sfxTone(c, d, t + 0.01, { type: 'sine', f0: ult ? 1040 : 1320, f1: 1300,
+                    dur: ult ? 0.5 : 0.32, gain: 0.12 });
+            },
+            heal(c, d, t, ult) {
+                // Rising major arpeggio, the only unambiguously pleasant voice.
+                const steps = ult ? [392, 523, 659, 784, 1046] : [392, 523, 659];
+                steps.forEach((f, i) => {
+                    sfxTone(c, d, t + i * 0.07, { type: 'sine', f0: f, f1: f, dur: 0.4, gain: 0.42, attack: 0.012 });
+                });
+            },
+            victory(c, d, t) {
+                [523, 659, 784, 1046].forEach((f, i) => {
+                    sfxTone(c, d, t + i * 0.1, { type: 'triangle', f0: f, f1: f, dur: 0.5, gain: 0.46, attack: 0.01 });
+                });
+            },
+            defeat(c, d, t) {
+                [392, 330, 262, 196].forEach((f, i) => {
+                    sfxTone(c, d, t + i * 0.13, { type: 'sawtooth', f0: f, f1: f * 0.98, dur: 0.6, gain: 0.42, attack: 0.02 });
+                });
+            }
+        };
+
+        const SFX = (() => {
+            let ctx = null, master = null, muted = false;
+            try { muted = localStorage.getItem('aetheris_muted') === '1'; } catch (e) {}
+
+            // iOS will not start audio outside a gesture, so the context is
+            // created on the first play (which always follows a tap) and
+            // resumed if the browser suspended it.
+            function ready() {
+                if (muted) return null;
+                try {
+                    if (!ctx) {
+                        const AC = window.AudioContext || window.webkitAudioContext;
+                        if (!AC) return null;
+                        ctx = new AC();
+                        master = ctx.createGain();
+                        master.gain.value = 0.42;
+                        master.connect(ctx.destination);
+                    }
+                    if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
+                    return ctx;
+                } catch (e) { return null; }
+            }
+
+            return {
+                play(voice, ultimate) {
+                    const c = ready();
+                    if (!c || !SFX_VOICES[voice]) return;
+                    try { SFX_VOICES[voice](c, master, c.currentTime, !!ultimate); } catch (e) {}
+                },
+                isMuted() { return muted; },
+                toggle() {
+                    muted = !muted;
+                    try { localStorage.setItem('aetheris_muted', muted ? '1' : '0'); } catch (e) {}
+                    if (muted && ctx && ctx.suspend) { try { ctx.suspend(); } catch (e) {} }
+                    return muted;
+                }
+            };
+        })();
+
+        function updateSoundButton() {
+            const btn = document.getElementById('btn-sound');
+            if (!btn) return;
+            const off = SFX.isMuted();
+            btn.textContent = off ? 'Sound Off' : 'Sound On';
+            btn.className = 'px-2.5 py-1 border text-[10px] font-bold rounded-xl transition ' +
+                (off ? 'bg-slate-800/60 text-slate-400 border-slate-600/40'
+                     : 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30');
+        }
+
+        function toggleSound() {
+            SFX.toggle();
+            updateSoundButton();
+            if (!SFX.isMuted()) SFX.play('defend', false);   // audible confirmation
+        }
+        window.toggleSound = toggleSound;
 
         // ================= SKILL FX ENGINE =================
         // Driven by each card's own `type` and `color`, so all 66 skills get a
@@ -2787,6 +2943,7 @@
             const layer  = document.getElementById('fx-layer');
 
             if (ultimate) fxFlash(tint);
+            SFX.play('cast', ultimate);
 
             // Self-targeted effects: no projectile, the glow stays on the caster.
             if (type === 'defend' || type === 'heal') {
@@ -2805,12 +2962,14 @@
                         }
                     }
                 }
+                SFX.play(type, ultimate);
                 if (deltas.armor > 0) fxNumber(caster, `+${deltas.armor} ARMOR`, '#60a5fa', false);
                 if (deltas.heal  > 0) fxNumber(caster, `+${deltas.heal} HP`, '#34d399', false);
                 // A drain card both heals and hits.
                 if (deltas.damage > 0) {
                     fxLunge(caster, fromPlayer);
                     setTimeout(() => {
+                        SFX.play('strike', ultimate);
                         fxImpact(target, tint, ultimate);
                         fxNumber(target, `-${deltas.damage}`, tint, ultimate);
                         fxShake(ultimate ? 14 : 8);
@@ -2824,6 +2983,7 @@
             const travel = fxProjectile(caster, target, tint, ultimate);
 
             setTimeout(() => {
+                SFX.play(type === 'poison' ? 'poison' : (type === 'debuff' ? 'debuff' : 'strike'), ultimate);
                 fxImpact(target, tint, ultimate);
                 fxShake(ultimate ? 18 : (type === 'debuff' ? 13 : 9));
 
@@ -2881,16 +3041,16 @@
 
                 lastDuelResponse = data;
                 applyServerDuelState(data);
-
-                if (data.finished) {
-                    await finishDuel(data);
-                    return null;
-                }
+                // Returns the payload whether or not the duel ended: the caller
+                // plays the effect first and closes the arena afterwards.
                 return data;
             } finally {
                 duelBusy = false;
             }
         }
+
+        // Long enough for the bolt to land and the impact to read.
+        const FX_SETTLE_MS = 900;
 
         async function playDuelCard(cardIndex) {
             const cardId = (duelState.hand || [])[cardIndex];
@@ -2900,15 +3060,21 @@
             const before = Object.assign({}, duelState);
 
             const next = await duelAction({ action: 'playCard', handIndex: cardIndex });
-            if (!card || !lastDuelResponse) return;
+            // A refused move (stale seq, not enough AP) must not animate or
+            // make a sound as though it had been played.
+            if (!next) return;
 
-            playSkillFx({
-                type: card.type,
-                color: card.color,
-                ultimate: card.ap >= 3,
-                fromPlayer: true,
-                deltas: fxDeltas(before, lastDuelResponse, true)
-            });
+            if (card) {
+                playSkillFx({
+                    type: card.type,
+                    color: card.color,
+                    ultimate: card.ap >= 3,
+                    fromPlayer: true,
+                    deltas: fxDeltas(before, next, true)
+                });
+            }
+
+            if (next.finished) setTimeout(() => finishDuel(next), FX_SETTLE_MS);
         }
         window.playDuelCard = playDuelCard;
 
@@ -2934,9 +3100,10 @@
 
             const before = Object.assign({}, duelState);
             const next = await duelAction({ action: 'endTurn' });
+            if (!next) return;
 
-            if (lastDuelResponse) {
-                const d = fxDeltas(before, lastDuelResponse, false);
+            {
+                const d = fxDeltas(before, next, false);
                 // The server does not name the opponent's card, so the shape of
                 // the turn tells us which effect to play.
                 let type = 'strike';
@@ -2951,7 +3118,8 @@
                 });
             }
 
-            if (next) startTurnTimer();
+            if (next.finished) setTimeout(() => finishDuel(next), FX_SETTLE_MS);
+            else startTurnTimer();
         }
         window.endDuelTurn = endDuelTurn;
 
@@ -2982,6 +3150,8 @@
             if (result && result.balance !== undefined) {
                 currentUser.wallet = Number(result.balance);
             }
+
+            SFX.play(result && result.result === 'VICTORY' ? 'victory' : 'defeat', false);
 
             if (result && result.result === 'VICTORY') {
                 currentUser.wins = (currentUser.wins || 0) + 1;
