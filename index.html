@@ -120,13 +120,22 @@
         @keyframes fx-lunge-down { 50%{transform:translateY(16px) scale(1.07)} }
         @keyframes fx-lunge-up   { 50%{transform:translateY(-16px) scale(1.07)} }
         @keyframes fx-hurt  { 0%,100%{filter:none} 30%{filter:brightness(2.4) saturate(.4)} }
+        /* Decaying shake. Rotation does most of the work: it reads as a far
+           harder hit per pixel of travel, and because it pivots about the
+           centre the panel's edges stay much closer to their slot than a big
+           translate would leave them. The scale covers what is left. */
         @keyframes fx-shake {
-            10%,90%{transform:translate3d(calc(var(--fx-amp)*-1),0,0)}
-            20%,80%{transform:translate3d(var(--fx-amp),0,0)}
-            30%,50%,70%{transform:translate3d(calc(var(--fx-amp)*-2),1px,0)}
-            40%,60%{transform:translate3d(calc(var(--fx-amp)*2),-1px,0)}
+            0%,100% { transform:translate3d(0,0,0) rotate(0deg) scale(1); }
+            8%   { transform:translate3d(calc(var(--fx-amp)*-1.1),calc(var(--fx-amp)*.45),0) rotate(calc(var(--fx-rot)*-1))     scale(1.05); }
+            18%  { transform:translate3d(calc(var(--fx-amp)*1.35),calc(var(--fx-amp)*-.55),0) rotate(var(--fx-rot))             scale(1.055); }
+            28%  { transform:translate3d(calc(var(--fx-amp)*-1.5),calc(var(--fx-amp)*.6),0)  rotate(calc(var(--fx-rot)*-1.15)) scale(1.055); }
+            38%  { transform:translate3d(calc(var(--fx-amp)*1.2),calc(var(--fx-amp)*-.5),0)  rotate(calc(var(--fx-rot)*.85))   scale(1.045); }
+            50%  { transform:translate3d(calc(var(--fx-amp)*-.95),calc(var(--fx-amp)*.38),0) rotate(calc(var(--fx-rot)*-.6))   scale(1.035); }
+            62%  { transform:translate3d(calc(var(--fx-amp)*.7),calc(var(--fx-amp)*-.28),0)  rotate(calc(var(--fx-rot)*.4))    scale(1.025); }
+            74%  { transform:translate3d(calc(var(--fx-amp)*-.48),calc(var(--fx-amp)*.2),0)  rotate(calc(var(--fx-rot)*-.25))  scale(1.016); }
+            86%  { transform:translate3d(calc(var(--fx-amp)*.26),0,0)                        rotate(calc(var(--fx-rot)*.12))   scale(1.008); }
         }
-        .fx-shaking { animation:fx-shake 420ms cubic-bezier(.36,.07,.19,.97); }
+        .fx-shaking { animation:fx-shake 500ms cubic-bezier(.33,.9,.4,1); }
 
         /* Players who ask for less motion keep the numbers, lose the motion. */
         @media (prefers-reduced-motion: reduce) {
@@ -2691,10 +2700,13 @@
             const stage = document.getElementById('fs-combat-stage');
             if (!stage) return;
             stage.style.setProperty('--fx-amp', amp + 'px');
+            // Rotation scales with the hit but is capped: past about a degree
+            // the arena starts to look like it is tumbling rather than reeling.
+            stage.style.setProperty('--fx-rot', Math.min(1.15, amp * 0.07).toFixed(2) + 'deg');
             stage.classList.remove('fx-shaking');
             void stage.offsetWidth;            // restart the animation
             stage.classList.add('fx-shaking');
-            setTimeout(() => stage.classList.remove('fx-shaking'), 440);
+            setTimeout(() => stage.classList.remove('fx-shaking'), 520);
         }
 
         function fxNumber(targetEl, text, color, crit) {
@@ -2801,7 +2813,7 @@
                     setTimeout(() => {
                         fxImpact(target, tint, ultimate);
                         fxNumber(target, `-${deltas.damage}`, tint, ultimate);
-                        fxShake(ultimate ? 7 : 4);
+                        fxShake(ultimate ? 14 : 8);
                     }, fxProjectile(caster, target, tint, ultimate));
                 }
                 return;
@@ -2813,7 +2825,7 @@
 
             setTimeout(() => {
                 fxImpact(target, tint, ultimate);
-                fxShake(ultimate ? 9 : (type === 'debuff' ? 7 : 5));
+                fxShake(ultimate ? 18 : (type === 'debuff' ? 13 : 9));
 
                 if (deltas.damage > 0) {
                     fxNumber(target, `-${deltas.damage}`, tint, ultimate || deltas.damage >= 60);
