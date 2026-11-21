@@ -188,7 +188,8 @@
             <button onclick="window.openLeaderboardModal()" id="btn-leaderboard" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10 whitespace-nowrap transition">Rankings</button>
             <button onclick="window.openChatModal()" id="btn-support-chat" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-blue-400 hover:bg-blue-500/10 whitespace-nowrap transition">Support Chat</button>
             <button onclick="window.switchTab('owner')" id="btn-owner" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white whitespace-nowrap transition hidden">Owner</button>
-            <button onclick="window.logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition ml-auto">Logout</button>
+            <button id="btn-music-nav" onclick="window.toggleMusic()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-indigo-300 hover:bg-indigo-500/10 whitespace-nowrap transition ml-auto">Music On</button>
+            <button onclick="window.logoutPlayer()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-red-400 hover:bg-red-500/10 whitespace-nowrap transition">Logout</button>
         </nav>
     </header>
 
@@ -1713,6 +1714,14 @@
                 }
             });
 
+            // Player screens share the calm bed; the owner portal stays silent.
+            if (tabName === 'hub' || tabName === 'select' || tabName === 'shop') {
+                MUSIC.start('hub');
+                updateMusicButton();
+            } else if (tabName === 'owner') {
+                MUSIC.stop();
+            }
+
             if (tabName === 'hub') {
                 const hub = document.getElementById('view-hub');
                 if (hub) hub.classList.remove('hidden');
@@ -2157,6 +2166,7 @@
         window.completePasswordRecovery = completePasswordRecovery;
 
         async function logoutPlayer() {
+            MUSIC.stop();
             if (supabaseClient) {
                 try { await supabaseClient.auth.signOut(); } catch (e) {}
             }
@@ -2609,7 +2619,7 @@
 
             updateSoundButton();
             updateMusicButton();
-            MUSIC.start();
+            MUSIC.start('battle');
             updateDuelUI();
             startTurnTimer();
         }
@@ -2837,26 +2847,48 @@
         // Generated a bar at a time rather than streamed from a file: no asset
         // to download and no loop seam to hide. Dm - Bb - F - C at 84bpm, which
         // sits under the effects without competing with them.
-        const MUSIC_BPM = 84;
         const MUSIC_BEATS = 4;
-        const MUSIC_BAR = (60 / MUSIC_BPM) * MUSIC_BEATS;   // ~2.86s
         // One source of truth: start, toggle and duck-restore all use this, so
         // the level cannot drift apart from the value ducking returns to.
         const MUSIC_LEVEL = 0.14;
         const MUSIC_DUCKED = 0.04;
 
-        const MUSIC_PROG = [
-            { bass: 73.42, pad: [293.66, 349.23, 440.00] },  // Dm
-            { bass: 58.27, pad: [233.08, 293.66, 349.23] },  // Bb
-            { bass: 87.31, pad: [261.63, 349.23, 440.00] },  // F
-            { bass: 65.41, pad: [261.63, 329.63, 392.00] }   // C
-        ];
+        // Two moods. The hub is slower, brighter and sparser so it can sit
+        // under someone reading the shop; the arena is darker and pushes on.
+        const MUSIC_THEMES = {
+            hub: {
+                bpm: 66,
+                level: 0.11,
+                arpGap: 2,                       // drop every 2nd note: airier
+                prog: [
+                    { bass: 55.00, pad: [261.63, 329.63, 392.00] },  // Am
+                    { bass: 87.31, pad: [261.63, 349.23, 440.00] },  // F
+                    { bass: 65.41, pad: [261.63, 329.63, 392.00] },  // C
+                    { bass: 98.00, pad: [293.66, 392.00, 493.88] }   // G
+                ]
+            },
+            battle: {
+                bpm: 84,
+                level: MUSIC_LEVEL,
+                arpGap: 3,
+                prog: [
+                    { bass: 73.42, pad: [293.66, 349.23, 440.00] },  // Dm
+                    { bass: 58.27, pad: [233.08, 293.66, 349.23] },  // Bb
+                    { bass: 87.31, pad: [261.63, 349.23, 440.00] },  // F
+                    { bass: 65.41, pad: [261.63, 329.63, 392.00] }   // C
+                ]
+            }
+        };
+
+        const musicBarLength = theme => (60 / theme.bpm) * MUSIC_BEATS;
 
         // Pure function of (ctx, destination, startTime, barIndex) so a bar can
         // be rendered offline for testing exactly as it plays live.
-        function musicScheduleBar(ctx, dest, t, idx) {
-            const chord = MUSIC_PROG[idx % MUSIC_PROG.length];
-            const beat = MUSIC_BAR / MUSIC_BEATS;
+        function musicScheduleBar(ctx, dest, t, idx, theme) {
+            theme = theme || MUSIC_THEMES.battle;
+            const bar = musicBarLength(theme);
+            const chord = theme.prog[idx % theme.prog.length];
+            const beat = bar / MUSIC_BEATS;
 
             // Low drone on beats 1 and 3.
             sfxTone(ctx, dest, t, { type: 'triangle', f0: chord.bass, f1: chord.bass,
@@ -2867,12 +2899,12 @@
             // Sustained pad across the whole bar.
             chord.pad.forEach((f, i) => {
                 sfxTone(ctx, dest, t + i * 0.015, { type: 'sine', f0: f, f1: f,
-                    dur: MUSIC_BAR * 0.96, gain: 0.13, attack: 0.5 });
+                    dur: bar * 0.96, gain: 0.13, attack: 0.5 });
             });
 
             // Sparse arpeggio an octave up, skipping a step so it breathes.
             for (let i = 0; i < MUSIC_BEATS * 2; i++) {
-                if (i % 3 === 1) continue;
+                if (i % theme.arpGap === 1) continue;
                 const f = chord.pad[i % chord.pad.length] * 2;
                 sfxTone(ctx, dest, t + i * (beat / 2), { type: 'sine', f0: f, f1: f,
                     dur: 0.26, gain: 0.07, attack: 0.01 });
@@ -2887,32 +2919,69 @@
 
         const MUSIC = (() => {
             let bus = null, timer = null, nextBar = 0, barIdx = 0, running = false;
+            let current = null, pendingTheme = null, gestureHooked = false;
             let enabled = true;
             try { enabled = localStorage.getItem('aetheris_music') !== '0'; } catch (e) {}
+
+            function theme() { return MUSIC_THEMES[current] || MUSIC_THEMES.battle; }
 
             function tick() {
                 const ctx = SFX.context();
                 if (!ctx || !bus) return;
+                const th = theme();
                 // Schedule ahead so timer jitter never creates a gap.
                 while (nextBar < ctx.currentTime + 2) {
                     if (nextBar < ctx.currentTime) nextBar = ctx.currentTime + 0.05;
-                    musicScheduleBar(ctx, bus, nextBar, barIdx++);
-                    nextBar += MUSIC_BAR;
+                    musicScheduleBar(ctx, bus, nextBar, barIdx++, th);
+                    nextBar += musicBarLength(th);
                 }
+            }
+
+            // A page restored from a saved session reaches the hub without a
+            // tap, and browsers will not start audio then. Wait for the first
+            // interaction and pick the music up at that point.
+            function hookGesture() {
+                if (gestureHooked) return;
+                gestureHooked = true;
+                const go = () => {
+                    document.removeEventListener('pointerdown', go);
+                    document.removeEventListener('keydown', go);
+                    gestureHooked = false;
+                    if (pendingTheme) {
+                        const t = pendingTheme;
+                        pendingTheme = null;
+                        MUSIC.start(t);
+                    }
+                };
+                document.addEventListener('pointerdown', go, { once: true });
+                document.addEventListener('keydown', go, { once: true });
             }
 
             return {
                 isEnabled() { return enabled; },
-                start() {
-                    if (running || !enabled) return;
+                current() { return running ? current : null; },
+                start(name) {
+                    name = name || 'battle';
+                    if (!enabled) { current = name; return; }
+                    if (running && current === name) return;   // already in this mood
+                    if (running) this.stop();
+
                     const ctx = SFX.context();
                     if (!ctx) return;
+                    if (ctx.state === 'suspended') {
+                        // Not allowed to sound yet; resume on the first gesture.
+                        pendingTheme = name;
+                        hookGesture();
+                        return;
+                    }
+                    current = name;
+                    const th = theme();
                     try {
                         bus = ctx.createGain();
                         bus.gain.value = 0;
                         bus.connect(ctx.destination);
-                        // Fade in; an abrupt start under a duel is jarring.
-                        bus.gain.linearRampToValueAtTime(MUSIC_LEVEL, ctx.currentTime + 1.2);
+                        // Fade in; an abrupt start is jarring either side.
+                        bus.gain.linearRampToValueAtTime(th.level, ctx.currentTime + 1.2);
                         nextBar = ctx.currentTime + 0.1;
                         barIdx = 0;
                         running = true;
@@ -2922,6 +2991,8 @@
                 },
                 stop() {
                     running = false;
+                    current = null;
+                    pendingTheme = null;
                     if (timer) { clearInterval(timer); timer = null; }
                     const ctx = SFX.context();
                     if (bus && ctx) {
@@ -2944,26 +3015,37 @@
                         bus.gain.cancelScheduledValues(now);
                         bus.gain.setValueAtTime(bus.gain.value, now);
                         bus.gain.linearRampToValueAtTime(MUSIC_DUCKED, now + 0.05);
-                        bus.gain.linearRampToValueAtTime(MUSIC_LEVEL, now + (ms || 600) / 1000);
+                        bus.gain.linearRampToValueAtTime(theme().level, now + (ms || 600) / 1000);
                     } catch (e) {}
                 },
                 toggle() {
                     enabled = !enabled;
                     try { localStorage.setItem('aetheris_music', enabled ? '1' : '0'); } catch (e) {}
-                    if (enabled) this.start(); else this.stop();
+                    const wanted = current || 'hub';
+                    if (enabled) { current = null; this.start(wanted); } else this.stop();
                     return enabled;
                 }
             };
         })();
 
         function updateMusicButton() {
-            const btn = document.getElementById('btn-music');
-            if (!btn) return;
             const on = MUSIC.isEnabled();
-            btn.textContent = on ? 'Music On' : 'Music Off';
-            btn.className = 'px-2.5 py-1 border text-[10px] font-bold rounded-xl transition ' +
-                (on ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/30'
-                    : 'bg-slate-800/60 text-slate-400 border-slate-600/40');
+
+            const btn = document.getElementById('btn-music');
+            if (btn) {
+                btn.textContent = on ? 'Music On' : 'Music Off';
+                btn.className = 'px-2.5 py-1 border text-[10px] font-bold rounded-xl transition ' +
+                    (on ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/30'
+                        : 'bg-slate-800/60 text-slate-400 border-slate-600/40');
+            }
+
+            // Same control mirrored in the main nav, for outside the arena.
+            const nav = document.getElementById('btn-music-nav');
+            if (nav) {
+                nav.textContent = on ? 'Music On' : 'Music Off';
+                nav.className = 'px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition ml-auto ' +
+                    (on ? 'text-indigo-300 hover:bg-indigo-500/10' : 'text-slate-500 hover:bg-slate-500/10');
+            }
         }
 
         function toggleMusic() {
@@ -3304,7 +3386,8 @@
         // closes the arena and reports what came back.
         async function finishDuel(result) {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
-            MUSIC.stop();
+            // switchTab('hub') below brings the calm bed back in.
+            MUSIC.start('hub');
             const viewFullscreen = document.getElementById('view-duel-fullscreen');
             if (viewFullscreen) viewFullscreen.classList.add('hidden');
 
