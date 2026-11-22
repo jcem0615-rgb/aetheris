@@ -40,6 +40,12 @@ supabase functions download duel --output-dir /tmp/live && diff /tmp/live/duel/i
   `EXECUTE` is revoked from `anon` and `authenticated`.
 - `duel_sessions` has a partial unique index allowing one `active` duel per
   player, and settlement is a conditional update, so a duel pays out once.
+- Abandoned duels are swept by `expire_stale_duels()`, which runs at the start
+  of every escrow. What happens depends on whether the duel actually began:
+  a duel with `seq = 0` (no card played) is **cancelled and the stake
+  refunded** after 5 minutes, because closing the tab during the six-second
+  search screen should not cost a wager; a duel with `seq > 0` is forfeited as
+  a DEFEAT after an hour, because a match was genuinely under way.
 - Players read only their own rows. Other players are visible only through the
   `leaderboard` view (nickname, wins, xp — no email, phone or balance).
 
@@ -54,3 +60,9 @@ Card effects live in the `duel` function's own table, generated from the game
 data in `index.html`. **If you change a card's damage, armour, heal, poison or
 AP in `index.html`, change it in the `duel` function too** — the page's copy is
 for display only, and the server's copy is what actually applies.
+
+## Where the database lives
+
+Schema, RLS policies and the SQL functions above exist **only in the Supabase
+project** — they are not in this repo. `supabase db pull` will write them into
+`supabase/migrations/` if you want them versioned alongside the code.
