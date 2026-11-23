@@ -190,7 +190,11 @@ Deno.serve(async (req: Request) => {
       return json({ error: balErr.message }, 400);
     }
 
-    return json({ ...publicState(state, duel.id, 0, stake), balance: bal?.[0]?.post_balance });
+    // Deliberately does NOT return the board. Revealing the hand and the
+    // opponent's hero here, while cancel still refunds in full, let a player
+    // reroll until they drew a favourable matchup. The board is handed over by
+    // "start", which commits the wager.
+    return json({ duelId: duel.id, stake, balance: bal?.[0]?.post_balance });
   }
 
   const { data: duel } = await sb.from("duel_sessions")
@@ -203,9 +207,26 @@ Deno.serve(async (req: Request) => {
   const s: State = duel.state as State;
   const stake = Number(duel.stake);
 
-  if (action === "getState") return json(publicState(s, duel.id, duel.seq, stake));
+  // Commits the wager and reveals the board. seq moves 0 -> 1, which is what
+  // cancel and the stale-duel sweep read as "this duel has begun".
+  if (action === "start") {
+    if (duel.seq === 0) {
+      await sb.from("duel_sessions")
+        .update({ seq: 1, last_action_at: new Date().toISOString() })
+        .eq("id", duel.id).eq("seq", 0);
+      return json(publicState(s, duel.id, 1, stake));
+    }
+    // Already started: hand back the live board, so a refresh resumes.
+    return json(publicState(s, duel.id, duel.seq, stake));
+  }
+
+  if (action === "getState") {
+    if (duel.seq === 0) return json({ duelId: duel.id, stake, started: false });
+    return json(publicState(s, duel.id, duel.seq, stake));
+  }
 
   if (action === "cancel") {
+    // seq > 0 means the board has been revealed, so the wager is live.
     if (duel.seq > 0) return json({ error: "The duel has already started" }, 409);
     const { data: upd } = await sb.from("duel_sessions")
       .update({ status: "cancelled", settled_at: new Date().toISOString() })

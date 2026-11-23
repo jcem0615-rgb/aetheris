@@ -2580,41 +2580,85 @@
             currentUser.wallet = Number(data.balance);
             updateWalletDisplay();
 
-            // The escrow response already carries the opening board.
-            applyServerDuelState(data);
+            // No board yet, by design. The server withholds the opening hand
+            // and the opponent's hero until `start`, because cancelling during
+            // the search refunds in full: a player who could see the draw here
+            // would cancel and requeue until they liked their hand.
 
             openModal('matchmaking');
             matchmakingElapsedSeconds = 0;
             const countdownEl = document.getElementById('matchmaking-countdown');
 
             if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
-            matchmakingElapsedTimer = setInterval(() => {
+            matchmakingElapsedTimer = setInterval(async () => {
                 matchmakingElapsedSeconds++;
                 if (countdownEl) countdownEl.innerText = `Elapsed time: ${matchmakingElapsedSeconds}s`;
-                if (matchmakingElapsedSeconds >= 6) {
-                    clearInterval(matchmakingElapsedTimer);
-                    closeModal();
-                    startLiveDuelMatch();
-                }
+                if (matchmakingElapsedSeconds < 6) return;
+
+                clearInterval(matchmakingElapsedTimer);
+                matchmakingElapsedTimer = null;
+                await revealDuelBoard();
             }, 1000);
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
 
+        // Commits the wager and reveals the board. `start` is idempotent on the
+        // server, so a retry after a dropped response hands back the same duel
+        // rather than dealing a second hand.
+        async function revealDuelBoard() {
+            let res = await callFunction('duel', { action: 'start', duelId: activeDuelId });
+            if (res.error) {
+                await new Promise(r => setTimeout(r, 1200));
+                res = await callFunction('duel', { action: 'start', duelId: activeDuelId });
+            }
+
+            if (res.error) {
+                // The board was never handed over, so the duel is still at the
+                // search stage and the stake can be returned right away.
+                closeModal();
+                const refund = await callFunction('duel', { action: 'cancel', duelId: activeDuelId });
+                if (!refund.error && refund.data) {
+                    currentUser.wallet = Number(refund.data.balance);
+                    updateWalletDisplay();
+                    activeDuelId = null;
+                    alert(`Could not reach the arena (${res.error}). Your ₱${refund.data.refunded} wager has been refunded.`);
+                } else {
+                    alert(`Could not reach the arena (${res.error}). Your wager is held and will be refunded automatically.`);
+                }
+                return;
+            }
+
+            applyServerDuelState(res.data);
+            closeModal();
+            startLiveDuelMatch();
+        }
+
         async function cancelMatchmakingQueue() {
             if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
-            closeModal();
+            matchmakingElapsedTimer = null;
+            if (!activeDuelId) { closeModal(); return; }
 
-            if (activeDuelId) {
-                const { data, error } = await callFunction('duel', { action: 'cancel', duelId: activeDuelId });
-                if (!error && data) {
-                    currentUser.wallet = Number(data.balance);
-                    updateWalletDisplay();
-                    alert(`Matchmaking cancelled. Your ₱${data.refunded} wager has been refunded.`);
-                } else {
-                    alert(error || 'Could not cancel the duel.');
-                }
+            const { data, error } = await callFunction('duel', { action: 'cancel', duelId: activeDuelId });
+            if (!error && data) {
+                closeModal();
+                currentUser.wallet = Number(data.balance);
+                updateWalletDisplay();
                 activeDuelId = null;
+                alert(`Matchmaking cancelled. Your ₱${data.refunded} wager has been refunded.`);
+                return;
             }
+
+            // The server refuses to refund once the board has been dealt. That
+            // can only happen if Cancel raced the reveal, so take the player
+            // into the duel they are now committed to rather than dropping
+            // them back to the hub with a live wager.
+            if (/already started/i.test(error || '')) {
+                await revealDuelBoard();
+                return;
+            }
+
+            closeModal();
+            alert(error || 'Could not cancel the duel.');
         }
         window.cancelMatchmakingQueue = cancelMatchmakingQueue;
 

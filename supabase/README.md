@@ -40,12 +40,22 @@ supabase functions download duel --output-dir /tmp/live && diff /tmp/live/duel/i
   `EXECUTE` is revoked from `anon` and `authenticated`.
 - `duel_sessions` has a partial unique index allowing one `active` duel per
   player, and settlement is a conditional update, so a duel pays out once.
+- A duel's `seq` is the **reveal gate**, and every rule below reads it that
+  way. `escrow` takes the stake and deals the hand into `duel_sessions.state`
+  but returns only `{ duelId, stake, balance }`, leaving `seq = 0`. The board
+  reaches the browser only through the `start` action, which moves `seq` to 1.
+  Before that the player has seen neither their hand nor the opponent's hero,
+  so `cancel` can refund in full without letting anyone shop for a draw; after
+  it, `cancel` is refused with `409 The duel has already started`. `start` is
+  idempotent — a second call returns the same board rather than dealing a new
+  hand — so a dropped response or a refresh resumes instead of rerolling.
 - Abandoned duels are swept by `expire_stale_duels()`, which runs at the start
-  of every escrow. What happens depends on whether the duel actually began:
-  a duel with `seq = 0` (no card played) is **cancelled and the stake
-  refunded** after 5 minutes, because closing the tab during the six-second
-  search screen should not cost a wager; a duel with `seq > 0` is forfeited as
-  a DEFEAT after an hour, because a match was genuinely under way.
+  of every escrow. What happens depends on whether the board was ever dealt to
+  the player: a duel with `seq = 0` (still searching) is **cancelled and the
+  stake refunded** after 5 minutes, because closing the tab during the
+  six-second search screen should not cost a wager; a duel with `seq > 0` is
+  forfeited as a DEFEAT after an hour, because the hand was in the player's
+  hands and walking away from a live wager has to cost something.
 - Players read only their own rows. Other players are visible only through the
   `leaderboard` view (nickname, wins, xp — no email, phone or balance).
 
