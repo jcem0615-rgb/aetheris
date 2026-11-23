@@ -903,6 +903,26 @@
             if (authInstallBtn) { authInstallBtn.classList.remove('hidden'); authInstallBtn.classList.add('flex'); }
         });
 
+        // Registering a service worker is what makes the browser offer a real
+        // install prompt. This one is network-first, so it cannot pin an old
+        // build; see sw.js.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Only reload when an existing worker is *replaced*. Doing it on
+                // the first install as well would reload the page on every
+                // first visit.
+                if (navigator.serviceWorker.controller) {
+                    let reloading = false;
+                    navigator.serviceWorker.addEventListener('controllerchange', () => {
+                        if (reloading) return;
+                        reloading = true;
+                        window.location.reload();
+                    });
+                }
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
+
         async function installPWA() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
