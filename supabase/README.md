@@ -75,7 +75,21 @@ it can afford. Earlier it invented one flat number per turn, which made its
 shields and heals land as 25-damage attacks and left its armour, healing and
 poison unused; `playerPoison` was dead state because nothing ever set it.
 
-Two things are matched to the player at escrow and then fixed for the duel:
+**Initiative is a coin flip**, decided at escrow as `state.botFirst` and acted
+on by `start`: when the opponent wins it, it takes its opening swing before the
+board is handed over, and the player opens the arena already down some HP. The
+player used to open every duel, and because a three-AP turn can out-damage the
+whole HP pool, the better opening hand simply won before the opponent acted.
+That one change took the house from -30.8% to +4.4%.
+
+**The HP pool is 150, not 100,** and that is load-bearing. At 100, a coin flip
+meant 19.2% of duels for shop-skill owners ended before the player touched a
+card -- paying a stake and losing without playing. Capping the opponent's
+opening AP fixes the feel and wrecks the economics (-18.3% at 1 AP). Raising
+the pool so no single turn can empty it fixes both: duels run long enough for
+both sides to play, and nobody loses before moving.
+
+Two more things are matched to the player at escrow and then fixed for the duel:
 
 - **Tier.** The opponent hero is drawn from the player's own rung of
   `HERO_LADDER`, give or take one. Drawn uniformly, a Pyra player met an Astral
@@ -86,9 +100,20 @@ Two things are matched to the player at escrow and then fixed for the duel:
 
 **Changing any of this changes the house margin, so measure it.** A win pays
 2x stake less the 5% fee, so the arena breaks even at a 52.6% player win rate
-and loses money above it. There is a simulator for exactly this: it imports
+and loses money above it. `tools/duel-sim` exists for exactly this: it imports
 the real `botTurn`, `matchOpponentHero` and `botDeckFor` out of this file so
-the numbers cannot drift from the shipped code.
+the numbers cannot drift from the shipped code. Where it stands, over 12000
+duels per population:
+
+| | win rate | house | lost before moving |
+|---|---|---|---|
+| no shop skills | 50.3% | +4.4% | 0% |
+| both shop skills | 48.9% | +7.1% | 0% |
+
+Two heroes are badly served by their own shop skills and sit near 20%: Valen's
+AEGIS FORTRESS and DIVINE INVINCIBILITY, and Chrono's TEMPORAL REWIND and
+ETERNAL TIME COLLAPSE, all deal **zero damage**, so buying them crowds the
+four-card hand with cards that cannot win. That is card design, not bot logic.
 
 Card effects live in the `duel` function's own table, generated from the game
 data in `index.html`. **If you change a card's damage, armour, heal, poison or

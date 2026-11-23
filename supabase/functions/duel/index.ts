@@ -6,9 +6,15 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const PLATFORM_FEE = 0.05;
 const ALLOWED_STAKES = [50, 100, 200, 500, 1000];
-const MAX_HP = 100;
+const MAX_HP = 150;
 const AP_PER_TURN = 3;
 const HAND_SIZE = 4;
+// The opponent opens half of all duels, so its opening swing can be capped
+// below AP_PER_TURN if it ever starts ending duels before the player touches
+// a card. At the 150 HP pool it does not, so the cap is off. Lowering it makes
+// the arena gentler and less profitable: at the old 100 HP pool, capping this
+// to 1 took the house from +4.6% to -18.3%. Measure with tools/duel-sim.
+const OPENING_AP = AP_PER_TURN;
 
 // The server's own copy of every card's effect, generated from the game
 // tables. The browser receives card IDs only and looks names up locally for
@@ -62,7 +68,8 @@ interface State {
   heroId: string; enemyHeroId: string; opponent: string;
   playerHp: number; playerArmor: number; playerAp: number; playerPoison: number;
   enemyHp: number; enemyArmor: number; enemyPoison: number;
-  deck: string[]; enemyDeck?: string[]; hand: string[]; turn: number; log: string;
+  deck: string[]; enemyDeck?: string[]; botFirst?: boolean;
+  hand: string[]; turn: number; log: string;
 }
 
 function deckFor(heroId: string, owned: Record<string, boolean>): string[] {
@@ -118,10 +125,10 @@ function botDeckFor(enemyHeroId: string, heroId: string, owned: Record<string, b
 // and each card's real effect. It used to invent one flat number per turn,
 // so its shields and heals landed as 25-damage attacks and its own armour,
 // healing and poison were never applied at all.
-function botTurn(s: State): string {
+function botTurn(s: State, apBudget: number = AP_PER_TURN): string {
   const deck = s.enemyDeck ?? HERO_BASE[s.enemyHeroId] ?? HERO_BASE["pyra"];
   const hand = deal(deck);
-  let ap = AP_PER_TURN;
+  let ap = apBudget;
   let msg = "";
 
   for (let guard = 0; guard < HAND_SIZE; guard++) {
@@ -132,7 +139,7 @@ function botTurn(s: State): string {
 
     // Heal when badly hurt, otherwise hit as hard as the AP allows, and fall
     // back to the best defensive card when no attack is affordable.
-    let choice = s.enemyHp < 35
+    let choice = s.enemyHp < MAX_HP * 0.35
       ? affordable.filter((x) => x.c.heal > 0).sort((a, b) => b.c.heal - a.c.heal)[0]
       : undefined;
     if (!choice) {
@@ -250,7 +257,8 @@ Deno.serve(async (req: Request) => {
       heroId, enemyHeroId, opponent,
       playerHp: MAX_HP, playerArmor: 0, playerAp: AP_PER_TURN, playerPoison: 0,
       enemyHp: MAX_HP, enemyArmor: 0, enemyPoison: 0,
-      deck, enemyDeck, hand: deal(deck), turn: 1,
+      deck, enemyDeck, botFirst: rnd(2) === 0,
+      hand: deal(deck), turn: 1,
       log: "Match connected! Choose tactical skills.",
     };
 
@@ -290,8 +298,23 @@ Deno.serve(async (req: Request) => {
   // cancel and the stale-duel sweep read as "this duel has begun".
   if (action === "start") {
     if (duel.seq === 0) {
+      // Initiative was decided at escrow. The player used to open every duel,
+      // and since most heroes can spend three AP for more than 100 damage, the
+      // better opening hand simply won before the opponent acted at all.
+      if (s.botFirst) {
+        const opening = botTurn(s, OPENING_AP);
+        if (s.playerHp <= 0) {
+          s.log = `${opening}You were struck down before you could move.`;
+          await sb.from("duel_sessions")
+            .update({ state: s, seq: 1, last_action_at: new Date().toISOString() })
+            .eq("id", duel.id).eq("seq", 0);
+          const out = await settle(sb, duel, profile, false);
+          return json({ ...publicState(s, duel.id, 1, stake), ...(out ?? {}) });
+        }
+        s.log = `${s.opponent} moves first. ${opening}Your turn.`;
+      }
       await sb.from("duel_sessions")
-        .update({ seq: 1, last_action_at: new Date().toISOString() })
+        .update({ state: s, seq: 1, last_action_at: new Date().toISOString() })
         .eq("id", duel.id).eq("seq", 0);
       return json(publicState(s, duel.id, 1, stake));
     }

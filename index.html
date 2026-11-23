@@ -2637,6 +2637,16 @@
 
             applyServerDuelState(res.data);
             closeModal();
+
+            // The opponent wins the coin flip half the time and swings before
+            // the board is handed over. At the current HP pool that never ends
+            // a duel outright, but the server can still settle one here, so
+            // don't open an arena onto a match that is already over.
+            if (res.data.finished) {
+                await finishDuel(res.data);
+                return;
+            }
+
             startLiveDuelMatch();
         }
 

@@ -14,7 +14,7 @@ const slice = src.slice(src.indexOf('const PLATFORM_FEE'), src.indexOf('function
   .replace(/const db = \(\).*\n/, '');
 
 writeFileSync(resolve(here, 'botlogic.ts'), slice + `
-export { CARDS, HERO_BASE, HERO_SHOP, HERO_LADDER, MAX_HP, AP_PER_TURN, HAND_SIZE,
+export { CARDS, HERO_BASE, HERO_SHOP, HERO_LADDER, MAX_HP, AP_PER_TURN, HAND_SIZE, OPENING_AP,
          deal, hit, deckFor, matchOpponentHero, botDeckFor, botTurn, rnd, pick };
 export type { State };
 `);
