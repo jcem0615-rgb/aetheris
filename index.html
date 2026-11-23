@@ -210,7 +210,7 @@
             <div id="auth-login-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box">
                 <div class="flex items-center justify-between">
                     <h3 class="font-cinzel text-base font-bold text-white">Secure Sign In</h3>
-                    <button id="auth-install-btn" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition hidden">
+                    <button id="auth-install-btn" onclick="window.installPWA()" class="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow transition">
                         <span>Install App</span>
                     </button>
                 </div>
@@ -895,6 +895,8 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            // The sign-in button is always shown; this only reveals the one in
+            // the header, which is pointless before a prompt is available.
             const installBtn = document.getElementById('btn-install-pwa');
             const authInstallBtn = document.getElementById('auth-install-btn');
             if (installBtn) { installBtn.classList.remove('hidden'); installBtn.classList.add('flex'); }
@@ -908,7 +910,11 @@
                 if (outcome === 'accepted') console.log('User accepted install');
                 deferredPrompt = null;
             } else {
-                alert('To install Aetheris Arena:\n\n• On iPhone/iPad (Safari): Tap the Share button at the bottom and select "Add to Home Screen".\n• On Android/PC (Chrome/Edge): Tap your browser menu or address bar icon.');
+                alert('To install Aetheris Arena:\n\n'
+                    + '• iPhone / iPad (Safari): tap Share, then "Add to Home Screen".\n'
+                    + '• Android (Chrome): tap the ⋮ menu, then "Add to Home screen" or "Install app".\n'
+                    + '• Desktop (Chrome/Edge): look for the install icon in the address bar.\n\n'
+                    + 'You do not need to install it to play — the site works the same in the browser.');
             }
         }
         window.installPWA = installPWA;
@@ -1019,20 +1025,33 @@
         }
         window.previewSelectedQR = previewSelectedQR;
 
-        function saveQRCodeImage(method) {
-            const qrData = merchantQrSrc(method);
-            if (!qrData) {
+        async function saveQRCodeImage(method) {
+            const src = merchantQrSrc(method);
+            if (!src) {
                 alert(`No ${method.toUpperCase()} QR code uploaded yet.`);
                 return;
             }
-            const a = document.createElement('a');
-            a.href = qrData;
-            a.target = '_blank';
-            a.rel = 'noopener';
-            a.download = `${method}_qr_code.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+
+            // The download attribute is ignored on a cross-origin href, and the
+            // QR now lives on Supabase Storage rather than in the page. Fetch
+            // the bytes and hand the browser a same-origin blob, which it will
+            // actually save instead of just navigating to the image.
+            try {
+                const res = await fetch(src, { mode: 'cors', cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                const url = URL.createObjectURL(await res.blob());
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `aetheris_${method}_qr.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+            } catch (err) {
+                // Opening it still lets the player long-press and save.
+                window.open(src, '_blank', 'noopener');
+            }
         }
         window.saveQRCodeImage = saveQRCodeImage;
 
