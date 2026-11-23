@@ -66,6 +66,30 @@ back. It never computes damage and never reports a result. Each request echoes
 the `seq` it last rendered; a stale or replayed `seq` is refused with
 `409 Out of sync`.
 
+### The opponent
+
+The opponent is a bot, and it plays by the player's rules: three AP a turn, a
+hand of four dealt from its own deck, and each card's real effect applied.
+It heals when badly hurt, otherwise spends its AP on the hardest-hitting cards
+it can afford. Earlier it invented one flat number per turn, which made its
+shields and heals land as 25-damage attacks and left its armour, healing and
+poison unused; `playerPoison` was dead state because nothing ever set it.
+
+Two things are matched to the player at escrow and then fixed for the duel:
+
+- **Tier.** The opponent hero is drawn from the player's own rung of
+  `HERO_LADDER`, give or take one. Drawn uniformly, a Pyra player met an Astral
+  Archmage one duel in eleven and was flattened before acting.
+- **Loadout.** `botDeckFor` gives the opponent as many of *its* hero's shop
+  skills as the player owns of *theirs*, stored on the duel as `state.enemyDeck`.
+  Unmatched, a player holding both shop skills won about three duels in four.
+
+**Changing any of this changes the house margin, so measure it.** A win pays
+2x stake less the 5% fee, so the arena breaks even at a 52.6% player win rate
+and loses money above it. There is a simulator for exactly this: it imports
+the real `botTurn`, `matchOpponentHero` and `botDeckFor` out of this file so
+the numbers cannot drift from the shipped code.
+
 Card effects live in the `duel` function's own table, generated from the game
 data in `index.html`. **If you change a card's damage, armour, heal, poison or
 AP in `index.html`, change it in the `duel` function too** — the page's copy is

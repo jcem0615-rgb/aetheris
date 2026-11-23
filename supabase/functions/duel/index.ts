@@ -62,7 +62,7 @@ interface State {
   heroId: string; enemyHeroId: string; opponent: string;
   playerHp: number; playerArmor: number; playerAp: number; playerPoison: number;
   enemyHp: number; enemyArmor: number; enemyPoison: number;
-  deck: string[]; hand: string[]; turn: number; log: string;
+  deck: string[]; enemyDeck?: string[]; hand: string[]; turn: number; log: string;
 }
 
 function deckFor(heroId: string, owned: Record<string, boolean>): string[] {
@@ -86,6 +86,82 @@ function deal(deck: string[]): string[] {
 function hit(dmg: number, armor: number) {
   if (armor >= dmg) return { dmg: 0, armor: armor - dmg };
   return { dmg: dmg - armor, armor: 0 };
+}
+
+// HERO_BASE is ordered weakest to strongest, so a hero's index is its tier.
+const HERO_LADDER = Object.keys(HERO_BASE);
+
+// The opponent is drawn from the player's own tier, give or take one rung.
+// Drawn uniformly, a Pyra player met an Astral Archmage one duel in eleven and
+// was flattened before acting, while an Astral player farmed the bottom of the
+// ladder.
+function matchOpponentHero(heroId: string): string {
+  const i = HERO_LADDER.indexOf(heroId);
+  if (i < 0) return pick(HERO_LADDER);
+  const lo = Math.max(0, i - 1);
+  const hi = Math.min(HERO_LADDER.length - 1, i + 1);
+  return HERO_LADDER[lo + rnd(hi - lo + 1)];
+}
+
+// The opponent is built to the player's own loadout: buy shop skills and you
+// meet someone who has them too. Left unmatched, a player holding both shop
+// skills won about three duels in four, which no 5% fee can cover.
+function botDeckFor(enemyHeroId: string, heroId: string, owned: Record<string, boolean>): string[] {
+  const mine = HERO_SHOP[heroId] ?? [];
+  const ownedCount = mine.filter((id) => owned && owned[id]).length;
+  const deck = [...(HERO_BASE[enemyHeroId] ?? HERO_BASE["pyra"])];
+  for (const id of (HERO_SHOP[enemyHeroId] ?? []).slice(0, ownedCount)) deck.push(id);
+  return deck;
+}
+
+// The bot takes its turn under the player's rules: three AP, a hand of four,
+// and each card's real effect. It used to invent one flat number per turn,
+// so its shields and heals landed as 25-damage attacks and its own armour,
+// healing and poison were never applied at all.
+function botTurn(s: State): string {
+  const deck = s.enemyDeck ?? HERO_BASE[s.enemyHeroId] ?? HERO_BASE["pyra"];
+  const hand = deal(deck);
+  let ap = AP_PER_TURN;
+  let msg = "";
+
+  for (let guard = 0; guard < HAND_SIZE; guard++) {
+    const affordable = hand
+      .map((id, i) => ({ i, c: CARDS[id] }))
+      .filter((x) => x.c && x.c.ap <= ap);
+    if (affordable.length === 0) break;
+
+    // Heal when badly hurt, otherwise hit as hard as the AP allows, and fall
+    // back to the best defensive card when no attack is affordable.
+    let choice = s.enemyHp < 35
+      ? affordable.filter((x) => x.c.heal > 0).sort((a, b) => b.c.heal - a.c.heal)[0]
+      : undefined;
+    if (!choice) {
+      const attacks = affordable.filter((x) => x.c.damage > 0);
+      choice = attacks.length
+        ? attacks.sort((a, b) => b.c.damage - a.c.damage)[0]
+        : affordable.sort((a, b) => (b.c.armor + b.c.heal) - (a.c.armor + a.c.heal))[0];
+    }
+
+    const c = choice.c;
+    ap -= c.ap;
+    hand.splice(choice.i, 1);
+    msg += `${s.opponent} used ${c.name}`;
+
+    if (c.damage) {
+      const r = hit(c.damage, s.playerArmor);
+      s.playerArmor = r.armor;
+      s.playerHp = Math.max(0, s.playerHp - r.dmg);
+      msg += ` for ${r.dmg} damage`;
+    }
+    if (c.armor)  { s.enemyArmor += c.armor; msg += `, gaining ${c.armor} armor`; }
+    if (c.heal)   { s.enemyHp = Math.min(MAX_HP, s.enemyHp + c.heal); msg += `, healing ${c.heal} HP`; }
+    if (c.poison) { s.playerPoison += c.poison; msg += `, applying ${c.poison} poison`; }
+    msg += ". ";
+
+    if (s.playerHp <= 0) break;
+  }
+
+  return msg || `${s.opponent} had no playable card. `;
 }
 
 function publicState(s: State, duelId: string, seq: number, stake: number) {
@@ -164,15 +240,18 @@ Deno.serve(async (req: Request) => {
     await sb.rpc("expire_stale_duels");
 
     const heroId = profile.active_hero ?? "pyra";
-    const enemyHeroId = pick(Object.keys(HERO_BASE));
+    const enemyHeroId = matchOpponentHero(heroId);
     const opponent = pick(BOT_NAMES);
-    const deck = deckFor(heroId, (profile.unlocked_skills ?? {}) as Record<string, boolean>);
+    const owned = (profile.unlocked_skills ?? {}) as Record<string, boolean>;
+    const deck = deckFor(heroId, owned);
+    const enemyDeck = botDeckFor(enemyHeroId, heroId, owned);
 
     const state: State = {
       heroId, enemyHeroId, opponent,
       playerHp: MAX_HP, playerArmor: 0, playerAp: AP_PER_TURN, playerPoison: 0,
       enemyHp: MAX_HP, enemyArmor: 0, enemyPoison: 0,
-      deck, hand: deal(deck), turn: 1, log: "Match connected! Choose tactical skills.",
+      deck, enemyDeck, hand: deal(deck), turn: 1,
+      log: "Match connected! Choose tactical skills.",
     };
 
     const { data: duel, error: duelErr } = await sb.from("duel_sessions")
@@ -303,28 +382,7 @@ Deno.serve(async (req: Request) => {
       return json({ ...publicState(s, duel.id, duel.seq + 1, stake), ...(out ?? {}) });
     }
 
-    const enemyDeck = HERO_BASE[s.enemyHeroId] ?? HERO_BASE["pyra"];
-    let dmg = 0;
-
-    if (s.enemyHp < 20) {
-      s.enemyHp = Math.min(MAX_HP, s.enemyHp + 60);
-      dmg = 25;
-      msg += `${s.opponent} triggered REVITALIZE! Healed 60 HP & struck for ${dmg}. `;
-    } else if (s.enemyHp < 60) {
-      s.enemyHp = Math.min(MAX_HP, s.enemyHp + 15);
-      s.enemyArmor += 15;
-      const c = CARDS[pick(enemyDeck)];
-      dmg = c?.damage || 25;
-      msg += `${s.opponent} used RECOVERY SURGE and ${c?.name ?? "a strike"} for ${dmg}. `;
-    } else {
-      const c = CARDS[pick(enemyDeck)];
-      dmg = c?.damage || 25;
-      msg += `${s.opponent} used ${c?.name ?? "a strike"} for ${dmg}. `;
-    }
-
-    const r = hit(dmg, s.playerArmor);
-    s.playerArmor = r.armor;
-    s.playerHp = Math.max(0, s.playerHp - r.dmg);
+    msg += botTurn(s);
 
     if (s.playerPoison > 0) {
       s.playerHp = Math.max(0, s.playerHp - s.playerPoison);
