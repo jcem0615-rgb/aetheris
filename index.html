@@ -2583,7 +2583,14 @@
             // No board yet, by design. The server withholds the opening hand
             // and the opponent's hero until `start`, because cancelling during
             // the search refunds in full: a player who could see the draw here
-            // would cancel and requeue until they liked their hand.
+            // would cancel and requeue until they liked their hand. Clear the
+            // last duel's board too, so nothing of it survives into this one.
+            duelState = Object.assign({}, duelState, {
+                playerHp: 100, playerMaxHp: 100, playerArmor: 0, playerAp: 3, playerPoison: 0,
+                enemyHp: 100, enemyMaxHp: 100, enemyArmor: 0, enemyPoison: 0,
+                heroId: null, enemyHeroId: null, opponent: '', hand: [], turn: 1, log: ''
+            });
+            duelSeq = 0;
 
             openModal('matchmaking');
             matchmakingElapsedSeconds = 0;
