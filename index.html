@@ -1622,8 +1622,13 @@
                     return;
                 }
 
-                const activeHero = currentUser.active_hero || currentUser.activeHero || 'pyra';
-                if (!activeHero) {
+                // The 50-peso registration fee buys one hero of the player's
+                // choosing, so an empty roster means they have not picked yet.
+                // This used to read `active_hero || 'pyra'` and then test for
+                // falsiness, which the fallback made impossible: the picker was
+                // dead code, and the column default handed everyone Pyra anyway.
+                const roster = Array.isArray(currentUser.unlocked_heroes) ? currentUser.unlocked_heroes : [];
+                if (roster.length === 0) {
                     const mainHeader = document.getElementById('main-header');
                     const viewStarter = document.getElementById('view-starter-select');
                     if (mainHeader) mainHeader.classList.add('hidden');
@@ -1999,11 +2004,18 @@
                 const { data, error } = await supabaseClient.functions.invoke(name, { body: payload });
                 if (error) {
                     let msg = error.message || 'Request failed';
+                    let details = null;
                     try {
                         const ctx = await error.context?.json?.();
-                        if (ctx && ctx.error) msg = ctx.error;
+                        if (ctx) {
+                            details = ctx;                 // the function's own body
+                            if (ctx.error) msg = ctx.error;
+                        }
                     } catch (e) {}
-                    return { error: msg };
+                    // `details` carries whatever else the function sent with the
+                    // error, so a caller can act on it instead of matching the
+                    // message text.
+                    return { error: msg, details };
                 }
                 if (data && data.error) return { error: data.error };
                 return { data };
@@ -3774,7 +3786,23 @@
         window.freezePlayer = freezePlayer;
 
         async function deletePlayer(email) {
-            alert('Deleting a player account permanently removes their wallet history.\\n\\nDo this from the Supabase dashboard (Authentication → Users) so the audit trail is preserved. Use Freeze here to block access immediately.');
+            if (!confirm(`Permanently delete ${email}?\n\nThis removes the account from Supabase as well: their profile, wallet ledger, duel and battle history, and their sign-in. It cannot be undone. An audit entry is kept.\n\nUse Freeze instead if you only want to block access.`)) return;
+
+            let res = await callFunction('admin-actions', { action: 'deletePlayer', email });
+            // The server refuses while the account still holds money, so the
+            // owner has to confirm that separately rather than wiping a balance
+            // by accident.
+            if (res.error && res.details && res.details.needsForce) {
+                if (!confirm(`${res.error}\n\nDelete anyway and write off the balance?`)) return;
+                res = await callFunction('admin-actions', { action: 'deletePlayer', email, force: true });
+            }
+            if (res.error) { alert(res.error); return; }
+
+            alert(res.data && res.data.authDeleted
+                ? `${email} has been deleted, sign-in included.`
+                : `${email} has been removed, but their Supabase sign-in could not be deleted. Remove it from Authentication → Users.`);
+            await loadAllCloudState();
+            await renderOwnerQueues();
         }
         window.deletePlayer = deletePlayer;
 

@@ -247,7 +247,7 @@ Deno.serve(async (req: Request) => {
   const action = String(body.action ?? "");
 
   const { data: profile } = await sb.from("profiles")
-    .select("user_id, email, nickname, wallet, wins, xp, approved, frozen, active_hero, unlocked_skills")
+    .select("user_id, email, nickname, wallet, wins, xp, approved, frozen, active_hero, unlocked_heroes, unlocked_skills")
     .eq("user_id", uid).maybeSingle();
 
   if (!profile) return json({ error: "No profile" }, 403);
@@ -262,7 +262,18 @@ Deno.serve(async (req: Request) => {
 
     await sb.rpc("expire_stale_duels");
 
-    const heroId = profile.active_hero ?? "pyra";
+    // A player picks one hero with their registration fee. Without this the
+    // `?? "pyra"` below would quietly hand a free hero to anyone who had not
+    // claimed one, which is the hero the fee is supposed to buy.
+    const roster: string[] = Array.isArray(profile.unlocked_heroes) ? profile.unlocked_heroes : [];
+    if (roster.length === 0 || !profile.active_hero) {
+      return json({ error: "Choose your champion before entering the arena" }, 403);
+    }
+    if (!roster.includes(profile.active_hero)) {
+      return json({ error: "That hero is not on your roster" }, 403);
+    }
+
+    const heroId = profile.active_hero;
     const enemyHeroId = matchOpponentHero(heroId);
     const opponent = pick(BOT_NAMES);
     const owned = (profile.unlocked_skills ?? {}) as Record<string, boolean>;

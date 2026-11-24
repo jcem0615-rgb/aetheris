@@ -1,6 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.4";
 
+const REGISTRATION_FEE = 50;
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -129,14 +131,82 @@ Deno.serve(async (req: Request) => {
     const email = String(body.email ?? "");
     if (!email) return json({ error: "email required" }, 400);
 
+    // The 50-peso fee is collected outside the app, against the receipt the
+    // player uploaded, and was never recorded anywhere. Record it on approval
+    // so it shows up as revenue. It is deliberately NOT a wallet credit: it is
+    // a fee the owner keeps, not balance the player can wager or withdraw.
     await sb.from("profiles")
       .update(approve
-        ? { status: "active", approved: true }
+        ? { status: "active", approved: true, registration_fee: REGISTRATION_FEE }
         : { status: "rejected", approved: false })
       .eq("email", email);
 
     await audit(approve ? "Registration Approved" : "Registration Rejected", email);
     return json({ ok: true });
+  }
+
+  // ---- delete a player, for real ------------------------------------------
+  // Nothing in this schema has a foreign key, so deleting the auth user alone
+  // would strand their ledger, duels and requests as orphan rows keyed to a
+  // user_id that no longer exists. Every table that references the player is
+  // cleared explicitly, and the audit row is written BEFORE the delete so the
+  // trail survives the account.
+  if (action === "deletePlayer") {
+    const email = String(body.email ?? "");
+    const force = Boolean(body.force);
+    if (!email) return json({ error: "email required" }, 400);
+
+    const { data: target } = await sb.from("profiles")
+      .select("user_id, email, nickname, wallet, wins, xp, role")
+      .eq("email", email).maybeSingle();
+    if (!target) return json({ error: "Player not found" }, 404);
+
+    // An owner must not be able to delete themselves or another admin by
+    // mistake: that would lock everyone out of the portal.
+    const { data: isAdmin } = await sb.from("admins")
+      .select("user_id").eq("email", email).maybeSingle();
+    if (target.role === "owner" || isAdmin) {
+      return json({ error: "Admin and owner accounts cannot be deleted here" }, 403);
+    }
+
+    // Deleting a player who still holds money destroys the record of what is
+    // owed to them. Refuse unless the caller says so deliberately.
+    const balance = Number(target.wallet ?? 0);
+    if (balance > 0 && !force) {
+      return json({ error: `That account still holds \u20b1${balance}. Withdraw or zero the balance first, or confirm again to delete anyway.`,
+                    needsForce: true, balance }, 409);
+    }
+
+    await audit("Player Deleted",
+      `${email} (${target.nickname}) - final balance \u20b1${balance}, ${target.wins} wins, ${target.xp} XP`);
+
+    const uid = target.user_id;
+    if (uid) {
+      for (const t of ["wallet_ledger", "battle_history", "duel_sessions", "topup_requests",
+                       "withdrawal_requests", "balance_adjustments", "support_messages"]) {
+        await sb.from(t).delete().eq("user_id", uid);
+      }
+    }
+    for (const t of ["pending_registrations", "registrations", "players", "topups",
+                     "withdrawals", "resets", "support_chats"]) {
+      await sb.from(t).delete().eq("email", email);
+    }
+    await sb.from("matchmaking_queue").delete().eq("player_email", email);
+    await sb.from("profiles").delete().eq("email", email);
+
+    // Last, so a failure above leaves the account recoverable rather than
+    // leaving an auth user with no profile.
+    let authDeleted = false;
+    if (uid) {
+      const { error } = await sb.auth.admin.deleteUser(uid);
+      authDeleted = !error;
+      if (error) {
+        await audit("Player Delete Warning",
+          `${email}: profile removed but the auth user remains (${error.message})`);
+      }
+    }
+
+    return json({ ok: true, email, authDeleted, balance });
   }
 
   // ---- freeze / unfreeze ---------------------------------------------------
