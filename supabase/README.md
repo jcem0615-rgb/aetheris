@@ -107,13 +107,28 @@ duels per population:
 
 | | win rate | house | lost before moving |
 |---|---|---|---|
-| no shop skills | 50.3% | +4.4% | 0% |
-| both shop skills | 48.9% | +7.1% | 0% |
+| no shop skills | 50.2% | +4.6% | 0% |
+| both shop skills | 50.2% | +4.5% | 0% |
 
-Two heroes are badly served by their own shop skills and sit near 20%: Valen's
-AEGIS FORTRESS and DIVINE INVINCIBILITY, and Chrono's TEMPORAL REWIND and
-ETERNAL TIME COLLAPSE, all deal **zero damage**, so buying them crowds the
-four-card hand with cards that cannot win. That is card design, not bot logic.
+The card numbers live twice -- the function applies them, `index.html` displays
+them -- so `node tools/duel-sim/check-cards.mjs` fails on any disagreement
+between the two. Run it after touching either.
+
+Every paid skill deals damage. Valen's AEGIS FORTRESS and DIVINE
+INVINCIBILITY and Chrono's TEMPORAL REWIND and ETERNAL TIME COLLAPSE once dealt
+**none** -- pure armour and pure healing -- so buying them crowded the
+four-card hand with cards that could not close a duel, and those two heroes won
+12% and 19% of duels. They now strike at a small discount to the pure-damage
+cards of their tier and keep their signature on top: Valen's hit behind armour,
+Chrono's hit that rewinds its own wounds. Both now sit near 50%, and the stalled
+duels that heal-only decks produced are gone.
+
+**Hero win rates are not flat without paid skills.** On base decks alone Valen
+and Storm Knight sit near 25% while Nyx, Void and Ironclad clear 65%, so the
+hero a player owns still swings their odds far more than it should. Valen's
+base cards are the clearest case: SHIELD BASH hits for 26, less than Pyra's
+28 at the bottom of the ladder. The aggregate is break-even either way, so this
+is a fairness problem rather than a money one, and it is base card design.
 
 Card effects live in the `duel` function's own table, generated from the game
 data in `index.html`. **If you change a card's damage, armour, heal, poison or

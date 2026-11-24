@@ -19,3 +19,16 @@ skills and players who do not.
 The simulated player is a competent human — heals below 35 HP, otherwise spends
 AP on the hardest-hitting affordable card. A weaker policy flatters the house,
 so treat these win rates as the pessimistic end.
+
+## Checking the two card tables agree
+
+The card numbers live twice: the duel function applies them, `index.html`
+displays them. If they drift, the arena quietly lies to players about what
+they are buying and playing.
+
+```bash
+node tools/duel-sim/check-cards.mjs
+```
+
+It exits non-zero and names every field that disagrees. Run it after changing
+a card in either file.
