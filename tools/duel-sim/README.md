@@ -32,3 +32,23 @@ node tools/duel-sim/check-cards.mjs
 
 It exits non-zero and names every field that disagrees. Run it after changing
 a card in either file.
+
+## Regenerating the base decks
+
+The 44 base cards are generated, not hand-written. The generator and the tuner
+that fitted them live in this session's scratchpad rather than the repo; what
+matters is the invariant they enforce, which `simulate.mts` and the ladder
+check in this README's workflow protect:
+
+- one power curve for all heroes, so strike/guard/signature damage at a tier is
+  identical across heroes and rises monotonically up the ladder
+- slot 4 always deals damage, and always less than the signature
+- flavour magnitudes (burn, heal, armour) tuned so the three are worth the same
+
+After changing any card in the duel function, run:
+
+```bash
+node tools/duel-sim/sync-client.mjs    # push the numbers into index.html
+node tools/duel-sim/check-cards.mjs    # fail if the two copies disagree
+node tools/duel-sim/extract.mjs && node --experimental-strip-types tools/duel-sim/simulate.mts
+```

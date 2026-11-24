@@ -105,10 +105,20 @@ the real `botTurn`, `matchOpponentHero` and `botDeckFor` out of this file so
 the numbers cannot drift from the shipped code. Where it stands, over 12000
 duels per population:
 
-| | win rate | house | lost before moving |
-|---|---|---|---|
-| no shop skills | 50.2% | +4.6% | 0% |
-| both shop skills | 50.2% | +4.5% | 0% |
+| | win rate | spread across heroes | house | lost before moving |
+|---|---|---|---|---|
+| no shop skills | 49.8% | 43-53% | +5.4% | 0% |
+| both shop skills | 50.4% | 40-57% | +4.2% | 0% |
+
+The shop population's spread is still wider than the base one. Sylph sits near
+40% because `shop-pyra-3` deals 95 while `shop-sylph-3`, a rung above it, deals
+90 -- the shop ladder has inversions the base ladder no longer has, and the
+shop cards are not generated from the power curve. That is the next thing to
+fix in here.
+
+Card text states only what the engine applies. It previously promised armour
+piercing, shock, shattered defences and Armor-Break, none of which exist, and
+called every hit "true damage" while `hit()` subtracts armour from all of it.
 
 The card numbers live twice -- the function applies them, `index.html` displays
 them -- so `node tools/duel-sim/check-cards.mjs` fails on any disagreement
@@ -123,12 +133,35 @@ cards of their tier and keep their signature on top: Valen's hit behind armour,
 Chrono's hit that rewinds its own wounds. Both now sit near 50%, and the stalled
 duels that heal-only decks produced are gone.
 
-**Hero win rates are not flat without paid skills.** On base decks alone Valen
-and Storm Knight sit near 25% while Nyx, Void and Ironclad clear 65%, so the
-hero a player owns still swings their odds far more than it should. Valen's
-base cards are the clearest case: SHIELD BASH hits for 26, less than Pyra's
-28 at the bottom of the ladder. The aggregate is break-even either way, so this
-is a fairness problem rather than a money one, and it is base card design.
+### The base decks and the hero ladder
+
+Every hero has four cards in fixed roles: a 1-AP strike, a 1-AP guard, a 2-AP
+signature and a 2-AP sustain. **All four come off one power curve**, so at a
+given tier every hero has the same strike, guard and signature damage. A hero's
+best turn is therefore the same number for everyone on that rung, and it rises
+monotonically up the ladder -- `tools/duel-sim` asserts this, and two earlier
+attempts at balancing were thrown away for inverting it.
+
+Flavour is the only thing that differs, in three groups: burn (Pyra, Sylph,
+Nyx, Void), healing (Storm, Chrono, Valkyrie, Berserker, Astral) and armour
+(Valen, Ironclad). Their magnitudes are set so the three are **worth the same**,
+which is what was broken: a pure heal was worth far less than a poison stack.
+
+Two consequences worth knowing before touching a number:
+
+- **Slot 4 always attacks.** It was a pure heal for six heroes and armour+heal
+  for Valen, costing 2 of 3 AP and dealing nothing, which is why Valen won 23%
+  of duels and Storm Knight 29%. Spread across the ladder, hero win rates ran
+  22% to 73%; they now run 43% to 53%.
+- **Burst must stay under the HP pool.** A hero's best turn is strike +
+  signature, and at the top of the ladder that is 137 against 150 HP. Push the
+  curve much higher and duels end before the second player acts, which is the
+  failure mode the 150 HP pool exists to prevent.
+
+The tier ends are not 50% and should not be: the bottom hero never meets
+anything weaker and the top never meets anything stronger, so Pyra sits near
+43% and Astral near 53%. Both stay inside the 52.6% break-even, so no hero is
+profitable to farm.
 
 Card effects live in the `duel` function's own table, generated from the game
 data in `index.html`. **If you change a card's damage, armour, heal, poison or
