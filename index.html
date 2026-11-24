@@ -1510,48 +1510,48 @@
 
         const shopSkillsMap = {
             'pyra': [
-                { id: 'shop-pyra-2', name: 'INFERNAL HELLFIRE', type: 'poison', ap: 2, color: 'red', damage: 55, poison: 15, cost: 150, desc: 'Tier-2 Elite: Deal 55 Fire damage & apply 15 Burn stacks.' },
-                { id: 'shop-pyra-3', name: 'SOLAR SUPERNOVA', type: 'strike', ap: 3, color: 'red', damage: 95, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to deal 95 solar fire damage!' }
+                { id: 'shop-pyra-2', type: 'poison', name: 'INFERNAL HELLFIRE', ap: 2, color: 'red', damage: 42, poison: 6, cost: 150, desc: 'Tier-2 Elite: Strike for 42 Fire damage & apply 6 Burn stacks!' },
+                { id: 'shop-pyra-3', type: 'strike', name: 'SOLAR SUPERNOVA', ap: 3, color: 'red', damage: 77, poison: 19, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 77 Fire damage & apply 19 Burn stacks!' }
             ],
             'sylph': [
-                { id: 'shop-sylph-2', name: 'HURRICANE BARRAGE', type: 'strike', ap: 2, color: 'emerald', damage: 58, cost: 150, desc: 'Tier-2 Elite: Unleash rapid wind strikes totaling 58 damage.' },
-                { id: 'shop-sylph-3', name: 'HURRICANE APOCALYPSE', type: 'strike', ap: 3, color: 'emerald', damage: 90, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 90 wind damage!' }
+                { id: 'shop-sylph-2', type: 'strike', name: 'HURRICANE BARRAGE', ap: 2, color: 'emerald', damage: 45, poison: 6, cost: 150, desc: 'Tier-2 Elite: Strike for 45 Wind damage & apply 6 Poison!' },
+                { id: 'shop-sylph-3', type: 'strike', name: 'HURRICANE APOCALYPSE', ap: 3, color: 'emerald', damage: 83, poison: 20, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 83 Wind damage & apply 20 Poison!' }
             ],
             'valen': [
-                { id: 'shop-valen-2', name: 'AEGIS FORTRESS', type: 'strike', ap: 2, color: 'blue', damage: 50, armor: 22, cost: 150, desc: 'Tier-2 Elite: Slam for 50 damage behind a 22 Armor guard.' },
-                { id: 'shop-valen-3', name: 'DIVINE INVINCIBILITY', type: 'strike', ap: 3, color: 'blue', damage: 78, armor: 35, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 78 damage & a 35 Armor bulwark!' }
+                { id: 'shop-valen-2', type: 'strike', name: 'AEGIS FORTRESS', ap: 2, color: 'blue', damage: 50, armor: 8, cost: 150, desc: 'Tier-2 Elite: Strike for 50 Steel damage & gain 8 Armor block!' },
+                { id: 'shop-valen-3', type: 'strike', name: 'DIVINE INVINCIBILITY', ap: 3, color: 'blue', damage: 92, armor: 27, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 92 Steel damage & gain 27 Armor block!' }
             ],
             'nyx': [
-                { id: 'shop-nyx-2', name: 'SHADOW ASSASSINATION', type: 'strike', ap: 2, color: 'purple', damage: 62, cost: 150, desc: 'Tier-2 Elite: Strike from the shadows for 62 critical dark damage.' },
-                { id: 'shop-nyx-3', name: 'ABSOLUTE SHADOW ECLIPSE', type: 'poison', ap: 3, color: 'purple', damage: 95, poison: 20, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 95 lethal dark damage!' }
+                { id: 'shop-nyx-2', type: 'strike', name: 'SHADOW ASSASSINATION', ap: 2, color: 'purple', damage: 54, poison: 7, cost: 150, desc: 'Tier-2 Elite: Strike for 54 Shadow damage & apply 7 Poison!' },
+                { id: 'shop-nyx-3', type: 'poison', name: 'ABSOLUTE SHADOW ECLIPSE', ap: 3, color: 'purple', damage: 98, poison: 24, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 98 Shadow damage & apply 24 Poison!' }
             ],
             'storm-knight': [
-                { id: 'shop-storm-2', name: 'THUNDER GODS WRATH', type: 'debuff', ap: 2, color: 'amber', damage: 65, cost: 200, desc: 'Tier-2 Elite: Summon divine lightning for 65 damage & shock.' },
-                { id: 'shop-storm-3', name: 'ZEUS THUNDERSTORM', type: 'debuff', ap: 3, color: 'amber', damage: 100, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to strike with 100 electrical damage!' }
+                { id: 'shop-storm-2', type: 'debuff', name: 'THUNDER GODS WRATH', ap: 2, color: 'amber', damage: 59, poison: 8, cost: 200, desc: 'Tier-2 Elite: Strike for 59 Lightning damage & apply 8 Burn stacks!' },
+                { id: 'shop-storm-3', type: 'debuff', name: 'ZEUS THUNDERSTORM', ap: 3, color: 'amber', damage: 108, poison: 26, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 108 Lightning damage & apply 26 Burn stacks!' }
             ],
             'ironclad-titan': [
-                { id: 'shop-titan-2', name: 'CONTINENTAL CRUSH', type: 'strike', ap: 2, color: 'stone', damage: 68, cost: 200, desc: 'Tier-2 Elite: Crush target with tectonic force for 68 earth damage.' },
-                { id: 'shop-titan-3', name: 'WORLD SHATTERING METEOR', type: 'strike', ap: 3, color: 'stone', damage: 105, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to drop a colossal meteor for damage!' }
+                { id: 'shop-titan-2', type: 'strike', name: 'CONTINENTAL CRUSH', ap: 2, color: 'stone', damage: 65, armor: 11, cost: 200, desc: 'Tier-2 Elite: Strike for 65 Earth damage & gain 11 Armor block!' },
+                { id: 'shop-titan-3', type: 'strike', name: 'WORLD SHATTERING METEOR', ap: 3, color: 'stone', damage: 119, armor: 35, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 119 Earth damage & gain 35 Armor block!' }
             ],
             'chrono-warden': [
-                { id: 'shop-chrono-2', name: 'TEMPORAL REWIND', type: 'strike', ap: 2, color: 'yellow', damage: 58, heal: 24, cost: 250, desc: 'Tier-2 Elite: Collapse time for 58 damage & rewind 24 HP of your own wounds.' },
-                { id: 'shop-chrono-3', name: 'ETERNAL TIME COLLAPSE', type: 'strike', ap: 3, color: 'yellow', damage: 88, heal: 38, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 88 damage & 38 HP rewound!' }
+                { id: 'shop-chrono-2', type: 'strike', name: 'TEMPORAL REWIND', ap: 2, color: 'yellow', damage: 72, heal: 12, cost: 250, desc: 'Tier-2 Elite: Strike for 72 Temporal damage & restore 12 HP!' },
+                { id: 'shop-chrono-3', type: 'strike', name: 'ETERNAL TIME COLLAPSE', ap: 3, color: 'yellow', damage: 131, heal: 40, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 131 Temporal damage & restore 40 HP!' }
             ],
             'sky-valkyrie': [
-                { id: 'shop-valkyrie-2', name: 'DIVINE JUDGMENT', type: 'debuff', ap: 2, color: 'orange', damage: 70, cost: 250, desc: 'Tier-2 Elite: Bring celestial judgment dealing 70 holy damage.' },
-                { id: 'shop-valkyrie-3', name: 'HEAVENLY RAGNAROK', type: 'debuff', ap: 3, color: 'orange', damage: 105, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 105 holy damage!' }
+                { id: 'shop-valkyrie-2', type: 'debuff', name: 'DIVINE JUDGMENT', ap: 2, color: 'orange', damage: 78, heal: 13, cost: 250, desc: 'Tier-2 Elite: Strike for 78 Holy damage & restore 13 HP!' },
+                { id: 'shop-valkyrie-3', type: 'debuff', name: 'HEAVENLY RAGNAROK', ap: 3, color: 'orange', damage: 142, heal: 44, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 142 Holy damage & restore 44 HP!' }
             ],
             'void-necromancer': [
-                { id: 'shop-void-2', name: 'SOUL HARVEST', type: 'poison', ap: 2, color: 'violet', damage: 65, heal: 25, cost: 300, desc: 'Tier-2 Elite: Harvest life force for 65 damage & 25 HP drain.' },
-                { id: 'shop-void-3', name: 'VOID REALM ANNIHILATION', type: 'poison', ap: 3, color: 'violet', damage: 110, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 110 dark damage!' }
+                { id: 'shop-void-2', type: 'poison', name: 'SOUL HARVEST', ap: 2, color: 'violet', damage: 82, heal: 15, cost: 300, desc: 'Tier-2 Elite: Strike for 82 Necrotic damage & restore 15 HP!' },
+                { id: 'shop-void-3', type: 'poison', name: 'VOID REALM ANNIHILATION', ap: 3, color: 'violet', damage: 142, poison: 38, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 142 Necrotic damage & apply 38 Plague!' }
             ],
             'blood-berserker': [
-                { id: 'shop-berserk-2', name: 'APOCALYPSE FRENZY', type: 'strike', ap: 2, color: 'rose', damage: 75, cost: 300, desc: 'Tier-2 Elite: Berserk rampage dealing 75 brutal physical damage.' },
-                { id: 'shop-berserk-3', name: 'RAGING BLOOD GOD RAMPAGE', type: 'strike', ap: 3, color: 'rose', damage: 115, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 115 blood fury damage!' }
+                { id: 'shop-berserk-2', type: 'strike', name: 'APOCALYPSE FRENZY', ap: 2, color: 'rose', damage: 82, heal: 16, cost: 300, desc: 'Tier-2 Elite: Strike for 82 Brutal damage & restore 16 HP!' },
+                { id: 'shop-berserk-3', type: 'strike', name: 'RAGING BLOOD GOD RAMPAGE', ap: 3, color: 'rose', damage: 142, heal: 52, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 142 Brutal damage & restore 52 HP!' }
             ],
             'astral-archmage': [
-                { id: 'shop-astral-2', name: 'GALAXY COLLAPSE', type: 'debuff', ap: 2, color: 'indigo', damage: 80, cost: 350, desc: 'Tier-2 Elite: Collapse cosmic orbits for 80 cosmic damage.' },
-                { id: 'shop-astral-3', name: 'BIG BANG UNIVERSE STRIKE', type: 'debuff', ap: 3, color: 'indigo', damage: 120, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP to unleash Big Bang damage!' }
+                { id: 'shop-astral-2', type: 'debuff', name: 'GALAXY COLLAPSE', ap: 2, color: 'indigo', damage: 82, heal: 17, cost: 350, desc: 'Tier-2 Elite: Strike for 82 Cosmic damage & restore 17 HP!' },
+                { id: 'shop-astral-3', type: 'debuff', name: 'BIG BANG UNIVERSE STRIKE', ap: 3, color: 'indigo', damage: 142, heal: 55, cost: 500, desc: 'Tier-3 SUPER ULTIMATE: Consumes all 3 AP for 142 Cosmic damage & restore 55 HP!' }
             ]
         };
 

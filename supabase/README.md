@@ -107,14 +107,35 @@ duels per population:
 
 | | win rate | spread across heroes | house | lost before moving |
 |---|---|---|---|---|
-| no shop skills | 49.8% | 43-53% | +5.4% | 0% |
-| both shop skills | 50.4% | 40-57% | +4.2% | 0% |
+| no shop skills | 49.9% | 43-53% | +5.2% | 0% |
+| both shop skills | 50.9% | 48-54% | +3.3% | 0% |
 
-The shop population's spread is still wider than the base one. Sylph sits near
-40% because `shop-pyra-3` deals 95 while `shop-sylph-3`, a rung above it, deals
-90 -- the shop ladder has inversions the base ladder no longer has, and the
-shop cards are not generated from the power curve. That is the next thing to
-fix in here.
+### The paid skills
+
+Generated from the base numbers they upgrade, so the shop ladder cannot invert
+and a paid skill is never a downgrade. Two rules it has to obey:
+
+- **A 2-AP paid skill beats the signature it replaces; a 3-AP one beats the
+  free strike + signature.** Before this, the flat-priced tier-3 skill dealt
+  *less* than two base cards for every hero from Chrono upward -- Astral's
+  BIG BANG did 120 against a free 137.
+- **Nothing may one-shot from full health.** The cap is 142 of the 150 pool,
+  and it is the ladder-wide tightest constraint, not each hero's own. A 2-AP
+  skill is played alongside the 1-AP strike, and the strike RISES with tier, so
+  capping each hero against its own strike inverts the ladder -- the top hero
+  ends up with the smallest paid skill. That bug was caught by the validator,
+  not by eye.
+
+Base burst reaches 137 at the top of the ladder, so four of the eleven 3-AP
+skills sit pinned at the cap and the top-tier upgrade is only +5 damage. The
+value there is carried by the flavour, not the burst. Raising MAX_HP is the
+only lever that would open that up, and it would need the whole ladder
+re-measured.
+
+**Buying skills cannot raise a player's win rate**, because `botDeckFor`
+mirrors the loadout onto the opponent. That is deliberate -- an edge players
+can buy is a house loss -- but it means the shop sells bigger numbers and
+flashier effects, not better odds. Worth knowing before advertising otherwise.
 
 Card text states only what the engine applies. It previously promised armour
 piercing, shock, shattered defences and Armor-Break, none of which exist, and
