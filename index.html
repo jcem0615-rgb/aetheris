@@ -1369,6 +1369,8 @@
         
         let matchmakingElapsedTimer = null;
         let matchmakingElapsedSeconds = 0;
+        // How long the queue looks for an opponent before falling back.
+        const SEARCH_SECONDS = 20;
 
         let currentRegMethod = 'gcash';
         let currentHubMethod = 'gcash';
@@ -2638,8 +2640,13 @@
             if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
             matchmakingElapsedTimer = setInterval(async () => {
                 matchmakingElapsedSeconds++;
-                if (countdownEl) countdownEl.innerText = `Elapsed time: ${matchmakingElapsedSeconds}s`;
-                if (matchmakingElapsedSeconds < 6) return;
+                const left = Math.max(0, SEARCH_SECONDS - matchmakingElapsedSeconds);
+                if (countdownEl) {
+                    countdownEl.innerText = left > 0
+                        ? `Searching for an opponent... ${left}s`
+                        : 'Opponent found!';
+                }
+                if (matchmakingElapsedSeconds < SEARCH_SECONDS) return;
 
                 clearInterval(matchmakingElapsedTimer);
                 matchmakingElapsedTimer = null;
