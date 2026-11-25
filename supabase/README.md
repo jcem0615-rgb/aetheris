@@ -59,6 +59,38 @@ supabase functions download duel --output-dir /tmp/live && diff /tmp/live/duel/i
 - Players read only their own rows. Other players are visible only through the
   `leaderboard` view (nickname, wins, xp — no email, phone or balance).
 
+## Registration
+
+A sign-up is a real Supabase auth account. `auth.signUp` carries the details as
+metadata and the `handle_new_user` trigger turns them into a `profiles` row with
+`status = 'pending_registration'`, an empty roster and no active hero, until the
+owner approves it.
+
+**One account per person, enforced in the database, not the page:**
+
+- email: unique twice over, including a `lower(email)` index so case cannot
+  slip a second account through
+- phone: unique on `normalize_ph_phone(phone)`, so `0917 123 4567`,
+  `+639171234567` and `9171234567` are all the same number. Blank numbers are
+  excluded from the index so they do not collide. The page's long-standing
+  claim that this was "enforced" was true of the email and false of the phone
+  until this index existed.
+
+`phone_in_use(text)` lets the sign-up page say so before calling `signUp`,
+rather than surfacing a constraint violation as "Database error saving new
+user". It is SECURITY DEFINER because a visitor cannot read `profiles`, and it
+answers only yes or no.
+
+The 50-peso fee is collected outside the app against an uploaded receipt, and
+is recorded on the profile at approval as `registration_fee`. It is **not** a
+wallet credit: it is revenue, not balance the player can wager or withdraw. In
+exchange the player claims one starter hero through `claimStarter`, once, and
+the other three stay on sale at 200 pesos.
+
+A player reaches the arena when, and only when, all of these hold: approved,
+not frozen, a valid stake, enough balance, a non-empty roster, and an active
+hero they actually own. `escrow` checks every one of them server-side.
+
 ## Combat is server-authoritative
 
 The browser sends `playCard`, `endTurn` or `surrender` and renders what comes

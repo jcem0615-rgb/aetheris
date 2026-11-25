@@ -2135,6 +2135,16 @@
             }
             if (!requireClient()) return;
 
+            // One account per number. The database enforces this with a unique
+            // index on the normalised phone, so 0917 123 4567, +639171234567
+            // and 9171234567 all count as the same number. Asking first turns a
+            // raw constraint violation into a sentence the player can act on.
+            const { data: taken } = await supabaseClient.rpc('phone_in_use', { p: phone });
+            if (taken) {
+                alert('That mobile number is already registered to another account.\n\nEach player may hold one account only. Sign in to the existing account, or use a different number.');
+                return;
+            }
+
             // Upload the receipt first: the bucket accepts anonymous uploads so
             // this works before the account exists.
             let receiptPath = null;
@@ -2163,9 +2173,20 @@
             });
 
             if (error) {
-                alert(error.message.includes('already registered')
-                    ? 'That email address is already registered.'
-                    : error.message);
+                const raw = error.message || '';
+                let msg = raw;
+                if (raw.includes('already registered') || raw.includes('already been registered')) {
+                    msg = 'That email address is already registered.\n\nEach player may hold one account only. Sign in instead, or use Forgot Password.';
+                } else if (raw.includes('rate limit')) {
+                    // Supabase throttles confirmation emails on the shared mail
+                    // service; it is not a problem with the details entered.
+                    msg = 'Too many sign-ups from this project in the last hour. Please wait a little and try again.';
+                } else if (raw.includes('profiles_phone_unique')) {
+                    msg = 'That mobile number is already registered to another account.';
+                } else if (raw.includes('Database error')) {
+                    msg = 'Your details could not be saved. If your email or mobile number is already registered, sign in to that account instead.';
+                }
+                alert(msg);
                 return;
             }
 
