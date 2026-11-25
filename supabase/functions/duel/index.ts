@@ -192,6 +192,92 @@ function botTurn(s: State, apBudget: number = AP_PER_TURN): string {
   return msg || `${s.opponent} had no playable card. `;
 }
 
+// ---------------------------------------------------------------- PvP ----
+// A PvP duel is stored from nobody's point of view: two symmetric seats, and
+// whose turn it is. Each player is then shown the board from their own seat
+// using the SAME field names a bot duel sends, so the page renders either kind
+// without knowing the difference. A player is only ever sent their own hand.
+interface PvpSide {
+  userId: string; nick: string; heroId: string;
+  hp: number; armor: number; ap: number; poison: number;
+  deck: string[]; hand: string[];
+}
+interface PvpState {
+  mode: "pvp";
+  a: PvpSide; b: PvpSide;
+  turn: "a" | "b";
+  turnNo: number;
+  log: string;
+}
+
+const seatOf = (s: PvpState, uid: string): "a" | "b" | null =>
+  s.a.userId === uid ? "a" : s.b.userId === uid ? "b" : null;
+
+function pvpPublicState(s: PvpState, duelId: string, seq: number, stake: number, uid: string) {
+  const seat = seatOf(s, uid);
+  const me  = seat === "b" ? s.b : s.a;
+  const foe = seat === "b" ? s.a : s.b;
+  return {
+    duelId, seq, stake, mode: "pvp" as const,
+    heroId: me.heroId, enemyHeroId: foe.heroId, opponent: foe.nick,
+    playerHp: me.hp, playerMaxHp: MAX_HP, playerArmor: me.armor,
+    playerAp: me.ap, playerPoison: me.poison,
+    enemyHp: foe.hp, enemyMaxHp: MAX_HP, enemyArmor: foe.armor,
+    enemyPoison: foe.poison,
+    hand: me.hand,                 // never the opponent's
+    enemyHandCount: foe.hand.length,
+    turn: s.turnNo, log: s.log,
+    myTurn: seat === s.turn,
+  };
+}
+
+function newSide(userId: string, nick: string, heroId: string, owned: Record<string, boolean>): PvpSide {
+  const deck = deckFor(heroId, owned);
+  return { userId, nick, heroId, hp: MAX_HP, armor: 0, ap: AP_PER_TURN, poison: 0,
+           deck, hand: deal(deck) };
+}
+
+// Pays the winner out of BOTH stakes, less the platform fee: the same 1.9x a
+// bot duel pays, except the losing stake is a real player's rather than the
+// house's. Settles once, by conditional update, however many clients ask.
+// deno-lint-ignore no-explicit-any
+async function settlePvp(sb: any, duel: any, winnerSeat: "a" | "b", reason: string) {
+  const s = duel.state as PvpState;
+  const stake = Number(duel.stake);
+  const payout = stake * 2 * (1 - PLATFORM_FEE);
+  const winner = winnerSeat === "a" ? s.a : s.b;
+  const loser  = winnerSeat === "a" ? s.b : s.a;
+
+  const { data: upd } = await sb.from("duel_sessions")
+    .update({ status: "settled", result: `WINNER:${winner.userId}`, payout,
+              settled_at: new Date().toISOString(), state: s })
+    .eq("id", duel.id).eq("status", "active").select("id");
+  if (!upd?.length) return null;             // someone else settled it first
+
+  const { data: bal } = await sb.rpc("apply_wallet_delta", {
+    p_user_id: winner.userId, p_delta: payout,
+    p_reason: `Ranked Duel won vs ${loser.nick} (${reason})`, p_type: "CREDIT",
+  });
+
+  const { data: wp } = await sb.from("profiles")
+    .select("wins, xp").eq("user_id", winner.userId).maybeSingle();
+  await sb.from("profiles")
+    .update({ wins: Number(wp?.wins ?? 0) + 1, xp: Number(wp?.xp ?? 0) + 100 })
+    .eq("user_id", winner.userId);
+
+  const now = new Date();
+  await sb.from("battle_history").insert([
+    { user_id: winner.userId, player_name: winner.nick, opponent: loser.nick,
+      result: "VICTORY", wager: stake, bet: stake, post_balance: bal?.[0]?.post_balance,
+      date: now.toISOString().split("T")[0], time: now.toTimeString().slice(0, 8) },
+    { user_id: loser.userId, player_name: loser.nick, opponent: winner.nick,
+      result: "DEFEAT", wager: stake, bet: stake,
+      date: now.toISOString().split("T")[0], time: now.toTimeString().slice(0, 8) },
+  ]);
+
+  return { winnerUserId: winner.userId, payout, stake };
+}
+
 function publicState(s: State, duelId: string, seq: number, stake: number) {
   return {
     duelId, seq, stake,
@@ -316,15 +402,254 @@ Deno.serve(async (req: Request) => {
     return json({ duelId: duel.id, stake, balance: bal?.[0]?.post_balance });
   }
 
+  // ---- PvP matchmaking ----------------------------------------------------
+  // Nothing is staked while a player waits: the two debits happen at the
+  // moment a pair is actually formed, so a long wait never locks up money.
+  if (action === "findMatch" || action === "pollMatch" || action === "cancelSearch") {
+    if (action === "cancelSearch") {
+      await sb.from("matchmaking_queue").delete().eq("user_id", uid).eq("status", "waiting");
+      return json({ cancelled: true });
+    }
+
+    if (action === "pollMatch") {
+      const { data: mine } = await sb.from("matchmaking_queue")
+        .select("status, duel_id").eq("user_id", uid).maybeSingle();
+      if (!mine) return json({ waiting: false, matched: false });
+      if (mine.status === "matched" && mine.duel_id) {
+        await sb.from("matchmaking_queue").delete().eq("user_id", uid);
+        return json({ matched: true, duelId: mine.duel_id });
+      }
+      return json({ waiting: true, matched: false });
+    }
+
+    // ---- findMatch
+    const stake = Number(body.stake);
+    if (!ALLOWED_STAKES.includes(stake)) return json({ error: "Invalid stake" }, 400);
+    if (Number(profile.wallet) < stake) return json({ error: "Insufficient balance" }, 400);
+
+    const myRoster: string[] = Array.isArray(profile.unlocked_heroes) ? profile.unlocked_heroes : [];
+    if (myRoster.length === 0 || !profile.active_hero || !myRoster.includes(profile.active_hero)) {
+      return json({ error: "Choose your champion before entering the arena" }, 403);
+    }
+
+    await sb.rpc("expire_stale_duels");
+
+    const myHero = profile.active_hero;
+    const myNick = profile.nickname ?? "Challenger";
+    const owned = (profile.unlocked_skills ?? {}) as Record<string, boolean>;
+
+    // Oldest waiting player at the same stake, never myself.
+    const { data: waiting } = await sb.from("matchmaking_queue")
+      .select("id, user_id, player_nickname, hero")
+      .eq("status", "waiting").eq("stake", stake).neq("user_id", uid)
+      .order("created_at", { ascending: true }).limit(1).maybeSingle();
+
+    if (waiting?.user_id) {
+      // Claim them. The conditional update means only one caller can win this
+      // row, so two players arriving at once cannot both pair with a third.
+      const { data: claimed } = await sb.from("matchmaking_queue")
+        .update({ status: "matching" })
+        .eq("id", waiting.id).eq("status", "waiting").select("id");
+
+      if (claimed?.length) {
+        const { data: foe } = await sb.from("profiles")
+          .select("user_id, nickname, wallet, active_hero, unlocked_skills")
+          .eq("user_id", waiting.user_id).maybeSingle();
+
+        const foeOwned = (foe?.unlocked_skills ?? {}) as Record<string, boolean>;
+        const foeHero = foe?.active_hero ?? waiting.hero ?? "pyra";
+
+        // They may have spent their balance while waiting. Drop them and let
+        // the caller search again rather than pairing into a duel that cannot
+        // be funded.
+        if (!foe || Number(foe.wallet) < stake) {
+          await sb.from("matchmaking_queue").delete().eq("id", waiting.id);
+          return json({ waiting: false, retry: true });
+        }
+
+        const iAmA = rnd(2) === 0;
+        const meSide  = newSide(uid, myNick, myHero, owned);
+        const foeSide = newSide(foe.user_id, foe.nickname ?? "Challenger", foeHero, foeOwned);
+        const pvp: PvpState = {
+          mode: "pvp",
+          a: iAmA ? meSide : foeSide,
+          b: iAmA ? foeSide : meSide,
+          turn: rnd(2) === 0 ? "a" : "b",
+          turnNo: 1,
+          log: "Opponent found. The duel begins.",
+        };
+
+        // Insert first: the one-active-duel trigger is what stops either side
+        // being pulled into two duels at once, and it is cheaper to undo an
+        // insert than to refund two debits.
+        const { data: duelRow, error: duelErr } = await sb.from("duel_sessions")
+          .insert([{ user_id: pvp.a.userId, opponent_user_id: pvp.b.userId,
+                     mode: "pvp", stake, opponent: foe.nickname,
+                     turn_user_id: pvp.turn === "a" ? pvp.a.userId : pvp.b.userId,
+                     state: pvp, seq: 1 }])
+          .select("id").single();
+
+        if (duelErr || !duelRow) {
+          await sb.from("matchmaking_queue").delete().eq("id", waiting.id);
+          return json({ waiting: false, retry: true });
+        }
+
+        const debit = async (who: string, nick: string) => await sb.rpc("apply_wallet_delta", {
+          p_user_id: who, p_delta: -stake,
+          p_reason: `Ranked Duel wager escrowed (\u20b1${stake} vs ${nick})`, p_type: "DEBIT",
+        });
+
+        const { error: e1 } = await debit(foe.user_id, myNick);
+        if (e1) {
+          await sb.from("duel_sessions").delete().eq("id", duelRow.id);
+          await sb.from("matchmaking_queue").delete().eq("id", waiting.id);
+          return json({ waiting: false, retry: true });
+        }
+        const { data: myBal, error: e2 } = await debit(uid, foe.nickname ?? "Challenger");
+        if (e2) {
+          // Put the opponent's stake back and leave them queued to try again.
+          await sb.rpc("apply_wallet_delta", {
+            p_user_id: foe.user_id, p_delta: stake,
+            p_reason: "Ranked Duel wager refunded (pairing failed)", p_type: "CREDIT",
+          });
+          await sb.from("duel_sessions").delete().eq("id", duelRow.id);
+          await sb.from("matchmaking_queue").update({ status: "waiting" }).eq("id", waiting.id);
+          return json({ error: e2.message }, 400);
+        }
+
+        // Stamp their row so their next poll finds the duel.
+        await sb.from("matchmaking_queue")
+          .update({ status: "matched", duel_id: duelRow.id, opponent_nickname: myNick })
+          .eq("id", waiting.id);
+        await sb.from("matchmaking_queue").delete().eq("user_id", uid);
+
+        return json({ matched: true, duelId: duelRow.id, stake,
+                      opponent: foe.nickname, balance: myBal?.[0]?.post_balance });
+      }
+    }
+
+    // Nobody to pair with: take a place in the queue.
+    await sb.from("matchmaking_queue").delete().eq("user_id", uid);
+    await sb.from("matchmaking_queue").insert([{
+      user_id: uid, player_email: profile.email, player_nickname: myNick,
+      stake, hero: myHero, status: "waiting",
+    }]);
+    return json({ waiting: true, matched: false });
+  }
+
   const { data: duel } = await sb.from("duel_sessions")
-    .select("id, stake, status, opponent, state, seq").eq("id", String(body.duelId ?? ""))
-    .eq("user_id", uid).maybeSingle();
+    .select("id, stake, status, opponent, state, seq, mode, opponent_user_id, turn_user_id")
+    .eq("id", String(body.duelId ?? ""))
+    .or(`user_id.eq.${uid},opponent_user_id.eq.${uid}`).maybeSingle();
 
   if (!duel) return json({ error: "Duel not found" }, 404);
   if (duel.status !== "active") return json({ error: "Duel already finished" }, 409);
 
-  const s: State = duel.state as State;
   const stake = Number(duel.stake);
+
+  // ---- a PvP duel runs its own turn logic and never touches botTurn --------
+  if (duel.mode === "pvp") {
+    const ps = duel.state as PvpState;
+    const seat = seatOf(ps, uid);
+    if (!seat) return json({ error: "Not your duel" }, 403);
+    const me  = seat === "a" ? ps.a : ps.b;
+    const foe = seat === "a" ? ps.b : ps.a;
+    const foeSeat: "a" | "b" = seat === "a" ? "b" : "a";
+
+    const sendState = (extra: Record<string, unknown> = {}) =>
+      json({ ...pvpPublicState(ps, duel.id, duel.seq, stake, uid), ...extra });
+
+    if (action === "start" || action === "getState") return sendState();
+
+    if (action === "surrender") {
+      const out = await settlePvp(sb, duel, foeSeat, "opponent surrendered");
+      return sendState({ finished: true, result: "DEFEAT", payout: 0,
+                         netGain: -stake, ...(out ? {} : {}) });
+    }
+
+    // Acting out of turn is refused outright: the board only ever moves on
+    // the move of whoever the server says is up.
+    if (action === "playCard" || action === "endTurn") {
+      if (ps.turn !== seat) return json({ error: "It is not your turn" }, 409);
+
+      const clientSeq = Number(body.seq ?? -1);
+      if (clientSeq !== duel.seq) {
+        return json({ error: "Out of sync",
+                      resync: pvpPublicState(ps, duel.id, duel.seq, stake, uid) }, 409);
+      }
+    }
+
+    if (action === "playCard") {
+      const idx = Number(body.handIndex);
+      if (!Number.isInteger(idx) || idx < 0 || idx >= me.hand.length) {
+        return json({ error: "No such card in hand" }, 400);
+      }
+      const card = CARDS[me.hand[idx]];
+      if (!card) return json({ error: "Unknown card" }, 400);
+      if (me.ap < card.ap) return json({ error: "Not enough Action Points" }, 400);
+
+      me.ap -= card.ap;
+      let msg = `${me.nick} played ${card.name}! `;
+      if (card.damage) {
+        const r = hit(card.damage, foe.armor);
+        foe.armor = r.armor;
+        foe.hp = Math.max(0, foe.hp - r.dmg);
+        msg += `Dealt ${r.dmg} damage. `;
+      }
+      if (card.armor)  { me.armor += card.armor; msg += `Gained ${card.armor} armor. `; }
+      if (card.heal)   { me.hp = Math.min(MAX_HP, me.hp + card.heal); msg += `Restored ${card.heal} HP. `; }
+      if (card.poison) { foe.poison += card.poison; msg += `Applied ${card.poison} burn/poison. `; }
+      me.hand.splice(idx, 1);
+      ps.log = msg;
+
+      if (foe.hp <= 0) {
+        const out = await settlePvp(sb, duel, seat, "opponent defeated");
+        return sendState({ finished: true, result: "VICTORY",
+                           payout: out?.payout ?? 0,
+                           netGain: (out?.payout ?? 0) - stake });
+      }
+
+      await sb.from("duel_sessions")
+        .update({ state: ps, seq: duel.seq + 1, last_action_at: new Date().toISOString() })
+        .eq("id", duel.id);
+      return json(pvpPublicState(ps, duel.id, duel.seq + 1, stake, uid));
+    }
+
+    if (action === "endTurn") {
+      let msg = "";
+      // The burn I put on them lands as I hand the turn over; theirs lands
+      // when they hand it back, so each side's poison ticks once a round.
+      if (foe.poison > 0) {
+        foe.hp = Math.max(0, foe.hp - foe.poison);
+        msg += `Burn/poison dealt ${foe.poison} to ${foe.nick}. `;
+        foe.poison = Math.max(0, foe.poison - 2);
+      }
+      if (foe.hp <= 0) {
+        ps.log = msg;
+        const out = await settlePvp(sb, duel, seat, "burn finished them");
+        return sendState({ finished: true, result: "VICTORY",
+                           payout: out?.payout ?? 0,
+                           netGain: (out?.payout ?? 0) - stake });
+      }
+
+      ps.turn = foeSeat;
+      ps.turnNo += 1;
+      foe.ap = AP_PER_TURN;
+      foe.hand = deal(foe.deck);
+      ps.log = `${msg}${me.nick} ended their turn. ${foe.nick} is up.`;
+
+      await sb.from("duel_sessions")
+        .update({ state: ps, seq: duel.seq + 1,
+                  turn_user_id: foe.userId,
+                  last_action_at: new Date().toISOString() })
+        .eq("id", duel.id);
+      return json(pvpPublicState(ps, duel.id, duel.seq + 1, stake, uid));
+    }
+
+    return json({ error: `Unknown action: ${action}` }, 400);
+  }
+
+  const s: State = duel.state as State;
 
   // Commits the wager and reveals the board. seq moves 0 -> 1, which is what
   // cancel and the stale-duel sweep read as "this duel has begun".

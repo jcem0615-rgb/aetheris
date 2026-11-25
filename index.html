@@ -688,7 +688,7 @@
         <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-2.5 space-y-1.5 backdrop-blur shrink-0">
             <div class="flex justify-between items-center px-1">
                 <span class="font-cinzel text-[10px] font-bold text-amber-400">SKILL DECK (SHUFFLED)</span>
-                <button onclick="window.endDuelTurn()" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-xl shadow transition">End Turn & Attack</button>
+                <button id="btn-end-turn" onclick="window.endDuelTurn()" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-xl shadow transition">End Turn & Attack</button>
             </div>
             <div id="shuffled-hand-container" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5"></div>
         </div>
@@ -1371,6 +1371,12 @@
         let matchmakingElapsedSeconds = 0;
         // How long the queue looks for an opponent before falling back.
         const SEARCH_SECONDS = 20;
+        // 'bot' or 'pvp'. In a PvP duel the board only moves on the server's
+        // say-so, so the page polls for the opponent's move instead of
+        // simulating one.
+        let duelMode = 'bot';
+        let pvpPollTimer = null;
+        let myTurn = true;
 
         let currentRegMethod = 'gcash';
         let currentHubMethod = 'gcash';
@@ -2605,21 +2611,8 @@
                 return;
             }
 
-            // The server takes the stake, picks the opponent and opens the duel.
-            // If this fails, no match starts, so a stake is never wagered twice.
-            const { data, error } = await callFunction('duel', {
-                action: 'escrow', stake: amount
-            });
-            if (error) {
-                alert(error);
-                return;
-            }
-
-            activeDuelId = data.duelId;
             currentDuelBet = amount;
             preBattleWallet = (currentUser.wallet || 0);
-            currentUser.wallet = Number(data.balance);
-            updateWalletDisplay();
 
             // No board yet, by design. The server withholds the opening hand
             // and the opponent's hero until `start`, because cancelling during
@@ -2637,6 +2630,13 @@
             matchmakingElapsedSeconds = 0;
             const countdownEl = document.getElementById('matchmaking-countdown');
 
+            // Nothing is staked yet. findMatch either pairs us with someone
+            // already waiting at this stake or puts us in the queue; the stake
+            // is taken only when a pair is actually formed.
+            let res = await callFunction('duel', { action: 'findMatch', stake: amount });
+            if (res.error) { closeModal(); alert(res.error); return; }
+            if (res.data && res.data.matched) { await enterPvpDuel(res.data, amount); return; }
+
             if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
             matchmakingElapsedTimer = setInterval(async () => {
                 matchmakingElapsedSeconds++;
@@ -2646,12 +2646,76 @@
                         ? `Searching for an opponent... ${left}s`
                         : 'Opponent found!';
                 }
+
+                // Ask every other second whether someone has paired with us.
+                if (matchmakingElapsedSeconds % 2 === 0 && matchmakingElapsedSeconds < SEARCH_SECONDS) {
+                    const poll = await callFunction('duel', { action: 'pollMatch' });
+                    if (poll.data && poll.data.matched) {
+                        clearInterval(matchmakingElapsedTimer);
+                        matchmakingElapsedTimer = null;
+                        await refreshProfile();
+                        await enterPvpDuel(poll.data, amount);
+                    }
+                    return;
+                }
                 if (matchmakingElapsedSeconds < SEARCH_SECONDS) return;
 
                 clearInterval(matchmakingElapsedTimer);
                 matchmakingElapsedTimer = null;
+
+                // Nobody turned up. Leave the queue and take the house match.
+                await callFunction('duel', { action: 'cancelSearch' });
+                const esc = await callFunction('duel', { action: 'escrow', stake: amount });
+                if (esc.error) { closeModal(); alert(esc.error); return; }
+                activeDuelId = esc.data.duelId;
+                duelMode = 'bot';
+                currentUser.wallet = Number(esc.data.balance);
+                updateWalletDisplay();
                 await revealDuelBoard();
             }, 1000);
+        }
+
+        // A real opponent was found: the stake is already taken, the board is
+        // already live, so collect it and open the arena.
+        async function enterPvpDuel(info, amount) {
+            activeDuelId = info.duelId;
+            duelMode = 'pvp';
+            currentDuelBet = amount;
+            if (info.balance !== undefined) {
+                currentUser.wallet = Number(info.balance);
+                updateWalletDisplay();
+            }
+            const res = await callFunction('duel', { action: 'start', duelId: activeDuelId });
+            if (res.error) { closeModal(); alert(res.error); return; }
+            applyServerDuelState(res.data);
+            closeModal();
+            startLiveDuelMatch();
+            pvpWatch();
+        }
+
+        // While the opponent is thinking, ask the server what the board looks
+        // like. Stops the moment it is our turn again or the duel is over, so
+        // it never polls in the background.
+        function pvpWatch() {
+            if (pvpPollTimer) clearInterval(pvpPollTimer);
+            if (duelMode !== 'pvp') return;
+            pvpPollTimer = setInterval(async () => {
+                const arena = document.getElementById('view-duel-fullscreen');
+                if (!activeDuelId || !arena || arena.classList.contains('hidden')) {
+                    clearInterval(pvpPollTimer); pvpPollTimer = null; return;
+                }
+                if (myTurn) { clearInterval(pvpPollTimer); pvpPollTimer = null; return; }
+
+                const res = await callFunction('duel', { action: 'getState', duelId: activeDuelId });
+                if (res.error) return;
+                applyServerDuelState(res.data);
+                if (res.data.finished) {
+                    clearInterval(pvpPollTimer); pvpPollTimer = null;
+                    await finishDuel(res.data);
+                } else if (res.data.myTurn) {
+                    clearInterval(pvpPollTimer); pvpPollTimer = null;
+                }
+            }, 2000);
         }
         window.startRankedMatchmaking = startRankedMatchmaking;
 
@@ -2743,7 +2807,32 @@
             duelState = Object.assign({}, duelState, st);
             duelSeq = st.seq;
             if (st.duelId) activeDuelId = st.duelId;
+            if (st.mode) duelMode = st.mode;
+            // A bot duel is always the player's move. A PvP duel says so.
+            myTurn = (duelMode === 'pvp') ? !!st.myTurn : true;
             updateDuelUI();
+            updateTurnIndicator();
+        }
+
+        // In PvP the hand is dead while the opponent is thinking, and the log
+        // says whose move it is rather than leaving the player guessing.
+        function updateTurnIndicator() {
+            const hand = document.getElementById('shuffled-hand-container');
+            const endBtn = document.getElementById('btn-end-turn');
+            const waiting = duelMode === 'pvp' && !myTurn;
+            if (hand) {
+                hand.style.opacity = waiting ? '0.45' : '1';
+                hand.style.pointerEvents = waiting ? 'none' : 'auto';
+            }
+            if (endBtn) {
+                endBtn.disabled = waiting;
+                endBtn.style.opacity = waiting ? '0.45' : '1';
+            }
+            if (waiting) {
+                const log = document.getElementById('fs-battle-log');
+                const who = duelState.opponent || 'Your opponent';
+                if (log) log.innerText = `[Arena]: Waiting for ${who} to move...`;
+            }
         }
 
         function startLiveDuelMatch() {
@@ -3445,6 +3534,7 @@
         const FX_SETTLE_MS = 900;
 
         async function playDuelCard(cardIndex) {
+            if (duelMode === 'pvp' && !myTurn) return;
             const cardId = (duelState.hand || [])[cardIndex];
             const card = CARD_INDEX[cardId];
             // Snapshot before the server moves anything, so the numbers shown
@@ -3486,6 +3576,7 @@
         }
 
         async function endDuelTurn() {
+            if (duelMode === 'pvp' && !myTurn) return;
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             const log = document.getElementById('fs-battle-log');
             if (log) log.innerText = `[Turn]: ${duelState.opponent || 'Opponent'} takes their turn...`;
@@ -3493,6 +3584,14 @@
             const before = Object.assign({}, duelState);
             const next = await duelAction({ action: 'endTurn' });
             if (!next) return;
+
+            // Against a human the turn now belongs to them, so wait for it
+            // rather than animating a move the server never made.
+            if (duelMode === 'pvp') {
+                if (next.finished) { setTimeout(() => finishDuel(next), FX_SETTLE_MS); return; }
+                pvpWatch();
+                return;
+            }
 
             {
                 const d = fxDeltas(before, next, false);
@@ -3532,6 +3631,9 @@
         // closes the arena and reports what came back.
         async function finishDuel(result) {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
+            if (pvpPollTimer) { clearInterval(pvpPollTimer); pvpPollTimer = null; }
+            duelMode = 'bot';
+            myTurn = true;
             // switchTab('hub') below brings the calm bed back in.
             MUSIC.start('hub');
             const viewFullscreen = document.getElementById('view-duel-fullscreen');
@@ -3552,7 +3654,9 @@
                 currentUser.xp = (currentUser.xp || 0) + 100;
                 alert(`VICTORY! Prize pool ₱${Number(result.payout).toFixed(2)} paid out (net +₱${Number(result.netGain).toFixed(2)} after the 5% platform fee) and you gained 100 EXP!`);
             } else {
-                alert(`DEFEAT! You forfeited your ₱${currentDuelBet} wager.`);
+                alert(result && result.result === 'DEFEAT' && result.byOpponent
+                    ? `DEFEAT! ${duelState.opponent || 'Your opponent'} took the pot. You lost your ₱${currentDuelBet} wager.`
+                    : `DEFEAT! You forfeited your ₱${currentDuelBet} wager.`);
             }
 
             await refreshProfile();
