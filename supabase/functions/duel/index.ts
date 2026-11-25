@@ -97,8 +97,13 @@ function deckFor(heroId: string, owned: Record<string, boolean>): string[] {
 
 function deal(deck: string[]): string[] {
   const pool = [...deck];
+  // Count the cards BEFORE drawing. The bound used to be re-evaluated every
+  // pass against a pool that shrinks as cards come out of it, so a four-card
+  // deck dealt two and a six-card deck dealt three. Every hand in the game,
+  // the opponent's included, had been short since server-side combat shipped.
+  const draw = Math.min(HAND_SIZE, pool.length);
   const hand: string[] = [];
-  for (let i = 0; i < Math.min(HAND_SIZE, pool.length); i++) {
+  for (let i = 0; i < draw; i++) {
     hand.push(pool.splice(rnd(pool.length), 1)[0]);
   }
   return hand;

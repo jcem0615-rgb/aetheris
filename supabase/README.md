@@ -139,8 +139,15 @@ duels per population:
 
 | | win rate | spread across heroes | house | lost before moving |
 |---|---|---|---|---|
-| no shop skills | 49.9% | 43-53% | +5.2% | 0% |
-| both shop skills | 50.9% | 48-54% | +3.3% | 0% |
+| no shop skills | 50.7% | 48-53% | +3.6% | 0% |
+| both shop skills | 50.4% | 45-55% | +4.1% | 0% |
+
+These are the numbers with `deal()` fixed. It used to re-evaluate its loop
+bound against a pool that shrinks as cards leave it, so a four-card deck dealt
+**two** cards and a six-card deck dealt **three** -- every hand in the game,
+the opponent's included, had been short since server-side combat shipped. The
+balance survived the fix because it was fitted on relative power, which a
+bigger hand scales for both sides at once.
 
 ### The paid skills
 
