@@ -1646,6 +1646,12 @@
                 if (navNick) navNick.classList.remove('hidden');
                 if (navMenu) navMenu.classList.remove('hidden');
 
+                // Declared here because the roster gate above replaced the old
+                // `const activeHero = ... || 'pyra'` line. Without it this threw
+                // a ReferenceError and aborted before switchTab('hub'), so a
+                // player with a hero landed on a header over a blank page.
+                const activeHero = currentUser.active_hero || roster[0];
+
                 updateHeaderUserInfo();
                 updateWalletDisplay();
                 setActiveHeroUI(activeHero);
