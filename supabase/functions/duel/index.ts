@@ -4,9 +4,21 @@ import { createClient } from "jsr:@supabase/supabase-js@2.49.4";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// The house's cut of every settled pot. A win pays
-// `stake * 2 * (1 - PLATFORM_FEE)`, so at 10% that is 1.8x and the arena
-// breaks even at a 55.6% player win rate.
+// The house's cut, charged on ONE player's wager rather than on the combined
+// pot. Read that twice before changing it - the two are not the same number
+// and the difference is the whole of the arena's revenue.
+//
+//   pot          = stake * 2                  two players, one stake each
+//   fee          = stake * PLATFORM_FEE       10% of ONE bet, not of the pot
+//   winner takes = stake * (2 - PLATFORM_FEE)
+//
+// On a 100 wager: the pot is 200, the fee is 10, and the winner takes 190.
+// The house therefore keeps 5% of the money wagered while quoting 10%, which
+// is correct and deliberate: the rate is on the bet, as the page says.
+//
+// At 1.9x the arena breaks even at a 52.6% player win rate, though that figure
+// no longer describes a position the house holds - it takes its cut whoever
+// wins, and both stakes come from players.
 //
 // This number exists in three other places and they must move together:
 //   - public.platform_fee() in Postgres, which expire_stale_duels uses to pay
@@ -15,6 +27,9 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 //     rate to the player - if those drift the arena misstates its own price
 // tools/duel-sim/check-cards.mjs fails if the page and this disagree.
 const PLATFORM_FEE = 0.10;
+
+// One place, so the pot maths cannot be written two different ways.
+const payoutFor = (stake: number) => stake * (2 - PLATFORM_FEE);
 const ALLOWED_STAKES = [50, 100, 200, 500, 1000];
 const MAX_HP = 150;
 const AP_PER_TURN = 3;
@@ -223,14 +238,14 @@ function newSide(userId: string, nick: string, heroId: string, owned: Record<str
            deck, hand: deal(deck) };
 }
 
-// Pays the winner out of BOTH stakes, less the platform fee: 1.8x the stake.
-// Every peso paid out comes from the other player, never from the house.
+// Pays the winner out of BOTH stakes, less the fee on one wager: 1.9x the
+// stake. Every peso paid out comes from the other player, never from the house.
 // Settles once, by conditional update, however many clients ask.
 // deno-lint-ignore no-explicit-any
 async function settlePvp(sb: any, duel: any, winnerSeat: "a" | "b", reason: string) {
   const s = duel.state as PvpState;
   const stake = Number(duel.stake);
-  const payout = stake * 2 * (1 - PLATFORM_FEE);
+  const payout = payoutFor(stake);
   const winner = winnerSeat === "a" ? s.a : s.b;
   const loser  = winnerSeat === "a" ? s.b : s.a;
 

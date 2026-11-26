@@ -212,15 +212,15 @@ const vic = all.filter((m) => /VICTORY/.test(m));
 const def = all.filter((m) => /DEFEAT/.test(m));
 ok(vic.length === 1, 'exactly one client was told VICTORY', vic.length + ': ' + vic.join());
 ok(def.length === 1, 'exactly one client was told DEFEAT', def.length + ': ' + def.join());
-ok(/180\.00/.test(vic[0] || ''), 'the winner is told 180.00 was paid out', vic[0] || '(none)');
+ok(/190\.00/.test(vic[0] || ''), 'the winner is told 190.00 was paid out', vic[0] || '(none)');
 ok(/took the pot/.test(def[0] || ''), 'the loser is told the opponent took the pot', def[0] || '(none)');
 
 const w1a = await walletOf(A), w1b = await walletOf(B);
 console.log('     wallets after: Alpha P' + w1a + '  Bravo P' + w1b);
 const moved = (w1a - w0a) + (w1b - w0b);
-ok(moved === -20, 'the two wallets lost 20 between them (the 10% rake)', 'moved ' + moved);
-ok((w1a - w0a === 80 && w1b - w0b === -100) || (w1b - w0b === 80 && w1a - w0a === -100),
-   'one is +80, the other -100', (w1a - w0a) + ' / ' + (w1b - w0b));
+ok(moved === -10, 'the two wallets lost 10 between them (10% of one wager)', 'moved ' + moved);
+ok((w1a - w0a === 90 && w1b - w0b === -100) || (w1b - w0b === 90 && w1a - w0a === -100),
+   'one is +90, the other -100', (w1a - w0a) + ' / ' + (w1b - w0b));
 
 await A.page.screenshot({ path: SHOTS + '/4-alpha-after.png' });
 await B.page.screenshot({ path: SHOTS + '/5-bravo-after.png' });

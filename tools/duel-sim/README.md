@@ -9,8 +9,13 @@ node tools/duel-sim/check-cards.mjs
 The card numbers live twice: the duel function applies them, `index.html`
 displays them. If they drift, the arena quietly lies to players about what they
 are buying and playing. The same check covers the platform fee, which the page
-quotes to the player twice — a player told 5% while 10% is taken has been
-overcharged, and that matters more than any card number being wrong.
+quotes to the player twice — a player told one rate while another is taken has
+been overcharged, and that matters more than any card number being wrong.
+
+The fee is charged on **one wager**, not on the combined pot: on a ₱100 bet the
+pot is ₱200, the fee is ₱10 and the winner takes ₱190. The house therefore
+keeps 5% of the money wagered while quoting 10%, because the rate is on the
+bet. Both numbers are correct; they answer different questions.
 
 Exits non-zero and names every field that disagrees.
 
@@ -52,8 +57,8 @@ regenerated. Worth revisiting if players avoid it.
 `simulate.mts` measured the arena's edge against its own bot over 8000 duels a
 run. There is no bot any more, and the house takes no position in a duel: it
 earns the registration fee and a fixed cut of every pot, win or lose, so its
-margin is now arithmetic rather than something to simulate. At a 10% fee the
-house keeps 10% of every pot settled. The file is gone; `fairness.mts` replaced
+margin is now arithmetic rather than something to simulate. At a 10% fee on the wager the
+house keeps 10% of one stake from every pot settled - 5% of the money wagered. The file is gone; `fairness.mts` replaced
 the question it was answering.
 
 `extract.mjs` used to slice the engine between `const PLATFORM_FEE` and
