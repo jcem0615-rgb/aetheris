@@ -3938,12 +3938,14 @@
             }
 
             const r = res.data.revenue, c = res.data.cash;
+            const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
             set('earn-reg', peso(r.registrations.amount));
-            set('earn-reg-sub', `${r.registrations.count} approved`);
+            set('earn-reg-sub', plural(r.registrations.count, 'approved', 'approved'));
             set('earn-rake', peso(r.duelRake.amount));
-            set('earn-rake-sub', `${r.duelRake.count} duels \u00b7 ${peso(r.duelRake.volume)} wagered`);
+            set('earn-rake-sub',
+                `${plural(r.duelRake.count, 'duel', 'duels')} \u00b7 ${peso(r.duelRake.volume)} wagered`);
             set('earn-shop', peso(r.shop.amount));
-            set('earn-shop-sub', `${r.shop.count} purchases`);
+            set('earn-shop-sub', plural(r.shop.count, 'purchase', 'purchases'));
             set('earn-total', peso(r.total));
 
             set('earn-cash', peso(c.expected));
