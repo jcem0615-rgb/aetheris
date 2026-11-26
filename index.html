@@ -1006,32 +1006,90 @@
         </div>
 
         <!-- Terms and Conditions Modal -->
+        <!-- Drafted against Philippine law. The bracketed fields are the
+             operator's own details and must be filled in before launch; a
+             policy that will not say who is behind it is not a policy. This
+             is a starting draft and needs a Philippine lawyer's review,
+             particularly on licensing, which no wording here can substitute
+             for. -->
         <div id="modal-terms" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                 <h3 class="font-cinzel text-base font-bold text-amber-400">Terms and Conditions</h3>
                 <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
             </div>
             <div class="legal-modal-content space-y-2 text-[11px] text-slate-300 pr-1">
-                <p><strong>1. Acceptance of Terms:</strong> By registering, accessing, or playing on Aetheris Arena, you agree to be bound by these Terms and Conditions.</p>
-                <p><strong>2. Fair Play Policy:</strong> To ensure a fair competitive environment, automated scripts, macro tools, and third-party exploits are strictly prohibited.</p>
-                <p><strong>3. Account Registration & P50 Fee:</strong> Accounts require accurate legal identification and a verified ₱50.00 registration fee receipt.</p>
-                <p><strong>4. Wagers & Platform Fees:</strong> Duels involve wagers. The platform deducts a standard 5% operational fee from the total prize pool upon match settlement.</p>
-                <p><strong>5. Financial Transactions:</strong> Top-ups and withdrawals are processed through verified official merchant channels.</p>
+                <p class="text-slate-500">Last updated: <strong id="terms-updated">26 November 2026</strong>. Operated by <strong>[OPERATOR LEGAL NAME]</strong>, <strong>[BUSINESS ADDRESS]</strong>, contact <strong>[SUPPORT EMAIL]</strong>.</p>
+
+                <p><strong>1. Agreement.</strong> By registering or playing on Aetheris Arena you agree to these Terms. If you do not agree, do not register. These Terms are governed by the laws of the Republic of the Philippines, and any dispute falls to the courts of <strong>[CITY]</strong>.</p>
+
+                <p><strong>2. Who may play.</strong> You must be at least <strong>21 years old</strong>, a resident of the Philippines, and legally permitted to place wagers. You may not play if you are an employee of the operator or their relative within the fourth degree, if you are on a self-exclusion or government exclusion list, or if gambling is prohibited where you are. We may ask for a valid government ID at any time and may suspend an account until it is provided.</p>
+
+                <p><strong>3. One account per person.</strong> Each person may hold one account, with their real name, one email address and one mobile number. Opening more than one account, or playing on someone else's, is grounds for closure and forfeiture of any balance obtained through it.</p>
+
+                <p><strong>4. Registration fee.</strong> Registration costs <strong>₱50.00</strong>, paid to our published payment channel before approval. The fee is <strong>non-refundable</strong> once your account is approved, and it entitles you to choose one starter champion, which is permanently yours.</p>
+
+                <p><strong>5. Your wallet.</strong> Money you top up is held so you can place wagers. It is <strong>not a bank deposit</strong>, earns no interest, and is not insured by the PDIC. It remains yours and you may withdraw it subject to clause 7.</p>
+
+                <p><strong>6. Wagers and our fee.</strong> A duel is between two players, each staking the same amount. We charge <strong>10% of one wager</strong>, not of the combined pot. <strong>On a ₱100 wager the pot is ₱200, our fee is ₱10, and the winner receives ₱190.</strong> The fee is taken at settlement, win or lose, and is shown to you before you stake.</p>
+
+                <p><strong>7. Top-ups and withdrawals.</strong> Both are reviewed by hand. A top-up is credited once we have matched your receipt to a payment actually received. Withdrawals have a <strong>₱100 minimum</strong>, carry no fee from us, and are paid to the mobile number registered on your account — not to a third party. We aim to settle within <strong>[N] business days</strong>. We may hold a withdrawal while we verify your identity or the source of funds, and we will tell you if we do.</p>
+
+                <p><strong>8. Fair play.</strong> Automated scripts, bots, macros, modified clients, exploiting defects, and arranging the outcome of a duel with another player are all prohibited. The duel engine runs on our servers and its record of a duel is authoritative. Where a defect gives a player money they did not win, we may reverse it.</p>
+
+                <p><strong>9. Money laundering.</strong> We are required to know who our players are and where their money comes from. We may request identification and proof of source of funds, must report suspicious transactions to the Anti-Money Laundering Council, and may freeze an account while doing so, in line with Republic Act No. 9160 as amended.</p>
+
+                <p><strong>10. Responsible gaming.</strong> Wagering can be addictive. Only stake what you can afford to lose. You may ask us at any time to set a deposit limit or to close your account permanently, and we will act on that request and not solicit you back. If gambling is causing you harm, please seek help — contact details are at <strong>[RESPONSIBLE GAMING CONTACT]</strong>.</p>
+
+                <p><strong>11. Suspension and closure.</strong> We may suspend or close an account that breaches these Terms, that we reasonably suspect of fraud, or where we are required to by law or a regulator. Where we close an account that has not breached these Terms, we will return the balance.</p>
+
+                <p><strong>12. Disputes.</strong> Raise a complaint through in-app support first. We will acknowledge it and respond with our findings and the server record the decision rests on. Nothing here removes your rights under the Consumer Act of the Philippines (Republic Act No. 7394).</p>
+
+                <p><strong>13. Liability.</strong> We provide the platform as it is. We are not liable for losses arising from your own wagers, from connectivity at your end, or from events outside our reasonable control. Nothing in these Terms limits liability for fraud or for anything that cannot lawfully be limited.</p>
+
+                <p><strong>14. Changes.</strong> We may change these Terms. Material changes will be notified in-app before they take effect, and continuing to play after that is acceptance. The date at the top shows when this version was issued.</p>
+
+                <p class="text-amber-400/90"><strong>15. Licensing.</strong> Real-money wagering in the Philippines is regulated by PAGCOR. This clause must state the operator's licence and its number before launch: <strong>[PAGCOR LICENCE DETAILS]</strong>.</p>
             </div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
 
         <!-- Privacy Policy Modal -->
+        <!-- Shaped to the Data Privacy Act of 2012 (RA 10173): what is
+             collected, the lawful basis, who it reaches, where it is stored,
+             how long it is kept, and the data subject rights the Act grants,
+             including the right to complain to the National Privacy
+             Commission. -->
         <div id="modal-privacy" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-lg space-y-3 hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                 <h3 class="font-cinzel text-base font-bold text-amber-400">Privacy Policy</h3>
                 <button onclick="window.closeModal()" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
             </div>
             <div class="legal-modal-content space-y-2 text-[11px] text-slate-300 pr-1">
-                <p><strong>1. Information Collection:</strong> We collect personal details provided during registration, including your legal name, email address, phone number, birthday, and payment receipts.</p>
-                <p><strong>2. Security & Monitoring:</strong> We monitor platform traffic and gameplay sessions to protect platform security and ensure integrity.</p>
-                <p><strong>3. Data Usage:</strong> Your data is used exclusively to manage your player profile, process secure wagers, and provide customer support.</p>
-                <p><strong>4. Data Protection:</strong> We employ robust encryption to safeguard your personal information.</p>
+                <p class="text-slate-500">Last updated: <strong>26 November 2026</strong>. This policy follows the Data Privacy Act of 2012 (Republic Act No. 10173).</p>
+
+                <p><strong>1. Who holds your data.</strong> The Personal Information Controller is <strong>[OPERATOR LEGAL NAME]</strong>, <strong>[BUSINESS ADDRESS]</strong>. Our Data Protection Officer can be reached at <strong>[DPO NAME AND EMAIL]</strong>.</p>
+
+                <p><strong>2. What we collect.</strong> Your full name, nickname, email address, mobile number and date of birth; the payment receipts you upload, which may show your account name and reference numbers; your wallet balance and every transaction on it; your duel history; and basic technical data such as your device and connection when you use the site.</p>
+
+                <p><strong>3. Why, and on what basis.</strong> We process your data to run your account and settle your wagers (necessary to perform our contract with you); to verify your age and identity and to meet anti-money-laundering obligations (legal obligation); to detect fraud, collusion and automated play (our legitimate interest in a fair platform); and to answer your support messages. We do not sell your data and we do not use it for advertising.</p>
+
+                <p><strong>4. Who else sees it.</strong> Our payment channels, when we match or send a payment. Our technology providers, who store and serve the platform for us and act only on our instructions. A regulator, court or the Anti-Money Laundering Council where we are legally required to disclose. Other players see only your nickname, hero, wins and experience — never your name, email, number, balance or receipts.</p>
+
+                <p><strong>5. Where it is stored.</strong> Our database and hosting providers operate servers outside the Philippines, so your data may be transferred and stored abroad. We remain accountable for it under the Data Privacy Act wherever it sits, and we use providers that contractually commit to protecting it.</p>
+
+                <p><strong>6. How long we keep it.</strong> For as long as your account is open, and after closure for as long as tax, accounting and anti-money-laundering rules require us to — generally <strong>five years</strong> from your last transaction. Financial records are kept even after an account is deleted, because we are required to keep them. Everything not required is deleted.</p>
+
+                <p><strong>7. How we protect it.</strong> Traffic is encrypted in transit. Access to player data is restricted to the operator. Your password is never stored in a readable form and we can never see it. No system is perfectly secure, and we do not claim otherwise.</p>
+
+                <p><strong>8. If there is a breach.</strong> If a breach is likely to put you at serious risk, we will notify the National Privacy Commission and you within <strong>72 hours</strong> of knowing, as the Act requires, and tell you what happened and what to do.</p>
+
+                <p><strong>9. Your rights.</strong> Under the Data Privacy Act you have the right to be <strong>informed</strong> about how your data is used; to <strong>access</strong> a copy of it; to have it <strong>corrected</strong> if it is wrong; to <strong>object</strong> to processing; to have it <strong>erased or blocked</strong> where the law allows; to <strong>data portability</strong>; and to <strong>be indemnified</strong> for damage caused by misuse. To exercise any of these, write to our Data Protection Officer above and we will respond within <strong>15 days</strong>.</p>
+
+                <p><strong>10. Complaints.</strong> If you are not satisfied with our response, you may complain to the <strong>National Privacy Commission</strong>, 5th Floor, Delegation Building, PICC Complex, Pasay City, or at privacy.gov.ph.</p>
+
+                <p><strong>11. Age.</strong> This platform is not for anyone under 21. We do not knowingly collect data from minors, and an account found to belong to one will be closed and its data deleted.</p>
+
+                <p><strong>12. Changes.</strong> We will post any change here and notify you in-app if it materially affects you.</p>
             </div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
