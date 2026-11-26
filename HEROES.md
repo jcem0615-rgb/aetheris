@@ -19,8 +19,33 @@ For the full-body art the app needs, per hero:
 - a little headroom and floor space, so a recoil or lunge animation has
   somewhere to move
 
+- **feet on or very near the bottom edge** of the canvas. This one matters
+  more than it sounds: every animation pivots about the bottom of the image,
+  which is what makes a lunge read as a step off the back foot rather than the
+  whole picture sliding. Art floating in the middle of its canvas will rotate
+  about the wrong point and look like it is swinging from a hook.
+
 Name them `body-<id>.png` using the ids below and drop them in the repo root.
-The page falls back to the existing card art wherever one is missing.
+Nothing else needs changing - the page picks them up on the next load, and
+falls back to the existing card art wherever one is missing.
+
+## What they will do once the art is in
+
+All of this is already built and running; it is only waiting on the images.
+Motion is procedural, so it works on any art that meets the brief above.
+
+- **idle** - a slow breath, with a slight sway. The two sides run at different
+  speeds so they never fall into lockstep.
+- **casting an attack** - winds back, then drives forward. The wind-up is what
+  gives it weight. The player strikes upward, the opponent mirrors it.
+- **defending** - braces and widens behind the shield.
+- **healing** - rises and glows green while channelling.
+- **taking a hit** - flinches away from whoever threw it, with a bright flash
+  on the first frames so it reads even on a dark figure.
+- **dying** - a flash, then falls and fades, and stays down.
+
+Players who have asked their phone for reduced motion keep the damage numbers
+and the fallen pose, and lose the rest.
 
 ## Tier 0 - PYRA
 

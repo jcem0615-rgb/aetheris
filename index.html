@@ -137,11 +137,126 @@
         }
         .fx-shaking { animation:fx-shake 500ms cubic-bezier(.33,.9,.4,1); }
 
-        /* Players who ask for less motion keep the numbers, lose the motion. */
+        /* ===== Hero figures ============================================== */
+        /* The heroes stand on the battlefield as full figures; only skills are
+           cards. Art is a tall transparent PNG per hero (body-<id>.png). Until
+           one exists the <img> falls back to the square icon and marks itself
+           so it gets a frame, because unframed cropped art looks like a bug.
+
+           The FX system animates the sprite CONTAINER (lunge, shake). Poses go
+           on the <img> inside it, so the two never fight over `transform`.
+           Every pose pivots about the feet, which is what makes a lunge read as
+           a step rather than a slide. */
+        .hero-figure { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; }
+        .hero-body {
+            height:clamp(96px, 23vh, 210px); width:auto; max-width:46vw;
+            object-fit:contain; object-position:bottom center;
+            transform-origin:bottom center;
+            filter:drop-shadow(0 6px 14px rgba(0,0,0,.75));
+            will-change:transform,filter;
+        }
+        /* The square icon standing in for missing body art. */
+        .hero-body.hero-body-fallback {
+            height:clamp(72px, 15vh, 120px); width:clamp(72px, 15vh, 120px);
+            object-fit:cover; border-radius:1rem;
+            border:2px solid rgba(234,179,8,.45);
+            box-shadow:0 0 15px rgba(234,179,8,.2), inset 0 0 15px rgba(0,0,0,.9);
+        }
+        /* The same art in a list slot: hero picker and shop. Taller than it is
+           wide so a standing figure reads, and anchored to the bottom of the
+           slot so the feet sit on the frame rather than floating mid-air. */
+        .hero-portrait {
+            width:100%; height:100%; object-fit:contain; object-position:bottom center;
+            filter:drop-shadow(0 4px 10px rgba(0,0,0,.7));
+        }
+        .hero-portrait.hero-portrait-fallback {
+            object-fit:cover; border-radius:.5rem; filter:none;
+        }
+
+        .hero-nameplate {
+            margin-top:3px; font-family:'Cinzel',serif; font-weight:700; font-size:9px;
+            color:#fcd34d; text-transform:uppercase; letter-spacing:.04em;
+            text-shadow:0 2px 6px rgba(0,0,0,.95);
+        }
+
+        /* Breathing. Deliberately small: a standing figure that bobs a visible
+           amount reads as floating, not alive. The two sides run at different
+           durations so they never fall into lockstep, which looks mechanical. */
+        @keyframes hero-idle {
+            0%,100% { transform:translateY(0)    rotate(0deg)    scaleY(1); }
+            25%     { transform:translateY(-2px) rotate(.45deg)  scaleY(1.014); }
+            50%     { transform:translateY(-3px) rotate(0deg)    scaleY(1.02); }
+            75%     { transform:translateY(-1px) rotate(-.45deg) scaleY(1.01); }
+        }
+        .hero-idle          { animation:hero-idle 3.4s ease-in-out infinite; }
+        .hero-idle.is-enemy { animation-duration:3.9s; animation-delay:-1.3s; }
+
+        /* Casting: wind back, then drive forward. The anticipation is what
+           sells the weight - going straight to the thrust looks like a twitch.
+           Player stands at the bottom and strikes upward; the enemy mirrors. */
+        @keyframes hero-cast-up {
+            0%   { transform:translateY(0)     rotate(0deg)  scaleY(1); }
+            20%  { transform:translateY(7px)   rotate(-3deg) scaleY(.965); }
+            46%  { transform:translateY(-15px) rotate(4deg)  scaleY(1.05); }
+            68%  { transform:translateY(-6px)  rotate(1.5deg) scaleY(1.02); }
+            100% { transform:translateY(0)     rotate(0deg)  scaleY(1); }
+        }
+        @keyframes hero-cast-down {
+            0%   { transform:translateY(0)     rotate(0deg)   scaleY(1); }
+            20%  { transform:translateY(-7px)  rotate(3deg)   scaleY(.965); }
+            46%  { transform:translateY(15px)  rotate(-4deg)  scaleY(1.05); }
+            68%  { transform:translateY(6px)   rotate(-1.5deg) scaleY(1.02); }
+            100% { transform:translateY(0)     rotate(0deg)   scaleY(1); }
+        }
+        .hero-cast-up   { animation:hero-cast-up   560ms cubic-bezier(.34,.8,.3,1) !important; }
+        .hero-cast-down { animation:hero-cast-down 560ms cubic-bezier(.34,.8,.3,1) !important; }
+
+        /* Taking a hit: knocked away from whoever threw it, with a blow-out on
+           the first frames so the flinch is visible even on a dark figure. */
+        @keyframes hero-hurt-down {
+            0%,100% { transform:translateY(0)   rotate(0deg);  filter:drop-shadow(0 6px 14px rgba(0,0,0,.75)); }
+            16%     { transform:translateY(8px) rotate(-5deg); filter:brightness(2.3) saturate(.3); }
+            42%     { transform:translateY(3px) rotate(2.5deg); filter:brightness(1.25); }
+        }
+        @keyframes hero-hurt-up {
+            0%,100% { transform:translateY(0)    rotate(0deg);  filter:drop-shadow(0 6px 14px rgba(0,0,0,.75)); }
+            16%     { transform:translateY(-8px) rotate(5deg);  filter:brightness(2.3) saturate(.3); }
+            42%     { transform:translateY(-3px) rotate(-2.5deg); filter:brightness(1.25); }
+        }
+        .hero-hurt-down { animation:hero-hurt-down 460ms ease-out !important; }
+        .hero-hurt-up   { animation:hero-hurt-up   460ms ease-out !important; }
+
+        /* Bracing behind a shield, and channelling a heal. */
+        @keyframes hero-guard {
+            0%,100% { transform:translateY(0)   scaleY(1)    scaleX(1); }
+            30%     { transform:translateY(3px) scaleY(.955) scaleX(1.035); }
+            60%     { transform:translateY(1px) scaleY(.985) scaleX(1.012); }
+        }
+        @keyframes hero-channel {
+            0%,100% { transform:translateY(0)    scaleY(1);     filter:drop-shadow(0 6px 14px rgba(0,0,0,.75)); }
+            45%     { transform:translateY(-7px) scaleY(1.035); filter:brightness(1.5) drop-shadow(0 0 16px rgba(52,211,153,.8)); }
+        }
+        .hero-guard   { animation:hero-guard   520ms ease-out !important; }
+        .hero-channel { animation:hero-channel 760ms ease-in-out !important; }
+
+        /* Going down. Holds on the last frame: the loser stays on the floor. */
+        @keyframes hero-die {
+            0%   { transform:translateY(0)    rotate(0deg)    scale(1);   opacity:1;   filter:none; }
+            22%  { transform:translateY(-5px) rotate(1deg)    scale(1.02); opacity:1;  filter:brightness(2.1) saturate(.3); }
+            100% { transform:translateY(16px) rotate(-15deg)  scale(.94);  opacity:.14; filter:grayscale(1) brightness(.55); }
+        }
+        .hero-dead { animation:hero-die 900ms cubic-bezier(.4,0,.7,1) forwards !important; }
+
+        /* Players who ask for less motion keep the numbers, lose the motion.
+           The death pose is kept: it is information, not decoration - it is how
+           you can see at a glance which figure is the one that fell. */
         @media (prefers-reduced-motion: reduce) {
             .fx-bolt, .fx-shard, .fx-mote, .fx-flash, .fx-shaking,
             .fx-lunge-down, .fx-lunge-up { animation:none !important; opacity:0 !important; }
             .fx-num { animation-duration:700ms; }
+            .hero-idle, .hero-cast-up, .hero-cast-down, .hero-hurt-down,
+            .hero-hurt-up, .hero-guard, .hero-channel { animation:none !important; }
+            .hero-dead { animation:hero-die 1ms linear forwards !important; }
         }
     </style>
 </head>
@@ -647,9 +762,9 @@
                         <span class="text-orange-400">Poison/Burn: <strong id="fs-enemy-poison">0</strong></span>
                     </div>
                 </div>
-                <div id="fs-enemy-sprite" class="w-20 h-20 animate-float bg-gradient-to-br from-yellow-950 to-slate-950 border-2 border-yellow-500/50 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.2)] p-1">
-                    <img id="fs-enemy-img-el" alt="Opponent Champion" class="w-12 h-12 object-cover rounded-xl shadow-lg">
-                    <span id="fs-enemy-name-label" class="font-cinzel text-[9px] font-bold text-amber-300 mt-0.5">OPPONENT</span>
+                <div id="fs-enemy-sprite" class="hero-figure">
+                    <img id="fs-enemy-img-el" alt="Opponent Champion" class="hero-body hero-idle is-enemy">
+                    <span id="fs-enemy-name-label" class="hero-nameplate">OPPONENT</span>
                 </div>
             </div>
 
@@ -660,9 +775,9 @@
 
             <!-- Player Stage Area (Bottom) -->
             <div class="flex flex-col items-center space-y-1 z-10">
-                <div id="fs-player-sprite" class="w-20 h-20 animate-float bg-gradient-to-br from-red-950 to-slate-950 border-2 border-red-500/50 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.2)] p-1">
-                    <img id="fs-player-img-el" alt="Pyra" class="w-12 h-12 object-cover rounded-xl shadow-lg mb-0.5">
-                    <span id="fs-player-avatar-username" class="font-cinzel text-[9px] font-bold text-amber-300 uppercase truncate">PLAYER</span>
+                <div id="fs-player-sprite" class="hero-figure">
+                    <img id="fs-player-img-el" alt="Your Champion" class="hero-body hero-idle">
+                    <span id="fs-player-avatar-username" class="hero-nameplate">PLAYER</span>
                 </div>
                 <div class="w-full max-w-xs bg-slate-950/90 border border-blue-900/50 rounded-xl p-2 space-y-1 shadow-lg backdrop-blur">
                     <div class="flex justify-between text-[10px] font-bold">
@@ -1704,8 +1819,8 @@
             if (!container) return;
             container.innerHTML = starterHeroes.map(h => `
                 <div onclick="window.chooseStarterHero('${h.id}')" class="bg-slate-900 border border-slate-800 hover:border-amber-500 rounded-2xl p-4 cursor-pointer card-hover flex items-center space-x-3.5">
-                    <div class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-xl">
-                        <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
+                    <div class="w-16 h-24 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-end justify-center p-1 shadow-xl">
+                        ${heroPortraitHtml(h)}
                     </div>
                     <div class="flex-1 min-w-0">
                         <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">${h.role}</span>
@@ -1743,14 +1858,44 @@
             if (withdrawName) withdrawName.value = currentUser.name || '';
         }
 
+        // Full-body art lives in body-<id>.png, dropped in per hero as it is
+        // drawn. A hero without one yet must not show a broken image, so the
+        // first load failure swaps in the square icon and tags the element for
+        // the framed fallback styling. onerror is cleared before reassigning so
+        // a missing icon cannot loop.
+        function heroBodySrc(hero) { return 'body-' + hero.id + '.png'; }
+
+        function setHeroArt(img, hero) {
+            if (!img || !hero) return;
+            img.onerror = null;
+            img.classList.remove('hero-body-fallback');
+            img.alt = hero.name;
+            img.onerror = function () {
+                this.onerror = null;
+                this.classList.add('hero-body-fallback');
+                this.src = hero.iconImg;
+            };
+            img.src = heroBodySrc(hero);
+        }
+
+        // These cards are built as HTML strings, so the fallback has to be an
+        // inline handler rather than an assigned one. Same rule as setHeroArt:
+        // one failure, swap to the icon, mark it, then stop trying.
+        function heroPortraitHtml(hero) {
+            return `<img src="${heroBodySrc(hero)}" alt="${hero.name}" class="hero-portrait"`
+                 + ` onerror="this.onerror=null;this.classList.add('hero-portrait-fallback');`
+                 + `this.src='${hero.iconImg}';">`;
+        }
+
         function setActiveHeroUI(heroId) {
             const hero = heroes.find(h => h.id === heroId) || heroes[0];
             const activeName = document.getElementById('active-hero-name');
             const activeImg = document.getElementById('active-hero-img-el');
             const fsPlayerImg = document.getElementById('fs-player-img-el');
             if (activeName) activeName.innerText = hero.name;
+            // The hub badge stays an icon; the arena figure is full body.
             if (activeImg) activeImg.src = hero.iconImg;
-            if (fsPlayerImg) fsPlayerImg.src = hero.iconImg;
+            setHeroArt(fsPlayerImg, hero);
         }
 
         async function switchTab(tabName) {
@@ -2486,8 +2631,8 @@
                 return `
                     <div class="bg-slate-900 border ${isActive ? 'border-amber-500 shadow-[0_0_20px_rgba(234,179,8,0.3)]' : 'border-slate-800'} rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 card-hover">
                         <div class="flex items-center space-x-3 w-full sm:w-auto">
-                            <div class="w-14 h-14 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-center justify-center p-1 shadow-lg">
-                                <img src="${h.iconImg}" alt="${h.name}" class="w-full h-full object-cover rounded-lg">
+                            <div class="w-16 h-24 rounded-xl overflow-hidden fantasy-frame flex-shrink-0 bg-gradient-to-br ${h.bg} border ${h.border} flex items-end justify-center p-1 shadow-lg">
+                                ${heroPortraitHtml(h)}
                             </div>
                             <div>
                                 <div class="flex items-center space-x-2">
@@ -2851,7 +2996,9 @@
 
             if (fsEnemyName) fsEnemyName.innerText = name;
             if (fsEnemyLabel) fsEnemyLabel.innerText = name;
-            if (fsEnemyImg) fsEnemyImg.src = enemyHero.iconImg;
+            setHeroArt(fsEnemyImg, enemyHero);
+            // The previous duel may have left a figure face down.
+            heroResetFigures();
             if (fsBetBadge) fsBetBadge.innerText = `Bet: ₱${currentDuelBet}`;
 
             const viewFullscreen = document.getElementById('view-duel-fullscreen');
@@ -2881,6 +3028,13 @@
             set('fs-enemy-hp-text', `${duelState.enemyHp}/${maxE}`);
             set('fs-enemy-armor', duelState.enemyArmor);
             set('fs-enemy-poison', duelState.enemyPoison);
+
+            // Whoever is on zero goes down. Driven off the HP the server
+            // reported rather than off the card that was played, so a hero
+            // finished by burn between turns falls too. heroDie only adds a
+            // class, so repeating it while the board re-renders is harmless.
+            if (duelState.playerHp <= 0) heroDie(true);
+            if (duelState.enemyHp  <= 0) heroDie(false);
 
             if (duelState.log) set('fs-battle-log', `[Arena]: ${duelState.log}`);
 
@@ -3419,6 +3573,72 @@
         }
 
         // Plays one skill. `deltas` carries the real numbers the server applied.
+        // A pose is a one-shot class on the figure's <img>. Idle comes off for
+        // the duration, or the two animations fight over `transform` and the
+        // pose gets swallowed; it goes back on when the pose ends. The FX
+        // system animates the sprite CONTAINER, so neither ever collides.
+        const HERO_POSES = ['hero-cast-up', 'hero-cast-down', 'hero-hurt-up',
+                            'hero-hurt-down', 'hero-guard', 'hero-channel'];
+
+        function heroFigure(isPlayer) {
+            return document.getElementById(isPlayer ? 'fs-player-img-el' : 'fs-enemy-img-el');
+        }
+
+        function heroPose(isPlayer, pose) {
+            const img = heroFigure(isPlayer);
+            // A hero who has fallen stays fallen; nothing re-poses them.
+            if (!img || img.classList.contains('hero-dead')) return;
+            HERO_POSES.forEach(c => img.classList.remove(c));
+            img.classList.remove('hero-idle');
+            // Reading offsetWidth forces the style flush that lets the same
+            // pose play twice in a row instead of being treated as unchanged.
+            void img.offsetWidth;
+            img.classList.add(pose);
+            const done = (e) => {
+                if (e && e.target !== img) return;
+                img.removeEventListener('animationend', done);
+                img.classList.remove(pose);
+                if (!img.classList.contains('hero-dead')) img.classList.add('hero-idle');
+            };
+            img.addEventListener('animationend', done);
+            // Belt and braces: if the animation never fires an end event (a
+            // backgrounded tab, reduced motion) the figure must not be left
+            // frozen mid-pose with no idle.
+            setTimeout(() => done(null), 1200);
+        }
+
+        // Casting away from yourself: the player stands at the bottom of the
+        // stage and strikes upward, the opponent mirrors it.
+        function heroCast(isPlayer, type) {
+            if (type === 'defend')   return heroPose(isPlayer, 'hero-guard');
+            if (type === 'heal')     return heroPose(isPlayer, 'hero-channel');
+            heroPose(isPlayer, isPlayer ? 'hero-cast-up' : 'hero-cast-down');
+        }
+
+        // Knocked away from whoever threw it.
+        function heroHurt(isPlayer) {
+            heroPose(isPlayer, isPlayer ? 'hero-hurt-down' : 'hero-hurt-up');
+        }
+
+        function heroDie(isPlayer) {
+            const img = heroFigure(isPlayer);
+            if (!img) return;
+            HERO_POSES.forEach(c => img.classList.remove(c));
+            img.classList.remove('hero-idle');
+            img.classList.add('hero-dead');
+        }
+
+        // Both figures back on their feet for a fresh duel.
+        function heroResetFigures() {
+            [true, false].forEach((isPlayer) => {
+                const img = heroFigure(isPlayer);
+                if (!img) return;
+                HERO_POSES.forEach(c => img.classList.remove(c));
+                img.classList.remove('hero-dead');
+                img.classList.add('hero-idle');
+            });
+        }
+
         function playSkillFx(opts) {
             const { type, color, ultimate, fromPlayer, deltas } = opts;
             const tint = fxColor(color);
@@ -3433,6 +3653,7 @@
 
             // Self-targeted effects: no projectile, the glow stays on the caster.
             if (type === 'defend' || type === 'heal') {
+                heroCast(fromPlayer, type);
                 const c = fxCenter(caster, layer);
                 if (c) {
                     if (type === 'defend') {
@@ -3459,12 +3680,14 @@
                         fxImpact(target, tint, ultimate);
                         fxNumber(target, `-${deltas.damage}`, tint, ultimate);
                         fxShake(ultimate ? 14 : 8);
+                        heroHurt(!fromPlayer);
                     }, fxProjectile(caster, target, tint, ultimate));
                 }
                 return;
             }
 
             // Offensive effects travel to the target and land.
+            heroCast(fromPlayer, type);
             fxLunge(caster, fromPlayer);
             const travel = fxProjectile(caster, target, tint, ultimate);
 
@@ -3472,6 +3695,7 @@
                 SFX.play(type === 'poison' ? 'poison' : (type === 'debuff' ? 'debuff' : 'strike'), ultimate);
                 fxImpact(target, tint, ultimate);
                 fxShake(ultimate ? 18 : (type === 'debuff' ? 13 : 9));
+                heroHurt(!fromPlayer);
 
                 if (deltas.damage > 0) {
                     fxNumber(target, `-${deltas.damage}`, tint, ultimate || deltas.damage >= 60);
