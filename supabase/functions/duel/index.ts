@@ -213,6 +213,29 @@ interface PvpState {
 const seatOf = (s: PvpState, uid: string): "a" | "b" | null =>
   s.a.userId === uid ? "a" : s.b.userId === uid ? "b" : null;
 
+// The final board plus the viewer's own outcome, read back from the row. Both
+// the loser polling a duel that ended on the opponent's turn and the request
+// that loses a settle race need exactly this, so it lives in one place.
+// deno-lint-ignore no-explicit-any
+async function settledPvpView(sb: any, duelId: string, uid: string) {
+  const { data: row } = await sb.from("duel_sessions")
+    .select("id, stake, result, payout, seq, state").eq("id", duelId).maybeSingle();
+  if (!row) return null;
+  const fin = row.state as PvpState;
+  if (!seatOf(fin, uid)) return null;
+  const iWon = String(row.result ?? "").replace("WINNER:", "") === uid;
+  const paid = Number(row.payout ?? 0);
+  const st = Number(row.stake);
+  return {
+    ...pvpPublicState(fin, row.id, row.seq, st, uid),
+    finished: true,
+    result: iWon ? "VICTORY" : "DEFEAT",
+    byOpponent: !iWon,
+    payout: iWon ? paid : 0,
+    netGain: iWon ? paid - st : -st,
+  };
+}
+
 function pvpPublicState(s: PvpState, duelId: string, seq: number, stake: number, uid: string) {
   const seat = seatOf(s, uid);
   const me  = seat === "b" ? s.b : s.a;
@@ -248,11 +271,16 @@ async function settlePvp(sb: any, duel: any, winnerSeat: "a" | "b", reason: stri
   const winner = winnerSeat === "a" ? s.a : s.b;
   const loser  = winnerSeat === "a" ? s.b : s.a;
 
-  const { data: upd } = await sb.from("duel_sessions")
+  const { data: upd, error: updErr } = await sb.from("duel_sessions")
     .update({ status: "settled", result: `WINNER:${winner.userId}`, payout,
               settled_at: new Date().toISOString(), state: s })
     .eq("id", duel.id).eq("status", "active").select("id");
-  if (!upd?.length) return null;             // someone else settled it first
+
+  // A write that FAILED must never be reported to the player as a win: that is
+  // how a duel ends with both stakes taken and nobody paid. Only "no rows" is
+  // benign - it means another request settled this duel a moment earlier.
+  if (updErr) throw new Error(`PvP settle write failed: ${updErr.message}`);
+  if (!upd?.length) return null;
 
   const { data: bal } = await sb.rpc("apply_wallet_delta", {
     p_user_id: winner.userId, p_delta: payout,
@@ -543,7 +571,20 @@ Deno.serve(async (req: Request) => {
     .or(`user_id.eq.${uid},opponent_user_id.eq.${uid}`).maybeSingle();
 
   if (!duel) return json({ error: "Duel not found" }, 404);
-  if (duel.status !== "active") return json({ error: "Duel already finished" }, 409);
+
+  // A settled PvP duel still has one player waiting on it: the loser is
+  // polling getState when their opponent lands the killing blow, and the duel
+  // is no longer active by the time that poll arrives. Hand them the final
+  // board and the result instead of "already finished", or they would sit in
+  // the arena forever never learning they lost.
+  if (duel.status !== "active") {
+    if (duel.mode === "pvp" && (action === "getState" || action === "start")) {
+      const view = await settledPvpView(sb, duel.id, uid);
+      if (view) return json(view);
+      return json({ error: "Not your duel" }, 403);
+    }
+    return json({ error: "Duel already finished" }, 409);
+  }
 
   const stake = Number(duel.stake);
 
@@ -563,8 +604,11 @@ Deno.serve(async (req: Request) => {
 
     if (action === "surrender") {
       const out = await settlePvp(sb, duel, foeSeat, "opponent surrendered");
-      return sendState({ finished: true, result: "DEFEAT", payout: 0,
-                         netGain: -stake, ...(out ? {} : {}) });
+      if (!out) {
+        const view = await settledPvpView(sb, duel.id, uid);
+        return view ? json(view) : json({ error: "Duel already finished" }, 409);
+      }
+      return sendState({ finished: true, result: "DEFEAT", payout: 0, netGain: -stake });
     }
 
     // Acting out of turn is refused outright: the board only ever moves on
@@ -604,9 +648,13 @@ Deno.serve(async (req: Request) => {
 
       if (foe.hp <= 0) {
         const out = await settlePvp(sb, duel, seat, "opponent defeated");
+        if (!out) {
+          // Lost the race: whoever settled it first decided the outcome.
+          const view = await settledPvpView(sb, duel.id, uid);
+          return view ? json(view) : json({ error: "Duel already finished" }, 409);
+        }
         return sendState({ finished: true, result: "VICTORY",
-                           payout: out?.payout ?? 0,
-                           netGain: (out?.payout ?? 0) - stake });
+                           payout: out.payout, netGain: out.payout - stake });
       }
 
       await sb.from("duel_sessions")
@@ -627,9 +675,13 @@ Deno.serve(async (req: Request) => {
       if (foe.hp <= 0) {
         ps.log = msg;
         const out = await settlePvp(sb, duel, seat, "burn finished them");
+        if (!out) {
+          // Lost the race: whoever settled it first decided the outcome.
+          const view = await settledPvpView(sb, duel.id, uid);
+          return view ? json(view) : json({ error: "Duel already finished" }, 409);
+        }
         return sendState({ finished: true, result: "VICTORY",
-                           payout: out?.payout ?? 0,
-                           netGain: (out?.payout ?? 0) - stake });
+                           payout: out.payout, netGain: out.payout - stake });
       }
 
       ps.turn = foeSeat;

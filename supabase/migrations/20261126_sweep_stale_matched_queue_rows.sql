@@ -1,0 +1,14 @@
+-- A 'matched' matchmaking_queue row is only a mailbox: findMatch leaves it so
+-- the waiting player's next pollMatch can read the duel id, and that poll
+-- deletes it. A player who closes the tab between those two moments never
+-- collects it, and the sweep only looked at 'waiting' and 'matching', so the
+-- row stayed forever. This adds the third case to expire_stale_duels.
+--
+-- The full function body lives in the database; this records the clause added:
+--
+--   delete from public.matchmaking_queue
+--    where status = 'matched'
+--      and ( created_at < now() - interval '10 minutes'
+--         or user_id is null
+--         or not exists (select 1 from public.profiles p
+--                         where p.user_id = matchmaking_queue.user_id) );

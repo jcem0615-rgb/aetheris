@@ -233,3 +233,55 @@ for display only, and the server's copy is what actually applies.
 Schema, RLS policies and the SQL functions above exist **only in the Supabase
 project** — they are not in this repo. `supabase db pull` will write them into
 `supabase/migrations/` if you want them versioned alongside the code.
+
+## Player versus player duels
+
+A PvP duel is one `duel_sessions` row with `mode = 'pvp'`, shared by two
+players: `user_id` is seat **a**, `opponent_user_id` is seat **b**, and
+`turn_user_id` is whoever is on the clock. The stored state belongs to nobody's
+point of view - two symmetric seats plus whose turn it is - and each request is
+answered from the caller's own seat using the same field names a bot duel
+sends, so the page renders either kind without knowing the difference.
+
+**A player is only ever sent their own hand.** The opponent's cards are
+reported as a count, never as ids.
+
+### The money
+
+| event | who pays | who is paid |
+|---|---|---|
+| waiting in the queue | nobody | - |
+| pairing | both players, one stake each | - |
+| a player is defeated | - | winner gets `stake x 2 x 0.95` |
+| a player surrenders | - | the other gets `stake x 2 x 0.95` |
+| a player abandons (2 min) | - | the side NOT on the clock gets the same |
+
+Nothing is staked while a player waits, so a long search never locks up money.
+Both debits happen at the moment a pair is formed, after the duel row inserts -
+it is cheaper to undo an insert than to refund two debits, and the
+one-active-duel guard on that insert is what stops either side being pulled
+into two duels at once.
+
+The house keeps `stake x 2 x 0.05` of every pot. Unlike a bot duel, the losing
+stake is another player's rather than the house's, so PvP volume carries no
+variance for the owner at all: the rake is collected whoever wins.
+
+### Settling
+
+`duel_sessions.result` holds `WINNER:<uuid>` for a PvP duel, not `VICTORY` or
+`DEFEAT` - the row is shared, so the outcome has to name a player. Per-player
+`VICTORY`/`DEFEAT` rows go into `battle_history`, which is what the client and
+the owner's reports read.
+
+Two rules that cost real money when they were broken:
+
+- **A settle that fails must never be reported as a win.** `settlePvp` raises
+  on a write error and only treats "no rows updated" as benign, because that
+  one means another request settled the duel a moment earlier. Reading only
+  `data` and ignoring `error` once left a duel active with both stakes taken
+  and nobody paid.
+- **A settled PvP duel must still answer the loser.** Their client is polling
+  `getState` when the opponent lands the killing blow, so by the time the poll
+  arrives the duel is no longer active. It returns the final board and the
+  result rather than "already finished", or the loser sits in the arena never
+  learning they lost.
