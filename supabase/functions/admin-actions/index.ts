@@ -182,10 +182,15 @@ Deno.serve(async (req: Request) => {
 
     const uid = target.user_id;
     if (uid) {
-      for (const t of ["wallet_ledger", "battle_history", "duel_sessions", "topup_requests",
+      for (const t of ["wallet_ledger", "battle_history", "topup_requests",
                        "withdrawal_requests", "balance_adjustments", "support_messages"]) {
         await sb.from(t).delete().eq("user_id", uid);
       }
+      // A PvP duel holds two players, and this one may be either of them.
+      // Matching on user_id alone left the opponent's duels behind, pointing
+      // at a profile that no longer exists.
+      await sb.from("duel_sessions").delete()
+        .or(`user_id.eq.${uid},opponent_user_id.eq.${uid}`);
     }
     for (const t of ["pending_registrations", "registrations", "players", "topups",
                      "withdrawals", "resets", "support_chats"]) {
