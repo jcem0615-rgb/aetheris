@@ -21,6 +21,31 @@ function json(body: unknown, status = 200) {
 
 const db = () => createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
+// A request is claimed by flipping it out of 'pending' first, which is what
+// makes approving the same one twice impossible. But if the wallet move then
+// fails - an over-balance withdrawal being the obvious case - the row was left
+// reading 'approved' with no money behind it, and the owner's history showed a
+// payout that never happened. Anyone working from that list to decide what to
+// send by GCash would send it.
+//
+// The claim is released again on failure, putting the request back in the
+// queue exactly as it was.
+// deno-lint-ignore no-explicit-any
+async function releaseClaim(sb: any, table: string, id: number,
+    audit: (what: string, detail: string) => unknown) {
+  const { error } = await sb.from(table)
+    .update({ status: "pending", decided_at: null, decided_by: null })
+    .eq("id", id);
+  if (error) {
+    // The row is now wrong and cannot be put right automatically. Say so
+    // loudly rather than leaving it to be found by accident.
+    await audit("Request Stuck",
+      `${table} #${id} reads decided but the wallet did not move, and it could ` +
+      `not be returned to pending (${error.message}). Fix this row by hand.`);
+  }
+  return !error;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -80,7 +105,10 @@ Deno.serve(async (req: Request) => {
         p_reason: `Top-Up approved (Ref: ${row.ref})`,
         p_type: "CREDIT",
       });
-      if (error) return json({ error: error.message }, 400);
+      if (error) {
+        const freed = await releaseClaim(sb, "topup_requests", row.id, audit);
+        return json({ error: error.message, requestReturnedToQueue: freed }, 400);
+      }
       balance = bal?.[0]?.post_balance;
     }
 
@@ -116,7 +144,13 @@ Deno.serve(async (req: Request) => {
         p_reason: `Withdrawal approved (${row.method} – ${row.account})`,
         p_type: "DEBIT",
       });
-      if (error) return json({ error: error.message }, 400);
+      if (error) {
+        const freed = await releaseClaim(sb, "withdrawal_requests", row.id, audit);
+        await audit("Withdrawal Not Paid",
+          `${row.email}: ₱${row.amount} could not be paid (${error.message}). ` +
+          `Nothing was sent and nothing left the wallet.`);
+        return json({ error: error.message, requestReturnedToQueue: freed }, 400);
+      }
       balance = bal?.[0]?.post_balance;
     }
 
