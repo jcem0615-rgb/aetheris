@@ -553,11 +553,18 @@
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                     <h2 class="font-cinzel text-base font-bold text-amber-400">OWNER ADMIN PORTAL</h2>
-                    <div class="space-x-2">
+                    <div class="flex items-center space-x-2">
+                        <span id="owner-live-dot" class="text-[10px] text-slate-500 font-bold">○ Offline</span>
                         <button onclick="window.forceSyncOwnerPortal()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg shadow">Force Sync Data</button>
                         <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">Verified Boss</span>
                     </div>
                 </div>
+
+                <!-- Fires when a request arrives while the owner is looking at
+                     something else on this screen. Browser notifications only
+                     show when the tab is in the background, so this covers the
+                     case where it is not. -->
+                <div id="owner-live-banner" class="hidden bg-emerald-600/15 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold rounded-xl px-3 py-2"></div>
 
                 <!-- EARNINGS: what the arena made, and what it still owes -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/40 space-y-2.5">
@@ -1583,10 +1590,24 @@
             cloudSet('audit_logs', systemAuditLogs);
         }
 
+        // cloudSet() fires this on every cached write, and renderOwnerQueues()
+        // does a great many cached writes while it loads. Calling it from here
+        // was a feedback loop: render -> load -> cloudSet -> event -> render.
+        // It converged only because the data stopped changing, after about
+        // eighteen rounds and 267 requests, taking 32 seconds to settle.
+        //
+        // The event now only coalesces into ONE refresh, and the guard inside
+        // renderOwnerQueues stops a refresh that is already running from
+        // starting another.
+        let ownerRefreshTimer = null;
         window.addEventListener('aetheris_data_updated', () => {
             const ownerView = document.getElementById('view-owner');
             if (ownerView && !ownerView.classList.contains('hidden')) {
-                renderOwnerQueues();
+                if (ownerRefreshTimer) clearTimeout(ownerRefreshTimer);
+                ownerRefreshTimer = setTimeout(() => {
+                    ownerRefreshTimer = null;
+                    renderOwnerQueues();
+                }, 400);
             }
             updateWalletDisplay();
             updateMerchantPaymentDisplay();
@@ -2009,6 +2030,7 @@
             } else if (tabName === 'owner') {
                 const own = document.getElementById('view-owner');
                 if (own) own.classList.remove('hidden');
+                startOwnerRealtime();
                 if (btnOwner) { btnOwner.classList.add('bg-blue-600', 'text-white'); btnOwner.classList.remove('text-slate-400'); }
                 await loadAllCloudState();
                 renderOwnerQueues();
@@ -2460,6 +2482,9 @@
         window.completePasswordRecovery = completePasswordRecovery;
 
         async function logoutPlayer() {
+            // A shared device must not keep streaming the owner's queues to
+            // whoever signs in next.
+            stopOwnerRealtime();
             MUSIC.stop();
             if (supabaseClient) {
                 try { await supabaseClient.auth.signOut(); } catch (e) {}
@@ -3969,16 +3994,138 @@
         }
         window.loadEarnings = loadEarnings;
 
+        // ---- live owner queues ------------------------------------------
+        // The owner used to have to reload the page to see a new request. These
+        // subscriptions push the change instead. Realtime applies RLS to every
+        // subscriber, so these only ever reach an admin.
+        //
+        // The handler does NOT trust the payload: it re-reads the queue from
+        // the database. A row arriving over a socket is a hint that something
+        // changed, not a source of truth about money.
+        let ownerRealtimeChannel = null;
+
+        function ownerNotify(title, body) {
+            try {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification(title, { body, tag: 'aetheris-owner' });
+                }
+            } catch (e) { /* notifications are a nicety, never a dependency */ }
+            const banner = document.getElementById('owner-live-banner');
+            if (banner) {
+                banner.innerText = `\u25cf ${title} \u2014 ${body}`;
+                banner.classList.remove('hidden');
+                clearTimeout(banner._hideTimer);
+                banner._hideTimer = setTimeout(() => banner.classList.add('hidden'), 12000);
+            }
+        }
+
+        function startOwnerRealtime() {
+            if (!supabaseClient || ownerRealtimeChannel) return;
+
+            const peso = (v) => '\u20b1' + Number(v || 0).toLocaleString('en-PH',
+                { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const refresh = () => {
+                const ownerView = document.getElementById('view-owner');
+                if (ownerView && !ownerView.classList.contains('hidden')) renderOwnerQueues();
+            };
+
+            ownerRealtimeChannel = supabaseClient.channel('owner-queues')
+                .on('postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'topup_requests' },
+                    (p) => {
+                        const r = p.new || {};
+                        ownerNotify('New top-up request',
+                            `${r.nickname || r.email || 'A player'} \u2014 ${peso(r.amount)}`);
+                        refresh();
+                    })
+                .on('postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'withdrawal_requests' },
+                    (p) => {
+                        const r = p.new || {};
+                        ownerNotify('New withdrawal request',
+                            `${r.nickname || r.email || 'A player'} \u2014 ${peso(r.amount)}`);
+                        refresh();
+                    })
+                .on('postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'resets' },
+                    (p) => {
+                        const r = p.new || {};
+                        ownerNotify('Password reset requested', r.email || 'A player');
+                        refresh();
+                    })
+                .on('postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'profiles' },
+                    (p) => {
+                        const r = p.new || {};
+                        // Every signup inserts a profile; only the ones still
+                        // waiting on the owner are worth interrupting them for.
+                        if (r.approved) return;
+                        ownerNotify('New registration', r.nickname || r.email || 'A new player');
+                        refresh();
+                    })
+                // A request being decided, or an account approved, removes it
+                // from a queue. Refresh quietly - the owner did that themselves.
+                .on('postgres_changes',
+                    { event: 'UPDATE', schema: 'public', table: 'topup_requests' }, refresh)
+                .on('postgres_changes',
+                    { event: 'UPDATE', schema: 'public', table: 'withdrawal_requests' }, refresh)
+                .on('postgres_changes',
+                    { event: 'UPDATE', schema: 'public', table: 'profiles' }, refresh)
+                .on('postgres_changes',
+                    { event: 'DELETE', schema: 'public', table: 'resets' }, refresh)
+                .subscribe((status) => {
+                    const dot = document.getElementById('owner-live-dot');
+                    if (!dot) return;
+                    const live = status === 'SUBSCRIBED';
+                    dot.innerText = live ? '\u25cf Live' : '\u25cb Offline';
+                    dot.className = live
+                        ? 'text-[10px] text-emerald-400 font-bold'
+                        : 'text-[10px] text-slate-500 font-bold';
+                });
+        }
+
+        function stopOwnerRealtime() {
+            if (ownerRealtimeChannel && supabaseClient) {
+                supabaseClient.removeChannel(ownerRealtimeChannel);
+            }
+            ownerRealtimeChannel = null;
+        }
+
+        // Only one refresh at a time. Without this, every cached write during a
+        // load kicked off another full refresh on top of the one still running.
+        let ownerRefreshRunning = false;
+        let ownerRefreshAgain = false;
+
         async function renderOwnerQueues() {
+            if (ownerRefreshRunning) { ownerRefreshAgain = true; return; }
+            ownerRefreshRunning = true;
+            try {
+                await renderOwnerQueuesInner();
+            } finally {
+                ownerRefreshRunning = false;
+                // Something asked for a refresh while this one was in flight,
+                // so the screen may be a step behind. Run exactly once more.
+                if (ownerRefreshAgain) {
+                    ownerRefreshAgain = false;
+                    setTimeout(() => renderOwnerQueues(), 0);
+                }
+            }
+        }
+
+        async function renderOwnerQueuesInner() {
+            // syncAllRegisteredPlayers and loadOwnerHistory hit different
+            // tables, so they go together rather than one after the other.
+            // loadAllCloudState() already calls syncAllRegisteredPlayers, and
+            // this used to call it a second time, then loadOwnerHistory a
+            // third pass later - three round trips for two tables' worth of
+            // data.
+            //
+            // loadOwnerHistory must finish BEFORE anything is drawn:
+            // loadAllCloudState fills walletTransactionLedger from
+            // localStorage, which is empty in a browser that has not been here
+            // before, and loadOwnerHistory is what reads the real table.
             await loadAllCloudState();
-            await syncAllRegisteredPlayers(true);
-            // Must come BEFORE anything is drawn. loadAllCloudState() above
-            // fills walletTransactionLedger from localStorage, which is empty
-            // in a browser that has not been here before; loadOwnerHistory()
-            // is what reads the real table. It used to run near the end of
-            // this function, 29 lines after the master ledger was rendered,
-            // so the owner's audit trail drew the stale value every time and
-            // only showed anything on a second visit.
             await loadOwnerHistory();
             loadEarnings();
 
@@ -4555,26 +4702,32 @@
             return row;
         }
 
+        // Five tables, none of which depends on another, so they are fetched
+        // together rather than one after the next. Sequentially this was five
+        // round trips of ~300ms each before the portal could draw anything.
         async function loadOwnerHistory() {
             const filterDate = getOwnerFilterDate();
+            const onDate = (q) => filterDate ? q.eq('date', filterDate) : q;
 
-            const dep = await remote(c => {
-                let q = c.from('topup_requests')
+            const [dep, wit, adj, battles, ledger] = await Promise.all([
+                remote(c => onDate(c.from('topup_requests')
                     .select('id, email, nickname, amount, ref, method, status, decided_at, decided_by, date')
                     .neq('status', 'pending')
-                    .order('decided_at', { ascending: false }).limit(200);
-                if (filterDate) q = q.eq('date', filterDate);
-                return q;
-            });
-
-            const wit = await remote(c => {
-                let q = c.from('withdrawal_requests')
+                    .order('decided_at', { ascending: false }).limit(200))),
+                remote(c => onDate(c.from('withdrawal_requests')
                     .select('id, email, nickname, amount, method, account, status, decided_at, decided_by, date')
                     .neq('status', 'pending')
-                    .order('decided_at', { ascending: false }).limit(200);
-                if (filterDate) q = q.eq('date', filterDate);
-                return q;
-            });
+                    .order('decided_at', { ascending: false }).limit(200))),
+                remote(c => onDate(c.from('balance_adjustments')
+                    .select('email, nickname, amount, pre_balance, post_balance, actor, date, time')
+                    .order('created_at', { ascending: false }).limit(200))),
+                remote(c => onDate(c.from('battle_history')
+                    .select('player_email, player_name, opponent, result, bet, pre_balance, post_balance, date, time')
+                    .order('created_at', { ascending: false }).limit(200))),
+                remote(c => onDate(c.from('wallet_ledger')
+                    .select('email, nickname, type, amount, pre_balance, post_balance, reason, date, time')
+                    .order('id', { ascending: false }).limit(300))),
+            ]);
 
             const toRow = r => Object.assign({}, r, {
                 date: r.date || (r.decided_at || '').split('T')[0],
@@ -4584,37 +4737,13 @@
 
             depositHistory  = (dep || []).map(toRow);
             withdrawHistory = (wit || []).map(toRow);
-
-            const adj = await remote(c => {
-                let q = c.from('balance_adjustments')
-                    .select('email, nickname, amount, pre_balance, post_balance, actor, date, time')
-                    .order('created_at', { ascending: false }).limit(200);
-                if (filterDate) q = q.eq('date', filterDate);
-                return q;
-            });
             balanceAdderHistory = (adj || []).map(a => Object.assign({}, a, {
                 preBalance: a.pre_balance, postBalance: a.post_balance
             }));
-
-            const battles = await remote(c => {
-                let q = c.from('battle_history')
-                    .select('player_email, player_name, opponent, result, bet, pre_balance, post_balance, date, time')
-                    .order('created_at', { ascending: false }).limit(200);
-                if (filterDate) q = q.eq('date', filterDate);
-                return q;
-            });
             battleHistoryLog = (battles || []).map(b => Object.assign({}, b, {
                 playerEmail: b.player_email, playerName: b.player_name,
                 preBalance: b.pre_balance, postBalance: b.post_balance
             }));
-
-            const ledger = await remote(c => {
-                let q = c.from('wallet_ledger')
-                    .select('email, nickname, type, amount, pre_balance, post_balance, reason, date, time')
-                    .order('id', { ascending: false }).limit(300);
-                if (filterDate) q = q.eq('date', filterDate);
-                return q;
-            });
             walletTransactionLedger = (ledger || []).map(t => Object.assign({}, t, {
                 preBalance: t.pre_balance, postBalance: t.post_balance
             }));
