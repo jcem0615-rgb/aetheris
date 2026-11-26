@@ -137,7 +137,10 @@ Deno.serve(async (req: Request) => {
     // a fee the owner keeps, not balance the player can wager or withdraw.
     await sb.from("profiles")
       .update(approve
-        ? { status: "active", approved: true, registration_fee: REGISTRATION_FEE }
+        // approved_at is when the fee is earned, which is not when the player
+        // signed up - the earnings report ranges on it.
+        ? { status: "active", approved: true, registration_fee: REGISTRATION_FEE,
+            approved_at: now }
         : { status: "rejected", approved: false })
       .eq("email", email);
 
@@ -212,6 +215,51 @@ Deno.serve(async (req: Request) => {
     }
 
     return json({ ok: true, email, authDeleted, balance });
+  }
+
+  // ---- what the arena earned, and what it owes -----------------------------
+  // Read-only, and admin membership was already checked at the top of this
+  // handler. owner_earnings is SECURITY DEFINER with EXECUTE revoked from
+  // every client role, so this is the only way to reach it.
+  if (action === "earnings") {
+    const from = String(body.from ?? "") || null;
+    const to   = String(body.to ?? "") || null;
+
+    const { data, error } = await sb.rpc("owner_earnings", {
+      p_from: from ?? "-infinity",
+      p_to:   to   ?? "infinity",
+    });
+    if (error) return json({ error: error.message }, 400);
+
+    const r = Array.isArray(data) ? data[0] : data;
+    if (!r) return json({ error: "No figures returned" }, 500);
+
+    const n = (v: unknown) => Number(v ?? 0);
+    return json({
+      ok: true,
+      from, to,
+      revenue: {
+        registrations: { count: n(r.reg_count),  amount: n(r.reg_revenue) },
+        duelRake:      { count: n(r.duel_count), amount: n(r.duel_rake),
+                         volume: n(r.duel_volume) },
+        shop:          { count: n(r.shop_count), amount: n(r.shop_revenue) },
+        total: n(r.period_revenue),
+      },
+      cash: {
+        depositsPeriod:    n(r.deposits_period),
+        withdrawalsPeriod: n(r.withdrawals_period),
+        depositsAll:       n(r.deposits_all),
+        withdrawalsAll:    n(r.withdrawals_all),
+        adjustmentsAll:    n(r.adjustments_all),
+        // What should be sitting in the GCash/Maya account right now.
+        expected:          n(r.cash_expected),
+        // Of that, how much belongs to players and must stay payable.
+        owedToPlayers:     n(r.player_balances),
+        earnedFromWallets: n(r.earned_from_wallets),
+        // Non-zero means money was created or lost outside the ledger.
+        discrepancy:       n(r.discrepancy),
+      },
+    });
   }
 
   // ---- freeze / unfreeze ---------------------------------------------------

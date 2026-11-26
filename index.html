@@ -559,6 +559,69 @@
                     </div>
                 </div>
 
+                <!-- EARNINGS: what the arena made, and what it still owes -->
+                <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/40 space-y-2.5">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">₱ EARNINGS</h3>
+                        <div class="flex items-center space-x-1.5 text-xs w-full sm:w-auto">
+                            <input type="date" id="earn-from" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-white">
+                            <span class="text-slate-500 text-[10px]">to</span>
+                            <input type="date" id="earn-to" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-white">
+                            <button onclick="window.loadEarnings()" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[10px] font-bold">Apply</button>
+                            <button onclick="document.getElementById('earn-from').value='';document.getElementById('earn-to').value='';window.loadEarnings();" class="px-2 py-1 bg-slate-800 text-slate-300 rounded-lg text-[10px] hover:bg-slate-700">All time</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Registrations</span>
+                            <span id="earn-reg" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                            <span id="earn-reg-sub" class="text-[9px] text-slate-500 block">0 approved</span>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Battle Fees</span>
+                            <span id="earn-rake" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                            <span id="earn-rake-sub" class="text-[9px] text-slate-500 block">0 duels</span>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Hero Shop</span>
+                            <span id="earn-shop" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                            <span id="earn-shop-sub" class="text-[9px] text-slate-500 block">0 purchases</span>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-lg border border-amber-500/40">
+                            <span class="text-[9px] text-amber-400/80 uppercase tracking-wider block">Total Earned</span>
+                            <span id="earn-total" class="text-base font-bold text-amber-400">₱0.00</span>
+                            <span class="text-[9px] text-slate-500 block">this period</span>
+                        </div>
+                    </div>
+
+                    <!-- A top-up is not earnings: it is money held for a player
+                         that must stay payable. This row is the difference. -->
+                    <div class="border-t border-slate-800 pt-2 space-y-1.5">
+                        <p class="text-[10px] text-slate-400">Cash position — a top-up is not profit, it is money you hold for a player.</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
+                                <span class="text-[9px] text-slate-400 uppercase tracking-wider block">You Should Hold</span>
+                                <span id="earn-cash" class="text-sm font-bold text-blue-400">₱0.00</span>
+                                <span class="text-[9px] text-slate-500 block">deposits less payouts</span>
+                            </div>
+                            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
+                                <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Owed To Players</span>
+                                <span id="earn-owed" class="text-sm font-bold text-red-400">₱0.00</span>
+                                <span class="text-[9px] text-slate-500 block">all wallet balances</span>
+                            </div>
+                            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
+                                <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Yours To Keep</span>
+                                <span id="earn-keep" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                                <span class="text-[9px] text-slate-500 block">from wallets, all time</span>
+                            </div>
+                        </div>
+                        <div id="earn-check" class="text-[10px] text-center py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-500">
+                            Books not yet checked.
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                         <h3 class="font-cinzel text-[11px] font-bold text-amber-400">TRANSACTION MONITORING & TOTALS</h3>
@@ -3841,9 +3904,73 @@
         }
 
         // OWNER PORTAL QUEUES & LOGS
+        // What the arena earned and what it still owes. Every figure comes from
+        // the server - the browser is never trusted to add up money - and the
+        // three revenue streams are deliberately shown apart from the cash
+        // position, because a top-up is NOT earnings: it is a liability until
+        // the player spends it or loses part of it to the fee.
+        async function loadEarnings() {
+            const peso = (v) => '\u20b1' + Number(v || 0).toLocaleString('en-PH',
+                { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+
+            const fromEl = document.getElementById('earn-from');
+            const toEl   = document.getElementById('earn-to');
+            const body = { action: 'earnings' };
+            if (fromEl && fromEl.value) body.from = fromEl.value + 'T00:00:00';
+            // Inclusive of the end date: a range of 1st to 1st must contain
+            // that whole day, not stop at midnight as it begins.
+            if (toEl && toEl.value) body.to = toEl.value + 'T23:59:59.999';
+
+            const check = document.getElementById('earn-check');
+            if (check) {
+                check.innerText = 'Loading...';
+                check.className = 'text-[10px] text-center py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-500';
+            }
+
+            const res = await callFunction('admin-actions', body);
+            if (res.error || !res.data) {
+                if (check) {
+                    check.innerText = res.error || 'Could not load earnings.';
+                    check.className = 'text-[10px] text-center py-1 rounded-lg bg-red-600/10 border border-red-500/30 text-red-400';
+                }
+                return;
+            }
+
+            const r = res.data.revenue, c = res.data.cash;
+            set('earn-reg', peso(r.registrations.amount));
+            set('earn-reg-sub', `${r.registrations.count} approved`);
+            set('earn-rake', peso(r.duelRake.amount));
+            set('earn-rake-sub', `${r.duelRake.count} duels \u00b7 ${peso(r.duelRake.volume)} wagered`);
+            set('earn-shop', peso(r.shop.amount));
+            set('earn-shop-sub', `${r.shop.count} purchases`);
+            set('earn-total', peso(r.total));
+
+            set('earn-cash', peso(c.expected));
+            set('earn-owed', peso(c.owedToPlayers));
+            set('earn-keep', peso(c.earnedFromWallets));
+
+            // The books either balance or they do not. Saying so plainly beats
+            // a number nobody knows how to check.
+            if (check) {
+                const off = Number(c.discrepancy || 0);
+                if (Math.abs(off) < 0.005) {
+                    check.innerText = '\u2713 Books balance: deposits less payouts equals what players hold plus what you earned.';
+                    check.className = 'text-[10px] text-center py-1 rounded-lg bg-emerald-600/10 border border-emerald-500/30 text-emerald-400';
+                } else {
+                    check.innerText = `\u26a0 Off by ${peso(Math.abs(off))}. ` +
+                        (off > 0 ? 'More cash than accounted for' : 'Less cash than accounted for') +
+                        ' \u2014 a balance was changed outside the ledger.';
+                    check.className = 'text-[10px] text-center py-1 rounded-lg bg-red-600/10 border border-red-500/30 text-red-400';
+                }
+            }
+        }
+        window.loadEarnings = loadEarnings;
+
         async function renderOwnerQueues() {
             await loadAllCloudState();
             await syncAllRegisteredPlayers(true);
+            loadEarnings();
 
             const ownerPlayersList = document.getElementById('owner-players-list');
             const ownerPlayerCount = document.getElementById('owner-player-count');
