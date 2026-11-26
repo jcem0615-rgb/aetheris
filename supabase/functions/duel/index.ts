@@ -59,6 +59,42 @@ function parseDecks(table: string): Record<string, string[]> {
 const HERO_BASE = parseDecks(BASE_TABLE);
 const HERO_SHOP = parseDecks(SHOP_TABLE);
 
+// While the bot still has its legs under it, the damage it deals is ROLLED per
+// card rather than read straight off the card, so no two battles play out the
+// same way. Below BOT_HEALTHY_HP it drops back to exact card values: a wounded
+// bot becomes predictable, which is what lets a player close out a duel on
+// plan rather than on luck.
+//
+// The roll is a multiplier on the card's OWN damage, not a flat damage band,
+// and the width is not a matter of taste. Both were measured against
+// tools/duel-sim with a no-jitter control, 8000 duels per population, three
+// runs each (the simulator's own run-to-run noise is about 3 points, so a
+// single run proves nothing):
+//
+//   flat 25-40 for every hero   player win 61-81%, house -16.6% / -54.1%
+//   the same band scaled by     player win 44-69%, house +15.8% / -30.9%
+//     hero tier                 and 4.4% of duels lost before the player moved
+//   x0.85-1.25 per card         house +7.3% / +1.7%  (shop margin down ~2.4)
+//   x0.90-1.10 per card         house +7.1% / +3.5%  (control: +6.3% / +4.1%)
+//
+// A flat band cannot work: 25-40 is about right for Pyra, whose strike does
+// 26, and guts Astral Archmage, whose strike does 60 and whose shop skills do
+// 142. Scaling the band per hero does not fix it either, because the bot also
+// holds shop cards no per-hero anchor knows about. A multiplier scales with
+// every card the bot can ever hold, and +/-10% is the widest setting that
+// leaves the house margin where it was.
+//
+// Armor is deliberately NOT rolled. Armor subtracts a FLAT amount, so moving
+// it swings the result far more than the same percentage on damage: every
+// armor band tried, in either direction and as narrow as +/-5%, cost the
+// shop-skill population about two points of margin.
+const BOT_HEALTHY_HP = 60;
+const BOT_DMG_LO = 0.90, BOT_DMG_HI = 1.10;
+
+// rnd is the crypto source already used for dealing; 1000 steps is far finer
+// than any damage number here, so the spread is effectively continuous.
+const rollFactor = (lo: number, hi: number) => lo + (hi - lo) * (rnd(1001) / 1000);
+
 const BOT_NAMES = ["Kenjie","Kenneth","Clyde","Joana","Glenda","Glenn","Mark","Jessa","Bryan","Rica","Christian","Nicole","Jomar","Kaye","Roldan"];
 
 const cors = {
@@ -146,7 +182,7 @@ function botDeckFor(enemyHeroId: string, heroId: string, owned: Record<string, b
 // and each card's real effect. It used to invent one flat number per turn,
 // so its shields and heals landed as 25-damage attacks and its own armour,
 // healing and poison were never applied at all.
-function botTurn(s: State, apBudget: number = AP_PER_TURN): string {
+function botTurn(s: State, apBudget: number = AP_PER_TURN, opening = false): string {
   const deck = s.enemyDeck ?? HERO_BASE[s.enemyHeroId] ?? HERO_BASE["pyra"];
   const hand = deal(deck);
   let ap = apBudget;
@@ -175,8 +211,16 @@ function botTurn(s: State, apBudget: number = AP_PER_TURN): string {
     hand.splice(choice.i, 1);
     msg += `${s.opponent} used ${c.name}`;
 
+    // Re-checked per card: a heal can lift the bot back over the line
+    // mid-turn, and the cards after it should follow suit.
+    const healthy = s.enemyHp > BOT_HEALTHY_HP;
+
     if (c.damage) {
-      const r = hit(c.damage, s.playerArmor);
+      const dealt = healthy
+        ? Math.max(1, Math.round(c.damage * rollFactor(BOT_DMG_LO,
+            opening ? 1.0 : BOT_DMG_HI)))
+        : c.damage;
+      const r = hit(dealt, s.playerArmor);
       s.playerArmor = r.armor;
       s.playerHp = Math.max(0, s.playerHp - r.dmg);
       msg += ` for ${r.dmg} damage`;
@@ -711,7 +755,7 @@ Deno.serve(async (req: Request) => {
       // and since most heroes can spend three AP for more than 100 damage, the
       // better opening hand simply won before the opponent acted at all.
       if (s.botFirst) {
-        const opening = botTurn(s, OPENING_AP);
+        const opening = botTurn(s, OPENING_AP, true);
         if (s.playerHp <= 0) {
           s.log = `${opening}You were struck down before you could move.`;
           await sb.from("duel_sessions")

@@ -44,7 +44,10 @@ function duel(heroId: string, owned: any) {
     botFirst: rnd(2) === 0, hand: deal(deck), turn: 1, log: ''
   };
   if (s.botFirst) {                       // the "start" action's opening swing
-    botTurn(s, OPENING_AP);
+    // Third argument matters: the engine caps the bot's opening roll so it
+    // cannot kill a full-HP player before they have taken a turn. Leaving it
+    // off measures a bot the arena does not actually ship.
+    botTurn(s, OPENING_AP, true);
     if (s.playerHp <= 0) return 'OPENING_KILL';
   }
   for (let t = 0; t < 80; t++) {
