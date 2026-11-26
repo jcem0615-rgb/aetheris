@@ -1599,16 +1599,19 @@
         // The event now only coalesces into ONE refresh, and the guard inside
         // renderOwnerQueues stops a refresh that is already running from
         // starting another.
-        let ownerRefreshTimer = null;
+        // This deliberately does NOT refresh the owner portal.
+        //
+        // cloudSet() fires this on every cached write, and renderOwnerQueues()
+        // does a great many cached writes while it loads, so refreshing from
+        // here was a feedback loop: render -> load -> cloudSet -> event ->
+        // render. It settled only once the data stopped changing, eighteen
+        // rounds and 267 requests later, taking 32 seconds. Debouncing it was
+        // not enough - each coalesced refresh still wrote, so it still rang.
+        //
+        // Nothing is lost by dropping it. The owner's queues now arrive over
+        // realtime, every approve/reject already re-renders, and Force Sync
+        // is there for anything else.
         window.addEventListener('aetheris_data_updated', () => {
-            const ownerView = document.getElementById('view-owner');
-            if (ownerView && !ownerView.classList.contains('hidden')) {
-                if (ownerRefreshTimer) clearTimeout(ownerRefreshTimer);
-                ownerRefreshTimer = setTimeout(() => {
-                    ownerRefreshTimer = null;
-                    renderOwnerQueues();
-                }, 400);
-            }
             updateWalletDisplay();
             updateMerchantPaymentDisplay();
         });
@@ -2032,7 +2035,8 @@
                 if (own) own.classList.remove('hidden');
                 startOwnerRealtime();
                 if (btnOwner) { btnOwner.classList.add('bg-blue-600', 'text-white'); btnOwner.classList.remove('text-slate-400'); }
-                await loadAllCloudState();
+                // renderOwnerQueues() loads everything itself; calling
+                // loadAllCloudState() here as well just did it twice.
                 renderOwnerQueues();
                 updateMerchantPaymentDisplay();
             }
@@ -4019,8 +4023,19 @@
             }
         }
 
-        function startOwnerRealtime() {
+        async function startOwnerRealtime() {
             if (!supabaseClient || ownerRealtimeChannel) return;
+
+            // postgres_changes on an RLS-protected table is filtered per
+            // subscriber, and the realtime socket needs the signed-in token to
+            // know who is asking. Without this it connects, reports SUBSCRIBED
+            // and silently delivers nothing.
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session?.access_token) supabaseClient.realtime.setAuth(session.access_token);
+            } catch (e) {
+                console.warn('[realtime] could not set auth', e);
+            }
 
             const peso = (v) => '\u20b1' + Number(v || 0).toLocaleString('en-PH',
                 { minimumFractionDigits: 2, maximumFractionDigits: 2 });
