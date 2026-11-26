@@ -131,7 +131,7 @@ Two more things are matched to the player at escrow and then fixed for the duel:
   Unmatched, a player holding both shop skills won about three duels in four.
 
 **Changing any of this changes the house margin, so measure it.** A win pays
-2x stake less the 5% fee, so the arena breaks even at a 52.6% player win rate
+2x stake less the 10% fee, so the arena breaks even at a 55.6% player win rate
 and loses money above it. `tools/duel-sim` exists for exactly this: it imports
 the real `botTurn`, `matchOpponentHero` and `botDeckFor` out of this file so
 the numbers cannot drift from the shipped code. Where it stands, over 12000
@@ -220,7 +220,7 @@ Two consequences worth knowing before touching a number:
 
 The tier ends are not 50% and should not be: the bottom hero never meets
 anything weaker and the top never meets anything stronger, so Pyra sits near
-43% and Astral near 53%. Both stay inside the 52.6% break-even, so no hero is
+43% and Astral near 53%. Both stay inside the 55.6% break-even, so no hero is
 profitable to farm.
 
 Card effects live in the `duel` function's own table, generated from the game
@@ -252,8 +252,8 @@ reported as a count, never as ids.
 |---|---|---|
 | waiting in the queue | nobody | - |
 | pairing | both players, one stake each | - |
-| a player is defeated | - | winner gets `stake x 2 x 0.95` |
-| a player surrenders | - | the other gets `stake x 2 x 0.95` |
+| a player is defeated | - | winner gets `stake x 2 x 0.90` |
+| a player surrenders | - | the other gets `stake x 2 x 0.90` |
 | a player abandons (2 min) | - | the side NOT on the clock gets the same |
 
 Nothing is staked while a player waits, so a long search never locks up money.

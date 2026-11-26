@@ -157,8 +157,8 @@ if (finished) {
   console.log(`     winner: ${winner.nick} after ${turns} handovers`);
   ok(finished.s.result === 'VICTORY', 'the killing blow reports VICTORY',
      finished.s.result);
-  ok(Number(finished.s.payout) === STAKE * 2 * 0.95,
-     `payout is ${STAKE * 2 * 0.95}`, String(finished.s.payout));
+  ok(Number(finished.s.payout) === STAKE * 2 * 0.90,
+     `payout is ${STAKE * 2 * 0.90}`, String(finished.s.payout));
 
   // --- 6. the loser learns they lost, not a 409 -------------------------
   console.log('\n6. the loser is told');

@@ -4,7 +4,17 @@ import { createClient } from "jsr:@supabase/supabase-js@2.49.4";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const PLATFORM_FEE = 0.05;
+// The house's cut of every settled pot, bot duel and PvP alike. A win pays
+// `stake * 2 * (1 - PLATFORM_FEE)`, so at 10% that is 1.8x and the arena
+// breaks even at a 55.6% player win rate.
+//
+// This number exists in three other places and they must move together:
+//   - public.platform_fee() in Postgres, which expire_stale_duels uses to pay
+//     out a PvP duel somebody walked away from
+//   - the wager modal and the victory message in index.html, which quote the
+//     rate to the player - if those drift the arena misstates its own price
+// tools/duel-sim/check-cards.mjs fails if the page and this disagree.
+const PLATFORM_FEE = 0.10;
 const ALLOWED_STAKES = [50, 100, 200, 500, 1000];
 const MAX_HP = 150;
 const AP_PER_TURN = 3;
@@ -83,6 +93,10 @@ const HERO_SHOP = parseDecks(SHOP_TABLE);
 // holds shop cards no per-hero anchor knows about. A multiplier scales with
 // every card the bot can ever hold, and +/-10% is the widest setting that
 // leaves the house margin where it was.
+//
+// This is the BOT's trait and the bot's alone. A player's own card always
+// deals exactly what the card says, in a bot duel and in PvP, and PvP rolls
+// nothing for either seat - player against player is a straight fight.
 //
 // Armor is deliberately NOT rolled. Armor subtracts a FLAT amount, so moving
 // it swings the result far more than the same percentage on damage: every
@@ -241,6 +255,10 @@ function botTurn(s: State, apBudget: number = AP_PER_TURN, opening = false): str
 // whose turn it is. Each player is then shown the board from their own seat
 // using the SAME field names a bot duel sends, so the page renders either kind
 // without knowing the difference. A player is only ever sent their own hand.
+//
+// Nothing here rolls a damage number. Both seats deal exactly what the card
+// says: player against player is a straight fight, and the house takes its cut
+// from the pot rather than from the odds.
 interface PvpSide {
   userId: string; nick: string; heroId: string;
   hp: number; armor: number; ap: number; poison: number;
@@ -304,7 +322,7 @@ function newSide(userId: string, nick: string, heroId: string, owned: Record<str
            deck, hand: deal(deck) };
 }
 
-// Pays the winner out of BOTH stakes, less the platform fee: the same 1.9x a
+// Pays the winner out of BOTH stakes, less the platform fee: the same 1.8x a
 // bot duel pays, except the losing stake is a real player's rather than the
 // house's. Settles once, by conditional update, however many clients ask.
 // deno-lint-ignore no-explicit-any
@@ -819,6 +837,8 @@ Deno.serve(async (req: Request) => {
     s.playerAp -= card.ap;
     let msg = `You played ${card.name}! `;
 
+    // The player's own card always deals exactly what the card says. Only the
+    // bot's output is rolled, and only in botTurn.
     if (card.damage) {
       const r = hit(card.damage, s.enemyArmor);
       s.enemyArmor = r.armor;

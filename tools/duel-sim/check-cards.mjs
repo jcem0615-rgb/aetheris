@@ -41,6 +41,24 @@ for (const id of Object.keys(client)) {
   if (!server[id]) problems.push(`${id}: in index.html, missing from the duel function`);
 }
 
+// The platform fee is quoted to the player twice on the page, and it is the
+// price of playing. If it drifts from the engine the arena misstates what it
+// charges - a player told 5% while 10% is taken has been overcharged, which
+// matters more than any card number being wrong.
+const feeM = fn.match(/const PLATFORM_FEE = ([0-9.]+)/);
+if (!feeM) {
+  problems.push('PLATFORM_FEE not found in the duel function');
+} else {
+  const pct = Math.round(Number(feeM[1]) * 100);
+  const quoted = [...html.matchAll(/(\d+)% platform fee/g)].map((m) => Number(m[1]));
+  if (!quoted.length) {
+    problems.push('the page never quotes a platform fee to the player');
+  }
+  for (const q of quoted) {
+    if (q !== pct) problems.push(`platform fee: function takes ${pct}%, page tells the player ${q}%`);
+  }
+}
+
 console.log(`checked ${Object.keys(server).length} cards in the duel function against ${Object.keys(client).length} in index.html`);
 if (problems.length) {
   console.log('\nMISMATCHES:');

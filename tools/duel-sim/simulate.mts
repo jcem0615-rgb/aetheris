@@ -2,7 +2,14 @@
 // Regenerate botlogic.ts first:  node tools/duel-sim/extract.mjs
 import * as B from './botlogic.ts';
 const { CARDS, HERO_BASE, HERO_SHOP, MAX_HP, AP_PER_TURN, deal, hit, deckFor,
-        matchOpponentHero, botDeckFor, botTurn, rnd, OPENING_AP } = B as any;
+        matchOpponentHero, botDeckFor, botTurn, rnd, OPENING_AP, PLATFORM_FEE } = B as any;
+
+// Derived, never typed in by hand. This line used to read `1 - wr*1.9` with
+// the multiplier hardcoded, so raising the platform fee moved every real
+// payout while the simulator carried on reporting the old margin - and the
+// banner above it said one thing while the arithmetic below did another.
+const PAYOUT_MULT = 2 * (1 - PLATFORM_FEE);
+const BREAKEVEN = 1 / PAYOUT_MULT;
 const HEROES = Object.keys(HERO_BASE);
 
 // A competent human: heal when badly hurt, otherwise spend AP on the hardest
@@ -77,12 +84,13 @@ function sweep(label: string, shop: boolean) {
   }
   const wr = w / N;
   console.log(`  ${label}`);
-  console.log(`     win ${(wr*100).toFixed(1)}%   house ${((1 - wr*1.9)*100).toFixed(1)}%   ` +
+  console.log(`     win ${(wr*100).toFixed(1)}%   house ${((1 - wr*PAYOUT_MULT)*100).toFixed(1)}%   ` +
               `lost before moving ${(opening/N*100).toFixed(1)}%   timeouts ${to}`);
   console.log(`     ${HEROES.map(h => `${h.split('-')[0]}:${(per[h].w/per[h].n*100).toFixed(0)}%`).join(' ')}`);
 }
 
 console.log(`\nAetheris arena, ${N} duels per population.`);
-console.log('A win pays 1.9x, so the house breaks even at a 52.6% player win rate.\n');
+console.log(`A win pays ${PAYOUT_MULT.toFixed(2)}x, so the house breaks even at a ` +
+            `${(BREAKEVEN*100).toFixed(1)}% player win rate.\n`);
 sweep('players without shop skills', false);
 sweep('players with both shop skills', true);
