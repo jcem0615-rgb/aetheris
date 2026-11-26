@@ -2690,6 +2690,11 @@
             applyServerDuelState(res.data);
             closeModal();
             startLiveDuelMatch();
+            // startLiveDuelMatch re-renders the board, which rewrites the log
+            // line from the server's text. Re-apply the turn state after it so
+            // the player who is not on the clock is told they are waiting
+            // rather than being shown the opening message.
+            updateTurnIndicator();
             pvpWatch();
         }
 
