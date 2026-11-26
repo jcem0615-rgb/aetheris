@@ -902,11 +902,11 @@
             <h3 class="font-cinzel text-base font-bold text-amber-400">SEARCHING FOR OPPONENT</h3>
             <div class="py-3 space-y-3">
                 <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p id="matchmaking-status" class="text-xs text-slate-300">Searching active player queue...</p>
+                <p id="matchmaking-status" class="text-xs text-slate-300">Looking for a player of similar strength...</p>
                 <p id="matchmaking-countdown" class="text-[11px] text-amber-400 font-bold">Elapsed time: 0s</p>
             </div>
             <div class="space-y-2">
-                <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel & Refund Wager</button>
+                <button onclick="window.cancelMatchmakingQueue()" class="w-full py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl">Cancel search</button>
             </div>
         </div>
 
@@ -1489,7 +1489,7 @@
         // 'bot' or 'pvp'. In a PvP duel the board only moves on the server's
         // say-so, so the page polls for the opponent's move instead of
         // simulating one.
-        let duelMode = 'bot';
+        let duelMode = 'pvp';
         let pvpPollTimer = null;
         let myTurn = true;
 
@@ -2562,23 +2562,18 @@
 
             await syncAllRegisteredPlayers(true);
 
-            const botEntries = [
-                { nickname: 'Kenjie', email: 'kenjie@bot.com', xp: 1250, wins: 14, status: 'active', active_hero: 'storm-knight', isBot: true },
-                { nickname: 'Kenneth', email: 'kenneth@bot.com', xp: 980, wins: 10, status: 'active', active_hero: 'sylph', isBot: true },
-                { nickname: 'Clyde', email: 'clyde@bot.com', xp: 850, wins: 8, status: 'active', active_hero: 'valen', isBot: true },
-                { nickname: 'Joana', email: 'joana@bot.com', xp: 720, wins: 7, status: 'active', active_hero: 'pyra', isBot: true },
-                { nickname: 'Glenda', email: 'glenda@bot.com', xp: 600, wins: 5, status: 'active', active_hero: 'nyx', isBot: true },
-                { nickname: 'Glenn', email: 'glenn@bot.com', xp: 450, wins: 4, status: 'active', active_hero: 'titan-1', isBot: true },
-                { nickname: 'Mark', email: 'mark@bot.com', xp: 320, wins: 3, status: 'active', active_hero: 'pyra', isBot: true },
-                { nickname: 'Rica', email: 'rica@bot.com', xp: 210, wins: 2, status: 'active', active_hero: 'sylph', isBot: true }
-            ];
+            // There were eight invented players here - names, win counts and XP
+            // that belonged to nobody - listed alongside real people. They were
+            // the house bot's roster. With the bot gone they refer to nothing
+            // at all, and a wagering board that shows made-up records to
+            // someone deciding whether to stake money was never defensible.
+            // An empty board is honest; a padded one is not.
 
             // The leaderboard view exposes nickname/wins/xp only - no email,
             // phone or wallet ever reaches another player's browser.
             const realPlayers = await remote(c => c.from('leaderboard').select('nickname, wins, xp, rank, active_hero')) || [];
 
             let combinedMap = new Map();
-            botEntries.forEach(b => combinedMap.set(b.nickname.toLowerCase(), b));
             realPlayers.forEach(p => {
                 if (p && p.nickname) combinedMap.set(p.nickname.toLowerCase(), p);
             });
@@ -2596,13 +2591,13 @@
             list.innerHTML = sortedLeaderboard.map((p, idx) => {
                 const rankName = p.rank || getRankTier(p.xp || 0, p.wins || 0);
                 const medalColor = idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-slate-300 font-bold' : idx === 2 ? 'text-amber-600 font-bold' : 'text-slate-400';
-                const isBot = !!p.isBot;
+
                 return `
                     <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                         <div class="flex items-center space-x-3">
                             <span class="${medalColor} w-6 text-center">#${idx + 1}</span>
                             <div>
-                                <span class="font-bold text-white">${p.nickname || 'Player'} ${isBot ? '<span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded ml-1 border border-slate-700">CPU</span>' : ''}</span>
+                                <span class="font-bold text-white">${p.nickname || 'Player'}</span>
                                 <span class="text-[10px] text-slate-400 block">Rank: <strong class="text-amber-400">${rankName}</strong></span>
                             </div>
                         </div>
@@ -2785,38 +2780,46 @@
             if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
             matchmakingElapsedTimer = setInterval(async () => {
                 matchmakingElapsedSeconds++;
-                const left = Math.max(0, SEARCH_SECONDS - matchmakingElapsedSeconds);
+                const secs = matchmakingElapsedSeconds;
+
+                // There is no house opponent any more, so the search does not
+                // time out into one - it keeps looking until a real player
+                // turns up or this player cancels. Nothing is staked while
+                // waiting, so waiting costs nothing but time.
                 if (countdownEl) {
-                    countdownEl.innerText = left > 0
-                        ? `Searching for an opponent... ${left}s`
-                        : 'Opponent found!';
+                    countdownEl.innerText = `Searching for an opponent... ${secs}s`;
+                }
+                const statusEl = document.getElementById('matchmaking-status');
+                if (statusEl) {
+                    // Mirrors toleranceFor() on the server, so the player can
+                    // see the net widening rather than guessing why it is slow.
+                    statusEl.innerText = secs < 20
+                        ? 'Looking for a player of similar strength...'
+                        : secs < 120
+                            ? 'Widening the search to a broader range of opponents...'
+                            : 'Accepting any available opponent at this stake...';
                 }
 
-                // Ask every other second whether someone has paired with us.
-                if (matchmakingElapsedSeconds % 2 === 0 && matchmakingElapsedSeconds < SEARCH_SECONDS) {
-                    const poll = await callFunction('duel', { action: 'pollMatch' });
-                    if (poll.data && poll.data.matched) {
+                if (secs % 2 !== 0) return;
+                const poll = await callFunction('duel', { action: 'pollMatch' });
+                if (poll.data && poll.data.matched) {
+                    clearInterval(matchmakingElapsedTimer);
+                    matchmakingElapsedTimer = null;
+                    await refreshProfile();
+                    await enterPvpDuel(poll.data, amount);
+                    return;
+                }
+                // Our queue row was swept (the server clears entries older
+                // than two minutes), so rejoin rather than wait on nothing.
+                if (poll.data && poll.data.waiting === false && !poll.data.matched) {
+                    const again = await callFunction('duel', { action: 'findMatch', stake: amount });
+                    if (again.data && again.data.matched) {
                         clearInterval(matchmakingElapsedTimer);
                         matchmakingElapsedTimer = null;
                         await refreshProfile();
-                        await enterPvpDuel(poll.data, amount);
+                        await enterPvpDuel(again.data, amount);
                     }
-                    return;
                 }
-                if (matchmakingElapsedSeconds < SEARCH_SECONDS) return;
-
-                clearInterval(matchmakingElapsedTimer);
-                matchmakingElapsedTimer = null;
-
-                // Nobody turned up. Leave the queue and take the house match.
-                await callFunction('duel', { action: 'cancelSearch' });
-                const esc = await callFunction('duel', { action: 'escrow', stake: amount });
-                if (esc.error) { closeModal(); alert(esc.error); return; }
-                activeDuelId = esc.data.duelId;
-                duelMode = 'bot';
-                currentUser.wallet = Number(esc.data.balance);
-                updateWalletDisplay();
-                await revealDuelBoard();
             }, 1000);
         }
 
@@ -2872,70 +2875,13 @@
         // Commits the wager and reveals the board. `start` is idempotent on the
         // server, so a retry after a dropped response hands back the same duel
         // rather than dealing a second hand.
-        async function revealDuelBoard() {
-            let res = await callFunction('duel', { action: 'start', duelId: activeDuelId });
-            if (res.error) {
-                await new Promise(r => setTimeout(r, 1200));
-                res = await callFunction('duel', { action: 'start', duelId: activeDuelId });
-            }
-
-            if (res.error) {
-                // The board was never handed over, so the duel is still at the
-                // search stage and the stake can be returned right away.
-                closeModal();
-                const refund = await callFunction('duel', { action: 'cancel', duelId: activeDuelId });
-                if (!refund.error && refund.data) {
-                    currentUser.wallet = Number(refund.data.balance);
-                    updateWalletDisplay();
-                    activeDuelId = null;
-                    alert(`Could not reach the arena (${res.error}). Your ₱${refund.data.refunded} wager has been refunded.`);
-                } else {
-                    alert(`Could not reach the arena (${res.error}). Your wager is held and will be refunded automatically.`);
-                }
-                return;
-            }
-
-            applyServerDuelState(res.data);
-            closeModal();
-
-            // The opponent wins the coin flip half the time and swings before
-            // the board is handed over. At the current HP pool that never ends
-            // a duel outright, but the server can still settle one here, so
-            // don't open an arena onto a match that is already over.
-            if (res.data.finished) {
-                await finishDuel(res.data);
-                return;
-            }
-
-            startLiveDuelMatch();
-        }
-
+        // Leaving the queue. No stake has been taken - the two debits happen
+        // at the moment a pair is formed - so there is nothing to refund.
         async function cancelMatchmakingQueue() {
             if (matchmakingElapsedTimer) clearInterval(matchmakingElapsedTimer);
             matchmakingElapsedTimer = null;
-            if (!activeDuelId) { closeModal(); return; }
-
-            const { data, error } = await callFunction('duel', { action: 'cancel', duelId: activeDuelId });
-            if (!error && data) {
-                closeModal();
-                currentUser.wallet = Number(data.balance);
-                updateWalletDisplay();
-                activeDuelId = null;
-                alert(`Matchmaking cancelled. Your ₱${data.refunded} wager has been refunded.`);
-                return;
-            }
-
-            // The server refuses to refund once the board has been dealt. That
-            // can only happen if Cancel raced the reveal, so take the player
-            // into the duel they are now committed to rather than dropping
-            // them back to the hub with a live wager.
-            if (/already started/i.test(error || '')) {
-                await revealDuelBoard();
-                return;
-            }
-
+            await callFunction('duel', { action: 'cancelSearch' });
             closeModal();
-            alert(error || 'Could not cancel the duel.');
         }
         window.cancelMatchmakingQueue = cancelMatchmakingQueue;
 
@@ -3861,7 +3807,7 @@
         async function finishDuel(result) {
             if (duelState.turnTimerInterval) clearInterval(duelState.turnTimerInterval);
             if (pvpPollTimer) { clearInterval(pvpPollTimer); pvpPollTimer = null; }
-            duelMode = 'bot';
+            duelMode = 'pvp';
             myTurn = true;
             // switchTab('hub') below brings the calm bed back in.
             MUSIC.start('hub');

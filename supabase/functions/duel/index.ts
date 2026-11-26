@@ -4,13 +4,13 @@ import { createClient } from "jsr:@supabase/supabase-js@2.49.4";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// The house's cut of every settled pot, bot duel and PvP alike. A win pays
+// The house's cut of every settled pot. A win pays
 // `stake * 2 * (1 - PLATFORM_FEE)`, so at 10% that is 1.8x and the arena
 // breaks even at a 55.6% player win rate.
 //
 // This number exists in three other places and they must move together:
 //   - public.platform_fee() in Postgres, which expire_stale_duels uses to pay
-//     out a PvP duel somebody walked away from
+//     out a duel somebody walked away from
 //   - the wager modal and the victory message in index.html, which quote the
 //     rate to the player - if those drift the arena misstates its own price
 // tools/duel-sim/check-cards.mjs fails if the page and this disagree.
@@ -19,12 +19,6 @@ const ALLOWED_STAKES = [50, 100, 200, 500, 1000];
 const MAX_HP = 150;
 const AP_PER_TURN = 3;
 const HAND_SIZE = 4;
-// The opponent opens half of all duels, so its opening swing can be capped
-// below AP_PER_TURN if it ever starts ending duels before the player touches
-// a card. At the 150 HP pool it does not, so the cap is off. Lowering it makes
-// the arena gentler and less profitable: at the old 100 HP pool, capping this
-// to 1 took the house from +4.6% to -18.3%. Measure with tools/duel-sim.
-const OPENING_AP = AP_PER_TURN;
 
 // The server's own copy of every card's effect, generated from the game
 // tables. The browser receives card IDs only and looks names up locally for
@@ -69,48 +63,6 @@ function parseDecks(table: string): Record<string, string[]> {
 const HERO_BASE = parseDecks(BASE_TABLE);
 const HERO_SHOP = parseDecks(SHOP_TABLE);
 
-// While the bot still has its legs under it, the damage it deals is ROLLED per
-// card rather than read straight off the card, so no two battles play out the
-// same way. Below BOT_HEALTHY_HP it drops back to exact card values: a wounded
-// bot becomes predictable, which is what lets a player close out a duel on
-// plan rather than on luck.
-//
-// The roll is a multiplier on the card's OWN damage, not a flat damage band,
-// and the width is not a matter of taste. Both were measured against
-// tools/duel-sim with a no-jitter control, 8000 duels per population, three
-// runs each (the simulator's own run-to-run noise is about 3 points, so a
-// single run proves nothing):
-//
-//   flat 25-40 for every hero   player win 61-81%, house -16.6% / -54.1%
-//   the same band scaled by     player win 44-69%, house +15.8% / -30.9%
-//     hero tier                 and 4.4% of duels lost before the player moved
-//   x0.85-1.25 per card         house +7.3% / +1.7%  (shop margin down ~2.4)
-//   x0.90-1.10 per card         house +7.1% / +3.5%  (control: +6.3% / +4.1%)
-//
-// A flat band cannot work: 25-40 is about right for Pyra, whose strike does
-// 26, and guts Astral Archmage, whose strike does 60 and whose shop skills do
-// 142. Scaling the band per hero does not fix it either, because the bot also
-// holds shop cards no per-hero anchor knows about. A multiplier scales with
-// every card the bot can ever hold, and +/-10% is the widest setting that
-// leaves the house margin where it was.
-//
-// This is the BOT's trait and the bot's alone. A player's own card always
-// deals exactly what the card says, in a bot duel and in PvP, and PvP rolls
-// nothing for either seat - player against player is a straight fight.
-//
-// Armor is deliberately NOT rolled. Armor subtracts a FLAT amount, so moving
-// it swings the result far more than the same percentage on damage: every
-// armor band tried, in either direction and as narrow as +/-5%, cost the
-// shop-skill population about two points of margin.
-const BOT_HEALTHY_HP = 60;
-const BOT_DMG_LO = 0.90, BOT_DMG_HI = 1.10;
-
-// rnd is the crypto source already used for dealing; 1000 steps is far finer
-// than any damage number here, so the spread is effectively continuous.
-const rollFactor = (lo: number, hi: number) => lo + (hi - lo) * (rnd(1001) / 1000);
-
-const BOT_NAMES = ["Kenjie","Kenneth","Clyde","Joana","Glenda","Glenn","Mark","Jessa","Bryan","Rica","Christian","Nicole","Jomar","Kaye","Roldan"];
-
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -121,20 +73,11 @@ const json = (b: unknown, s = 200) =>
 
 const db = () => createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
-// Server-side RNG: the client cannot predict or steer a shuffle or a bot move.
+// Server-side RNG: the client cannot predict or steer a shuffle.
 function rnd(n: number) {
   const buf = new Uint32Array(1);
   crypto.getRandomValues(buf);
   return buf[0] % n;
-}
-function pick<T>(a: T[]): T { return a[rnd(a.length)]; }
-
-interface State {
-  heroId: string; enemyHeroId: string; opponent: string;
-  playerHp: number; playerArmor: number; playerAp: number; playerPoison: number;
-  enemyHp: number; enemyArmor: number; enemyPoison: number;
-  deck: string[]; enemyDeck?: string[]; botFirst?: boolean;
-  hand: string[]; turn: number; log: string;
 }
 
 function deckFor(heroId: string, owned: Record<string, boolean>): string[] {
@@ -169,96 +112,54 @@ function hit(dmg: number, armor: number) {
 // HERO_BASE is ordered weakest to strongest, so a hero's index is its tier.
 const HERO_LADDER = Object.keys(HERO_BASE);
 
-// The opponent is drawn from the player's own tier, give or take one rung.
-// Drawn uniformly, a Pyra player met an Astral Archmage one duel in eleven and
-// was flattened before acting, while an Astral player farmed the bottom of the
-// ladder.
-function matchOpponentHero(heroId: string): string {
-  const i = HERO_LADDER.indexOf(heroId);
-  if (i < 0) return pick(HERO_LADDER);
-  const lo = Math.max(0, i - 1);
-  const hi = Math.min(HERO_LADDER.length - 1, i + 1);
-  return HERO_LADDER[lo + rnd(hi - lo + 1)];
+// How strong a player is, for pairing: their rung on the hero ladder plus what
+// they have bought for that hero.
+//
+// This matters now in a way it did not before. The house bot was always drawn
+// from within one rung of the player (the old matchOpponentHero). Between two
+// real players nothing enforced that: the queue paired on STAKE ALONE, so a
+// maxed Astral Archmage holding two 142-damage shop skills could be matched
+// against a starter Pyra for the same money. That is not a duel, it is a
+// transfer, and it is the fastest way to lose every new player you register.
+//
+// The weights are measured, not guessed. A shop skill was first counted as 1
+// against a rung's 2, on the reasoning that a tier should outweigh a purchase.
+// tools/duel-sim/fairness.mts showed that is badly wrong at the bottom of the
+// ladder, where a paid skill roughly doubles your damage - Pyra strikes for 26
+// and her shop skills do 42 and 77. At that weighting valen+0 and valen+2 fell
+// inside the same bracket and the buyer won 70.6% of the time. At 3 every
+// pairing the matchmaker will make sits inside 40-60%.
+const SHOP_SKILL_WEIGHT = 3;
+
+function powerOf(heroId: string, owned: Record<string, boolean>): number {
+  const rung = Math.max(0, HERO_LADDER.indexOf(heroId));
+  const bought = (HERO_SHOP[heroId] ?? []).filter((id) => owned && owned[id]).length;
+  return rung * 2 + bought * SHOP_SKILL_WEIGHT;
 }
 
-// The opponent is built to the player's own loadout: buy shop skills and you
-// meet someone who has them too. Left unmatched, a player holding both shop
-// skills won about three duels in four, which no 5% fee can cover.
-function botDeckFor(enemyHeroId: string, heroId: string, owned: Record<string, boolean>): string[] {
-  const mine = HERO_SHOP[heroId] ?? [];
-  const ownedCount = mine.filter((id) => owned && owned[id]).length;
-  const deck = [...(HERO_BASE[enemyHeroId] ?? HERO_BASE["pyra"])];
-  for (const id of (HERO_SHOP[enemyHeroId] ?? []).slice(0, ownedCount)) deck.push(id);
-  return deck;
-}
-
-// The bot takes its turn under the player's rules: three AP, a hand of four,
-// and each card's real effect. It used to invent one flat number per turn,
-// so its shields and heals landed as 25-damage attacks and its own armour,
-// healing and poison were never applied at all.
-function botTurn(s: State, apBudget: number = AP_PER_TURN, opening = false): string {
-  const deck = s.enemyDeck ?? HERO_BASE[s.enemyHeroId] ?? HERO_BASE["pyra"];
-  const hand = deal(deck);
-  let ap = apBudget;
-  let msg = "";
-
-  for (let guard = 0; guard < HAND_SIZE; guard++) {
-    const affordable = hand
-      .map((id, i) => ({ i, c: CARDS[id] }))
-      .filter((x) => x.c && x.c.ap <= ap);
-    if (affordable.length === 0) break;
-
-    // Heal when badly hurt, otherwise hit as hard as the AP allows, and fall
-    // back to the best defensive card when no attack is affordable.
-    let choice = s.enemyHp < MAX_HP * 0.35
-      ? affordable.filter((x) => x.c.heal > 0).sort((a, b) => b.c.heal - a.c.heal)[0]
-      : undefined;
-    if (!choice) {
-      const attacks = affordable.filter((x) => x.c.damage > 0);
-      choice = attacks.length
-        ? attacks.sort((a, b) => b.c.damage - a.c.damage)[0]
-        : affordable.sort((a, b) => (b.c.armor + b.c.heal) - (a.c.armor + a.c.heal))[0];
-    }
-
-    const c = choice.c;
-    ap -= c.ap;
-    hand.splice(choice.i, 1);
-    msg += `${s.opponent} used ${c.name}`;
-
-    // Re-checked per card: a heal can lift the bot back over the line
-    // mid-turn, and the cards after it should follow suit.
-    const healthy = s.enemyHp > BOT_HEALTHY_HP;
-
-    if (c.damage) {
-      const dealt = healthy
-        ? Math.max(1, Math.round(c.damage * rollFactor(BOT_DMG_LO,
-            opening ? 1.0 : BOT_DMG_HI)))
-        : c.damage;
-      const r = hit(dealt, s.playerArmor);
-      s.playerArmor = r.armor;
-      s.playerHp = Math.max(0, s.playerHp - r.dmg);
-      msg += ` for ${r.dmg} damage`;
-    }
-    if (c.armor)  { s.enemyArmor += c.armor; msg += `, gaining ${c.armor} armor`; }
-    if (c.heal)   { s.enemyHp = Math.min(MAX_HP, s.enemyHp + c.heal); msg += `, healing ${c.heal} HP`; }
-    if (c.poison) { s.playerPoison += c.poison; msg += `, applying ${c.poison} poison`; }
-    msg += ". ";
-
-    if (s.playerHp <= 0) break;
-  }
-
-  return msg || `${s.opponent} had no playable card. `;
+// How far from your own power you will accept, by how long you have waited.
+// Someone at the very top or bottom of the ladder has few true peers, so a
+// fixed bracket would leave them queuing forever; after two minutes they take
+// anyone, because by then the alternative is no duel at all.
+function toleranceFor(waitedMs: number): number {
+  const secs = Math.max(0, waitedMs) / 1000;
+  if (secs >= 120) return 99;
+  return 2 + Math.floor(secs / 20);
 }
 
 // ---------------------------------------------------------------- PvP ----
-// A PvP duel is stored from nobody's point of view: two symmetric seats, and
-// whose turn it is. Each player is then shown the board from their own seat
-// using the SAME field names a bot duel sends, so the page renders either kind
-// without knowing the difference. A player is only ever sent their own hand.
+// Every duel is player against player. The house opponent was removed: it
+// decided outcomes with the house's own money on the table, which is a risk no
+// rake is worth. The arena now earns from the registration fee and the cut it
+// takes from each pot, and never from whether a player wins.
+//
+// A duel is stored from nobody's point of view: two symmetric seats, and whose
+// turn it is. Each player is shown the board from their own seat, and is only
+// ever sent their own hand.
 //
 // Nothing here rolls a damage number. Both seats deal exactly what the card
-// says: player against player is a straight fight, and the house takes its cut
-// from the pot rather than from the odds.
+// says - a straight fight, with the house's cut coming out of the pot rather
+// than out of the odds.
 interface PvpSide {
   userId: string; nick: string; heroId: string;
   hp: number; armor: number; ap: number; poison: number;
@@ -322,9 +223,9 @@ function newSide(userId: string, nick: string, heroId: string, owned: Record<str
            deck, hand: deal(deck) };
 }
 
-// Pays the winner out of BOTH stakes, less the platform fee: the same 1.8x a
-// bot duel pays, except the losing stake is a real player's rather than the
-// house's. Settles once, by conditional update, however many clients ask.
+// Pays the winner out of BOTH stakes, less the platform fee: 1.8x the stake.
+// Every peso paid out comes from the other player, never from the house.
+// Settles once, by conditional update, however many clients ask.
 // deno-lint-ignore no-explicit-any
 async function settlePvp(sb: any, duel: any, winnerSeat: "a" | "b", reason: string) {
   const s = duel.state as PvpState;
@@ -368,51 +269,6 @@ async function settlePvp(sb: any, duel: any, winnerSeat: "a" | "b", reason: stri
   return { winnerUserId: winner.userId, payout, stake };
 }
 
-function publicState(s: State, duelId: string, seq: number, stake: number) {
-  return {
-    duelId, seq, stake,
-    heroId: s.heroId, enemyHeroId: s.enemyHeroId, opponent: s.opponent,
-    playerHp: s.playerHp, playerMaxHp: MAX_HP, playerArmor: s.playerArmor,
-    playerAp: s.playerAp, playerPoison: s.playerPoison,
-    enemyHp: s.enemyHp, enemyMaxHp: MAX_HP, enemyArmor: s.enemyArmor,
-    enemyPoison: s.enemyPoison, hand: s.hand, turn: s.turn, log: s.log,
-  };
-}
-
-// deno-lint-ignore no-explicit-any
-async function settle(sb: any, duel: any, profile: any, won: boolean) {
-  const stake = Number(duel.stake);
-  const payout = won ? stake * 2 * (1 - PLATFORM_FEE) : 0;
-
-  const { data: upd } = await sb.from("duel_sessions")
-    .update({ status: "settled", result: won ? "VICTORY" : "DEFEAT", payout, settled_at: new Date().toISOString() })
-    .eq("id", duel.id).eq("status", "active").select("id");
-
-  if (!upd || upd.length === 0) return null;
-
-  let balance = Number(profile.wallet);
-  if (won) {
-    const { data: bal } = await sb.rpc("apply_wallet_delta", {
-      p_user_id: profile.user_id, p_delta: payout,
-      p_reason: `Ranked Duel Victory vs ${duel.opponent} (stake returned + winnings)`, p_type: "CREDIT",
-    });
-    balance = Number(bal?.[0]?.post_balance ?? balance);
-    await sb.from("profiles")
-      .update({ wins: Number(profile.wins ?? 0) + 1, xp: Number(profile.xp ?? 0) + 100 })
-      .eq("user_id", profile.user_id);
-  }
-
-  await sb.from("battle_history").insert([{
-    user_id: profile.user_id, player_email: profile.email, player_name: profile.nickname,
-    opponent: duel.opponent ?? "Opponent", result: won ? "VICTORY" : "DEFEAT",
-    wager: stake, bet: stake, pre_balance: Number(profile.wallet) + stake, post_balance: balance,
-    date: new Date().toISOString().split("T")[0], time: new Date().toTimeString().slice(0, 8),
-  }]);
-
-  return { finished: true, result: won ? "VICTORY" : "DEFEAT", payout,
-           netGain: won ? payout - stake : -stake, balance };
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -434,63 +290,6 @@ Deno.serve(async (req: Request) => {
   if (!profile) return json({ error: "No profile" }, 403);
   if (profile.frozen) return json({ error: "Account is frozen" }, 403);
   if (!profile.approved) return json({ error: "Account is not approved yet" }, 403);
-
-  // ---- start: take the stake and build the opening board ------------------
-  if (action === "escrow") {
-    const stake = Number(body.stake);
-    if (!ALLOWED_STAKES.includes(stake)) return json({ error: "Invalid stake" }, 400);
-    if (Number(profile.wallet) < stake) return json({ error: "Insufficient balance" }, 400);
-
-    await sb.rpc("expire_stale_duels");
-
-    // A player picks one hero with their registration fee. Without this the
-    // `?? "pyra"` below would quietly hand a free hero to anyone who had not
-    // claimed one, which is the hero the fee is supposed to buy.
-    const roster: string[] = Array.isArray(profile.unlocked_heroes) ? profile.unlocked_heroes : [];
-    if (roster.length === 0 || !profile.active_hero) {
-      return json({ error: "Choose your champion before entering the arena" }, 403);
-    }
-    if (!roster.includes(profile.active_hero)) {
-      return json({ error: "That hero is not on your roster" }, 403);
-    }
-
-    const heroId = profile.active_hero;
-    const enemyHeroId = matchOpponentHero(heroId);
-    const opponent = pick(BOT_NAMES);
-    const owned = (profile.unlocked_skills ?? {}) as Record<string, boolean>;
-    const deck = deckFor(heroId, owned);
-    const enemyDeck = botDeckFor(enemyHeroId, heroId, owned);
-
-    const state: State = {
-      heroId, enemyHeroId, opponent,
-      playerHp: MAX_HP, playerArmor: 0, playerAp: AP_PER_TURN, playerPoison: 0,
-      enemyHp: MAX_HP, enemyArmor: 0, enemyPoison: 0,
-      deck, enemyDeck, botFirst: rnd(2) === 0,
-      hand: deal(deck), turn: 1,
-      log: "Match connected! Choose tactical skills.",
-    };
-
-    const { data: duel, error: duelErr } = await sb.from("duel_sessions")
-      .insert([{ user_id: uid, stake, opponent, state, seq: 0 }])
-      .select("id, stake").single();
-
-    if (duelErr) return json({ error: "You already have a duel in progress" }, 409);
-
-    const { data: bal, error: balErr } = await sb.rpc("apply_wallet_delta", {
-      p_user_id: uid, p_delta: -stake,
-      p_reason: `Ranked Duel wager escrowed (₱${stake} stake)`, p_type: "DEBIT",
-    });
-    if (balErr) {
-      await sb.from("duel_sessions").delete().eq("id", duel.id);
-      return json({ error: balErr.message }, 400);
-    }
-
-    // Deliberately does NOT return the board. Revealing the hand and the
-    // opponent's hero here, while cancel still refunds in full, let a player
-    // reroll until they drew a favourable matchup. The board is handed over by
-    // "start", which commits the wager.
-    return json({ duelId: duel.id, stake, balance: bal?.[0]?.post_balance });
-  }
 
   // ---- PvP matchmaking ----------------------------------------------------
   // Nothing is staked while a player waits: the two debits happen at the
@@ -528,11 +327,24 @@ Deno.serve(async (req: Request) => {
     const myNick = profile.nickname ?? "Challenger";
     const owned = (profile.unlocked_skills ?? {}) as Record<string, boolean>;
 
-    // Oldest waiting player at the same stake, never myself.
-    const { data: waiting } = await sb.from("matchmaking_queue")
-      .select("id, user_id, player_nickname, hero")
+    const myPower = powerOf(myHero, owned);
+
+    // Everyone waiting at this stake, oldest first, and then the first one
+    // close enough in power to be a fair fight. The bracket used is the WIDER
+    // of the two: whoever has waited longer has already accepted a rougher
+    // match, and it would be unfair to make them keep waiting because the
+    // player who just arrived is still being fussy.
+    const { data: pool } = await sb.from("matchmaking_queue")
+      .select("id, user_id, player_nickname, hero, power, created_at")
       .eq("status", "waiting").eq("stake", stake).neq("user_id", uid)
-      .order("created_at", { ascending: true }).limit(1).maybeSingle();
+      .order("created_at", { ascending: true }).limit(20);
+
+    const now = Date.now();
+    const waiting = (pool ?? []).find((row) => {
+      const theirWait = now - new Date(row.created_at as string).getTime();
+      const bracket = Math.max(toleranceFor(0), toleranceFor(theirWait));
+      return Math.abs(Number(row.power ?? 0) - myPower) <= bracket;
+    });
 
     if (waiting?.user_id) {
       // Claim them. The conditional update means only one caller can win this
@@ -622,9 +434,24 @@ Deno.serve(async (req: Request) => {
     await sb.from("matchmaking_queue").delete().eq("user_id", uid);
     await sb.from("matchmaking_queue").insert([{
       user_id: uid, player_email: profile.email, player_nickname: myNick,
-      stake, hero: myHero, status: "waiting",
+      stake, hero: myHero, power: myPower, status: "waiting",
     }]);
-    return json({ waiting: true, matched: false });
+    return json({ waiting: true, matched: false, power: myPower });
+  }
+
+  // Anyone still running the old page will ask for a house duel after its
+  // twenty-second search. Without this the request falls through to the duel
+  // lookup below, finds no duelId and comes back "Duel not found", which tells
+  // them nothing. Say what actually happened.
+  if (action === "escrow") {
+    return json({ error: "House duels have been retired - every duel is now against " +
+                         "another player. Please refresh the page to continue." }, 410);
+  }
+
+  // Everything past this point needs a duel to act on, so an action that is
+  // not one of these is a bad request, not a missing duel.
+  if (!["start", "getState", "surrender", "playCard", "endTurn"].includes(action)) {
+    return json({ error: `Unknown action: ${action}` }, 400);
   }
 
   const { data: duel } = await sb.from("duel_sessions")
@@ -650,7 +477,6 @@ Deno.serve(async (req: Request) => {
 
   const stake = Number(duel.stake);
 
-  // ---- a PvP duel runs its own turn logic and never touches botTurn --------
   if (duel.mode === "pvp") {
     const ps = duel.state as PvpState;
     const seat = seatOf(ps, uid);
@@ -761,146 +587,6 @@ Deno.serve(async (req: Request) => {
     }
 
     return json({ error: `Unknown action: ${action}` }, 400);
-  }
-
-  const s: State = duel.state as State;
-
-  // Commits the wager and reveals the board. seq moves 0 -> 1, which is what
-  // cancel and the stale-duel sweep read as "this duel has begun".
-  if (action === "start") {
-    if (duel.seq === 0) {
-      // Initiative was decided at escrow. The player used to open every duel,
-      // and since most heroes can spend three AP for more than 100 damage, the
-      // better opening hand simply won before the opponent acted at all.
-      if (s.botFirst) {
-        const opening = botTurn(s, OPENING_AP, true);
-        if (s.playerHp <= 0) {
-          s.log = `${opening}You were struck down before you could move.`;
-          await sb.from("duel_sessions")
-            .update({ state: s, seq: 1, last_action_at: new Date().toISOString() })
-            .eq("id", duel.id).eq("seq", 0);
-          const out = await settle(sb, duel, profile, false);
-          return json({ ...publicState(s, duel.id, 1, stake), ...(out ?? {}) });
-        }
-        s.log = `${s.opponent} moves first. ${opening}Your turn.`;
-      }
-      await sb.from("duel_sessions")
-        .update({ state: s, seq: 1, last_action_at: new Date().toISOString() })
-        .eq("id", duel.id).eq("seq", 0);
-      return json(publicState(s, duel.id, 1, stake));
-    }
-    // Already started: hand back the live board, so a refresh resumes.
-    return json(publicState(s, duel.id, duel.seq, stake));
-  }
-
-  if (action === "getState") {
-    if (duel.seq === 0) return json({ duelId: duel.id, stake, started: false });
-    return json(publicState(s, duel.id, duel.seq, stake));
-  }
-
-  if (action === "cancel") {
-    // seq > 0 means the board has been revealed, so the wager is live.
-    if (duel.seq > 0) return json({ error: "The duel has already started" }, 409);
-    const { data: upd } = await sb.from("duel_sessions")
-      .update({ status: "cancelled", settled_at: new Date().toISOString() })
-      .eq("id", duel.id).eq("status", "active").select("id");
-    if (!upd?.length) return json({ error: "Duel already settled" }, 409);
-
-    const { data: bal } = await sb.rpc("apply_wallet_delta", {
-      p_user_id: uid, p_delta: stake,
-      p_reason: "Ranked Duel wager refunded (queue cancelled)", p_type: "CREDIT",
-    });
-    return json({ cancelled: true, refunded: stake, balance: bal?.[0]?.post_balance });
-  }
-
-  if (action === "surrender") {
-    const out = await settle(sb, duel, profile, false);
-    return out ? json(out) : json({ error: "Duel already settled" }, 409);
-  }
-
-  // Replay guard: the client echoes the seq it rendered, so a resent or
-  // out-of-order request can never apply the same action twice.
-  const clientSeq = Number(body.seq ?? -1);
-  if (clientSeq !== duel.seq) {
-    return json({ error: "Out of sync", resync: publicState(s, duel.id, duel.seq, stake) }, 409);
-  }
-
-  if (action === "playCard") {
-    const idx = Number(body.handIndex);
-    if (!Number.isInteger(idx) || idx < 0 || idx >= s.hand.length) {
-      return json({ error: "No such card in hand" }, 400);
-    }
-    const card = CARDS[s.hand[idx]];
-    if (!card) return json({ error: "Unknown card" }, 400);
-    if (s.playerAp < card.ap) return json({ error: "Not enough Action Points" }, 400);
-
-    s.playerAp -= card.ap;
-    let msg = `You played ${card.name}! `;
-
-    // The player's own card always deals exactly what the card says. Only the
-    // bot's output is rolled, and only in botTurn.
-    if (card.damage) {
-      const r = hit(card.damage, s.enemyArmor);
-      s.enemyArmor = r.armor;
-      s.enemyHp = Math.max(0, s.enemyHp - r.dmg);
-      msg += `Dealt ${r.dmg} damage. `;
-    }
-    if (card.armor)  { s.playerArmor += card.armor; msg += `Gained ${card.armor} armor. `; }
-    if (card.heal)   { s.playerHp = Math.min(MAX_HP, s.playerHp + card.heal); msg += `Restored ${card.heal} HP. `; }
-    if (card.poison) { s.enemyPoison += card.poison; msg += `Applied ${card.poison} burn/poison. `; }
-
-    s.hand.splice(idx, 1);
-    s.log = msg;
-
-    if (s.enemyHp <= 0) {
-      const out = await settle(sb, duel, profile, true);
-      return json({ ...publicState(s, duel.id, duel.seq + 1, stake), ...(out ?? {}) });
-    }
-
-    await sb.from("duel_sessions")
-      .update({ state: s, seq: duel.seq + 1, last_action_at: new Date().toISOString() })
-      .eq("id", duel.id);
-    return json(publicState(s, duel.id, duel.seq + 1, stake));
-  }
-
-  if (action === "endTurn") {
-    let msg = "";
-
-    // Burn/poison now actually damages, as every card's text promises.
-    if (s.enemyPoison > 0) {
-      s.enemyHp = Math.max(0, s.enemyHp - s.enemyPoison);
-      msg += `Burn/poison dealt ${s.enemyPoison} to ${s.opponent}. `;
-      s.enemyPoison = Math.max(0, s.enemyPoison - 2);
-    }
-    if (s.enemyHp <= 0) {
-      s.log = msg;
-      const out = await settle(sb, duel, profile, true);
-      return json({ ...publicState(s, duel.id, duel.seq + 1, stake), ...(out ?? {}) });
-    }
-
-    msg += botTurn(s);
-
-    if (s.playerPoison > 0) {
-      s.playerHp = Math.max(0, s.playerHp - s.playerPoison);
-      msg += `You took ${s.playerPoison} poison damage. `;
-      s.playerPoison = Math.max(0, s.playerPoison - 2);
-    }
-
-    s.log = msg;
-
-    if (s.playerHp <= 0) {
-      const out = await settle(sb, duel, profile, false);
-      return json({ ...publicState(s, duel.id, duel.seq + 1, stake), ...(out ?? {}) });
-    }
-
-    s.turn += 1;
-    s.playerAp = AP_PER_TURN;
-    s.hand = deal(s.deck);
-
-    await sb.from("duel_sessions")
-      .update({ state: s, seq: duel.seq + 1, last_action_at: new Date().toISOString() })
-      .eq("id", duel.id);
-    return json(publicState(s, duel.id, duel.seq + 1, stake));
   }
 
   return json({ error: `Unknown action: ${action}` }, 400);
