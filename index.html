@@ -1353,11 +1353,16 @@
         let activeOwnerChatEmail = null;
         let lastPersistedPlayersJson = null;
         let merchantConfig = {
-            gcashNum: '09923978537',
-            gcashName: 'John Carlo Estrada Morales',
+            // Deliberately blank. These used to be hardcoded here with the real
+            // account number and legal name, which put both in the page source
+            // of a public website - view-source was enough, no API call needed.
+            // The owner portal fills them from merchant_private, which only an
+            // admin can read.
+            gcashNum: '',
+            gcashName: '',
             gcashQR: null,
-            mayaNum: '09923978537',
-            mayaName: 'John Carlo Estrada Morales',
+            mayaNum: '',
+            mayaName: '',
             mayaQR: null,
             // The text decoded out of the uploaded QR image. Having the payload
             // rather than only the picture is what lets a top-up QR be re-issued
