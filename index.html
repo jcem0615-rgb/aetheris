@@ -2256,7 +2256,11 @@
             const isMaya = currentTopupMethod === 'maya';
             const num = (isMaya ? merchantConfig.mayaNum : merchantConfig.gcashNum) || '';
             const name = (isMaya ? merchantConfig.mayaName : merchantConfig.gcashName) || '';
-            const qr = (isMaya ? merchantConfig.mayaQR : merchantConfig.gcashQR);
+            // merchantQrSrc, not merchantConfig.gcashQR: the QR normally lives
+            // in the storage bucket as a path, and the base64 field is only a
+            // fallback for one that has not been uploaded yet. Reading the
+            // field directly hid a QR that was there.
+            const qr = merchantQrSrc(isMaya ? 'maya' : 'gcash');
 
             const numEl = document.getElementById('topup-pay-number');
             const nameEl = document.getElementById('topup-pay-name');
