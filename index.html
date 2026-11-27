@@ -2103,7 +2103,15 @@
                 .select('email, name, nickname, phone, wallet, wins, xp, status, approved, frozen, active_hero, registration_ref, receipt_path, role')
                 .order('created_at', { ascending: false })
                 .limit(500));
-            registeredPlayersList = rows || [];
+            // The house is not a player. Without this the owner's own account
+            // sat in the player directory, counted toward the player total,
+            // and could be inspected, frozen or deleted like a customer.
+            //
+            // Filtered here rather than in the query because `role` is null for
+            // ordinary players, and `role <> 'owner'` in SQL evaluates to NULL
+            // for those rows - so a server-side neq would have hidden every
+            // real player and shown nobody.
+            registeredPlayersList = (rows || []).filter(p => p.role !== 'owner');
         }
 
         // A player may only edit presentation fields. wallet / wins / xp /
