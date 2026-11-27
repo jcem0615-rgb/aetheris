@@ -346,11 +346,11 @@
             <!-- Register Box with Payment Method Switcher (QR Only) -->
             <div id="auth-register-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 glow-box hidden">
                 <h3 class="font-cinzel text-base font-bold text-white">Create Player Account</h3>
-                <p class="text-[11px] text-amber-400/90">*Note: A ₱50.00 registration fee applies. Unique email & phone enforced.</p>
+                <p class="text-[11px] text-amber-400/90">*Note: A 50 AC registration fee applies. Unique email &amp; phone enforced.</p>
                 
                 <!-- Payment Method Selector Tabs -->
                 <div class="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px]">
-                    <p class="text-[11px] text-amber-400 font-bold text-center">Select Payment Channel & Scan/Save QR to Pay ₱50 Fee:</p>
+                    <p class="text-[11px] text-amber-400 font-bold text-center">Select Payment Channel &amp; Scan/Save QR to Pay 50 AC Fee:</p>
                     <div class="flex space-x-2">
                         <button type="button" onclick="window.switchRegPaymentMethod('gcash')" id="btn-reg-gcash" class="flex-1 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
                         <button type="button" onclick="window.switchRegPaymentMethod('maya')" id="btn-reg-maya" class="flex-1 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
@@ -506,7 +506,7 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-2 w-full sm:w-auto justify-end flex-wrap gap-y-1">
-                    <button onclick="window.openModal('topup')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">+ Add Coins (Min ₱50)</button>
+                    <button onclick="window.openModal('topup')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">+ Add Coins</button>
                     <button onclick="window.openModal('withdraw')" class="flex-1 sm:flex-none px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">Cash Out (Min 100 AC)</button>
                 </div>
             </div>
@@ -581,7 +581,7 @@
                 <!-- EARNINGS: what the arena made, and what it still owes -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/40 space-y-2.5">
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
-                        <h3 class="font-cinzel text-xs font-bold text-amber-400">₱ EARNINGS</h3>
+                        <h3 class="font-cinzel text-xs font-bold text-amber-400">AC EARNINGS</h3>
                         <div class="flex items-center space-x-1.5 text-xs w-full sm:w-auto">
                             <input type="date" id="earn-from" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-white">
                             <span class="text-slate-500 text-[10px]">to</span>
@@ -594,22 +594,22 @@
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
                             <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Registrations</span>
-                            <span id="earn-reg" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                            <span id="earn-reg" class="text-sm font-bold text-emerald-400">0 AC</span>
                             <span id="earn-reg-sub" class="text-[9px] text-slate-500 block">0 approved</span>
                         </div>
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
                             <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Battle Fees</span>
-                            <span id="earn-rake" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                            <span id="earn-rake" class="text-sm font-bold text-emerald-400">0 AC</span>
                             <span id="earn-rake-sub" class="text-[9px] text-slate-500 block">0 duels</span>
                         </div>
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
                             <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Hero Shop</span>
-                            <span id="earn-shop" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                            <span id="earn-shop" class="text-sm font-bold text-emerald-400">0 AC</span>
                             <span id="earn-shop-sub" class="text-[9px] text-slate-500 block">0 purchases</span>
                         </div>
                         <div class="bg-slate-900 p-2 rounded-lg border border-amber-500/40">
                             <span class="text-[9px] text-amber-400/80 uppercase tracking-wider block">Total Earned</span>
-                            <span id="earn-total" class="text-base font-bold text-amber-400">₱0.00</span>
+                            <span id="earn-total" class="text-base font-bold text-amber-400">0 AC</span>
                             <span class="text-[9px] text-slate-500 block">this period</span>
                         </div>
                     </div>
@@ -621,17 +621,17 @@
                         <div class="grid grid-cols-3 gap-2">
                             <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
                                 <span class="text-[9px] text-slate-400 uppercase tracking-wider block">You Should Hold</span>
-                                <span id="earn-cash" class="text-sm font-bold text-blue-400">₱0.00</span>
+                                <span id="earn-cash" class="text-sm font-bold text-blue-400">0 AC</span>
                                 <span class="text-[9px] text-slate-500 block">deposits less payouts</span>
                             </div>
                             <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
                                 <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Owed To Players</span>
-                                <span id="earn-owed" class="text-sm font-bold text-red-400">₱0.00</span>
+                                <span id="earn-owed" class="text-sm font-bold text-red-400">0 AC</span>
                                 <span class="text-[9px] text-slate-500 block">all wallet balances</span>
                             </div>
                             <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
                                 <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Yours To Keep</span>
-                                <span id="earn-keep" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                                <span id="earn-keep" class="text-sm font-bold text-emerald-400">0 AC</span>
                                 <span class="text-[9px] text-slate-500 block">from wallets, all time</span>
                             </div>
                         </div>
@@ -658,11 +658,11 @@
                     <div class="grid grid-cols-2 gap-2 pt-1">
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
                             <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Deposits</span>
-                            <span id="metric-total-deposits" class="text-sm font-bold text-emerald-400">₱0.00</span>
+                            <span id="metric-total-deposits" class="text-sm font-bold text-emerald-400">0 AC</span>
                         </div>
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
                             <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Total Withdrawals</span>
-                            <span id="metric-total-withdrawals" class="text-sm font-bold text-amber-400">₱0.00</span>
+                            <span id="metric-total-withdrawals" class="text-sm font-bold text-amber-400">0 AC</span>
                         </div>
                     </div>
                 </div>
@@ -799,7 +799,7 @@
                 </div>
 
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Registration Approvals (₱50 Fee Receipt)</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Registration Approvals (50 AC Fee Receipt)</h3>
                     <div id="owner-registration-list" class="space-y-1.5">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending registration requests.</div>
                     </div>
@@ -813,14 +813,14 @@
                 </div>
 
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals (Min ₱50)</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Top-Up Approvals (Min 50 AC)</h3>
                     <div id="owner-deposit-list" class="space-y-1.5">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending top-ups.</div>
                     </div>
                 </div>
 
                 <div class="space-y-1.5">
-                    <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals (Min ₱100 • Zero Fee)</h3>
+                    <h3 class="font-cinzel text-xs font-bold text-white">Cash-Out Approvals (Min 100 AC &bull; Zero Fee)</h3>
                     <p class="text-[10px] text-slate-500">Approving takes the money out of the player's balance. It does not send it — that is the next list.</p>
                     <div id="owner-withdraw-list" class="space-y-1.5">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawals.</div>
@@ -1079,7 +1079,7 @@
         <!-- Withdrawal Modal (Min 100 AC • Zero Fee) -->
         <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
             <h3 class="font-cinzel text-base font-bold text-amber-400">Cash Out (Min 100 AC &bull; Zero Fee)</h3>
-            <p class="text-[11px] text-emerald-400">Coins convert back at 1 AC = &#8369;1.00. Cash out 100 AC and &#8369;100.00 is sent to you.</p>
+            <p class="text-[11px] text-emerald-400">Sent to the GCash or Maya number registered on your account.</p>
             <p class="text-xs text-slate-400">Payouts are locked strictly to your registered phone number and legal name.</p>
             <div class="space-y-2.5">
                 <input type="number" id="withdraw-amount" placeholder="Coins to cash out (100 AC minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
@@ -1175,7 +1175,7 @@
 
                 <p><strong>3. One account per person.</strong> Each person may hold one account, with their real name, one email address and one mobile number. Opening more than one account, or playing on someone else's, is grounds for closure and forfeiture of any balance obtained through it.</p>
 
-                <p><strong>4. Registration fee.</strong> Registration costs <strong>₱50.00</strong>, paid to our published payment channel before approval. The fee is <strong>non-refundable</strong> once your account is approved, and it entitles you to choose one starter champion, which is permanently yours.</p>
+                <p><strong>4. Registration fee.</strong> Registration costs <strong>50 AC</strong>, paid to our published payment channel before approval. The fee is <strong>non-refundable</strong> once your account is approved, and it entitles you to choose one starter champion, which is permanently yours.</p>
 
                 <p><strong>5. Your coins.</strong> Topping up converts your money into <strong>Aetheris Coins (AC)</strong> at a fixed rate of <strong>1 AC = &#8369;1.00</strong>. Coins are a record of what we hold for you so you can place wagers. They are <strong>not a bank deposit</strong>, earn no interest, and are not insured by the PDIC. They do not expire, we will not change the rate, and you may convert them back to pesos at the same 1:1 rate subject to clause 7.</p>
 
@@ -1405,6 +1405,16 @@
             }) + ' AC';
         }
         window.coins = coins;
+
+        // Audit entries and ledger reasons are written by the edge functions
+        // with a peso figure. At a fixed 1 AC = \u20b11.00 the number is
+        // identical, so the display swaps the unit rather than the amount.
+        // Doing it here, rather than redeploying the combat engine to change a
+        // label, keeps working money code untouched.
+        function acText(v) {
+            return String(v ?? '').replace(/\u20b1\s?([\d,]+(?:\.\d+)?)/g, '$1 AC');
+        }
+        window.acText = acText;
 
         // ================= IMAGE COMPRESSION UTILITY =================
         function compressImage(file, maxWidth = 150, maxHeight = 150, quality = 0.5) {
@@ -2005,7 +2015,7 @@
                 email, nickname: tx.nickname, type, amount,
                 pre_balance: preBalance, post_balance: postBalance, reason
             }]));
-            logSystemActivity('Wallet ' + type, `${nickname || email}: ${type === 'CREDIT' ? '+' : '-'}₱${amount} (₱${preBalance} ➔ ₱${postBalance}) | Reason: ${reason}`, nickname || email);
+            logSystemActivity('Wallet ' + type, `${nickname || email}: ${type === 'CREDIT' ? '+' : '-'}${coins(amount)} (${coins(preBalance)} \u279c ${coins(postBalance)}) | Reason: ${reason}`, nickname || email);
         }
 
         function clearWalletLedger() {
@@ -3353,7 +3363,7 @@
                         <p><strong>Nickname:</strong> ${p.nickname || 'N/A'}</p>
                         <p><strong>Email:</strong> ${p.email}</p>
                         <p><strong>Phone:</strong> ${p.phone || 'N/A'}</p>
-                        <p><strong>Wallet Balance:</strong> ₱${p.wallet || 0}</p>
+                        <p><strong>Balance:</strong> ${coins(p.wallet || 0)}</p>
                         <p><strong>Wins:</strong> ${p.wins || 0}</p>
                         <p><strong>EXP:</strong> ${p.xp || 0} (Lv. ${Math.floor((p.xp || 0) / 100) + 1})</p>
                         <p><strong>Status:</strong> <span class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${p.status || 'active'}</span></p>
@@ -3371,7 +3381,7 @@
                                     <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${b.result}</span>
                                 </div>
                                 <div class="text-slate-400 text-[10px]">
-                                    <span>Wager: ₱${b.bet} • Balance: ₱${b.preBalance} ➔ ₱${b.postBalance}</span><br>
+                                    <span>Wager: ${coins(b.bet)} \u2022 Balance: ${coins(b.preBalance)} \u279c ${coins(b.postBalance)}</span><br>
                                     <span>📅 ${b.date} ⏰ ${b.time}</span>
                                 </div>
                             </div>
@@ -4663,11 +4673,11 @@
             if (result && result.result === 'VICTORY') {
                 currentUser.wins = (currentUser.wins || 0) + 1;
                 currentUser.xp = (currentUser.xp || 0) + 100;
-                alert(`VICTORY! Prize pool ₱${Number(result.payout).toFixed(2)} paid out (net +₱${Number(result.netGain).toFixed(2)} after the 10% platform fee) and you gained 100 EXP!`);
+                alert(`VICTORY! Prize pool ${coins(result.payout)} paid out (net +${coins(result.netGain)} after the 10% platform fee) and you gained 100 EXP!`);
             } else {
                 alert(result && result.result === 'DEFEAT' && result.byOpponent
-                    ? `DEFEAT! ${duelState.opponent || 'Your opponent'} took the pot. You lost your ₱${currentDuelBet} wager.`
-                    : `DEFEAT! You forfeited your ₱${currentDuelBet} wager.`);
+                    ? `DEFEAT! ${duelState.opponent || 'Your opponent'} took the pot. You lost your ${coins(currentDuelBet)} wager.`
+                    : `DEFEAT! You forfeited your ${coins(currentDuelBet)} wager.`);
             }
 
             await refreshProfile();
@@ -4683,8 +4693,7 @@
         // position, because a top-up is NOT earnings: it is a liability until
         // the player spends it or loses part of it to the fee.
         async function loadEarnings() {
-            const peso = (v) => '\u20b1' + Number(v || 0).toLocaleString('en-PH',
-                { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const peso = (v) => coins(v);
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
 
             const fromEl = document.getElementById('earn-from');
@@ -4851,7 +4860,7 @@
                     <div class="bg-slate-950 border border-slate-800 rounded-xl p-2 flex items-center justify-between gap-2">
                         <div class="min-w-0">
                             <span class="text-xs font-bold text-white">
-                                ${r.kind === 'topup' ? 'Top-up' : 'Withdrawal'} ₱${Number(r.amount)}
+                                ${r.kind === 'topup' ? 'Top-up' : 'Cash-out'} ${coins(r.amount)}
                             </span>
                             <span class="text-[9px] text-slate-500 ml-1">${escapeHtml(when)}</span>
                             ${extra ? `<span class="text-[10px] text-slate-400 block leading-snug">${extra}</span>` : ''}
@@ -4906,8 +4915,7 @@
                 console.warn('[realtime] could not set auth', e);
             }
 
-            const peso = (v) => '\u20b1' + Number(v || 0).toLocaleString('en-PH',
-                { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const peso = (v) => coins(v);
 
             const refresh = () => {
                 const ownerView = document.getElementById('view-owner');
@@ -5030,7 +5038,7 @@
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
                                 <span class="font-bold text-white">${escapeHtml(p.nickname || p.name)}</span>
-                                <span class="text-[10px] text-slate-400 block">${escapeHtml(p.email)} • ₱${Number(p.wallet) || 0} • Status: <strong class="${p.status === 'pending_registration' ? 'text-amber-400' : 'text-emerald-400'}">${escapeHtml(p.status || 'active')}</strong></span>
+                                <span class="text-[10px] text-slate-400 block">${escapeHtml(p.email)} \u2022 ${coins(p.wallet)} \u2022 Status: <strong class="${p.status === 'pending_registration' ? 'text-amber-400' : 'text-emerald-400'}">${escapeHtml(p.status || 'active')}</strong></span>
                             </div>
                             <div class="flex space-x-1">
                                 <button onclick="window.inspectPlayer('${escapeAttr(p.email)}')" class="px-2 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded text-[10px]">Inspect</button>
@@ -5049,14 +5057,14 @@
                     pendingTopups.map((t, idx) => `
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div class="min-w-0">
-                                <span class="font-bold text-amber-400">₱${t.amount} top-up</span>
+                                <span class="font-bold text-amber-400">${coins(t.amount)} top-up</span>
                                 ${t.pay_code ? `<span class="ml-1.5 text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold tracking-wider">${escapeHtml(t.pay_code)}</span>` : ''}
                                 <span class="text-[10px] text-slate-400 block truncate">${escapeHtml(t.email)} • their ref: ${escapeHtml(t.ref || '—')}</span>
                                 <!-- The receipt is a screenshot the player
                                      uploaded and can be edited in minutes.
                                      The code is what to look for in GCash. -->
                                 <span class="text-[10px] text-slate-500 block">${t.pay_code
-                                    ? `Check GCash for ₱${Number(t.amount)} with message ${escapeHtml(t.pay_code)}`
+                                    ? `Check GCash for ${coins(t.amount)} with message ${escapeHtml(t.pay_code)}`
                                     : 'No code — match by amount and time in GCash'}</span>
                             </div>
                             <div class="flex space-x-1 items-center shrink-0">
@@ -5075,7 +5083,7 @@
                     pendingWithdrawals.map((w, idx) => `
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
-                                <span class="font-bold text-amber-400">₱${w.amount} withdrawal</span>
+                                <span class="font-bold text-amber-400">${coins(w.amount)} cash-out</span>
                                 <span class="text-[10px] text-slate-400 block">${escapeHtml(w.email)} • ${escapeHtml(w.method)} (${escapeHtml(w.account)})</span>
                             </div>
                             <div class="flex space-x-1">
@@ -5109,7 +5117,7 @@
                         return `
                         <div class="bg-slate-900 p-2.5 rounded-xl border ${stale ? 'border-red-500/50' : 'border-amber-500/40'} flex items-center justify-between gap-2 text-xs">
                             <div class="min-w-0">
-                                <span class="font-bold text-amber-400">\u20b1${Number(w.amount)}</span>
+                                <span class="font-bold text-amber-400">${coins(w.amount)}</span>
                                 <span class="text-[10px] ${stale ? 'text-red-400 font-bold' : 'text-slate-500'} ml-1">approved ${wait}</span>
                                 <span class="text-[10px] text-slate-300 block truncate">Send to <b>${escapeHtml(w.account)}</b> (${escapeHtml(w.method)})</span>
                                 <span class="text-[10px] text-slate-500 block truncate">${escapeHtml(w.name)} \u00b7 ${escapeHtml(w.email)}</span>
@@ -5176,10 +5184,10 @@
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[11px] flex items-center justify-between">
                             <div>
                                 <span class="font-bold text-white">${tx.nickname || tx.email}</span>
-                                <span class="text-[10px] text-slate-400 block">${tx.reason} • ₱${tx.preBalance} ➔ ₱${tx.postBalance}</span>
+                                <span class="text-[10px] text-slate-400 block">${acText(tx.reason)} \u2022 ${coins(tx.preBalance)} \u279c ${coins(tx.postBalance)}</span>
                             </div>
                             <div class="text-right">
-                                <span class="${tx.type === 'CREDIT' ? 'text-emerald-400' : 'text-amber-400'} font-bold">${tx.type === 'CREDIT' ? '+' : '-'}₱${tx.amount}</span>
+                                <span class="${tx.type === 'CREDIT' ? 'text-emerald-400' : 'text-amber-400'} font-bold">${tx.type === 'CREDIT' ? '+' : '-'}${coins(tx.amount)}</span>
                                 <span class="text-[9px] text-slate-500 block">${tx.date} ${tx.time}</span>
                             </div>
                         </div>
@@ -5194,7 +5202,7 @@
                                 <span>${log.action}</span>
                                 <span class="text-[10px] text-slate-400">${log.timestamp}</span>
                             </div>
-                            <p class="text-slate-300 text-[10px]">${log.details}</p>
+                            <p class="text-slate-300 text-[10px]">${acText(log.details)}</p>
                         </div>
                     `).join('');
             }
@@ -5258,7 +5266,7 @@
             const t = ownerQueueCache.topups[idx];
             if (!t) return;
             await adminAction({ action: 'approveTopup', id: t.id },
-                `Approved ₱${t.amount} top-up for ${t.email}`);
+                `Approved ${coins(t.amount)} top-up for ${t.email}`);
         }
         window.approveTopup = approveTopup;
 
@@ -5273,7 +5281,7 @@
             const w = ownerQueueCache.withdrawals[idx];
             if (!w) return;
             await adminAction({ action: 'approveWithdrawal', id: w.id },
-                `Approved withdrawal of ₱${w.amount} for ${w.email}`);
+                `Approved cash-out of ${coins(w.amount)} for ${w.email}`);
         }
         window.approveWithdrawal = approveWithdrawal;
 
@@ -5290,14 +5298,14 @@
             const w = ownerQueueCache.payouts[idx];
             if (!w) return;
             const ref = prompt(
-                `Send ₱${w.amount} to ${w.account} (${w.method}) for ${w.email}.\n\n` +
+                `Send ${coins(w.amount)} to ${w.account} (${w.method}) for ${w.email}.\n\n` +
                 `Once you HAVE sent it, paste the GCash/Maya reference number here.\n` +
                 `Leave it blank only if you cannot find one.`);
             // prompt returns null when cancelled, '' when submitted empty. Only
             // a cancel should abort - an empty reference is a deliberate choice.
             if (ref === null) return;
             await adminAction({ action: 'markWithdrawalPaid', id: w.id, payoutRef: ref.trim() },
-                `Marked ₱${w.amount} to ${w.email} as paid.`);
+                `Marked ${coins(w.amount)} to ${w.email} as paid.`);
         }
         window.markWithdrawalPaid = markWithdrawalPaid;
 
@@ -5306,12 +5314,12 @@
             const w = ownerQueueCache.payouts[idx];
             if (!w) return;
             if (!confirm(
-                `Put ₱${w.amount} back into ${w.email}'s balance?\n\n` +
+                `Put ${coins(w.amount)} back into ${w.email}'s balance?\n\n` +
                 `Only do this if you have NOT sent the money. If you already ` +
                 `sent it, this hands it over twice.`)) return;
             const reason = prompt('Why is it being returned? (optional)') ?? '';
             await adminAction({ action: 'refundWithdrawal', id: w.id, reason: reason.trim() },
-                `₱${w.amount} returned to ${w.email}.`);
+                `${coins(w.amount)} returned to ${w.email}.`);
         }
         window.refundWithdrawalToPlayer = refundWithdrawalToPlayer;
 
@@ -5382,7 +5390,7 @@
 
             document.getElementById('manual-wallet-amount').value = '';
             await renderOwnerQueues();
-            alert(`Adjusted ${email}: ₱${data.pre_balance} ➔ ₱${data.post_balance}`);
+            alert(`Adjusted ${email}: ${coins(data.pre_balance)} \u279c ${coins(data.post_balance)}`);
         }
         window.executeManualWalletAdjustment = executeManualWalletAdjustment;
 
@@ -5459,7 +5467,7 @@
                 alert('Could not submit your top-up. Check your connection and try again.');
                 return;
             }
-            notifyOwner('Top-Up Request', `Player ${currentUser.nickname} requested top-up of ₱${amount} via ${currentTopupMethod.toUpperCase()}.`);
+            notifyOwner('Top-Up Request', `Player ${currentUser.nickname} requested top-up of ${coins(amount)} via ${currentTopupMethod.toUpperCase()}.`);
             closeModal();
             alert('Top-up request submitted successfully! Pending owner verification.');
         }
@@ -5468,7 +5476,7 @@
             const amount = parseFloat(document.getElementById('withdraw-amount').value);
             const method = document.getElementById('withdraw-method').value;
             if (isNaN(amount) || amount < 100) {
-                alert('Minimum withdrawal amount is ₱100.');
+                alert('Minimum cash-out is 100 AC.');
                 return;
             }
             if (!currentUser || (currentUser.wallet || 0) < amount) {
@@ -5493,7 +5501,7 @@
                 alert('Could not submit your withdrawal. Check your connection and try again.');
                 return;
             }
-            notifyOwner('Withdrawal Request', `Player ${currentUser.nickname} requested withdrawal of ₱${amount} via ${method}.`);
+            notifyOwner('Withdrawal Request', `Player ${currentUser.nickname} requested cash-out of ${coins(amount)} via ${method}.`);
             closeModal();
             alert('Withdrawal request submitted successfully! Zero fees applied.');
         }
@@ -5777,14 +5785,14 @@
 
             const depMetric = document.getElementById('metric-total-deposits');
             const witMetric = document.getElementById('metric-total-withdrawals');
-            if (depMetric) depMetric.innerText = `₱${totalDep.toFixed(2)}`;
-            if (witMetric) witMetric.innerText = `₱${totalWit.toFixed(2)}`;
+            if (depMetric) depMetric.innerText = coins(totalDep);
+            if (witMetric) witMetric.innerText = coins(totalWit);
 
             const historyRow = (r, accent) => `
                 <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[11px]">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-white truncate">${r.nickname || r.email}</span>
-                        <span class="${r.status === 'approved' ? accent : 'text-red-400'} font-bold">${r.status === 'approved' ? '' : 'REJECTED '}₱${Number(r.amount || 0).toFixed(2)}</span>
+                        <span class="${r.status === 'approved' ? accent : 'text-red-400'} font-bold">${r.status === 'approved' ? '' : 'REJECTED '}${coins(r.amount)}</span>
                     </div>
                     <span class="text-[10px] text-slate-400 block truncate">${r.method ? r.method.toUpperCase() + ' • ' : ''}${r.ref ? 'Ref: ' + r.ref : ''}${r.account ? 'To: ' + r.account : ''}</span>
                     <span class="text-[9px] text-slate-500 block">📅 ${r.date} ⏰ ${r.time} • by ${r.actor}</span>
@@ -5814,10 +5822,10 @@
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-[10px] flex items-center justify-between">
                             <div class="min-w-0">
                                 <span class="font-bold text-white truncate block">${a.nickname || a.email}</span>
-                                <span class="text-slate-400">₱${a.preBalance} ➔ ₱${a.postBalance}</span>
+                                <span class="text-slate-400">${coins(a.preBalance)} \u279c ${coins(a.postBalance)}</span>
                             </div>
                             <div class="text-right flex-shrink-0 ml-2">
-                                <span class="${Number(a.amount) >= 0 ? 'text-emerald-400' : 'text-amber-400'} font-bold">${Number(a.amount) >= 0 ? '+' : ''}₱${a.amount}</span>
+                                <span class="${Number(a.amount) >= 0 ? 'text-emerald-400' : 'text-amber-400'} font-bold">${Number(a.amount) >= 0 ? '+' : ''}${coins(a.amount)}</span>
                                 <span class="text-[9px] text-slate-500 block">${a.date || ''} ${a.time || a.timestamp || ''} • by ${a.actor || 'BOSS'}</span>
                             </div>
                         </div>
@@ -5835,7 +5843,7 @@
                                 <span class="font-bold text-white truncate">${b.playerName || b.playerEmail} <span class="text-slate-500">vs</span> ${b.opponent}</span>
                                 <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'} font-bold flex-shrink-0 ml-2">${b.result}</span>
                             </div>
-                            <span class="text-[10px] text-slate-400 block">Wager: ₱${b.bet} • Balance: ₱${b.preBalance} ➔ ₱${b.postBalance}</span>
+                            <span class="text-[10px] text-slate-400 block">Wager: ${coins(b.bet)} \u2022 Balance: ${coins(b.preBalance)} \u279c ${coins(b.postBalance)}</span>
                             <span class="text-[9px] text-slate-500 block">📅 ${b.date} ⏰ ${b.time}</span>
                         </div>
                     `).join('');
