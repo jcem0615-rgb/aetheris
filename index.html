@@ -910,8 +910,11 @@
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
         </div>
 
-        <!-- Top-up Modal with Payment Tabs (QR Only) -->
-        <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
+        <!-- Top-up Modal with Payment Tabs (QR Only)
+             max-h/overflow because this modal is taller than a phone screen:
+             at 844px of viewport the Submit button fell off the bottom with no
+             way to reach it. -->
+        <div id="modal-topup" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden max-h-[90vh] overflow-y-auto">
             <h3 class="font-cinzel text-base font-bold text-amber-400 text-center">Submit Top-Up Request (Min ₱50)</h3>
             
             <div class="space-y-2">
@@ -929,41 +932,77 @@
                 <p class="text-[11px] text-slate-400 text-center pt-1">2. How much are you sending?</p>
                 <input type="number" id="topup-amount" oninput="window.onTopupAmountInput()" placeholder="Amount in pesos (₱50 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
 
-                <p class="text-[11px] text-slate-400 text-center pt-1">3. Send it here:</p>
+                <p class="text-[11px] text-slate-400 text-center pt-1">3. Scan this to pay:</p>
 
-                <!-- The number and name, which the modal never used to show at
-                     all: with no QR uploaded a player saw an empty box and had
-                     no way to know where to send money. Tap to copy, because
-                     most players pay on the same phone they are playing on and
-                     cannot scan their own screen. -->
+                <!-- QR only. The account number and name are deliberately not
+                     shown here. -->
                 <div class="p-2.5 bg-slate-950 border border-amber-500/30 rounded-xl space-y-2">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="min-w-0">
-                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Send to</span>
-                            <span id="topup-pay-number" class="text-sm font-bold text-amber-400">--</span>
-                            <span id="topup-pay-name" class="text-[10px] text-slate-400 block truncate">--</span>
-                        </div>
-                        <button type="button" onclick="window.copyTopupField('number')" class="shrink-0 px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-lg">Copy</button>
+                    <div id="topup-qr-wrap" class="hidden flex-col items-center text-center space-y-2">
+                        <div id="topup-active-qr" class="w-44 h-44 bg-white border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <span id="topup-qr-note" class="text-[10px] text-emerald-400 font-semibold block px-1 leading-snug"></span>
+                        <button type="button" onclick="window.saveQRCodeImage(currentTopupMethod)" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] rounded-lg shadow">Save QR to Phone</button>
+                    </div>
+
+                    <!-- Without a QR there is now no way at all to pay, so say
+                         so plainly instead of showing an empty box. -->
+                    <div id="topup-no-qr" class="hidden text-center py-3 px-2">
+                        <span class="text-[11px] text-amber-400 font-bold block">Payment is temporarily unavailable</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">
+                            The payment QR is not set up right now. Please message support and
+                            we will sort it out for you.
+                        </span>
                     </div>
 
                     <div class="flex items-center justify-between gap-2 border-t border-slate-800 pt-2">
                         <div class="min-w-0">
-                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Put this in the GCash message</span>
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Your payment code</span>
                             <span id="topup-pay-code" class="text-sm font-bold text-emerald-400 tracking-widest">--</span>
-                            <span class="text-[9px] text-slate-500 block">So we can find your payment</span>
+                            <span class="text-[9px] text-slate-500 block">Already inside the QR. Type it in the GCash message box if it asks.</span>
                         </div>
                         <button type="button" onclick="window.copyTopupField('code')" class="shrink-0 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] rounded-lg">Copy</button>
                     </div>
 
-                    <div id="topup-qr-wrap" class="hidden flex-col items-center text-center space-y-2 border-t border-slate-800 pt-2">
-                        <div id="topup-active-qr" class="w-40 h-40 bg-white border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                        <span id="topup-qr-note" class="text-[10px] text-emerald-400 font-semibold block px-1 leading-snug"></span>
-                        <button type="button" onclick="window.saveQRCodeImage(currentTopupMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR to Phone</button>
-                        <p class="text-[9px] text-slate-500 leading-snug px-1">
-                            Paying on this same phone? Tap <b>Save QR to Phone</b>, open your
-                            wallet app, tap <b>Scan QR</b>, then choose the picture from your gallery.
-                        </p>
-                    </div>
+                    <!-- Most players are playing on the phone they pay with, so
+                         they cannot scan their own screen. That path goes first. -->
+                    <details id="topup-how-to" class="border-t border-slate-800 pt-2" open>
+                        <summary class="text-[10px] font-bold text-blue-400 cursor-pointer select-none list-none flex items-center gap-1">
+                            <span class="text-[9px]">&#9660;</span> How to pay with GCash
+                        </summary>
+
+                        <div class="mt-2 space-y-2.5 text-left">
+                            <div>
+                                <span class="text-[9px] text-amber-400 uppercase tracking-wider font-bold block mb-1">
+                                    Paying on this same phone
+                                </span>
+                                <ol class="text-[10px] text-slate-300 space-y-1 list-decimal list-inside leading-snug">
+                                    <li>Tap <b>Save QR to Phone</b> above.</li>
+                                    <li>Open your <b>GCash</b> app.</li>
+                                    <li>Tap <b>Scan QR</b> on the home screen.</li>
+                                    <li>In the scanner, tap the <b>photo or gallery icon</b> to upload a picture instead of scanning.</li>
+                                    <li>Choose the QR you just saved.</li>
+                                    <li>The amount is already filled in &mdash; check it, then <b>Send</b>.</li>
+                                    <li>Come back here and enter your reference number below.</li>
+                                </ol>
+                            </div>
+
+                            <div>
+                                <span class="text-[9px] text-amber-400 uppercase tracking-wider font-bold block mb-1">
+                                    Paying from another phone
+                                </span>
+                                <ol class="text-[10px] text-slate-300 space-y-1 list-decimal list-inside leading-snug">
+                                    <li>Open <b>GCash</b> on the other phone.</li>
+                                    <li>Tap <b>Scan QR</b> and point it at this screen.</li>
+                                    <li>The amount is already filled in &mdash; check it, then <b>Send</b>.</li>
+                                    <li>Come back here and enter your reference number below.</li>
+                                </ol>
+                            </div>
+
+                            <p class="text-[9px] text-slate-500 leading-snug">
+                                Maya works the same way &mdash; switch to the Maya tab above first,
+                                then scan with the Maya app.
+                            </p>
+                        </div>
+                    </details>
                 </div>
             </div>
 
@@ -2467,9 +2506,9 @@
         }
 
         async function copyTopupField(which) {
+            // The pay code only. The account number is no longer offered to
+            // players anywhere - they pay by scanning the QR.
             const map = {
-                number: () => (currentTopupMethod === 'maya'
-                    ? merchantConfig.mayaNum : merchantConfig.gcashNum) || '',
                 code: () => currentTopupCode || '',
             };
             const text = (map[which] || (() => ''))();
@@ -2480,7 +2519,7 @@
                 // Clipboard is blocked outside a secure context or without
                 // permission. Select the text instead so a long-press copy
                 // still works rather than the button doing nothing at all.
-                const el = document.getElementById(which === 'number' ? 'topup-pay-number' : 'topup-pay-code');
+                const el = document.getElementById('topup-pay-code');
                 if (el && window.getSelection) {
                     const range = document.createRange();
                     range.selectNodeContents(el);
@@ -2522,32 +2561,32 @@
         // channel changes and whenever the modal opens.
         function paintTopupPaymentDetails() {
             const isMaya = currentTopupMethod === 'maya';
-            const num = (isMaya ? merchantConfig.mayaNum : merchantConfig.gcashNum) || '';
-            const name = (isMaya ? merchantConfig.mayaName : merchantConfig.gcashName) || '';
             // merchantQrSrc, not merchantConfig.gcashQR: the QR normally lives
             // in the storage bucket as a path, and the base64 field is only a
             // fallback for one that has not been uploaded yet. Reading the
             // field directly hid a QR that was there.
             const qr = merchantQrSrc(isMaya ? 'maya' : 'gcash');
+            const payload = merchantQrPayload(isMaya ? 'maya' : 'gcash');
 
-            const numEl = document.getElementById('topup-pay-number');
-            const nameEl = document.getElementById('topup-pay-name');
             const codeEl = document.getElementById('topup-pay-code');
             const qrWrap = document.getElementById('topup-qr-wrap');
+            const noQr = document.getElementById('topup-no-qr');
+            const howTo = document.getElementById('topup-how-to');
 
-            if (numEl) numEl.innerText = num || 'Not set \u2014 ask support';
-            if (nameEl) nameEl.innerText = name || '';
             if (!currentTopupCode) currentTopupCode = newPayCode();
             if (codeEl) codeEl.innerText = currentTopupCode;
 
-            // Only offer the QR when there is one. An empty box told the
-            // player nothing and hid the number they actually needed.
-            const payload = merchantQrPayload(isMaya ? 'maya' : 'gcash');
+            // The QR is now the only way to pay, so when there is none the
+            // player is stuck. Say that outright rather than showing an empty
+            // box and instructions for scanning something that is not there.
+            const payable = !!(qr || payload);
             if (qrWrap) {
-                const haveSomething = !!(qr || payload);
-                qrWrap.classList.toggle('hidden', !haveSomething);
-                qrWrap.classList.toggle('flex', haveSomething);
+                qrWrap.classList.toggle('hidden', !payable);
+                qrWrap.classList.toggle('flex', payable);
             }
+            if (noQr) noQr.classList.toggle('hidden', payable);
+            if (howTo) howTo.classList.toggle('hidden', !payable);
+
             paintTopupQr();
         }
         window.paintTopupPaymentDetails = paintTopupPaymentDetails;
