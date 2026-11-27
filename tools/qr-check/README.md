@@ -72,3 +72,25 @@ Whether GCash and Maya actually honour a re-issued personal code. That needs a
 real scan on a real phone. If a wallet ever refuses one, the owner portal has an
 off switch — *Build the amount into top-up QR codes* — which puts every player
 straight back on the plain uploaded QR without a code change.
+
+## Checking the live site
+
+```bash
+node tools/qr-check/live-modal.mjs
+```
+
+Needs Playwright and no credentials. It opens the real top-up modal on the
+deployed site, types into the real amount field, waits out the real debounce,
+and reads whatever ended up in the QR box — then writes the rendered codes to
+`modal-shots.json` so they can be decoded and checked against the source.
+
+Override `SITE` to point at a preview deployment, `QR_TEST_OUT` for where
+screenshots land, and `PLAYWRIGHT_FROM` if Playwright is not resolvable from
+`/opt/node-tools/`.
+
+Worth running after swapping a QR image in the owner portal, which is the one
+change that can silently turn pre-fill off.
+
+**Watch for stale edges.** A deploy can be live for `curl` and still be cached
+for the browser a moment later; a confusing failure here is worth re-running
+before being believed.
