@@ -1928,7 +1928,11 @@
 
         // Keys small enough to live in app_settings as JSON. Anything holding an
         // image is deliberately absent from this list.
-        const REMOTE_SETTING_KEYS = ['merchant_config'];
+        // merchant_config is world-readable by policy, so it holds only what a
+        // player needs to pay. The account number and legal name live in
+        // merchant_private, which RLS gives to admins alone - a non-admin just
+        // gets no row back for it, which is the point.
+        const REMOTE_SETTING_KEYS = ['merchant_config', 'merchant_private'];
 
         async function cloudSet(key, value) {
             try {
@@ -1965,7 +1969,7 @@
                 try {
                     localStorage.setItem('aetheris_' + row.key, JSON.stringify(row.value));
                 } catch (e) {}
-                if (row.key === 'merchant_config') {
+                if (row.key === 'merchant_config' || row.key === 'merchant_private') {
                     merchantConfig = Object.assign({}, merchantConfig, row.value);
                 }
             });
@@ -1982,6 +1986,8 @@
             approvedResets = await cloudGet('approved_resets', []);
             supportChatsCache = await cloudGet('support_chats', {});
             merchantConfig = await cloudGet('merchant_config', merchantConfig);
+            merchantConfig = Object.assign({}, merchantConfig,
+                                           await cloudGet('merchant_private', {}));
             await pullRemoteSettings();
             await syncAllRegisteredPlayers(true);
             updateMerchantPaymentDisplay();
@@ -2818,6 +2824,10 @@
             if (savedConfig) {
                 merchantConfig = { ...merchantConfig, ...savedConfig };
             }
+            const savedPrivate = await cloudGet('merchant_private', null);
+            if (savedPrivate) {
+                merchantConfig = { ...merchantConfig, ...savedPrivate };
+            }
 
             const inputGcashNum = document.getElementById('input-gcash-num');
             const inputGcashName = document.getElementById('input-gcash-name');
@@ -2872,11 +2882,24 @@
             const box = document.getElementById('input-qr-prefill');
             if (!box) return;
             merchantConfig.qrPrefillAmount = !!box.checked;
-            await cloudSet('merchant_config', merchantConfig);
+            await saveMerchantConfig();
             paintPrefillStatus('gcash');
             paintPrefillStatus('maya');
         }
         window.saveQrPrefillSetting = saveQrPrefillSetting;
+
+        // Writes the merchant settings to the two keys they belong in. The
+        // numbers and names must never land in merchant_config: that row is
+        // readable by anyone, signed in or not.
+        const MERCHANT_PRIVATE_FIELDS = ['gcashNum', 'gcashName', 'mayaNum', 'mayaName'];
+        async function saveMerchantConfig() {
+            const pub = {}, priv = {};
+            for (const [k, v] of Object.entries(merchantConfig)) {
+                (MERCHANT_PRIVATE_FIELDS.includes(k) ? priv : pub)[k] = v;
+            }
+            await cloudSet('merchant_config', pub);
+            await cloudSet('merchant_private', priv);
+        }
 
         async function saveGcashSettings() {
             try {
@@ -2911,7 +2934,7 @@
                     }
                 }
 
-                await cloudSet('merchant_config', merchantConfig);
+                await saveMerchantConfig();
                 updateMerchantPaymentDisplay();
                 switchPlayerHubPayment(currentHubMethod);
                 switchRegPaymentMethod(currentRegMethod);
@@ -2953,7 +2976,7 @@
                     }
                 }
 
-                await cloudSet('merchant_config', merchantConfig);
+                await saveMerchantConfig();
                 updateMerchantPaymentDisplay();
                 switchPlayerHubPayment(currentHubMethod);
                 switchRegPaymentMethod(currentRegMethod);
