@@ -900,23 +900,48 @@
             <h3 class="font-cinzel text-base font-bold text-amber-400 text-center">Submit Top-Up Request (Min ₱50)</h3>
             
             <div class="space-y-2">
-                <p class="text-[11px] text-slate-400 text-center">1. Select payment channel & scan/save QR:</p>
-                
+                <p class="text-[11px] text-slate-400 text-center">1. Choose where to send it:</p>
+
                 <div class="flex space-x-2 max-w-xs mx-auto">
                     <button type="button" onclick="window.switchTopUpPaymentMethod('gcash')" id="btn-topup-gcash" class="flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition">GCash</button>
                     <button type="button" onclick="window.switchTopUpPaymentMethod('maya')" id="btn-topup-maya" class="flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
                 </div>
 
-                <div class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex flex-col items-center text-center space-y-2">
-                    <div id="topup-active-qr" class="w-32 h-32 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
-                    <button type="button" onclick="window.saveQRCodeImage(currentTopupMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR Code to Phone</button>
+                <!-- The number and name, which the modal never used to show at
+                     all: with no QR uploaded a player saw an empty box and had
+                     no way to know where to send money. Tap to copy, because
+                     most players pay on the same phone they are playing on and
+                     cannot scan their own screen. -->
+                <div class="p-2.5 bg-slate-950 border border-amber-500/30 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Send to</span>
+                            <span id="topup-pay-number" class="text-sm font-bold text-amber-400">--</span>
+                            <span id="topup-pay-name" class="text-[10px] text-slate-400 block truncate">--</span>
+                        </div>
+                        <button type="button" onclick="window.copyTopupField('number')" class="shrink-0 px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] rounded-lg">Copy</button>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2 border-t border-slate-800 pt-2">
+                        <div class="min-w-0">
+                            <span class="text-[9px] text-slate-400 uppercase tracking-wider block">Put this in the GCash message</span>
+                            <span id="topup-pay-code" class="text-sm font-bold text-emerald-400 tracking-widest">--</span>
+                            <span class="text-[9px] text-slate-500 block">So we can find your payment</span>
+                        </div>
+                        <button type="button" onclick="window.copyTopupField('code')" class="shrink-0 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] rounded-lg">Copy</button>
+                    </div>
+
+                    <div id="topup-qr-wrap" class="hidden flex-col items-center text-center space-y-2 border-t border-slate-800 pt-2">
+                        <div id="topup-active-qr" class="w-32 h-32 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <button type="button" onclick="window.saveQRCodeImage(currentTopupMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR to Phone</button>
+                    </div>
                 </div>
             </div>
 
-            <p class="text-[11px] text-slate-400 text-center">2. Enter amount (Minimum ₱50), reference number & upload receipt:</p>
+            <p class="text-[11px] text-slate-400 text-center">2. Send the money, then tell us about it:</p>
             <div class="space-y-2.5">
                 <input type="number" id="topup-amount" placeholder="Amount Sent (₱50 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                <input type="text" id="topup-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="text" id="topup-ref" placeholder="GCash/Maya Reference No. (from your receipt)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <div class="space-y-1">
                     <label class="text-[10px] text-slate-400 block">Upload Receipt Screenshot:</label>
                     <input type="file" id="topup-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-600 file:text-white">
@@ -1433,7 +1458,7 @@
 
         async function fetchPendingTopups() {
             const rows = await remote(c => c.from('topup_requests')
-                .select('id, user_id, email, nickname, amount, ref, method, receipt_path, date, created_at')
+                .select('id, user_id, email, nickname, amount, ref, pay_code, method, receipt_path, date, created_at')
                 .eq('status', 'pending')
                 .order('created_at', { ascending: false })
                 .limit(200));
@@ -2156,11 +2181,61 @@
         }
         window.switchRegPaymentMethod = switchRegPaymentMethod;
 
+        // The code the player writes in the GCash message, so the owner can
+        // match the transfer they can actually see against this request.
+        //
+        // Deliberately short and read-aloud safe: no O/0 or I/1/L, which get
+        // mistyped into the message field and then match nothing. Generated
+        // when the modal opens, because the player needs it BEFORE they pay.
+        let currentTopupCode = null;
+
+        function newPayCode() {
+            const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+            const buf = new Uint32Array(4);
+            crypto.getRandomValues(buf);
+            let out = '';
+            for (let i = 0; i < 4; i++) out += alphabet[buf[i] % alphabet.length];
+            return 'AET-' + out;
+        }
+
+        async function copyTopupField(which) {
+            const map = {
+                number: () => (currentTopupMethod === 'maya'
+                    ? merchantConfig.mayaNum : merchantConfig.gcashNum) || '',
+                code: () => currentTopupCode || '',
+            };
+            const text = (map[which] || (() => ''))();
+            if (!text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                // Clipboard is blocked outside a secure context or without
+                // permission. Select the text instead so a long-press copy
+                // still works rather than the button doing nothing at all.
+                const el = document.getElementById(which === 'number' ? 'topup-pay-number' : 'topup-pay-code');
+                if (el && window.getSelection) {
+                    const range = document.createRange();
+                    range.selectNodeContents(el);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+                alert('Could not copy automatically. The text is selected \u2014 hold and copy it.');
+                return;
+            }
+            const btn = event && event.currentTarget;
+            if (btn) {
+                const was = btn.innerText;
+                btn.innerText = 'Copied';
+                setTimeout(() => { btn.innerText = was; }, 1400);
+            }
+        }
+        window.copyTopupField = copyTopupField;
+
         async function switchTopUpPaymentMethod(method) {
             currentTopupMethod = method;
             const btnGcash = document.getElementById('btn-topup-gcash');
             const btnMaya = document.getElementById('btn-topup-maya');
-            const qrBox = document.getElementById('topup-active-qr');
 
             if (method === 'gcash') {
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
@@ -2171,8 +2246,36 @@
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
                 paintQrInto('topup-active-qr', 'maya', 'No Maya QR');
             }
+            paintTopupPaymentDetails();
         }
         window.switchTopUpPaymentMethod = switchTopUpPaymentMethod;
+
+        // Fills in the number, the name and the code. Called whenever the
+        // channel changes and whenever the modal opens.
+        function paintTopupPaymentDetails() {
+            const isMaya = currentTopupMethod === 'maya';
+            const num = (isMaya ? merchantConfig.mayaNum : merchantConfig.gcashNum) || '';
+            const name = (isMaya ? merchantConfig.mayaName : merchantConfig.gcashName) || '';
+            const qr = (isMaya ? merchantConfig.mayaQR : merchantConfig.gcashQR);
+
+            const numEl = document.getElementById('topup-pay-number');
+            const nameEl = document.getElementById('topup-pay-name');
+            const codeEl = document.getElementById('topup-pay-code');
+            const qrWrap = document.getElementById('topup-qr-wrap');
+
+            if (numEl) numEl.innerText = num || 'Not set \u2014 ask support';
+            if (nameEl) nameEl.innerText = name || '';
+            if (!currentTopupCode) currentTopupCode = newPayCode();
+            if (codeEl) codeEl.innerText = currentTopupCode;
+
+            // Only offer the QR when there is one. An empty box told the
+            // player nothing and hid the number they actually needed.
+            if (qrWrap) {
+                qrWrap.classList.toggle('hidden', !qr);
+                qrWrap.classList.toggle('flex', !!qr);
+            }
+        }
+        window.paintTopupPaymentDetails = paintTopupPaymentDetails;
 
         async function switchPlayerHubPayment(method) {
             currentHubMethod = method;
@@ -2571,6 +2674,9 @@
             if (target) target.classList.remove('hidden');
 
             if (type === 'topup') {
+                // A new code per visit, so two top-ups never carry the same
+                // reference and the owner can tell them apart.
+                currentTopupCode = newPayCode();
                 switchTopUpPaymentMethod('gcash');
             }
             if (type === 'support-chat') {
@@ -4237,11 +4343,18 @@
                 ownerDepositList.innerHTML = pendingTopups.length === 0 ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending top-ups.</div>' :
                     pendingTopups.map((t, idx) => `
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                            <div>
+                            <div class="min-w-0">
                                 <span class="font-bold text-amber-400">₱${t.amount} top-up</span>
-                                <span class="text-[10px] text-slate-400 block">${t.email} • Ref: ${t.ref}</span>
+                                ${t.pay_code ? `<span class="ml-1.5 text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold tracking-wider">${t.pay_code}</span>` : ''}
+                                <span class="text-[10px] text-slate-400 block truncate">${t.email} • their ref: ${t.ref || '—'}</span>
+                                <!-- The receipt is a screenshot the player
+                                     uploaded and can be edited in minutes.
+                                     The code is what to look for in GCash. -->
+                                <span class="text-[10px] text-slate-500 block">${t.pay_code
+                                    ? `Check GCash for ₱${t.amount} with message ${t.pay_code}`
+                                    : 'No code — match by amount and time in GCash'}</span>
                             </div>
-                            <div class="flex space-x-1 items-center">
+                            <div class="flex space-x-1 items-center shrink-0">
                                 ${(t.receipt_path || t.receipt) ? `<button onclick="window.openReceiptModal('${t.receipt_path || t.receipt}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px]">View Receipt</button>` : ''}
                                 <button onclick="window.approveTopup(${idx})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
                                 <button onclick="window.rejectTopup(${idx})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">Reject</button>
@@ -4507,6 +4620,7 @@
                 nickname: currentUser.nickname || currentUser.email,
                 amount,
                 ref,
+                pay_code: currentTopupCode,
                 receipt_path: receiptPath,
                 method: currentTopupMethod,
                 status: 'pending',
