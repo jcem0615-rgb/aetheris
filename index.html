@@ -2576,9 +2576,13 @@
                 ? qrphWithAmount(payload, amount, currentTopupCode)
                 : null;
 
-            // Drawing from the payload beats showing the uploaded picture even
-            // without an amount: same data, but crisp at any size.
-            const toDraw = dynamic || payload;
+            // Only ever draw our own code when it carries an amount. With
+            // pre-fill off, or below the minimum, the player gets the owner's
+            // uploaded image untouched — that is the whole point of the off
+            // switch, so it has to escape our encoding too, not just the
+            // dynamic flag. Drawing the payload is the last resort for an
+            // uploaded image that will not load at all.
+            const toDraw = dynamic || (staticSrc ? null : payload);
             if (toDraw) {
                 try {
                     await loadScriptOnce(QRPH_LIB);
