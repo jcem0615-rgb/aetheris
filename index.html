@@ -289,7 +289,7 @@
                 <!-- Wallet Container -->
                 <div id="nav-wallet-container" class="hidden items-center space-x-1 bg-slate-900 border border-slate-700 rounded-full px-2.5 py-0.5">
                     <span class="text-[10px] text-slate-400">Bal:</span>
-                    <span id="nav-wallet" class="text-xs font-bold text-emerald-400">₱0.00</span>
+                    <span id="nav-wallet" class="text-xs font-bold text-emerald-400">0 AC</span>
                 </div>
             </div>
         </div>
@@ -483,7 +483,7 @@
         <div id="view-shop" class="hidden space-y-3 py-2">
             <div class="text-center max-w-lg mx-auto mb-2">
                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-amber-400 glow-gold mb-1">HERO SKILL MARKETPLACE</h2>
-                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills (₱150-₱350) and Tier-3 Ultimate Super Skills (₱500) that cost 3 AP to unleash!</p>
+                <p class="text-slate-400 text-xs">Purchase elite Tier-2 skills (150&ndash;350 AC) and Tier-3 Ultimate Super Skills (500 AC) that cost 3 AP to unleash!</p>
             </div>
             <div id="shop-skills-container" class="space-y-2.5 pb-6"></div>
         </div>
@@ -506,8 +506,8 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-2 w-full sm:w-auto justify-end flex-wrap gap-y-1">
-                    <button onclick="window.openModal('topup')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">+ Top-Up (Min ₱50)</button>
-                    <button onclick="window.openModal('withdraw')" class="flex-1 sm:flex-none px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">Withdraw (Min ₱100)</button>
+                    <button onclick="window.openModal('topup')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">+ Add Coins (Min ₱50)</button>
+                    <button onclick="window.openModal('withdraw')" class="flex-1 sm:flex-none px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] rounded-xl shadow text-center">Cash Out (Min 100 AC)</button>
                 </div>
             </div>
 
@@ -550,7 +550,7 @@
                 <div onclick="window.switchTab('shop')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-3 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-1 text-xs">📜</div>
                     <h3 class="font-cinzel font-bold text-white text-xs">SKILL SHOP (Tier 2 & 3)</h3>
-                    <p class="text-[10px] text-slate-400 mt-0.5">Buy elite & ₱500 super skills.</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Buy elite &amp; 500 AC super skills.</p>
                 </div>
                 <div onclick="window.switchTab('select')" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-3 cursor-pointer card-hover">
                     <div class="w-7 h-7 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold mb-1 text-xs">🛡</div>
@@ -871,7 +871,7 @@
         <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-3 py-2 backdrop-blur shrink-0">
             <div class="flex items-center space-x-2">
                 <h2 class="font-cinzel font-bold text-xs sm:text-sm text-amber-400 glow-gold">DUEL ARENA</h2>
-                <span id="fullscreen-bet-badge" class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">Bet: ₱50</span>
+                <span id="fullscreen-bet-badge" class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">Stake: 50 AC</span>
             </div>
             <div class="flex items-center space-x-2">
                 <button id="btn-sound" onclick="window.toggleSound()" class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold rounded-xl transition">Sound On</button>
@@ -983,7 +983,10 @@
                      used to, is what left the player typing the figure into
                      GCash by hand and the owner matching it up by eye. -->
                 <p class="text-[11px] text-slate-400 text-center pt-1">2. How much are you sending?</p>
-                <input type="number" id="topup-amount" oninput="window.onTopupAmountInput()" placeholder="Amount in pesos (₱50 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="number" id="topup-amount" oninput="window.onTopupAmountInput()" placeholder="Amount in pesos (&#8369;50 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <!-- The one place the two units meet. Saying it in the moment
+                     beats a rate buried in the terms. -->
+                <p id="topup-coins-line" class="text-[11px] text-emerald-400 text-center font-semibold">1 Aetheris Coin = &#8369;1.00</p>
 
                 <p class="text-[11px] text-slate-400 text-center pt-1">3. Scan this to pay:</p>
 
@@ -1073,12 +1076,13 @@
             </div>
         </div>
 
-        <!-- Withdrawal Modal (Min ₱100 • Zero Fee) -->
+        <!-- Withdrawal Modal (Min 100 AC • Zero Fee) -->
         <div id="modal-withdraw" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden">
-            <h3 class="font-cinzel text-base font-bold text-amber-400">Withdrawal Request (Min ₱100 • Zero Fee)</h3>
+            <h3 class="font-cinzel text-base font-bold text-amber-400">Cash Out (Min 100 AC &bull; Zero Fee)</h3>
+            <p class="text-[11px] text-emerald-400">Coins convert back at 1 AC = &#8369;1.00. Cash out 100 AC and &#8369;100.00 is sent to you.</p>
             <p class="text-xs text-slate-400">Payouts are locked strictly to your registered phone number and legal name.</p>
             <div class="space-y-2.5">
-                <input type="number" id="withdraw-amount" placeholder="Amount (₱100 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="number" id="withdraw-amount" placeholder="Coins to cash out (100 AC minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <select id="withdraw-method" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <option value="GCash">GCash</option>
                     <option value="Maya">Maya</option>
@@ -1101,13 +1105,13 @@
         <!-- Ranked Matchmaking Wager Modal -->
         <div id="modal-bet" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-md space-y-3 hidden text-center">
             <h3 class="font-cinzel text-base font-bold text-amber-400">RANKED WAGER</h3>
-            <p class="text-xs text-slate-400">Choose your match stake. Winner takes the pot less a 10% platform fee on the wager — bet ₱100, win ₱190.</p>
+            <p class="text-xs text-slate-400">Choose your match stake. Winner takes the pot less a 10% platform fee on the wager &mdash; stake 100 AC, win 190 AC.</p>
             <div class="grid grid-cols-3 gap-2 pt-1">
-                <button onclick="window.startRankedMatchmaking(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱50</button>
-                <button onclick="window.startRankedMatchmaking(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱100</button>
-                <button onclick="window.startRankedMatchmaking(200)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱200</button>
-                <button onclick="window.startRankedMatchmaking(500)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">₱500</button>
-                <button onclick="window.startRankedMatchmaking(1000)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs col-span-2">₱1,000</button>
+                <button onclick="window.startRankedMatchmaking(50)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">50 AC</button>
+                <button onclick="window.startRankedMatchmaking(100)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">100 AC</button>
+                <button onclick="window.startRankedMatchmaking(200)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">200 AC</button>
+                <button onclick="window.startRankedMatchmaking(500)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs">500 AC</button>
+                <button onclick="window.startRankedMatchmaking(1000)" class="py-2.5 bg-slate-950 border border-slate-700 hover:border-amber-500 rounded-xl text-amber-400 font-bold text-xs col-span-2">1,000 AC</button>
             </div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl mt-1">Cancel</button>
         </div>
@@ -1173,11 +1177,11 @@
 
                 <p><strong>4. Registration fee.</strong> Registration costs <strong>₱50.00</strong>, paid to our published payment channel before approval. The fee is <strong>non-refundable</strong> once your account is approved, and it entitles you to choose one starter champion, which is permanently yours.</p>
 
-                <p><strong>5. Your wallet.</strong> Money you top up is held so you can place wagers. It is <strong>not a bank deposit</strong>, earns no interest, and is not insured by the PDIC. It remains yours and you may withdraw it subject to clause 7.</p>
+                <p><strong>5. Your coins.</strong> Topping up converts your money into <strong>Aetheris Coins (AC)</strong> at a fixed rate of <strong>1 AC = &#8369;1.00</strong>. Coins are a record of what we hold for you so you can place wagers. They are <strong>not a bank deposit</strong>, earn no interest, and are not insured by the PDIC. They do not expire, we will not change the rate, and you may convert them back to pesos at the same 1:1 rate subject to clause 7.</p>
 
-                <p><strong>6. Wagers and our fee.</strong> A duel is between two players, each staking the same amount. We charge <strong>10% of one wager</strong>, not of the combined pot. <strong>On a ₱100 wager the pot is ₱200, our fee is ₱10, and the winner receives ₱190.</strong> The fee is taken at settlement, win or lose, and is shown to you before you stake.</p>
+                <p><strong>6. Wagers and our fee.</strong> A duel is between two players, each staking the same amount. We charge <strong>10% of one wager</strong>, not of the combined pot. <strong>On a 100 AC wager the pot is 200 AC, our fee is 10 AC, and the winner receives 190 AC.</strong> The fee is taken at settlement, win or lose, and is shown to you before you stake.</p>
 
-                <p><strong>7. Top-ups and withdrawals.</strong> Both are reviewed by hand. A top-up is credited once we have matched your receipt to a payment actually received. Withdrawals have a <strong>₱100 minimum</strong>, carry no fee from us, and are paid to the mobile number registered on your account — not to a third party. We aim to settle within <strong>[N] business days</strong>. We may hold a withdrawal while we verify your identity or the source of funds, and we will tell you if we do.</p>
+                <p><strong>7. Top-ups and withdrawals.</strong> Both are reviewed by hand. A top-up is credited as Aetheris Coins once we have matched your receipt to a payment actually received. Withdrawals convert coins back to pesos at the same 1:1 rate, have a <strong>100 AC minimum</strong>, carry no fee from us, and are paid in pesos to the mobile number registered on your account — not to a third party. We aim to settle within <strong>[N] business days</strong>. We may hold a withdrawal while we verify your identity or the source of funds, and we will tell you if we do.</p>
 
                 <p><strong>8. Fair play.</strong> Automated scripts, bots, macros, modified clients, exploiting defects, and arranging the outcome of a duel with another player are all prohibited. The duel engine runs on our servers and its record of a duel is authoritative. Where a defect gives a player money they did not win, we may reverse it.</p>
 
@@ -1386,6 +1390,21 @@
         function escapeAttr(v) {
             return escapeHtml(v).replace(/\\/g, '&#92;');
         }
+
+        // The arena's own unit. One Aetheris Coin is one peso, fixed, and
+        // convertible back at the same rate - so this is a relabelling, not a
+        // second currency with its own maths. Pesos are still shown at the two
+        // points where real money moves: paying a top-up in, and cashing out.
+        // Whole balances lose the decimals; anything fractional keeps both.
+        function coins(v) {
+            const n = Number(v) || 0;
+            const whole = Math.abs(n % 1) < 0.005;
+            return n.toLocaleString('en-PH', {
+                minimumFractionDigits: whole ? 0 : 2,
+                maximumFractionDigits: 2,
+            }) + ' AC';
+        }
+        window.coins = coins;
 
         // ================= IMAGE COMPRESSION UTILITY =================
         function compressImage(file, maxWidth = 150, maxHeight = 150, quality = 0.5) {
@@ -2415,7 +2434,7 @@
             if (!currentUser) return;
             const bal = currentUser.wallet || currentUser.balance || 0;
             const navWallet = document.getElementById('nav-wallet');
-            if (navWallet) navWallet.innerText = `₱${Number(bal).toFixed(2)}`;
+            if (navWallet) navWallet.innerText = coins(bal);
             const withdrawAcct = document.getElementById('withdraw-account');
             const withdrawName = document.getElementById('withdraw-name');
             if (withdrawAcct) withdrawAcct.value = currentUser.phone || '';
@@ -2748,9 +2767,22 @@
         // Rebuilt as the player types, but not on every keystroke.
         let topupAmountTimer = null;
         function onTopupAmountInput() {
+            paintTopupCoinsLine();
             clearTimeout(topupAmountTimer);
             topupAmountTimer = setTimeout(paintTopupQr, 350);
         }
+
+        // Spells out the exchange while they are deciding the figure.
+        function paintTopupCoinsLine() {
+            const el = document.getElementById('topup-coins-line');
+            if (!el) return;
+            const amountEl = document.getElementById('topup-amount');
+            const amt = amountEl ? Number(amountEl.value) : NaN;
+            el.innerText = (Number.isFinite(amt) && amt > 0)
+                ? `\u20b1${amt.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} gets you ${coins(amt)}`
+                : '1 Aetheris Coin = \u20b11.00';
+        }
+        window.paintTopupCoinsLine = paintTopupCoinsLine;
         window.onTopupAmountInput = onTopupAmountInput;
 
         async function switchPlayerHubPayment(method) {
@@ -3224,6 +3256,7 @@
                     if (el) el.value = '';
                 });
                 topupQrShown = { payload: null, canvas: null, dynamic: false };
+                paintTopupCoinsLine();
                 switchTopUpPaymentMethod('gcash');
             }
             if (type === 'support-chat') {
@@ -3290,7 +3323,7 @@
                                     <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${b.result}</span>
                                 </div>
                                 <div class="text-slate-400 text-[10px]">
-                                    <span>Balance: ₱${b.preBalance} ➔ ₱${b.postBalance}</span><br>
+                                    <span>Balance: ${coins(b.preBalance)} \u279c ${coins(b.postBalance)}</span><br>
                                     <span>📅 ${b.date} ⏰ ${b.time}</span>
                                 </div>
                             </div>
@@ -3445,8 +3478,8 @@
                         <div class="w-full sm:w-auto flex justify-end">
                             ${isActive ? '<button disabled class="px-3 py-1.5 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl cursor-not-allowed">In Combat</button>' :
                               isUnlocked ? `<button onclick="window.setActiveHero('${h.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow">Select Hero</button>` :
-                              meetsReq ? `<button onclick="window.purchaseHero('${h.id}', ${h.price})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow">Buy ₱${h.price}</button>` :
-                              `<button disabled class="px-3 py-1.5 bg-slate-800 text-slate-500 text-xs font-bold rounded-xl cursor-not-allowed">Locked (₱${h.price})</button>`}
+                              meetsReq ? `<button onclick="window.purchaseHero('${h.id}', ${h.price})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow">Buy ${coins(h.price)}</button>` :
+                              `<button disabled class="px-3 py-1.5 bg-slate-800 text-slate-500 text-xs font-bold rounded-xl cursor-not-allowed">Locked (${coins(h.price)})</button>`}
                         </div>
                     </div>
                 `;
@@ -3470,7 +3503,7 @@
             // Price, win and EXP gates are enforced server-side; this is only a
             // fast fail so the player gets an instant message.
             if ((currentUser.wallet || 0) < price) {
-                alert(`Insufficient wallet balance (₱${currentUser.wallet || 0}). Top-up required.`);
+                alert(`You have ${coins(currentUser.wallet || 0)}. Add more coins to buy this.`);
                 openModal('topup');
                 return;
             }
@@ -3510,7 +3543,7 @@
                         </div>
                         <div>
                             ${isOwned ? '<span class="text-xs text-emerald-400 font-bold">Owned ✓</span>' :
-                              `<button onclick="window.purchaseSkill('${skill.id}', ${skill.cost})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow">Buy ₱${skill.cost}</button>`}
+                              `<button onclick="window.purchaseSkill('${skill.id}', ${skill.cost})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow">Buy ${coins(skill.cost)}</button>`}
                         </div>
                     </div>
                 `;
@@ -3521,7 +3554,7 @@
         async function purchaseSkill(skillId, cost) {
             if (!currentUser) return;
             if ((currentUser.wallet || 0) < cost) {
-                alert(`Insufficient balance (₱${currentUser.wallet || 0}). Top-up required.`);
+                alert(`You have ${coins(currentUser.wallet || 0)}. Add more coins to buy this.`);
                 openModal('topup');
                 return;
             }
@@ -3549,7 +3582,7 @@
             closeModal();
             if (!currentUser) return;
             if ((currentUser.wallet || 0) < amount) {
-                alert(`Insufficient wallet balance (₱${currentUser.wallet || 0}) for a ₱${amount} wager. Please top-up.`);
+                alert(`You have ${coins(currentUser.wallet || 0)}, which is not enough for a ${coins(amount)} wager. Add more coins first.`);
                 openModal('topup');
                 return;
             }
@@ -3748,7 +3781,7 @@
             setHeroArt(fsEnemyImg, enemyHero);
             // The previous duel may have left a figure face down.
             heroResetFigures();
-            if (fsBetBadge) fsBetBadge.innerText = `Bet: ₱${currentDuelBet}`;
+            if (fsBetBadge) fsBetBadge.innerText = `Stake: ${coins(currentDuelBet)}`;
 
             const viewFullscreen = document.getElementById('view-duel-fullscreen');
             if (viewFullscreen) viewFullscreen.classList.remove('hidden');
