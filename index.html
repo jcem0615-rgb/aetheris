@@ -750,6 +750,7 @@
                         <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
                             <span class="text-xs font-bold text-blue-400 self-start">GCash Account & QR</span>
                             <div id="owner-gcash-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                            <span id="owner-gcash-prefill" class="text-[9px] font-bold leading-snug block px-1"></span>
                             <input type="text" id="input-gcash-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="text" id="input-gcash-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="file" id="input-gcash-qr" accept="image/*" onchange="window.previewSelectedQR(event, 'gcash')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-600 file:text-white">
@@ -758,12 +759,26 @@
                         <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-2.5 flex flex-col items-center text-center">
                             <span class="text-xs font-bold text-teal-400 self-start">Maya Account & QR</span>
                             <div id="owner-maya-qr-preview" class="w-36 h-36 bg-slate-900 border-2 border-teal-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                            <span id="owner-maya-prefill" class="text-[9px] font-bold leading-snug block px-1"></span>
                             <input type="text" id="input-maya-num" placeholder="Account Number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="text" id="input-maya-name" placeholder="Account Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                             <input type="file" id="input-maya-qr" accept="image/*" onchange="window.previewSelectedQR(event, 'maya')" class="w-full text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-teal-600 file:text-white">
                             <button onclick="window.saveMayaSettings()" class="w-full py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg shadow">Save Maya Settings</button>
                         </div>
                     </div>
+
+                    <!-- The off switch. A re-issued personal QR is standard
+                         EMVCo, but if a wallet ever refuses one, turning this
+                         off puts every player straight back on the plain QR
+                         without waiting for a code change. -->
+                    <label class="flex items-start gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800 cursor-pointer">
+                        <input type="checkbox" id="input-qr-prefill" onchange="window.saveQrPrefillSetting()" class="mt-0.5 accent-emerald-500">
+                        <span class="text-[10px] text-slate-300 leading-snug">
+                            <b class="text-emerald-400">Build the amount into top-up QR codes.</b>
+                            Players scan and the figure plus their pay code are already filled in.
+                            Turn this off to show your plain uploaded QR instead.
+                        </span>
+                    </label>
                 </div>
 
                 <div class="space-y-1.5">
@@ -907,6 +922,15 @@
                     <button type="button" onclick="window.switchTopUpPaymentMethod('maya')" id="btn-topup-maya" class="flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition">Maya</button>
                 </div>
 
+                <!-- The amount is asked for BEFORE the QR is shown, because the
+                     QR is rebuilt to carry it. Asking afterwards, as this modal
+                     used to, is what left the player typing the figure into
+                     GCash by hand and the owner matching it up by eye. -->
+                <p class="text-[11px] text-slate-400 text-center pt-1">2. How much are you sending?</p>
+                <input type="number" id="topup-amount" oninput="window.onTopupAmountInput()" placeholder="Amount in pesos (₱50 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+
+                <p class="text-[11px] text-slate-400 text-center pt-1">3. Send it here:</p>
+
                 <!-- The number and name, which the modal never used to show at
                      all: with no QR uploaded a player saw an empty box and had
                      no way to know where to send money. Tap to copy, because
@@ -932,15 +956,19 @@
                     </div>
 
                     <div id="topup-qr-wrap" class="hidden flex-col items-center text-center space-y-2 border-t border-slate-800 pt-2">
-                        <div id="topup-active-qr" class="w-32 h-32 bg-slate-900 border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <div id="topup-active-qr" class="w-40 h-40 bg-white border-2 border-blue-500/50 rounded-xl flex items-center justify-center text-xs text-slate-400 overflow-hidden shadow-lg p-1">No QR</div>
+                        <span id="topup-qr-note" class="text-[10px] text-emerald-400 font-semibold block px-1 leading-snug"></span>
                         <button type="button" onclick="window.saveQRCodeImage(currentTopupMethod)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg shadow">Save QR to Phone</button>
+                        <p class="text-[9px] text-slate-500 leading-snug px-1">
+                            Paying on this same phone? Tap <b>Save QR to Phone</b>, open your
+                            wallet app, tap <b>Scan QR</b>, then choose the picture from your gallery.
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <p class="text-[11px] text-slate-400 text-center">2. Send the money, then tell us about it:</p>
+            <p class="text-[11px] text-slate-400 text-center">4. Sent it? Tell us about it:</p>
             <div class="space-y-2.5">
-                <input type="number" id="topup-amount" placeholder="Amount Sent (₱50 minimum)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <input type="text" id="topup-ref" placeholder="GCash/Maya Reference No. (from your receipt)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                 <div class="space-y-1">
                     <label class="text-[10px] text-slate-400 block">Upload Receipt Screenshot:</label>
@@ -1234,7 +1262,15 @@
             gcashQR: null,
             mayaNum: '09923978537',
             mayaName: 'John Carlo Estrada Morales',
-            mayaQR: null
+            mayaQR: null,
+            // The text decoded out of the uploaded QR image. Having the payload
+            // rather than only the picture is what lets a top-up QR be re-issued
+            // with the amount and the pay code already in it.
+            gcashQrPayload: null,
+            mayaQrPayload: null,
+            // Off switch, in case a wallet refuses a re-issued personal code.
+            // With it off the player just sees the plain uploaded QR.
+            qrPrefillAmount: true
         };
 
         // ================= IMAGE COMPRESSION UTILITY =================
@@ -1283,6 +1319,201 @@
             return method === 'gcash' ? merchantConfig.gcashQR : merchantConfig.mayaQR;
         }
 
+        // ================= QR Ph (EMVCo) RE-ISSUING =================
+        // A GCash or Maya personal QR is an EMVCo payload: tag(2) + length(2,
+        // decimal) + value, ending in a CRC. A personal code is static and
+        // carries no amount, which is why a player has to type the figure in
+        // themselves and why the owner then has to match a payment to a request
+        // by hand. Decoding the owner's own QR lets the same code be re-issued
+        // per request with the amount and the pay code already inside it.
+        //
+        // Nothing here invents a destination: the merchant account field is
+        // copied through untouched and asserted byte-identical in the tests.
+
+        const QRPH_LIB = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+        const QRPH_DECODER = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+
+        // CRC-16/CCITT-FALSE, which is what EMVCo tag 63 carries.
+        function qrphCrc(s) {
+            let crc = 0xFFFF;
+            for (let i = 0; i < s.length; i++) {
+                crc ^= s.charCodeAt(i) << 8;
+                for (let b = 0; b < 8; b++) {
+                    crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+                }
+            }
+            return crc.toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        function qrphParse(s) {
+            if (typeof s !== 'string') return null;
+            const out = [];
+            let i = 0;
+            while (i + 4 <= s.length) {
+                const tag = s.slice(i, i + 2);
+                const lenStr = s.slice(i + 2, i + 4);
+                const len = Number(lenStr);
+                if (!/^\d{2}$/.test(lenStr) || i + 4 + len > s.length) return null;
+                out.push({ tag, value: s.slice(i + 4, i + 4 + len) });
+                i += 4 + len;
+            }
+            return i === s.length ? out : null;
+        }
+
+        function qrphTlv(tag, value) {
+            if (value.length > 99) return null;   // the length field is two digits
+            return tag + String(value.length).padStart(2, '0') + value;
+        }
+
+        // Is this a peso QR Ph code whose checksum proves it arrived intact?
+        // Anything that fails here is left strictly alone.
+        function qrphValid(payload) {
+            if (typeof payload !== 'string' || payload.length < 20 || payload.length > 512) return false;
+            const fields = qrphParse(payload);
+            if (!fields) return false;
+            const get = (t) => (fields.find((f) => f.tag === t) || {}).value;
+            if (get('00') !== '01') return false;        // payload format indicator
+            if (get('53') !== '608') return false;        // pesos, so no other currency is touched
+            if (!get('58')) return false;                 // country
+            const crc = get('63');
+            if (!crc) return false;
+            return qrphCrc(payload.slice(0, payload.length - 4)) === crc.toUpperCase();
+        }
+
+        // Re-issue a static QR Ph payload carrying an amount and a reference.
+        // Returns null rather than a guess whenever the input is not something
+        // it fully understands.
+        function qrphWithAmount(staticPayload, amount, reference, dynamicFlag = true) {
+            if (!qrphValid(staticPayload)) return null;
+
+            const amt = Number(amount);
+            if (!Number.isFinite(amt) || amt <= 0 || amt > 999999.99) return null;
+            const amtStr = amt.toFixed(2);
+
+            const fields = qrphParse(staticPayload);
+            const kept = [];
+            for (const f of fields) {
+                if (f.tag === '63' || f.tag === '54') continue;   // recomputed / replaced
+                if (f.tag === '01') { kept.push({ tag: '01', value: dynamicFlag ? '12' : '11' }); continue; }
+                kept.push({ tag: f.tag, value: f.value });
+            }
+            if (!kept.some((f) => f.tag === '01')) {
+                kept.push({ tag: '01', value: dynamicFlag ? '12' : '11' });
+            }
+            kept.push({ tag: '54', value: amtStr });
+
+            // The pay code goes in the additional-data template, subtag 05
+            // (Reference Label), which is the field wallets surface as a note.
+            const ref = String(reference || '').trim().slice(0, 25);
+            if (ref) {
+                const existing = kept.find((f) => f.tag === '62');
+                const sub = existing ? (qrphParse(existing.value) || []) : [];
+                const rebuilt = sub.filter((f) => f.tag !== '05').map((f) => qrphTlv(f.tag, f.value));
+                const refTlv = qrphTlv('05', ref);
+                if (rebuilt.some((x) => x === null) || !refTlv) return null;
+                const value = rebuilt.join('') + refTlv;
+                if (value.length > 99) return null;
+                if (existing) existing.value = value;
+                else kept.push({ tag: '62', value });
+            }
+
+            // EMVCo does not demand ascending order, but every code in the wild
+            // is written that way and the source payloads already are.
+            kept.sort((a, b) => (a.tag < b.tag ? -1 : a.tag > b.tag ? 1 : 0));
+
+            const parts = kept.map((f) => qrphTlv(f.tag, f.value));
+            if (parts.some((p) => p === null)) return null;
+            const body = parts.join('') + '6304';
+            if (body.length > 460) return null;
+            return body + qrphCrc(body);
+        }
+
+        // Validated on the way out, so a payload that got corrupted in storage
+        // can never be turned into a code pointing somewhere unintended.
+        function merchantQrPayload(method) {
+            const raw = method === 'gcash' ? merchantConfig.gcashQrPayload : merchantConfig.mayaQrPayload;
+            return (typeof raw === 'string' && qrphValid(raw)) ? raw : null;
+        }
+
+        // What the owner is told after uploading a QR, and shown in the payment
+        // settings panel. Silence here is how a broken pre-fill would go unnoticed.
+        function qrPrefillNote(method) {
+            const label = method === 'gcash' ? 'GCash' : 'Maya';
+            return merchantQrPayload(method)
+                ? `\n\nAmount pre-fill is ON for ${label}. Top-up QRs are rebuilt with the `
+                  + `player's amount and pay code already inside them.`
+                : `\n\nAmount pre-fill is OFF for ${label}: that image did not read as a QR Ph `
+                  + `code. Players still get the QR, they just type the amount themselves. A `
+                  + `sharper, uncropped screenshot of the QR usually fixes it.`;
+        }
+
+        const loadedScripts = {};
+        function loadScriptOnce(src) {
+            if (loadedScripts[src]) return loadedScripts[src];
+            loadedScripts[src] = new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = src;
+                s.async = true;
+                s.onload = () => resolve();
+                s.onerror = () => { delete loadedScripts[src]; reject(new Error('Could not load ' + src)); };
+                document.head.appendChild(s);
+            });
+            return loadedScripts[src];
+        }
+
+        // Drawn rather than handed to the library's own SVG helper, so the
+        // result is a canvas the player can also save as a picture.
+        function qrphCanvas(payload, px) {
+            const qr = window.qrcode(0, 'M');
+            qr.addData(payload);
+            qr.make();
+            const n = qr.getModuleCount();
+            const quiet = 4;                       // the white border a scanner needs
+            const total = n + quiet * 2;
+            const cell = Math.max(2, Math.floor((px || 512) / total));
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = total * cell;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#000000';
+            for (let r = 0; r < n; r++) {
+                for (let c = 0; c < n; c++) {
+                    if (qr.isDark(r, c)) ctx.fillRect((c + quiet) * cell, (r + quiet) * cell, cell, cell);
+                }
+            }
+            return canvas;
+        }
+
+        // Reads the payload back out of an uploaded QR image, so changing the
+        // QR in the owner portal keeps the amount pre-fill working by itself.
+        async function decodeQrFile(file) {
+            try {
+                await loadScriptOnce(QRPH_DECODER);
+                const bitmap = await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    const url = URL.createObjectURL(file);
+                    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+                    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+                    img.src = url;
+                });
+                // Upscale small images: jsQR needs a few pixels per module.
+                const scale = Math.min(4, Math.max(1, 900 / Math.max(bitmap.width, bitmap.height)));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(bitmap.width * scale);
+                canvas.height = Math.round(bitmap.height * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const found = window.jsQR(data.data, data.width, data.height,
+                                          { inversionAttempts: 'attemptBoth' });
+                const text = found && found.data;
+                return (text && qrphValid(text)) ? text : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
         function paintQrInto(elementId, method, emptyLabel) {
             const box = document.getElementById(elementId);
             if (!box) return;
@@ -1297,14 +1528,24 @@
             if (!file) return;
             try {
                 const base64 = await compressImage(file, 150, 150, 0.5);
+                // The old payload describes the old picture. Drop it now, so a
+                // previewed-but-unsaved QR can never be paired with the previous
+                // code's account details. Save re-reads it from the new file.
                 if (type === 'gcash') {
                     merchantConfig.gcashQR = base64;
+                    merchantConfig.gcashQrPayload = null;
                     const preview = document.getElementById('owner-gcash-qr-preview');
                     if (preview) preview.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-lg">`;
                 } else {
                     merchantConfig.mayaQR = base64;
+                    merchantConfig.mayaQrPayload = null;
                     const preview = document.getElementById('owner-maya-qr-preview');
                     if (preview) preview.innerHTML = `<img src="${base64}" class="w-full h-full object-cover rounded-lg">`;
+                }
+                const status = document.getElementById(`owner-${type}-prefill`);
+                if (status) {
+                    status.className = 'text-[9px] font-bold leading-snug block px-1 text-slate-400';
+                    status.innerText = 'Not saved yet — press Save to read this QR.';
                 }
             } catch(err) {
                 console.error('Preview error:', err);
@@ -1314,6 +1555,33 @@
         window.previewSelectedQR = previewSelectedQR;
 
         async function saveQRCodeImage(method) {
+            // When the top-up modal is showing a code we generated, save THAT
+            // one. Saving the owner's plain QR instead would quietly drop the
+            // amount and the pay code the player is relying on.
+            if (topupQrShown.canvas && method === currentTopupMethod) {
+                const name = topupQrShown.dynamic
+                    ? `aetheris_${method}_${(currentTopupCode || 'pay').replace(/[^\w-]/g, '')}.png`
+                    : `aetheris_${method}_qr.png`;
+                try {
+                    const blob = await new Promise((resolve, reject) => {
+                        topupQrShown.canvas.toBlob(
+                            (b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = name;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 10000);
+                    return;
+                } catch (err) {
+                    // Fall through to the uploaded image rather than leave the
+                    // button doing nothing.
+                }
+            }
+
             const src = merchantQrSrc(method);
             if (!src) {
                 alert(`No ${method.toUpperCase()} QR code uploaded yet.`);
@@ -2240,12 +2508,12 @@
             if (method === 'gcash') {
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-blue-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                paintQrInto('topup-active-qr', 'gcash', 'No GCash QR');
             } else {
                 if (btnMaya) btnMaya.className = 'flex-1 py-1 bg-teal-600 text-white font-bold rounded-lg text-xs transition';
                 if (btnGcash) btnGcash.className = 'flex-1 py-1 bg-slate-950 border border-slate-700 text-slate-300 font-bold rounded-lg text-xs transition';
-                paintQrInto('topup-active-qr', 'maya', 'No Maya QR');
             }
+            // paintTopupPaymentDetails paints the QR too, because which QR to
+            // show depends on the amount as well as the channel.
             paintTopupPaymentDetails();
         }
         window.switchTopUpPaymentMethod = switchTopUpPaymentMethod;
@@ -2274,12 +2542,82 @@
 
             // Only offer the QR when there is one. An empty box told the
             // player nothing and hid the number they actually needed.
+            const payload = merchantQrPayload(isMaya ? 'maya' : 'gcash');
             if (qrWrap) {
-                qrWrap.classList.toggle('hidden', !qr);
-                qrWrap.classList.toggle('flex', !!qr);
+                const haveSomething = !!(qr || payload);
+                qrWrap.classList.toggle('hidden', !haveSomething);
+                qrWrap.classList.toggle('flex', haveSomething);
             }
+            paintTopupQr();
         }
         window.paintTopupPaymentDetails = paintTopupPaymentDetails;
+
+        // What the player is currently looking at, so Save QR saves the code on
+        // screen rather than the owner's plain one.
+        let topupQrShown = { payload: null, canvas: null, dynamic: false };
+
+        // Paints the top-up QR: the owner's code re-issued with this request's
+        // amount and pay code when that can be built, the plain code otherwise.
+        async function paintTopupQr() {
+            const box = document.getElementById('topup-active-qr');
+            const note = document.getElementById('topup-qr-note');
+            if (!box) return;
+
+            const method = currentTopupMethod === 'maya' ? 'maya' : 'gcash';
+            const staticSrc = merchantQrSrc(method);
+            const payload = merchantQrPayload(method);
+            const amountEl = document.getElementById('topup-amount');
+            const amount = amountEl ? Number(amountEl.value) : NaN;
+            const wantPrefill = merchantConfig.qrPrefillAmount !== false;
+
+            topupQrShown = { payload: null, canvas: null, dynamic: false };
+
+            const dynamic = (wantPrefill && payload && Number.isFinite(amount) && amount >= 50)
+                ? qrphWithAmount(payload, amount, currentTopupCode)
+                : null;
+
+            // Drawing from the payload beats showing the uploaded picture even
+            // without an amount: same data, but crisp at any size.
+            const toDraw = dynamic || payload;
+            if (toDraw) {
+                try {
+                    await loadScriptOnce(QRPH_LIB);
+                    // The channel or amount may have moved on while the library
+                    // was loading; whatever ran last wins.
+                    if (method !== (currentTopupMethod === 'maya' ? 'maya' : 'gcash')) return;
+                    const canvas = qrphCanvas(toDraw, 512);
+                    canvas.className = 'w-full h-full object-contain rounded-lg bg-white';
+                    box.innerHTML = '';
+                    box.appendChild(canvas);
+                    topupQrShown = { payload: toDraw, canvas, dynamic: !!dynamic };
+                    if (note) {
+                        note.innerText = dynamic
+                            ? `This QR already has \u20b1${amount.toFixed(2)} and ${currentTopupCode} in it.`
+                            : (wantPrefill
+                                ? 'Enter the amount above and it will be built into this QR.'
+                                : 'Scan, then type the amount in your wallet app.');
+                    }
+                    return;
+                } catch (e) {
+                    // The QR library did not load. Fall through to the picture,
+                    // which is never worse than what players had before.
+                }
+            }
+
+            box.innerHTML = staticSrc
+                ? `<img src="${staticSrc}" loading="lazy" class="w-full h-full object-cover rounded-lg">`
+                : `<span class="text-xs text-slate-400">No ${method.toUpperCase()} QR</span>`;
+            if (note) note.innerText = 'Scan, then type the amount in your wallet app.';
+        }
+        window.paintTopupQr = paintTopupQr;
+
+        // Rebuilt as the player types, but not on every keystroke.
+        let topupAmountTimer = null;
+        function onTopupAmountInput() {
+            clearTimeout(topupAmountTimer);
+            topupAmountTimer = setTimeout(paintTopupQr, 350);
+        }
+        window.onTopupAmountInput = onTopupAmountInput;
 
         async function switchPlayerHubPayment(method) {
             currentHubMethod = method;
@@ -2319,7 +2657,50 @@
 
             paintQrInto('owner-gcash-qr-preview', 'gcash', 'No QR');
             paintQrInto('owner-maya-qr-preview', 'maya', 'No QR');
+
+            const prefillBox = document.getElementById('input-qr-prefill');
+            if (prefillBox && document.activeElement !== prefillBox) {
+                prefillBox.checked = merchantConfig.qrPrefillAmount !== false;
+            }
+            paintPrefillStatus('gcash');
+            paintPrefillStatus('maya');
         }
+
+        // Says, per channel, whether a top-up QR can be built with the amount in
+        // it. Without this the owner has no way to tell that pre-fill silently
+        // stopped working after swapping a QR image.
+        function paintPrefillStatus(method) {
+            const el = document.getElementById(`owner-${method}-prefill`);
+            if (!el) return;
+            const src = merchantQrSrc(method);
+            const readable = !!merchantQrPayload(method);
+            const on = merchantConfig.qrPrefillAmount !== false;
+            if (!src) {
+                el.innerText = '';
+                return;
+            }
+            if (readable && on) {
+                el.className = 'text-[9px] font-bold leading-snug block px-1 text-emerald-400';
+                el.innerText = 'Amount pre-fill ON — players get a QR with the figure in it';
+            } else if (readable) {
+                el.className = 'text-[9px] font-bold leading-snug block px-1 text-slate-400';
+                el.innerText = 'Readable, but pre-fill is switched off below';
+            } else {
+                el.className = 'text-[9px] font-bold leading-snug block px-1 text-amber-400';
+                el.innerText = 'Could not read this QR — players will type the amount themselves. '
+                             + 'Re-upload a sharper, uncropped shot to enable pre-fill.';
+            }
+        }
+
+        async function saveQrPrefillSetting() {
+            const box = document.getElementById('input-qr-prefill');
+            if (!box) return;
+            merchantConfig.qrPrefillAmount = !!box.checked;
+            await cloudSet('merchant_config', merchantConfig);
+            paintPrefillStatus('gcash');
+            paintPrefillStatus('maya');
+        }
+        window.saveQrPrefillSetting = saveQrPrefillSetting;
 
         async function saveGcashSettings() {
             try {
@@ -2332,14 +2713,22 @@
                 merchantConfig.gcashNum = numInput.value.trim();
                 merchantConfig.gcashName = nameInput.value.trim();
 
+                let uploaded = false;
                 if (fileInput && fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    // Decode from the ORIGINAL file, before compression: once it
+                    // has been squeezed to 512px at quality 0.8 there may not be
+                    // enough pixels per module left to read.
+                    const payload = await decodeQrFile(file);
                     // Bytes go to Storage; the row keeps a short path. Storing the
                     // base64 here is what used to re-ship the image on every read.
-                    const path = await uploadImage(QR_BUCKET, 'gcash-qr.jpg', fileInput.files[0], 512, 512, 0.8);
+                    const path = await uploadImage(QR_BUCKET, 'gcash-qr.jpg', file, 512, 512, 0.8);
                     if (path) {
                         merchantConfig.gcashQrPath = path;
                         merchantConfig.gcashQrVersion = Date.now();
                         merchantConfig.gcashQR = null;
+                        merchantConfig.gcashQrPayload = payload;   // null is fine: the plain QR still shows
+                        uploaded = true;
                     } else {
                         alert('Could not upload the QR image to storage. Check your connection and try again.');
                         return;
@@ -2350,7 +2739,7 @@
                 updateMerchantPaymentDisplay();
                 switchPlayerHubPayment(currentHubMethod);
                 switchRegPaymentMethod(currentRegMethod);
-                alert('GCash settings saved successfully!');
+                alert('GCash settings saved successfully!' + (uploaded ? qrPrefillNote('gcash') : ''));
             } catch (err) {
                 alert('Error saving GCash settings: ' + err.message);
             }
@@ -2368,14 +2757,20 @@
                 merchantConfig.mayaNum = numInput.value.trim();
                 merchantConfig.mayaName = nameInput.value.trim();
 
+                let uploaded = false;
                 if (fileInput && fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    // Decode before compression, for the same reason as GCash.
+                    const payload = await decodeQrFile(file);
                     // Bytes go to Storage; the row keeps a short path. Storing the
                     // base64 here is what used to re-ship the image on every read.
-                    const path = await uploadImage(QR_BUCKET, 'maya-qr.jpg', fileInput.files[0], 512, 512, 0.8);
+                    const path = await uploadImage(QR_BUCKET, 'maya-qr.jpg', file, 512, 512, 0.8);
                     if (path) {
                         merchantConfig.mayaQrPath = path;
                         merchantConfig.mayaQrVersion = Date.now();
                         merchantConfig.mayaQR = null;
+                        merchantConfig.mayaQrPayload = payload;
+                        uploaded = true;
                     } else {
                         alert('Could not upload the QR image to storage. Check your connection and try again.');
                         return;
@@ -2386,7 +2781,7 @@
                 updateMerchantPaymentDisplay();
                 switchPlayerHubPayment(currentHubMethod);
                 switchRegPaymentMethod(currentRegMethod);
-                alert('Maya settings saved successfully!');
+                alert('Maya settings saved successfully!' + (uploaded ? qrPrefillNote('maya') : ''));
             } catch (err) {
                 alert('Error saving Maya settings: ' + err.message);
             }
@@ -2681,6 +3076,13 @@
                 // A new code per visit, so two top-ups never carry the same
                 // reference and the owner can tell them apart.
                 currentTopupCode = newPayCode();
+                // Clear last visit's entries. A stale amount left here would
+                // build a QR for the wrong figure.
+                ['topup-amount', 'topup-ref', 'topup-receipt'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                topupQrShown = { payload: null, canvas: null, dynamic: false };
                 switchTopUpPaymentMethod('gcash');
             }
             if (type === 'support-chat') {
