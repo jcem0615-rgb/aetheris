@@ -410,6 +410,14 @@
                 <div class="flex items-center justify-between text-xs pt-1">
                     <button onclick="window.showAuthMode('login')" class="text-blue-400 hover:underline">Back to Sign In</button>
                 </div>
+                <!-- Only rendered once a Turnstile site key is saved in the
+                     owner portal. Until then registration works exactly as
+                     before, rather than being blocked by a widget that cannot
+                     load. -->
+                <div id="reg-captcha-wrap" class="hidden flex-col items-center gap-1 pt-1">
+                    <div id="reg-captcha"></div>
+                    <span id="reg-captcha-note" class="text-[10px] text-slate-500">Tick the box above to prove you are a person.</span>
+                </div>
                 <button onclick="window.handleRegister()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">Register Account</button>
             </div>
 
@@ -859,6 +867,26 @@
                         <input type="email" id="input-new-admin" placeholder="Email of a registered account"
                                class="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                         <button onclick="window.addAdminAccount()" class="shrink-0 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg">Make Admin</button>
+                    </div>
+                </div>
+
+                <!-- Turnstile keeps scripted sign-ups out. Two halves: the site
+                     key here, and the secret key in the Supabase dashboard,
+                     which is what actually verifies the token. One without the
+                     other does nothing. -->
+                <div class="space-y-1.5 pb-2">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Human Check On Registration</h3>
+                    <p class="text-[10px] text-slate-500 leading-snug">
+                        Free from Cloudflare Turnstile. Paste the <b>site key</b> here, then put the
+                        <b>secret key</b> in Supabase under Authentication &rarr; Attack Protection &rarr;
+                        enable CAPTCHA and choose Turnstile. Both halves are needed: the key here only
+                        shows the box, the one in Supabase is what checks it.
+                    </p>
+                    <div id="owner-captcha-state" class="text-[10px] font-bold"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="input-turnstile-key" placeholder="Turnstile site key (0x4AAA...)"
+                               class="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <button onclick="window.saveTurnstileKey()" class="shrink-0 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg">Save</button>
                     </div>
                 </div>
 
@@ -1962,7 +1990,8 @@
         // player needs to pay. The account number and legal name live in
         // merchant_private, which RLS gives to admins alone - a non-admin just
         // gets no row back for it, which is the point.
-        const REMOTE_SETTING_KEYS = ['merchant_config', 'merchant_private'];
+        const REMOTE_SETTING_KEYS = ['merchant_config', 'merchant_private', 'auth_config'];
+        let authConfig = { turnstileSiteKey: '' };
 
         async function cloudSet(key, value) {
             try {
@@ -2001,6 +2030,10 @@
                 } catch (e) {}
                 if (row.key === 'merchant_config' || row.key === 'merchant_private') {
                     merchantConfig = Object.assign({}, merchantConfig, row.value);
+                }
+                if (row.key === 'auth_config') {
+                    authConfig = Object.assign({}, authConfig, row.value);
+                    mountRegistrationCaptcha();
                 }
             });
         }
@@ -3146,6 +3179,70 @@
         }
         window.handleLogin = handleLogin;
 
+        // ================= REGISTRATION CAPTCHA =================
+        // Cloudflare Turnstile. The SITE key is public and lives in
+        // app_settings; the SECRET key is never in this file - it goes in the
+        // Supabase dashboard, and Supabase Auth verifies the token server-side
+        // when signUp carries one. A token minted here and checked there is
+        // what makes this worth anything; a widget alone would be decoration.
+        const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        let turnstileWidgetId = null;
+        let captchaToken = null;
+
+        function captchaConfigured() {
+            return typeof authConfig.turnstileSiteKey === 'string'
+                && authConfig.turnstileSiteKey.trim().length > 0;
+        }
+
+        async function mountRegistrationCaptcha() {
+            const wrap = document.getElementById('reg-captcha-wrap');
+            const box = document.getElementById('reg-captcha');
+            if (!wrap || !box) return;
+
+            if (!captchaConfigured()) {
+                // No key set: leave registration exactly as it was.
+                wrap.classList.add('hidden');
+                wrap.classList.remove('flex');
+                return;
+            }
+            if (turnstileWidgetId !== null) return;      // already mounted
+
+            wrap.classList.remove('hidden');
+            wrap.classList.add('flex');
+            try {
+                await loadScriptOnce(TURNSTILE_SCRIPT);
+                // The script sets window.turnstile asynchronously after load.
+                for (let i = 0; i < 40 && !window.turnstile; i++) {
+                    await new Promise((r) => setTimeout(r, 100));
+                }
+                if (!window.turnstile) throw new Error('turnstile did not initialise');
+
+                turnstileWidgetId = window.turnstile.render(box, {
+                    sitekey: authConfig.turnstileSiteKey.trim(),
+                    theme: 'dark',
+                    callback: (token) => { captchaToken = token; },
+                    'expired-callback': () => { captchaToken = null; },
+                    'error-callback': () => { captchaToken = null; },
+                });
+            } catch (e) {
+                // If Cloudflare is unreachable, say so rather than silently
+                // letting everyone through or blocking everyone out.
+                const note = document.getElementById('reg-captcha-note');
+                if (note) {
+                    note.innerText = 'The human check could not load. Refresh, or contact support if it keeps happening.';
+                    note.className = 'text-[10px] text-amber-400';
+                }
+            }
+        }
+        window.mountRegistrationCaptcha = mountRegistrationCaptcha;
+
+        function resetRegistrationCaptcha() {
+            captchaToken = null;
+            if (turnstileWidgetId !== null && window.turnstile) {
+                try { window.turnstile.reset(turnstileWidgetId); } catch (e) {}
+            }
+        }
+
         async function handleRegister() {
             const name = document.getElementById('reg-name').value.trim();
             const nickname = document.getElementById('reg-nickname').value.trim();
@@ -3200,12 +3297,21 @@
                 );
             }
 
+            // A widget nobody checks is decoration. The token goes to Supabase
+            // Auth, which verifies it against the secret key held in the
+            // dashboard and rejects the signup if it does not hold up.
+            if (captchaConfigured() && !captchaToken) {
+                alert('Please complete the "I am a person" check before registering.');
+                return;
+            }
+
             // Everything travels as signUp metadata; a database trigger turns it
             // into the pending profile row.
             const { data, error } = await supabaseClient.auth.signUp({
                 email,
                 password: pass,
                 options: {
+                    captchaToken: captchaToken || undefined,
                     data: {
                         name, nickname, phone,
                         birthday: bday,
@@ -3216,10 +3322,18 @@
                 }
             });
 
+            // A Turnstile token may only be redeemed once, so the widget has to
+            // be reset whether the signup succeeded or failed - otherwise a
+            // second attempt sends a spent token and is rejected for the wrong
+            // reason.
+            resetRegistrationCaptcha();
+
             if (error) {
                 const raw = error.message || '';
                 let msg = raw;
-                if (raw.includes('already registered') || raw.includes('already been registered')) {
+                if (raw.includes('captcha') || raw.includes('Captcha')) {
+                    msg = 'The human check did not pass. Please tick the box again and retry.';
+                } else if (raw.includes('already registered') || raw.includes('already been registered')) {
                     msg = 'That email address is already registered.\n\nEach player may hold one account only. Sign in instead, or use Forgot Password.';
                 } else if (raw.includes('rate limit')) {
                     // Supabase throttles confirmation emails on the shared mail
@@ -5185,7 +5299,7 @@
 
             // Once per session: it rarely changes and renderOwnerQueues runs
             // on every realtime event.
-            if (!adminListLoaded) { adminListLoaded = true; loadAdminList(); }
+            if (!adminListLoaded) { adminListLoaded = true; loadAdminList(); paintCaptchaState(); }
 
             let pendingRegs = await fetchPendingRegistrations();
             const profilePending = registeredPlayersList.filter(p => p.status === 'pending_registration');
@@ -5377,6 +5491,37 @@
         window.refundWithdrawalToPlayer = refundWithdrawalToPlayer;
 
         // ---- who can approve things -----------------------------------------
+        async function saveTurnstileKey() {
+            const el = document.getElementById('input-turnstile-key');
+            if (!el) return;
+            const key = el.value.trim();
+            authConfig = Object.assign({}, authConfig, { turnstileSiteKey: key });
+            await cloudSet('auth_config', authConfig);
+            paintCaptchaState();
+            alert(key
+                ? 'Saved. New visitors will see the human check on the registration form.\n\n' +
+                  'It only blocks anything once the SECRET key is set in Supabase under ' +
+                  'Authentication, Attack Protection.'
+                : 'Cleared. Registration no longer shows a human check.');
+        }
+        window.saveTurnstileKey = saveTurnstileKey;
+
+        function paintCaptchaState() {
+            const el = document.getElementById('owner-captcha-state');
+            const input = document.getElementById('input-turnstile-key');
+            if (input && document.activeElement !== input) {
+                input.value = authConfig.turnstileSiteKey || '';
+            }
+            if (!el) return;
+            if (captchaConfigured()) {
+                el.className = 'text-[10px] font-bold text-emerald-400';
+                el.innerText = 'Site key saved \u2014 the box shows on registration. Check the secret key is set in Supabase too.';
+            } else {
+                el.className = 'text-[10px] font-bold text-amber-400';
+                el.innerText = 'Not set \u2014 anyone can script a sign-up.';
+            }
+        }
+
         async function loadAdminList() {
             const box = document.getElementById('owner-admin-list');
             const warn = document.getElementById('owner-admin-warning');
