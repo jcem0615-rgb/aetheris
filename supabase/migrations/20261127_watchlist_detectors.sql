@@ -1,0 +1,28 @@
+-- Applied to the live project on 2026-11-27.
+--
+-- Two detectors over data already being stored, so the duel engine is
+-- untouched: they read outcomes rather than instrumenting play. Both are
+-- SECURITY DEFINER because they read across every player's duels, and both
+-- refuse anyone who is not an admin as their first act. That internal guard is
+-- what makes it safe to grant EXECUTE to authenticated and let the owner
+-- portal call them directly.
+--
+-- collusion_pairs: accounts that mostly play each other.
+--   Collusion is already a losing strategy here - the 10% rake costs 10% of
+--   every stake moved between two accounts, and there are no bonuses or prizes
+--   to farm. So this is not looking for profit. It looks for someone willing
+--   to PAY that 10%, which is what moving money through a platform looks like.
+--   The verdict names WHICH side is concentrated, because two accounts that
+--   play only each other is one person with two accounts, while one
+--   concentrated side against a varied one is a feeder or farming alt pointed
+--   at a normal player - a different problem, and that player is the victim.
+--
+-- duel_pace: accounts playing faster than a person can.
+--   Derived from created_at, settled_at and the turn counter in the board.
+--   Honest limit: a bot told to wait three seconds a turn looks exactly like a
+--   fast human here.
+--
+-- See the repository history for the full definitions; they were applied with
+-- apply_migration and are reproduced by the migrations named
+-- collusion_and_pace_detectors, detectors_left_join_identity and
+-- collusion_verdict_names_the_side.

@@ -861,6 +861,31 @@
                         <button onclick="window.addAdminAccount()" class="shrink-0 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg">Make Admin</button>
                     </div>
                 </div>
+
+                <!-- Two detectors over duels that have already settled. Loaded
+                     on demand rather than with the queues: they scan every
+                     duel ever played and are not something to look at hourly. -->
+                <div class="space-y-1.5 pb-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="font-cinzel text-xs font-bold text-white">Watch List</h3>
+                        <button onclick="window.loadWatchList()" class="shrink-0 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold rounded-lg">Run checks</button>
+                    </div>
+                    <p class="text-[10px] text-slate-500">Two patterns worth a look: accounts that mostly play each other, and accounts playing faster than a person can.</p>
+
+                    <div>
+                        <span class="text-[9px] text-slate-400 uppercase tracking-wider font-bold block mt-1.5 mb-1">Pairs that mostly play each other</span>
+                        <div id="watch-pairs" class="space-y-1.5">
+                            <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-500 text-center">Not run yet.</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-[9px] text-slate-400 uppercase tracking-wider font-bold block mt-2 mb-1">Suspiciously fast play</span>
+                        <div id="watch-pace" class="space-y-1.5">
+                            <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-500 text-center">Not run yet.</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -5378,6 +5403,77 @@
             }).join('');
         }
         window.loadAdminList = loadAdminList;
+
+        // ---- watch list ------------------------------------------------------
+        // Both of these are SECURITY DEFINER functions that refuse anyone who
+        // is not an admin as their first act, so calling them straight from the
+        // portal exposes nothing an edge function would have protected.
+        async function loadWatchList() {
+            const pairsEl = document.getElementById('watch-pairs');
+            const paceEl  = document.getElementById('watch-pace');
+            if (!pairsEl || !paceEl || !requireClient()) return;
+
+            const busy = '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-500 text-center">Checking...</div>';
+            pairsEl.innerHTML = busy;
+            paceEl.innerHTML = busy;
+
+            const empty = (msg) =>
+                `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-[11px] text-slate-500 text-center">${msg}</div>`;
+            const failed = (msg) =>
+                `<div class="bg-red-600/10 p-2 rounded-xl border border-red-500/30 text-[11px] text-red-400 text-center">${escapeHtml(msg)}</div>`;
+
+            const [pairs, pace] = await Promise.all([
+                supabaseClient.rpc('collusion_pairs', { p_min_together: 3 }),
+                supabaseClient.rpc('duel_pace', { p_min_duels: 3, p_secs_per_turn: 2.0 }),
+            ]);
+
+            if (pairs.error) {
+                pairsEl.innerHTML = failed(pairs.error.message);
+            } else if (!pairs.data || !pairs.data.length) {
+                pairsEl.innerHTML = empty('No pair has played each other 3 times yet.');
+            } else {
+                pairsEl.innerHTML = pairs.data.map((p) => {
+                    const flagged = p.verdict !== 'normal';
+                    // Which way the money ran, said from the named account's side.
+                    const net = Number(p.net_to_a) || 0;
+                    const flow = net === 0 ? 'even'
+                        : net > 0 ? `${escapeHtml(p.player_a)} is up ${coins(net)}`
+                                  : `${escapeHtml(p.player_b)} is up ${coins(-net)}`;
+                    return `
+                    <div class="bg-slate-900 p-2.5 rounded-xl border ${flagged ? 'border-amber-500/50' : 'border-slate-800'} text-[11px]">
+                        <div class="font-bold ${flagged ? 'text-amber-400' : 'text-slate-300'} break-words">
+                            ${escapeHtml(p.player_a)} \u2194 ${escapeHtml(p.player_b)}
+                        </div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">
+                            ${p.duels_together} duels together \u00b7
+                            ${p.a_share_pct}% of one side's play, ${p.b_share_pct}% of the other \u00b7 ${flow}
+                        </div>
+                        ${flagged ? `<div class="text-[10px] text-amber-300 mt-1 font-semibold break-words">${escapeHtml(p.verdict)}</div>` : ''}
+                    </div>`;
+                }).join('');
+            }
+
+            if (pace.error) {
+                paceEl.innerHTML = failed(pace.error.message);
+            } else if (!pace.data || !pace.data.length) {
+                paceEl.innerHTML = empty('Nobody has finished 3 duels yet.');
+            } else {
+                paceEl.innerHTML = pace.data.map((r) => {
+                    const flagged = r.verdict !== 'normal';
+                    return `
+                    <div class="bg-slate-900 p-2.5 rounded-xl border ${flagged ? 'border-red-500/50' : 'border-slate-800'} text-[11px] flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <span class="font-bold ${flagged ? 'text-red-400' : 'text-slate-300'} block truncate">${escapeHtml(r.player)}</span>
+                            <span class="text-[10px] text-slate-400">${r.duels} duels \u00b7 fastest ${r.fastest_secs_per_turn}s a turn</span>
+                        </div>
+                        <span class="shrink-0 text-[10px] font-bold ${flagged ? 'text-red-400' : 'text-slate-500'}">
+                            ${r.median_secs_per_turn}s / turn
+                        </span>
+                    </div>`;
+                }).join('');
+            }
+        }
+        window.loadWatchList = loadWatchList;
 
         async function addAdminAccount() {
             const input = document.getElementById('input-new-admin');
