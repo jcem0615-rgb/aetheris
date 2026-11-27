@@ -379,10 +379,10 @@ Deno.serve(async (req: Request) => {
       await sb.from("duel_sessions").delete()
         .or(`user_id.eq.${uid},opponent_user_id.eq.${uid}`);
     }
-    for (const t of ["pending_registrations", "registrations", "players", "topups",
-                     "withdrawals", "resets", "support_chats"]) {
-      await sb.from(t).delete().eq("email", email);
-    }
+    // This was a loop over seven tables, six of which were superseded
+    // leftovers and have now been dropped. Only the password-reset queue is
+    // still keyed by email.
+    await sb.from("resets").delete().eq("email", email);
     await sb.from("matchmaking_queue").delete().eq("player_email", email);
     await sb.from("profiles").delete().eq("email", email);
 
