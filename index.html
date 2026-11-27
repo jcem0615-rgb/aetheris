@@ -3067,8 +3067,12 @@
                 alert('Please fill out all registration fields.');
                 return;
             }
-            if (pass.length < 6) {
-                alert('Please choose a password of at least 6 characters.');
+            // Eight is Supabase's own floor; six is short enough to brute
+            // force, and these accounts hold withdrawable money. This check is
+            // only a courtesy message - the rule that counts is the minimum
+            // set on the project's Auth settings, which the server enforces.
+            if (pass.length < 8) {
+                alert('Please choose a password of at least 8 characters.\n\nThis account will hold real money, so a short password is a real risk.');
                 return;
             }
             if (!checkTerms || !checkPrivacy) {
@@ -3077,15 +3081,18 @@
             }
             if (!requireClient()) return;
 
-            // One account per number. The database enforces this with a unique
-            // index on the normalised phone, so 0917 123 4567, +639171234567
-            // and 9171234567 all count as the same number. Asking first turns a
-            // raw constraint violation into a sentence the player can act on.
-            const { data: taken } = await supabaseClient.rpc('phone_in_use', { p: phone });
-            if (taken) {
-                alert('That mobile number is already registered to another account.\n\nEach player may hold one account only. Sign in to the existing account, or use a different number.');
-                return;
-            }
+            // One account per number is enforced by profiles_phone_unique, a
+            // unique index on the normalised phone, so 0917 123 4567,
+            // +639171234567 and 9171234567 all count as the same number. It
+            // fires inside the signup trigger and rolls the whole registration
+            // back, and the error handler below turns that into a sentence the
+            // player can act on.
+            //
+            // There used to be a phone_in_use check here first, for a slightly
+            // earlier message. It has been removed: that RPC answered "is this
+            // number registered here?" to anyone unauthenticated, which on a
+            // gambling site lets a stranger walk a range of numbers and learn
+            // who gambles. A marginally nicer error was not worth it.
 
             // Upload the receipt first: the bucket accepts anonymous uploads so
             // this works before the account exists.
