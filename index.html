@@ -511,6 +511,18 @@
                 </div>
             </div>
 
+            <!-- Players used to submit a top-up or a withdrawal and then see
+                 nothing at all: no pending, no approved, no rejected. Every
+                 request became a support message, and a slow payout looked
+                 identical to being ignored. -->
+            <div id="player-requests-panel" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                    <h3 class="font-cinzel font-bold text-amber-400 text-sm">YOUR MONEY REQUESTS</h3>
+                    <span class="text-[9px] text-slate-500">updates by itself</span>
+                </div>
+                <div id="player-requests-list" class="space-y-1.5"></div>
+            </div>
+
             <!-- Payment QR Banner for Players (QR Only with Save Button) -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="text-center">
@@ -623,6 +635,11 @@
                                 <span class="text-[9px] text-slate-500 block">from wallets, all time</span>
                             </div>
                         </div>
+                        <!-- Approved but not yet sent. This money has already
+                             left the player's balance and is still physically
+                             in the account, so it is the figure to check
+                             before treating that balance as yours. -->
+                        <div id="earn-awaiting" class="hidden text-[10px] text-center py-1.5 px-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 leading-snug"></div>
                         <div id="earn-check" class="text-[10px] text-center py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-500">
                             Books not yet checked.
                         </div>
@@ -802,10 +819,46 @@
                     </div>
                 </div>
 
-                <div class="space-y-1.5 pb-2">
+                <div class="space-y-1.5">
                     <h3 class="font-cinzel text-xs font-bold text-white">Withdrawal Approvals (Min ₱100 • Zero Fee)</h3>
+                    <p class="text-[10px] text-slate-500">Approving takes the money out of the player's balance. It does not send it — that is the next list.</p>
                     <div id="owner-withdraw-list" class="space-y-1.5">
                         <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">No pending withdrawals.</div>
+                    </div>
+                </div>
+
+                <!-- The list that stops an approved payout being forgotten.
+                     Approve used to be the only step, so a player's balance
+                     could drop with the cash never leaving the account and
+                     nothing anywhere showing it was still owed. -->
+                <div class="space-y-1.5 pb-2">
+                    <h3 class="font-cinzel text-xs font-bold text-amber-400">
+                        Awaiting Payout &mdash; send these now
+                        <span id="owner-payout-count" class="ml-1 text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded hidden">0</span>
+                    </h3>
+                    <p class="text-[10px] text-slate-500">Already taken from the player. Send the money in GCash or Maya, then mark it paid.</p>
+                    <div id="owner-payout-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Nothing waiting to be sent.</div>
+                    </div>
+                </div>
+
+                <!-- A single admin account is one lost password away from
+                     nobody being able to approve anything, with every player's
+                     money frozen behind it. -->
+                <div class="space-y-1.5 pb-2">
+                    <h3 class="font-cinzel text-xs font-bold text-white">Who Can Approve Things</h3>
+                    <div id="owner-admin-list" class="space-y-1.5">
+                        <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Loading...</div>
+                    </div>
+                    <div id="owner-admin-warning" class="hidden text-[10px] bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl p-2 leading-snug">
+                        <b>Only one admin account.</b> If you lose this login, nobody can approve
+                        a top-up or a withdrawal and every player's money is stuck. Have a second
+                        person register, then add them below.
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="email" id="input-new-admin" placeholder="Email of a registered account"
+                               class="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <button onclick="window.addAdminAccount()" class="shrink-0 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg">Make Admin</button>
                     </div>
                 </div>
             </div>
@@ -1312,6 +1365,28 @@
             qrPrefillAmount: true
         };
 
+        // Player-controlled text - nicknames, emails, reference numbers - is
+        // rendered into the OWNER's portal with innerHTML. Without escaping, a
+        // nickname like <img src=x onerror=...> runs script in the one session
+        // that can approve withdrawals and adjust balances. Everything a player
+        // can type goes through here first.
+        function escapeHtml(v) {
+            if (v === null || v === undefined) return '';
+            return String(v)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        window.escapeHtml = escapeHtml;
+
+        // For a value going inside a single-quoted onclick="..." attribute.
+        // Escaping for HTML alone still lets a quote break out of the handler.
+        function escapeAttr(v) {
+            return escapeHtml(v).replace(/\\/g, '&#92;');
+        }
+
         // ================= IMAGE COMPRESSION UTILITY =================
         function compressImage(file, maxWidth = 150, maxHeight = 150, quality = 0.5) {
             return new Promise((resolve, reject) => {
@@ -1753,7 +1828,8 @@
         // ---- Queue reads -----------------------------------------------------
         // Each select names its columns. receipt_path is a short string; the
         // image itself is only fetched when the owner clicks "View Receipt".
-        let ownerQueueCache = { topups: [], withdrawals: [], registrations: [], resets: [] };
+        let ownerQueueCache = { topups: [], withdrawals: [], registrations: [], resets: [], payouts: [] };
+        let adminListLoaded = false;
 
         function mergeQueues(remoteRows, localRows, keyOf) {
             const seen = new Set();
@@ -1777,6 +1853,17 @@
                 .select('id, user_id, email, nickname, amount, method, account, name, date, created_at')
                 .eq('status', 'pending')
                 .order('created_at', { ascending: false })
+                .limit(200));
+            return rows || [];
+        }
+
+        // Approved but not yet sent. This is the owner's real obligation list:
+        // the money has already left these players' balances.
+        async function fetchAwaitingPayout() {
+            const rows = await remote(c => c.from('withdrawal_requests')
+                .select('id, user_id, email, nickname, amount, method, account, name, date, created_at, decided_at')
+                .eq('status', 'approved')
+                .order('created_at', { ascending: true })
                 .limit(200));
             return rows || [];
         }
@@ -2409,6 +2496,10 @@
                 updateWalletDisplay();
                 updateRankAndExpBadges();
                 switchPlayerHubPayment('gcash');
+                // What the player is owed and waiting on, and a live feed so an
+                // approval lands without them reloading.
+                renderMyRequests();
+                startPlayerRealtime();
             } else if (tabName === 'select') {
                 const sel = document.getElementById('view-select');
                 if (sel) sel.classList.remove('hidden');
@@ -4594,6 +4685,22 @@
             set('earn-owed', peso(c.owedToPlayers));
             set('earn-keep', peso(c.earnedFromWallets));
 
+            // Approved but not sent. Already gone from the player's balance and
+            // still sitting in the account, so it is neither theirs nor yours
+            // until it moves. Worth seeing before treating a balance as profit.
+            const awaitEl = document.getElementById('earn-awaiting');
+            if (awaitEl) {
+                const amt = Number(c.awaitingPayout || 0);
+                const n = Number(c.awaitingPayoutCount || 0);
+                awaitEl.classList.toggle('hidden', !(amt > 0));
+                if (amt > 0) {
+                    awaitEl.innerText =
+                        `\u26a0 ${peso(amt)} approved but not yet sent to ` +
+                        `${n} ${n === 1 ? 'player' : 'players'}. That money is still ` +
+                        `in your account and still owed \u2014 see Awaiting Payout below.`;
+                }
+            }
+
             // The books either balance or they do not. Saying so plainly beats
             // a number nobody knows how to check.
             if (check) {
@@ -4635,6 +4742,115 @@
                 banner._hideTimer = setTimeout(() => banner.classList.add('hidden'), 12000);
             }
         }
+
+        // ---- what the player can see about their own money ------------------
+        // Every status a request can be in, said the way a player would ask it.
+        const REQUEST_STATUS = {
+            topup: {
+                pending:  ['Checking your payment',  'amber',   'Usually within a few hours.'],
+                approved: ['Added to your balance',  'emerald', ''],
+                rejected: ['Not approved',           'red',     'Message support if you think this is wrong.'],
+            },
+            withdrawal: {
+                pending:  ['Waiting for approval',   'amber',   ''],
+                // The distinction this whole change exists for: the money has
+                // left their balance but has not been sent yet.
+                approved: ['Approved — being sent to you', 'blue',
+                           'Taken from your balance. The transfer is on its way.'],
+                paid:     ['Sent to you',            'emerald', ''],
+                rejected: ['Not approved',           'red',     'Your balance was not touched.'],
+                refunded: ['Returned to your balance', 'slate',
+                           'We could not send it, so it went back to your wallet.'],
+            },
+        };
+
+        async function renderMyRequests() {
+            const panel = document.getElementById('player-requests-panel');
+            const list = document.getElementById('player-requests-list');
+            if (!panel || !list || !authSession) return;
+
+            const uid = authSession.user.id;
+            const [tops, wds] = await Promise.all([
+                remote(c => c.from('topup_requests')
+                    .select('id, amount, status, pay_code, created_at, decided_at')
+                    .eq('user_id', uid).order('created_at', { ascending: false }).limit(5)),
+                remote(c => c.from('withdrawal_requests')
+                    .select('id, amount, status, method, account, created_at, decided_at, paid_at, payout_ref')
+                    .eq('user_id', uid).order('created_at', { ascending: false }).limit(5)),
+            ]);
+
+            const rows = [
+                ...(tops || []).map(r => ({ ...r, kind: 'topup' })),
+                ...(wds || []).map(r => ({ ...r, kind: 'withdrawal' })),
+            ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 6);
+
+            // Nothing to report is not worth a panel taking up the screen.
+            panel.classList.toggle('hidden', rows.length === 0);
+            if (!rows.length) return;
+
+            const tone = {
+                amber:   'bg-amber-500/10 border-amber-500/30 text-amber-300',
+                emerald: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+                blue:    'bg-blue-500/10 border-blue-500/30 text-blue-300',
+                red:     'bg-red-500/10 border-red-500/30 text-red-300',
+                slate:   'bg-slate-700/20 border-slate-600/40 text-slate-300',
+            };
+
+            list.innerHTML = rows.map((r) => {
+                const map = REQUEST_STATUS[r.kind] || {};
+                const [label, colour, note] = map[r.status] ||
+                    [r.status || 'unknown', 'slate', ''];
+                const when = r.created_at
+                    ? new Date(r.created_at).toLocaleDateString('en-PH',
+                        { month: 'short', day: 'numeric' })
+                    : '';
+                const extra = (r.kind === 'withdrawal' && r.status === 'paid' && r.payout_ref)
+                    ? `Reference ${escapeHtml(r.payout_ref)}`
+                    : note;
+                return `
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-2 flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <span class="text-xs font-bold text-white">
+                                ${r.kind === 'topup' ? 'Top-up' : 'Withdrawal'} ₱${Number(r.amount)}
+                            </span>
+                            <span class="text-[9px] text-slate-500 ml-1">${escapeHtml(when)}</span>
+                            ${extra ? `<span class="text-[10px] text-slate-400 block leading-snug">${extra}</span>` : ''}
+                        </div>
+                        <span class="shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg border ${tone[colour] || tone.slate}">
+                            ${escapeHtml(label)}
+                        </span>
+                    </div>`;
+            }).join('');
+        }
+        window.renderMyRequests = renderMyRequests;
+
+        // The player's own feed, so an approval shows up without a reload. RLS
+        // already limits these tables to the player's own rows, and the filter
+        // keeps the socket from carrying everyone else's traffic.
+        let playerRealtimeChannel = null;
+        async function startPlayerRealtime() {
+            if (!supabaseClient || playerRealtimeChannel || !authSession) return;
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session?.access_token) supabaseClient.realtime.setAuth(session.access_token);
+            } catch (e) {
+                console.warn('[realtime] could not set auth', e);
+            }
+            const uid = authSession.user.id;
+            // An approval changes both the request status and the balance, so
+            // pull the profile too rather than leaving a stale wallet on screen.
+            const bump = () => { renderMyRequests(); refreshProfile(); };
+
+            playerRealtimeChannel = supabaseClient.channel('my-requests')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'topup_requests',
+                      filter: `user_id=eq.${uid}` }, bump)
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'withdrawal_requests',
+                      filter: `user_id=eq.${uid}` }, bump)
+                .subscribe();
+        }
+        window.startPlayerRealtime = startPlayerRealtime;
 
         async function startOwnerRealtime() {
             if (!supabaseClient || ownerRealtimeChannel) return;
@@ -4773,14 +4989,14 @@
                     registeredPlayersList.map(p => `
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
-                                <span class="font-bold text-white">${p.nickname || p.name}</span>
-                                <span class="text-[10px] text-slate-400 block">${p.email} • ₱${p.wallet || 0} • Status: <strong class="${p.status === 'pending_registration' ? 'text-amber-400' : 'text-emerald-400'}">${p.status || 'active'}</strong></span>
+                                <span class="font-bold text-white">${escapeHtml(p.nickname || p.name)}</span>
+                                <span class="text-[10px] text-slate-400 block">${escapeHtml(p.email)} • ₱${Number(p.wallet) || 0} • Status: <strong class="${p.status === 'pending_registration' ? 'text-amber-400' : 'text-emerald-400'}">${escapeHtml(p.status || 'active')}</strong></span>
                             </div>
                             <div class="flex space-x-1">
-                                <button onclick="window.inspectPlayer('${p.email}')" class="px-2 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded text-[10px]">Inspect</button>
-                                ${p.status === 'pending_registration' ? `<button onclick="window.approveRegistrationByEmail('${p.email}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>` : ''}
-                                <button onclick="window.freezePlayer('${p.email}')" class="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded text-[10px]">Freeze</button>
-                                <button onclick="window.deletePlayer('${p.email}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px]">Delete</button>
+                                <button onclick="window.inspectPlayer('${escapeAttr(p.email)}')" class="px-2 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded text-[10px]">Inspect</button>
+                                ${p.status === 'pending_registration' ? `<button onclick="window.approveRegistrationByEmail('${escapeAttr(p.email)}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>` : ''}
+                                <button onclick="window.freezePlayer('${escapeAttr(p.email)}')" class="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded text-[10px]">Freeze</button>
+                                <button onclick="window.deletePlayer('${escapeAttr(p.email)}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px]">Delete</button>
                             </div>
                         </div>
                     `).join('');
@@ -4794,13 +5010,13 @@
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div class="min-w-0">
                                 <span class="font-bold text-amber-400">₱${t.amount} top-up</span>
-                                ${t.pay_code ? `<span class="ml-1.5 text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold tracking-wider">${t.pay_code}</span>` : ''}
-                                <span class="text-[10px] text-slate-400 block truncate">${t.email} • their ref: ${t.ref || '—'}</span>
+                                ${t.pay_code ? `<span class="ml-1.5 text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold tracking-wider">${escapeHtml(t.pay_code)}</span>` : ''}
+                                <span class="text-[10px] text-slate-400 block truncate">${escapeHtml(t.email)} • their ref: ${escapeHtml(t.ref || '—')}</span>
                                 <!-- The receipt is a screenshot the player
                                      uploaded and can be edited in minutes.
                                      The code is what to look for in GCash. -->
                                 <span class="text-[10px] text-slate-500 block">${t.pay_code
-                                    ? `Check GCash for ₱${t.amount} with message ${t.pay_code}`
+                                    ? `Check GCash for ₱${Number(t.amount)} with message ${escapeHtml(t.pay_code)}`
                                     : 'No code — match by amount and time in GCash'}</span>
                             </div>
                             <div class="flex space-x-1 items-center shrink-0">
@@ -4820,7 +5036,7 @@
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
                                 <span class="font-bold text-amber-400">₱${w.amount} withdrawal</span>
-                                <span class="text-[10px] text-slate-400 block">${w.email} • ${w.method} (${w.account})</span>
+                                <span class="text-[10px] text-slate-400 block">${escapeHtml(w.email)} • ${escapeHtml(w.method)} (${escapeHtml(w.account)})</span>
                             </div>
                             <div class="flex space-x-1">
                                 <button onclick="window.approveWithdrawal(${idx})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve</button>
@@ -4829,6 +5045,46 @@
                         </div>
                     `).join('');
             }
+
+            const awaitingPayout = await fetchAwaitingPayout();
+            ownerQueueCache.payouts = awaitingPayout;
+            const payoutList = document.getElementById('owner-payout-list');
+            const payoutCount = document.getElementById('owner-payout-count');
+            if (payoutCount) {
+                payoutCount.innerText = String(awaitingPayout.length);
+                payoutCount.classList.toggle('hidden', awaitingPayout.length === 0);
+            }
+            if (payoutList) {
+                payoutList.innerHTML = awaitingPayout.length === 0
+                    ? '<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-400 text-center">Nothing waiting to be sent.</div>'
+                    : awaitingPayout.map((w, idx) => {
+                        // How long this player has been waiting on money that is
+                        // already out of their balance.
+                        const since = w.decided_at || w.created_at;
+                        const hrs = since ? Math.floor((Date.now() - new Date(since).getTime()) / 3600000) : 0;
+                        const wait = hrs < 1 ? 'just now'
+                                   : hrs < 24 ? `${hrs}h ago`
+                                   : `${Math.floor(hrs / 24)}d ago`;
+                        const stale = hrs >= 24;
+                        return `
+                        <div class="bg-slate-900 p-2.5 rounded-xl border ${stale ? 'border-red-500/50' : 'border-amber-500/40'} flex items-center justify-between gap-2 text-xs">
+                            <div class="min-w-0">
+                                <span class="font-bold text-amber-400">\u20b1${Number(w.amount)}</span>
+                                <span class="text-[10px] ${stale ? 'text-red-400 font-bold' : 'text-slate-500'} ml-1">approved ${wait}</span>
+                                <span class="text-[10px] text-slate-300 block truncate">Send to <b>${escapeHtml(w.account)}</b> (${escapeHtml(w.method)})</span>
+                                <span class="text-[10px] text-slate-500 block truncate">${escapeHtml(w.name)} \u00b7 ${escapeHtml(w.email)}</span>
+                            </div>
+                            <div class="flex flex-col gap-1 shrink-0">
+                                <button onclick="window.markWithdrawalPaid(${idx})" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold">Mark Paid</button>
+                                <button onclick="window.refundWithdrawalToPlayer(${idx})" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px]">Refund</button>
+                            </div>
+                        </div>`;
+                    }).join('');
+            }
+
+            // Once per session: it rarely changes and renderOwnerQueues runs
+            // on every realtime event.
+            if (!adminListLoaded) { adminListLoaded = true; loadAdminList(); }
 
             let pendingRegs = await fetchPendingRegistrations();
             const profilePending = registeredPlayersList.filter(p => p.status === 'pending_registration');
@@ -4842,13 +5098,13 @@
                     combinedPendingRegs.map((r, idx) => `
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
                             <div>
-                                <span class="font-bold text-amber-400">${r.nickname || r.name} (${r.name})</span>
-                                <span class="text-[10px] text-slate-400 block">${r.email} • Ref: ${r.registration_ref || r.registrationRef || 'N/A'}</span>
+                                <span class="font-bold text-amber-400">${escapeHtml(r.nickname || r.name)} (${escapeHtml(r.name)})</span>
+                                <span class="text-[10px] text-slate-400 block">${escapeHtml(r.email)} • Ref: ${escapeHtml(r.registration_ref || r.registrationRef || 'N/A')}</span>
                             </div>
                             <div class="flex items-center space-x-1.5 flex-wrap">
                                 ${(r.receipt_path || r.registration_receipt || r.registrationReceipt) ? `<button onclick="window.openReceiptModal('${r.receipt_path || r.registration_receipt || r.registrationReceipt}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-[10px]">View Receipt</button>` : '<span class="text-[10px] text-slate-500">No Receipt</span>'}
-                                <button onclick="window.approveRegistrationByEmail('${r.email}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[10px]">Approve</button>
-                                <button onclick="window.rejectRegistrationByEmail('${r.email}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-[10px]">Reject</button>
+                                <button onclick="window.approveRegistrationByEmail('${escapeAttr(r.email)}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-[10px]">Approve</button>
+                                <button onclick="window.rejectRegistrationByEmail('${escapeAttr(r.email)}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-[10px]">Reject</button>
                             </div>
                         </div>
                     `).join('');
@@ -4862,8 +5118,8 @@
                     pendingResets.map((rst, idx) => `
                         <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                             <div>
-                                <span class="font-bold text-amber-400">${rst.email}</span>
-                                <span class="text-[10px] text-slate-400 block">Birthday: ${rst.birthday}</span>
+                                <span class="font-bold text-amber-400">${escapeHtml(rst.email)}</span>
+                                <span class="text-[10px] text-slate-400 block">Birthday: ${escapeHtml(rst.birthday)}</span>
                             </div>
                             <button onclick="window.approveReset(${idx})" class="px-2 py-1 bg-emerald-600 text-white rounded text-[10px]">Approve Reset</button>
                         </div>
@@ -4987,6 +5243,87 @@
             await adminAction({ action: 'rejectWithdrawal', id: w.id }, 'Withdrawal rejected.');
         }
         window.rejectWithdrawal = rejectWithdrawal;
+
+        // Approving took the money out of the player's balance. This is the
+        // separate act of confirming it actually left the GCash account.
+        async function markWithdrawalPaid(idx) {
+            const w = ownerQueueCache.payouts[idx];
+            if (!w) return;
+            const ref = prompt(
+                `Send ₱${w.amount} to ${w.account} (${w.method}) for ${w.email}.\n\n` +
+                `Once you HAVE sent it, paste the GCash/Maya reference number here.\n` +
+                `Leave it blank only if you cannot find one.`);
+            // prompt returns null when cancelled, '' when submitted empty. Only
+            // a cancel should abort - an empty reference is a deliberate choice.
+            if (ref === null) return;
+            await adminAction({ action: 'markWithdrawalPaid', id: w.id, payoutRef: ref.trim() },
+                `Marked ₱${w.amount} to ${w.email} as paid.`);
+        }
+        window.markWithdrawalPaid = markWithdrawalPaid;
+
+        // The way back out of an approval, for a payout that cannot be sent.
+        async function refundWithdrawalToPlayer(idx) {
+            const w = ownerQueueCache.payouts[idx];
+            if (!w) return;
+            if (!confirm(
+                `Put ₱${w.amount} back into ${w.email}'s balance?\n\n` +
+                `Only do this if you have NOT sent the money. If you already ` +
+                `sent it, this hands it over twice.`)) return;
+            const reason = prompt('Why is it being returned? (optional)') ?? '';
+            await adminAction({ action: 'refundWithdrawal', id: w.id, reason: reason.trim() },
+                `₱${w.amount} returned to ${w.email}.`);
+        }
+        window.refundWithdrawalToPlayer = refundWithdrawalToPlayer;
+
+        // ---- who can approve things -----------------------------------------
+        async function loadAdminList() {
+            const box = document.getElementById('owner-admin-list');
+            const warn = document.getElementById('owner-admin-warning');
+            if (!box) return;
+            const { data, error } = await callFunction('admin-actions', { action: 'listAdmins' });
+            if (error || !data?.admins) {
+                box.innerHTML = `<div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-red-400 text-center">${error || 'Could not load admins.'}</div>`;
+                return;
+            }
+            const admins = data.admins;
+            const only = admins.length <= 1;
+            if (warn) warn.classList.toggle('hidden', !only);
+            box.innerHTML = admins.map((a) => {
+                const isYou = String(a.email).toLowerCase() === String(data.you).toLowerCase();
+                return `
+                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2 text-xs">
+                        <div class="min-w-0">
+                            <span class="font-bold text-white truncate block">${escapeHtml(a.email)}</span>
+                            <span class="text-[10px] text-slate-500">${isYou ? 'This is you' : 'Can approve money'}</span>
+                        </div>
+                        ${(isYou || only) ? '' :
+                          `<button onclick="window.removeAdminAccount('${escapeHtml(a.email)}')" class="shrink-0 px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded text-[10px]">Remove</button>`}
+                    </div>`;
+            }).join('');
+        }
+        window.loadAdminList = loadAdminList;
+
+        async function addAdminAccount() {
+            const input = document.getElementById('input-new-admin');
+            const email = (input?.value || '').trim().toLowerCase();
+            if (!email) { alert('Enter the email of an account that has already registered.'); return; }
+            if (!confirm(`Give ${email} full access to approve top-ups, withdrawals and ` +
+                         `registrations, and to adjust balances?`)) return;
+            const { data, error } = await callFunction('admin-actions', { action: 'addAdmin', email });
+            if (error) { alert(error); return; }
+            if (input) input.value = '';
+            alert(`${data.email} can now approve things.`);
+            await loadAdminList();
+        }
+        window.addAdminAccount = addAdminAccount;
+
+        async function removeAdminAccount(email) {
+            if (!confirm(`Remove ${email}'s ability to approve anything?`)) return;
+            const { error } = await callFunction('admin-actions', { action: 'removeAdmin', email });
+            if (error) { alert(error); return; }
+            await loadAdminList();
+        }
+        window.removeAdminAccount = removeAdminAccount;
 
         async function executeManualWalletAdjustment() {
             const email = document.getElementById('manual-wallet-email').value.trim();

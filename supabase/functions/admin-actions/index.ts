@@ -155,8 +155,158 @@ Deno.serve(async (req: Request) => {
     }
 
     await audit(approve ? "Withdrawal Approved" : "Withdrawal Rejected",
-      `${row.email}: ₱${row.amount} via ${row.method}`);
-    return json({ ok: true, balance });
+      `${row.email}: ₱${row.amount} via ${row.method}` +
+      (approve ? " - committed, NOT yet sent" : ""));
+    return json({ ok: true, balance, awaitingPayout: approve });
+  }
+
+  // ---- the money actually leaving ------------------------------------------
+  // Approving commits the funds and debits the wallet. It does not send
+  // anything: that happens by hand in GCash. These two were the same action,
+  // so a request could read 'approved' forever with the cash still sitting in
+  // the owner's account and nothing anywhere showing it was owed.
+  if (action === "markWithdrawalPaid") {
+    const payoutRef = String(body.payoutRef ?? "").trim().slice(0, 100);
+    const { data: row } = await sb
+      .from("withdrawal_requests")
+      .select("id, email, nickname, amount, method, account, status")
+      .eq("id", Number(body.id)).maybeSingle();
+
+    if (!row) return json({ error: "Request not found" }, 404);
+    if (row.status === "paid") return json({ error: "Already marked paid" }, 409);
+    if (row.status !== "approved") {
+      return json({ error: `Only an approved withdrawal can be marked paid. ` +
+                           `This one is '${row.status}'.` }, 409);
+    }
+
+    const { data: upd } = await sb.from("withdrawal_requests")
+      .update({ status: "paid", paid_at: now, paid_by: actor,
+                payout_ref: payoutRef || null })
+      .eq("id", row.id).eq("status", "approved").select("id");
+    if (!upd?.length) return json({ error: "Already decided elsewhere" }, 409);
+
+    // No wallet movement: the money left the player's balance at approval.
+    await audit("Withdrawal Paid",
+      `${row.email}: ₱${row.amount} sent to ${row.account} via ${row.method}` +
+      (payoutRef ? ` (ref ${payoutRef})` : " (no reference recorded)"));
+    return json({ ok: true, id: row.id });
+  }
+
+  // ---- undoing an approval -------------------------------------------------
+  // Now that approving is no longer the final step, there has to be a way back
+  // out of it - otherwise an approved payout that cannot be sent leaves the
+  // player's money gone with no route to return it.
+  if (action === "refundWithdrawal") {
+    const reason = String(body.reason ?? "").trim().slice(0, 200);
+    const { data: row } = await sb
+      .from("withdrawal_requests")
+      .select("id, user_id, email, nickname, amount, method, status")
+      .eq("id", Number(body.id)).maybeSingle();
+
+    if (!row) return json({ error: "Request not found" }, 404);
+    // A paid withdrawal must never be refunded here: the cash is already gone,
+    // so crediting the wallet would hand the money over twice.
+    if (row.status === "paid") {
+      return json({ error: "That withdrawal was already paid out. Refunding it " +
+                           "here would credit the wallet for money that has " +
+                           "already left. Use a manual balance adjustment if " +
+                           "the player genuinely returned it." }, 409);
+    }
+    if (row.status !== "approved") {
+      return json({ error: `Only an approved withdrawal can be refunded. ` +
+                           `This one is '${row.status}'.` }, 409);
+    }
+    if (!row.user_id) return json({ error: "Request has no linked account" }, 400);
+
+    const { data: upd } = await sb.from("withdrawal_requests")
+      .update({ status: "refunded", decided_at: now, decided_by: actor })
+      .eq("id", row.id).eq("status", "approved").select("id");
+    if (!upd?.length) return json({ error: "Already decided elsewhere" }, 409);
+
+    // The reason MUST start with "Withdrawal refunded": owner_earnings matches
+    // on that prefix to net refunds off the withdrawal total. Reword it and the
+    // reconciliation silently reports a shortfall that is not real.
+    const { data: bal, error } = await sb.rpc("apply_wallet_delta", {
+      p_user_id: row.user_id,
+      p_delta: Number(row.amount),
+      p_reason: `Withdrawal refunded (${row.method})${reason ? ` - ${reason}` : ""}`,
+      p_type: "CREDIT",
+    });
+    if (error) {
+      await sb.from("withdrawal_requests")
+        .update({ status: "approved" }).eq("id", row.id);
+      await audit("Withdrawal Refund Failed",
+        `${row.email}: ₱${row.amount} could not be returned (${error.message}). ` +
+        `The request is back to approved and still owed.`);
+      return json({ error: error.message }, 400);
+    }
+
+    await audit("Withdrawal Refunded",
+      `${row.email}: ₱${row.amount} returned to their wallet` +
+      (reason ? ` - ${reason}` : ""));
+    return json({ ok: true, balance: bal?.[0]?.post_balance });
+  }
+
+  // ---- who else can run this place ----------------------------------------
+  // One admin account meant one lost password away from nobody being able to
+  // approve anything, with every player's balance frozen behind it.
+  if (action === "listAdmins") {
+    const { data, error } = await sb.from("admins")
+      .select("email, user_id, created_at").order("created_at");
+    if (error) return json({ error: error.message }, 400);
+    return json({ ok: true, admins: data ?? [], you: actor });
+  }
+
+  if (action === "addAdmin") {
+    const email = String(body.email ?? "").trim().toLowerCase();
+    if (!email) return json({ error: "email required" }, 400);
+
+    const { data: target } = await sb.from("profiles")
+      .select("user_id, email, nickname").eq("email", email).maybeSingle();
+    if (!target?.user_id) {
+      return json({ error: "No account with that email. They need to register " +
+                           "first, then you can make them an admin." }, 404);
+    }
+
+    const { data: already } = await sb.from("admins")
+      .select("user_id").eq("user_id", target.user_id).maybeSingle();
+    if (already) return json({ error: "That account is already an admin" }, 409);
+
+    const { error } = await sb.from("admins")
+      .insert([{ user_id: target.user_id, email: target.email }]);
+    if (error) return json({ error: error.message }, 400);
+
+    await audit("Admin Added",
+      `${target.email} can now approve top-ups, withdrawals and registrations, ` +
+      `and adjust balances`);
+    return json({ ok: true, email: target.email });
+  }
+
+  if (action === "removeAdmin") {
+    const email = String(body.email ?? "").trim().toLowerCase();
+    if (!email) return json({ error: "email required" }, 400);
+
+    // Removing yourself is how you lock yourself out of your own arena.
+    if (email === String(actor).toLowerCase()) {
+      return json({ error: "You cannot remove your own admin access. Ask the " +
+                           "other admin to do it." }, 403);
+    }
+
+    const { count } = await sb.from("admins")
+      .select("user_id", { count: "exact", head: true });
+    if ((count ?? 0) <= 1) {
+      return json({ error: "That is the only admin account. Add another one " +
+                           "before removing it, or nobody can approve " +
+                           "anything." }, 409);
+    }
+
+    const { data: gone, error } = await sb.from("admins")
+      .delete().eq("email", email).select("email");
+    if (error) return json({ error: error.message }, 400);
+    if (!gone?.length) return json({ error: "That account is not an admin" }, 404);
+
+    await audit("Admin Removed", `${email} can no longer approve anything`);
+    return json({ ok: true, email });
   }
 
   // ---- registration approval ----------------------------------------------
@@ -285,7 +435,15 @@ Deno.serve(async (req: Request) => {
         depositsAll:       n(r.deposits_all),
         withdrawalsAll:    n(r.withdrawals_all),
         adjustmentsAll:    n(r.adjustments_all),
-        // What should be sitting in the GCash/Maya account right now.
+        // Approved but not yet sent. This money has already left the player's
+        // balance and is still sitting in the GCash account, so it is both
+        // owed and physically present - the figure to check before spending
+        // anything out of that account.
+        awaitingPayout:      n(r.payouts_pending),
+        awaitingPayoutCount: n(r.payouts_pending_count),
+        paidOut:             n(r.payouts_sent),
+        // What should be in the account once everything approved has gone out.
+        // Add awaitingPayout to get what should be there right now.
         expected:          n(r.cash_expected),
         // Of that, how much belongs to players and must stay payable.
         owedToPlayers:     n(r.player_balances),
