@@ -69,9 +69,19 @@ two markers at the top of `check-qrph.mjs`.
 ## What this cannot tell you
 
 Whether GCash and Maya actually honour a re-issued personal code. That needs a
-real scan on a real phone. If a wallet ever refuses one, the owner portal has an
-off switch — *Build the amount into top-up QR codes* — which puts every player
-straight back on the plain uploaded QR without a code change.
+real scan on a real phone.
+
+**GCash: confirmed on 2026-11-28.** The owner scanned a generated code with the
+GCash app. It resolved to the owner's own real GCash account, and the amount
+came up **pre-filled**. So a re-issued personal code is honoured, and tag 54 is
+read — the two things these assertions could only check as bytes.
+
+**Maya: still untested.** The same code path builds it and the same assertions
+cover it, but no one has scanned one. Do not assume it behaves like GCash.
+
+If a wallet ever refuses one, the owner portal has an off switch — *Build the
+amount into top-up QR codes* — which puts every player straight back on the
+plain uploaded QR without a code change.
 
 ## Checking the live site
 
