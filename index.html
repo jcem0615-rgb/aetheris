@@ -258,6 +258,17 @@
             .hero-hurt-up, .hero-guard, .hero-channel { animation:none !important; }
             .hero-dead { animation:hero-die 1ms linear forwards !important; }
         }
+    
+        /* An end-over-end coin seen from the side: the face squashes to a line
+           and opens out again. Cheap, and it reads instantly as a flip. */
+        @keyframes tossflip {
+            0%   { transform: scaleY(1); }
+            50%  { transform: scaleY(0.06); }
+            100% { transform: scaleY(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #toss-coin { animation: none !important; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
@@ -951,6 +962,49 @@
 
     <!-- FULL-SCREEN PVP BATTLE ARENA VIEW -->
     <div id="view-duel-fullscreen" class="fixed inset-0 bg-[#04060b] z-50 flex flex-col justify-between p-3 hidden overflow-hidden">
+
+        <!-- Coin toss. Covers the board until the opening seat is decided, so
+             neither player can act, and both see the same thing throughout. -->
+        <div id="toss-overlay" class="hidden absolute inset-0 z-[60] bg-[#04060b]/97 backdrop-blur-sm flex flex-col items-center justify-center p-5 text-center">
+            <p id="toss-heading" class="font-cinzel text-amber-400 font-bold text-lg tracking-widest">COIN TOSS</p>
+            <p id="toss-sub" class="text-[11px] text-slate-400 mt-1">Deciding who moves first</p>
+
+            <div id="toss-coin" class="my-7 rounded-full shadow-2xl" style="width:120px;height:120px;background:radial-gradient(circle at 36% 30%,#ffe9a8,#e0a93c 55%,#8a5e12);box-shadow:0 0 50px rgba(255,195,90,.45),inset 0 0 18px rgba(0,0,0,.45)"></div>
+
+            <div id="toss-call-box" class="hidden w-full max-w-xs">
+                <p class="text-[11px] text-slate-300 mb-2">Your call:</p>
+                <div class="flex gap-3">
+                    <button onclick="window.callToss('HEADS')" class="flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-white font-cinzel font-bold rounded-xl shadow">HEADS</button>
+                    <button onclick="window.callToss('TAILS')" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white font-cinzel font-bold rounded-xl shadow">TAILS</button>
+                </div>
+                <p id="toss-countdown" class="text-[10px] text-slate-500 mt-2"></p>
+            </div>
+
+            <p id="toss-waiting" class="hidden text-xs text-slate-400"></p>
+            <p id="toss-result" class="hidden font-cinzel text-xl font-bold"></p>
+
+            <div class="mt-6 w-full max-w-sm bg-slate-950/80 border border-slate-800 rounded-xl p-3">
+                <p class="text-[9px] uppercase tracking-widest text-slate-500">Published before the call</p>
+                <p id="toss-commit" class="text-[9px] font-mono text-slate-400 break-all mt-1"></p>
+                <button id="toss-verify-btn" onclick="window.toggleTossVerify()" class="hidden mt-2 text-[10px] text-blue-400 hover:text-blue-300 underline">Verify this toss</button>
+                <div id="toss-verify-panel" class="hidden mt-3 text-left space-y-1.5">
+                    <p class="text-[9px] uppercase tracking-widest text-slate-500">Revealed after the call</p>
+                    <p class="text-[9px] text-slate-400">server seed</p>
+                    <p id="tv-server" class="text-[9px] font-mono text-emerald-400 break-all"></p>
+                    <p class="text-[9px] text-slate-400">client seed</p>
+                    <p id="tv-client" class="text-[9px] font-mono text-emerald-400 break-all"></p>
+                    <p class="text-[9px] text-slate-400">duel id</p>
+                    <p id="tv-duel" class="text-[9px] font-mono text-slate-300 break-all"></p>
+                    <p id="tv-check" class="text-[10px] font-bold pt-1"></p>
+                    <p class="text-[9px] text-slate-500 pt-1">Check it yourself:</p>
+                    <p class="text-[8px] font-mono text-slate-400 break-all">echo -n &lt;server seed&gt; | sha256sum</p>
+                    <p class="text-[8px] font-mono text-slate-400 break-all">openssl dgst -sha256 -mac HMAC -macopt key:&lt;server seed&gt; &lt;&lt;&lt; "&lt;client seed&gt;:&lt;duel id&gt;"</p>
+                    <p class="text-[8px] text-slate-500">First byte even = HEADS, odd = TAILS.</p>
+                </div>
+            </div>
+            <button id="toss-continue" onclick="window.dismissToss()" class="hidden mt-5 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-cinzel font-bold rounded-xl shadow text-sm">Begin duel</button>
+        </div>
+
         <!-- Top Battle Bar -->
         <div class="flex items-center justify-between bg-slate-950/90 border border-slate-800 rounded-2xl px-3 py-2 backdrop-blur shrink-0">
             <div class="flex items-center space-x-2">
@@ -3976,6 +4030,11 @@
             activeDuelId = info.duelId;
             duelMode = 'pvp';
             currentDuelBet = amount;
+            // Otherwise the next duel inherits the last one's resolved toss and
+            // never shows its own.
+            tossShownResult = false;
+            const prevOverlay = document.getElementById('toss-overlay');
+            if (prevOverlay) prevOverlay.classList.add('hidden');
             if (info.balance !== undefined) {
                 currentUser.wallet = Number(info.balance);
                 updateWalletDisplay();
@@ -4046,6 +4105,165 @@
             return map;
         })();
 
+        // ---- the coin toss ------------------------------------------------
+        // The server decides the opening seat from a seed it committed to
+        // before either player called. This draws that, and lets the player
+        // check it afterwards without taking our word for anything.
+        let tossShownResult = false;
+        let tossDismissTimer = null;
+        let tossCountdownTimer = null;
+
+        function tossEl(id) { return document.getElementById(id); }
+
+        function renderToss(st) {
+            const ov = tossEl('toss-overlay');
+            if (!ov) return;
+            const t = st && st.toss;
+
+            // A bot duel, an older duel, or a duel already in play and already
+            // acknowledged: nothing to show.
+            if (!t || (!t.pending && tossShownResult)) { return; }
+
+            ov.classList.remove('hidden');
+            tossEl('toss-commit').textContent = t.commit || '';
+
+            if (t.pending) {
+                tossShownResult = false;
+                tossEl('toss-result').classList.add('hidden');
+                tossEl('toss-continue').classList.add('hidden');
+                tossEl('toss-verify-btn').classList.add('hidden');
+                tossEl('toss-verify-panel').classList.add('hidden');
+                spinTossCoin(true);
+
+                if (t.callerIsMe) {
+                    tossEl('toss-call-box').classList.remove('hidden');
+                    tossEl('toss-waiting').classList.add('hidden');
+                    tossEl('toss-sub').textContent = 'Your call decides nothing but the side - the coin is already sealed.';
+                    startTossCountdown(Number(t.secondsLeft) || 0);
+                } else {
+                    tossEl('toss-call-box').classList.add('hidden');
+                    const w = tossEl('toss-waiting');
+                    w.classList.remove('hidden');
+                    w.textContent = `${t.callerNick || 'Your opponent'} is calling\u2026`;
+                    tossEl('toss-sub').textContent = 'Both of you are watching the same coin.';
+                }
+                return;
+            }
+
+            // Resolved.
+            tossShownResult = true;
+            if (tossCountdownTimer) { clearInterval(tossCountdownTimer); tossCountdownTimer = null; }
+            spinTossCoin(false, t.face);
+            tossEl('toss-call-box').classList.add('hidden');
+            tossEl('toss-waiting').classList.add('hidden');
+            tossEl('toss-sub').textContent = t.auto
+                ? `No call came in time, so HEADS was called for ${escapeHtml(t.callerNick || 'the caller')}.`
+                : `${escapeHtml(t.callerNick || 'The caller')} called ${escapeHtml(t.call || '')}.`;
+
+            const r = tossEl('toss-result');
+            r.classList.remove('hidden');
+            r.className = 'font-cinzel text-xl font-bold ' + (t.firstIsMe ? 'text-emerald-400' : 'text-amber-400');
+            r.textContent = `${t.face} \u2014 ${t.firstIsMe ? 'you move first' : (t.firstNick || 'your opponent') + ' moves first'}`;
+
+            tossEl('tv-server').textContent = t.serverSeed || '';
+            tossEl('tv-client').textContent = t.clientSeed || '';
+            tossEl('tv-duel').textContent   = st.duelId || activeDuelId || '';
+            tossEl('toss-verify-btn').classList.remove('hidden');
+            tossEl('toss-continue').classList.remove('hidden');
+            verifyTossLocally(t, st.duelId || activeDuelId);
+
+            if (tossDismissTimer) clearTimeout(tossDismissTimer);
+            tossDismissTimer = setTimeout(() => {
+                if (!tossEl('toss-verify-panel').classList.contains('hidden')) return; // reading the proof
+                dismissToss();
+            }, 7000);
+        }
+
+        // Recompute the result in the browser from the revealed seed, so the
+        // tick beside it is this device's own arithmetic, not the server's word.
+        async function verifyTossLocally(t, duelId) {
+            const out = tossEl('tv-check');
+            if (!out || !t.serverSeed || !window.crypto || !crypto.subtle) return;
+            try {
+                const enc = new TextEncoder();
+                const hashBuf = await crypto.subtle.digest('SHA-256', enc.encode(t.serverSeed));
+                const hex = (b) => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
+                const commitOk = hex(hashBuf) === t.commit;
+
+                const key = await crypto.subtle.importKey('raw', enc.encode(t.serverSeed),
+                    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+                const sig = await crypto.subtle.sign('HMAC', key, enc.encode(`${t.clientSeed}:${duelId}`));
+                const face = (new Uint8Array(sig)[0] & 1) === 0 ? 'HEADS' : 'TAILS';
+                const faceOk = face === t.face;
+
+                out.className = 'text-[10px] font-bold pt-1 ' + (commitOk && faceOk ? 'text-emerald-400' : 'text-red-400');
+                out.textContent = commitOk && faceOk
+                    ? '\u2713 Checked on your device: the seed matches the hash, and it really does give ' + face + '.'
+                    : '\u26a0 This does NOT check out. Screenshot this and send it to support.';
+            } catch (e) {
+                out.textContent = '';
+            }
+        }
+
+        function spinTossCoin(spinning, face) {
+            const c = tossEl('toss-coin');
+            if (!c) return;
+            c.style.transition = spinning ? 'none' : 'transform .4s ease-out';
+            c.style.transform = spinning ? '' : 'scale(1.12)';
+            c.style.animation = spinning ? 'tossflip .45s linear infinite' : 'none';
+            if (!spinning) {
+                c.style.background = face === 'TAILS'
+                    ? 'radial-gradient(circle at 36% 30%,#cfd9e6,#8e9bb0 55%,#434d5e)'
+                    : 'radial-gradient(circle at 36% 30%,#ffe9a8,#e0a93c 55%,#8a5e12)';
+            }
+        }
+
+        function startTossCountdown(secs) {
+            if (tossCountdownTimer) clearInterval(tossCountdownTimer);
+            let left = secs;
+            const paint = () => {
+                const el = tossEl('toss-countdown');
+                if (el) el.textContent = left > 0
+                    ? `${left}s \u2014 if you do not call, HEADS is called for you`
+                    : 'Calling HEADS for you\u2026';
+            };
+            paint();
+            tossCountdownTimer = setInterval(() => { left -= 1; paint(); if (left <= 0) clearInterval(tossCountdownTimer); }, 1000);
+        }
+
+        async function callToss(side) {
+            if (!activeDuelId) return;
+            tossEl('toss-call-box').classList.add('hidden');
+            const w = tossEl('toss-waiting');
+            w.classList.remove('hidden');
+            w.textContent = `You called ${side}\u2026`;
+            // Our own entropy. It cannot steer the result - the seed we would
+            // need is still sealed - but it means the arena did not pick this
+            // on its own either.
+            const seedBytes = new Uint8Array(16);
+            crypto.getRandomValues(seedBytes);
+            const clientSeed = Array.from(seedBytes).map(x => x.toString(16).padStart(2, '0')).join('');
+            const res = await callFunction('duel', {
+                action: 'tossCall', duelId: activeDuelId, call: side, clientSeed,
+            });
+            if (res.error) { alert(res.error); return; }
+            applyServerDuelState(res.data);
+        }
+        window.callToss = callToss;
+
+        function toggleTossVerify() {
+            const p = tossEl('toss-verify-panel');
+            if (p) p.classList.toggle('hidden');
+        }
+        window.toggleTossVerify = toggleTossVerify;
+
+        function dismissToss() {
+            if (tossDismissTimer) { clearTimeout(tossDismissTimer); tossDismissTimer = null; }
+            const ov = tossEl('toss-overlay');
+            if (ov) ov.classList.add('hidden');
+        }
+        window.dismissToss = dismissToss;
+
         function applyServerDuelState(st) {
             duelState = Object.assign({}, duelState, st);
             duelSeq = st.seq;
@@ -4053,6 +4271,7 @@
             if (st.mode) duelMode = st.mode;
             // A bot duel is always the player's move. A PvP duel says so.
             myTurn = (duelMode === 'pvp') ? !!st.myTurn : true;
+            renderToss(st);
             updateDuelUI();
             updateTurnIndicator();
         }
