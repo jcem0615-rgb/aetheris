@@ -3351,15 +3351,27 @@
             // gambling site lets a stranger walk a range of numbers and learn
             // who gambles. A marginally nicer error was not worth it.
 
-            // Upload the receipt first: the bucket accepts anonymous uploads so
-            // this works before the account exists.
-            let receiptPath = null;
-            if (receiptFile) {
-                receiptPath = await uploadImage(
-                    RECEIPT_BUCKET,
-                    `registration/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`,
-                    receiptFile, 1000, 1000, 0.7
-                );
+            // The receipt is the only evidence the registration fee was ever
+            // paid. It used to be optional, and uploadImage returns null on
+            // failure rather than throwing - so a registration could reach the
+            // owner with no proof at all and the owner would be approving a
+            // payment they could not see. Both holes are closed here: no file
+            // is a refusal, and a failed upload stops the signup instead of
+            // being written to a console nobody reads.
+            if (!receiptFile) {
+                alert('Please attach a photo of your payment receipt. A registration cannot be approved without proof of payment.');
+                return;
+            }
+            // Upload first: the bucket accepts anonymous uploads, so this works
+            // before the account exists.
+            const receiptPath = await uploadImage(
+                RECEIPT_BUCKET,
+                `registration/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`,
+                receiptFile, 1000, 1000, 0.7
+            );
+            if (!receiptPath) {
+                alert('Your receipt image could not be uploaded. Check your connection and try again - your registration has NOT been submitted.');
+                return;
             }
 
             // A widget nobody checks is decoration. The token goes to Supabase
@@ -3548,10 +3560,10 @@
             content.innerHTML = `
                 <div class="space-y-3">
                     <div class="space-y-1">
-                        <p><strong>Name:</strong> ${currentUser.name}</p>
-                        <p><strong>Username:</strong> ${currentUser.nickname}</p>
-                        <p><strong>Email:</strong> ${currentUser.email}</p>
-                        <p><strong>Phone:</strong> ${currentUser.phone}</p>
+                        <p><strong>Name:</strong> ${escapeHtml(currentUser.name)}</p>
+                        <p><strong>Username:</strong> ${escapeHtml(currentUser.nickname)}</p>
+                        <p><strong>Email:</strong> ${escapeHtml(currentUser.email)}</p>
+                        <p><strong>Phone:</strong> ${escapeHtml(currentUser.phone)}</p>
                         <p><strong>Wins:</strong> ${currentUser.wins || 0}</p>
                         <p><strong>EXP:</strong> ${currentUser.xp || 0}</p>
                     </div>
@@ -3561,12 +3573,12 @@
                           playerBattles.map(b => `
                             <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[11px] space-y-0.5">
                                 <div class="flex justify-between text-amber-400 font-bold">
-                                    <span>vs ${b.opponent}</span>
-                                    <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${b.result}</span>
+                                    <span>vs ${escapeHtml(b.opponent)}</span>
+                                    <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${escapeHtml(b.result)}</span>
                                 </div>
                                 <div class="text-slate-400 text-[10px]">
                                     <span>Balance: ${coins(b.preBalance)} \u279c ${coins(b.postBalance)}</span><br>
-                                    <span>📅 ${b.date} ⏰ ${b.time}</span>
+                                    <span>📅 ${escapeHtml(b.date)} ⏰ ${escapeHtml(b.time)}</span>
                                 </div>
                             </div>
                           `).join('')}
@@ -3591,17 +3603,19 @@
             content.innerHTML = `
                 <div class="space-y-3">
                     <div class="space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <p><strong>Full Name:</strong> ${p.name || 'N/A'}</p>
-                        <p><strong>Nickname:</strong> ${p.nickname || 'N/A'}</p>
-                        <p><strong>Email:</strong> ${p.email}</p>
-                        <p><strong>Phone:</strong> ${p.phone || 'N/A'}</p>
+                        <p><strong>Full Name:</strong> ${escapeHtml(p.name || 'N/A')}</p>
+                        <p><strong>Nickname:</strong> ${escapeHtml(p.nickname || 'N/A')}</p>
+                        <p><strong>Email:</strong> ${escapeHtml(p.email)}</p>
+                        <p><strong>Phone:</strong> ${escapeHtml(p.phone || 'N/A')}</p>
                         <p><strong>Balance:</strong> ${coins(p.wallet || 0)}</p>
                         <p><strong>Wins:</strong> ${p.wins || 0}</p>
                         <p><strong>EXP:</strong> ${p.xp || 0} (Lv. ${Math.floor((p.xp || 0) / 100) + 1})</p>
-                        <p><strong>Status:</strong> <span class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${p.status || 'active'}</span></p>
-                        <p><strong>Active Hero:</strong> ${p.active_hero || 'pyra'}</p>
-                        ${p.registration_ref ? `<p><strong>Ref No:</strong> ${p.registration_ref}</p>` : ''}
-                        ${(p.receipt_path || p.registration_receipt) ? `<div class="mt-2"><strong class="block mb-1 text-amber-400">Fee Receipt:</strong><button onclick="window.openReceiptModal('${p.receipt_path || p.registration_receipt}')" class="px-3 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg shadow">View Receipt Image</button></div>` : ''}
+                        <p><strong>Status:</strong> <span class="${p.status === 'frozen' ? 'text-red-400' : 'text-emerald-400'} font-bold">${escapeHtml(p.status || 'active')}</span></p>
+                        <p><strong>Active Hero:</strong> ${escapeHtml(p.active_hero || 'pyra')}</p>
+                        ${p.registration_ref ? `<p><strong>Ref No:</strong> ${escapeHtml(p.registration_ref)}</p>` : ''}
+                        ${(p.receipt_path || p.registration_receipt)
+                          ? `<div class="mt-2"><strong class="block mb-1 text-amber-400">Fee Receipt:</strong><button onclick="window.openReceiptModal('${escapeAttr(p.receipt_path || p.registration_receipt)}')" class="px-3 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg shadow">View Receipt Image</button></div>`
+                          : `<p class="mt-2 text-red-400 font-bold">\u26a0 No receipt was uploaded for this registration.</p>`}
                     </div>
                     <div class="space-y-1.5">
                         <h4 class="font-cinzel text-amber-400 font-bold">Battle History (${playerBattles.length})</h4>
@@ -3609,12 +3623,12 @@
                           playerBattles.map(b => `
                             <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[11px] space-y-0.5">
                                 <div class="flex justify-between text-amber-400 font-bold">
-                                    <span>vs ${b.opponent}</span>
-                                    <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${b.result}</span>
+                                    <span>vs ${escapeHtml(b.opponent)}</span>
+                                    <span class="${b.result === 'VICTORY' ? 'text-emerald-400' : 'text-red-400'}">${escapeHtml(b.result)}</span>
                                 </div>
                                 <div class="text-slate-400 text-[10px]">
                                     <span>Wager: ${coins(b.bet)} \u2022 Balance: ${coins(b.preBalance)} \u279c ${coins(b.postBalance)}</span><br>
-                                    <span>📅 ${b.date} ⏰ ${b.time}</span>
+                                    <span>📅 ${escapeHtml(b.date)} ⏰ ${escapeHtml(b.time)}</span>
                                 </div>
                             </div>
                           `).join('')}
@@ -5271,6 +5285,13 @@
                             <div>
                                 <span class="font-bold text-white">${escapeHtml(p.nickname || p.name)}</span>
                                 <span class="text-[10px] text-slate-400 block">${escapeHtml(p.email)} \u2022 ${coins(p.wallet)} \u2022 Status: <strong class="${p.status === 'pending_registration' ? 'text-amber-400' : 'text-emerald-400'}">${escapeHtml(p.status || 'active')}</strong></span>
+                                ${p.status === 'pending_registration' ? `
+                                <span class="text-[10px] block mt-1">
+                                    <span class="text-slate-500">Ref:</span> <span class="text-slate-200 font-mono">${escapeHtml(p.registration_ref || '\u2014')}</span>
+                                    ${p.receipt_path
+                                        ? `<button onclick="window.openReceiptModal('${escapeAttr(p.receipt_path)}')" class="ml-2 px-2 py-0.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-[10px]">View Receipt</button>`
+                                        : `<strong class="ml-2 text-red-400">\u26a0 NO RECEIPT \u2014 nothing proves this fee was paid</strong>`}
+                                </span>` : ''}
                             </div>
                             <div class="flex space-x-1">
                                 <button onclick="window.inspectPlayer('${escapeAttr(p.email)}')" class="px-2 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded text-[10px]">Inspect</button>
@@ -5845,13 +5866,21 @@
         async function saveTopUpRequest(amount, ref, receiptFile) {
             if (!currentUser) return;
 
-            let receiptPath = null;
-            if (receiptFile) {
-                receiptPath = await uploadImage(
-                    RECEIPT_BUCKET,
-                    `topup/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`,
-                    receiptFile, 1000, 1000, 0.7
-                );
+            // Same reasoning as registration, and it matters more here because
+            // this one moves real money. A silent null meant the owner was
+            // asked to approve a top-up with nothing to look at.
+            if (!receiptFile) {
+                alert('Please attach a screenshot of your payment before submitting.');
+                return;
+            }
+            const receiptPath = await uploadImage(
+                RECEIPT_BUCKET,
+                `topup/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`,
+                receiptFile, 1000, 1000, 0.7
+            );
+            if (!receiptPath) {
+                alert('Your receipt image could not be uploaded. Check your connection and try again - your top-up has NOT been submitted.');
+                return;
             }
 
             const today = new Date().toISOString().split('T')[0];
