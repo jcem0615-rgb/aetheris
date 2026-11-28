@@ -364,19 +364,19 @@
                 </div>
 
                 <div class="space-y-2">
-                    <input type="text" id="reg-name" placeholder="Full Legal Name (Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="text" id="reg-nickname" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="text" id="reg-phone" placeholder="Phone Number (Unique & Locked)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                    <input type="email" id="reg-email" placeholder="Email Address (Unique)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-name" autocomplete="off" placeholder="Full Legal Name (Locked for Withdrawals)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-nickname" autocomplete="off" placeholder="Player Username / Nickname" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-phone" autocomplete="off" placeholder="Phone Number (Unique & Locked)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="email" id="reg-email" autocomplete="off" placeholder="Email Address (Unique)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <div class="space-y-0.5">
                         <label class="text-[10px] text-slate-400 block">Birthday:</label>
-                        <input type="date" id="reg-bday" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
+                        <input type="date" id="reg-bday" autocomplete="off" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
                     </div>
                     <div class="relative">
-                        <input type="password" id="reg-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
+                        <input type="password" id="reg-pass" autocomplete="new-password" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-10">
                         <button type="button" onclick="window.togglePass('reg-pass', this)" class="absolute right-3 top-2 text-slate-400 text-xs font-bold hover:text-white">SHOW</button>
                     </div>
-                    <input type="text" id="reg-ref" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" id="reg-ref" autocomplete="off" placeholder="Transaction Reference Number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     <div class="space-y-0.5">
                         <label class="text-[10px] text-amber-400 block font-bold">Upload Registration Fee Receipt:</label>
                         <input type="file" id="reg-receipt" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-600 file:text-white">
@@ -2707,6 +2707,26 @@
         }
         window.togglePass = togglePass;
 
+        // A registration form left full of someone else's details is a real
+        // problem on a shared or borrowed phone, which is a normal way to use
+        // this. The browser restores every field across a reload - the
+        // password included, one tap of SHOW away - and nothing cleared them
+        // after a successful signup either. autocomplete="off" on the inputs
+        // asks the browser not to restore; this clears them whether or not it
+        // listens, which is the half that does not depend on good behaviour.
+        function clearRegistrationForm() {
+            ['reg-name', 'reg-nickname', 'reg-phone', 'reg-email', 'reg-bday',
+             'reg-pass', 'reg-ref', 'reg-receipt'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            ['reg-check-terms', 'reg-check-privacy'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.checked = false;
+            });
+        }
+        window.clearRegistrationForm = clearRegistrationForm;
+
         async function showAuthMode(mode) {
             const loginBox = document.getElementById('auth-login-box');
             const registerBox = document.getElementById('auth-register-box');
@@ -2718,6 +2738,7 @@
             if (mode === 'login' && loginBox) loginBox.classList.remove('hidden');
             if (mode === 'register' && registerBox) {
                 registerBox.classList.remove('hidden');
+                clearRegistrationForm();
                 switchRegPaymentMethod('gcash');
             }
             if (mode === 'forgot' && forgotBox) forgotBox.classList.remove('hidden');
@@ -3427,6 +3448,9 @@
 
             if (data.session) await supabaseClient.auth.signOut();
 
+            // Clear before leaving, so the next person on this device does not
+            // inherit a stranger's name, number, birthday and password.
+            clearRegistrationForm();
             alert('Registration submitted. Your account is pending owner approval — you will be able to sign in once it is approved.');
             showAuthMode('login');
         }
