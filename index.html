@@ -1937,17 +1937,47 @@
             });
         }
 
-        async function uploadImage(bucket, path, file, maxWidth, maxHeight, quality) {
-            if (!supabaseClient || !file) return null;
+        // upsert is OFF by default, and that is the whole point. Storage treats
+        // an upsert as needing UPDATE on storage.objects as well as INSERT. A
+        // registrant is anonymous and holds INSERT only, so every receipt
+        // upload was refused - and Storage reports it as HTTP 400 carrying a
+        // 403 inside the body, which is why it never read as a permissions
+        // problem. Receipt paths already carry a timestamp and a random
+        // suffix, so there is nothing to overwrite and nothing to gain.
+        //
+        // The owner's QR codes DO need it: they live at fixed paths and are
+        // replaced in place, and the owner is an admin holding every right on
+        // that bucket. Those two call sites pass it explicitly.
+        //
+        // The failure reason is kept rather than discarded. remote() turns
+        // every error into a null and a console warning, so the only way to
+        // learn why an upload failed was to read the server logs. Now the
+        // caller can tell the person what actually went wrong.
+        let lastUploadError = '';
+        async function uploadImage(bucket, path, file, maxWidth, maxHeight, quality, upsert = false) {
+            lastUploadError = '';
+            if (!supabaseClient || !file) {
+                lastUploadError = 'No file was selected.';
+                return null;
+            }
             try {
                 const blob = await compressImageToBlob(file, maxWidth, maxHeight, quality);
-                const ok = await remote(c => c.storage.from(bucket).upload(path, blob, {
-                    contentType: 'image/jpeg',
-                    upsert: true
-                }));
-                return ok ? path : null;
+                const res = await withTimeout(Promise.resolve(
+                    supabaseClient.storage.from(bucket).upload(path, blob, {
+                        contentType: 'image/jpeg',
+                        upsert
+                    })
+                ));
+                if (!res || res.error) {
+                    lastUploadError = (res && res.error && res.error.message)
+                        ? res.error.message : 'The upload did not complete.';
+                    console.warn('[storage] upload refused:', lastUploadError);
+                    return null;
+                }
+                return path;
             } catch (err) {
-                console.warn('[storage] upload failed', err);
+                lastUploadError = (err && err.message) ? err.message : String(err);
+                console.warn('[storage] upload failed:', lastUploadError);
                 return null;
             }
         }
@@ -3070,7 +3100,7 @@
                     const payload = await decodeQrFile(file);
                     // Bytes go to Storage; the row keeps a short path. Storing the
                     // base64 here is what used to re-ship the image on every read.
-                    const path = await uploadImage(QR_BUCKET, 'gcash-qr.jpg', file, 512, 512, 0.8);
+                    const path = await uploadImage(QR_BUCKET, 'gcash-qr.jpg', file, 512, 512, 0.8, true);
                     if (path) {
                         merchantConfig.gcashQrPath = path;
                         merchantConfig.gcashQrVersion = Date.now();
@@ -3112,7 +3142,7 @@
                     const payload = await decodeQrFile(file);
                     // Bytes go to Storage; the row keeps a short path. Storing the
                     // base64 here is what used to re-ship the image on every read.
-                    const path = await uploadImage(QR_BUCKET, 'maya-qr.jpg', file, 512, 512, 0.8);
+                    const path = await uploadImage(QR_BUCKET, 'maya-qr.jpg', file, 512, 512, 0.8, true);
                     if (path) {
                         merchantConfig.mayaQrPath = path;
                         merchantConfig.mayaQrVersion = Date.now();
@@ -3391,7 +3421,8 @@
                 receiptFile, 1000, 1000, 0.7
             );
             if (!receiptPath) {
-                alert('Your receipt image could not be uploaded. Check your connection and try again - your registration has NOT been submitted.');
+                alert('Your receipt image could not be uploaded, so your registration has NOT been submitted.\n\n'
+                    + (lastUploadError || 'Please check your connection and try again.'));
                 return;
             }
 
@@ -5903,7 +5934,8 @@
                 receiptFile, 1000, 1000, 0.7
             );
             if (!receiptPath) {
-                alert('Your receipt image could not be uploaded. Check your connection and try again - your top-up has NOT been submitted.');
+                alert('Your receipt image could not be uploaded, so your top-up has NOT been submitted.\n\n'
+                    + (lastUploadError || 'Please check your connection and try again.'));
                 return;
             }
 
