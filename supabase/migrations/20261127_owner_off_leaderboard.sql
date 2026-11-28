@@ -1,5 +1,10 @@
 -- Applied to the live project on 2026-11-27.
 --
+-- SUPERSEDED the next day by 20261128_staff_role_not_a_player.sql, which
+-- redefines this view to exclude role 'staff' as well. The definition below
+-- is no longer what runs in production; it is kept because replaying this
+-- directory in order has to pass through it to reach that one.
+--
 -- The owner was sitting on the public leaderboard among the players. The house
 -- does not compete in its own arena.
 --

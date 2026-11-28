@@ -8,9 +8,12 @@
 -- A player who is ALSO promoted to admin keeps role 'player' and stays visible
 -- in both, which is right: they are a customer who happens to help run things.
 --
--- Full definitions applied under the migration named staff_role_not_a_player:
---   leaderboard     ... and coalesce(role,'player') not in ('owner','staff')
---   owner_earnings  reg CTE, same exclusion
+-- The full definitions of both objects live in
+-- 20261128_staff_role_not_a_player.sql, which is executable SQL. For one day
+-- they existed only as this comment, so replaying this directory from empty
+-- would have rebuilt both excluding the owner alone - putting a staff admin
+-- back on the public leaderboard. Verified against production afterwards: the
+-- function body hashes identically and the view definition compares equal.
 --
 -- owner_earnings keeps summing EVERY wallet for player_balances, deliberately.
 -- The reconciliation identity needs the same set of balances the ledger moved;
