@@ -1,0 +1,18 @@
+-- Applied to the live project on 2026-11-28.
+--
+-- A staff admin is not a player. Role 'staff' joins 'owner' in being kept off
+-- the public leaderboard and out of the registration revenue figure, because a
+-- staff account never pays the registration fee and counting it would invent
+-- income that never arrived.
+--
+-- A player who is ALSO promoted to admin keeps role 'player' and stays visible
+-- in both, which is right: they are a customer who happens to help run things.
+--
+-- Full definitions applied under the migration named staff_role_not_a_player:
+--   leaderboard     ... and coalesce(role,'player') not in ('owner','staff')
+--   owner_earnings  reg CTE, same exclusion
+--
+-- owner_earnings keeps summing EVERY wallet for player_balances, deliberately.
+-- The reconciliation identity needs the same set of balances the ledger moved;
+-- narrowing it to players only would break the discrepancy check rather than
+-- tidy it.

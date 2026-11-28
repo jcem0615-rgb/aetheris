@@ -863,10 +863,41 @@
                         a top-up or a withdrawal and every player's money is stuck. Have a second
                         person register, then add them below.
                     </div>
+                    <span class="text-[9px] text-slate-400 uppercase tracking-wider font-bold block mt-2">Promote someone who already plays here</span>
                     <div class="flex gap-2">
                         <input type="email" id="input-new-admin" placeholder="Email of a registered account"
                                class="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
                         <button onclick="window.addAdminAccount()" class="shrink-0 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg">Make Admin</button>
+                    </div>
+
+                    <!-- The other route: a staff member who is not a player.
+                         Making them register first would charge them the
+                         registration fee, put them in the approval queue, and
+                         leave them in the player directory and on the
+                         leaderboard permanently. -->
+                    <span class="text-[9px] text-slate-400 uppercase tracking-wider font-bold block mt-3">Or create a staff account from scratch</span>
+                    <p class="text-[10px] text-slate-500 leading-snug mb-1">
+                        No registration fee, no approval queue, and they never appear as a player.
+                        You choose a temporary password and give it to them in person &mdash; they
+                        change it after signing in.
+                    </p>
+                    <div class="space-y-1.5">
+                        <input type="text" id="input-staff-name" placeholder="Their name"
+                               class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <input type="email" id="input-staff-email" placeholder="Their email"
+                               class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <input type="text" id="input-staff-pass" placeholder="Temporary password (8+ characters)"
+                               class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                        <button onclick="window.createStaffAdmin()" class="w-full px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Create Staff Admin</button>
+                    </div>
+
+                    <!-- Needed because a staff member starts on a password
+                         somebody else chose. Useful for everyone else too:
+                         until now the only way to change a password was the
+                         forgotten-password email. -->
+                    <div class="border-t border-slate-800 pt-2 mt-2">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-wider font-bold block mb-1">Your own password</span>
+                        <button onclick="window.changeMyPassword()" class="w-full px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg">Change my password</button>
                     </div>
                 </div>
 
@@ -1014,6 +1045,31 @@
                 </div>
             </div>
             <button onclick="window.closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl">Close</button>
+        </div>
+
+        <!-- Change Password. A prompt() would show the new password in plain
+             text on screen and leave it in the browser's autofill history,
+             which is not acceptable for an account that approves payouts. -->
+        <div id="modal-change-password" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-sm space-y-3 hidden">
+            <h3 class="font-cinzel text-base font-bold text-amber-400">Change Your Password</h3>
+            <p class="text-[11px] text-slate-400">At least 8 characters. You stay signed in afterwards.</p>
+            <div class="space-y-2">
+                <div class="relative">
+                    <input type="password" id="cp-new" placeholder="New password" autocomplete="new-password"
+                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-12">
+                    <button type="button" onclick="window.togglePass('cp-new', this)" class="absolute right-3 top-2.5 text-slate-400 text-[10px]">Show</button>
+                </div>
+                <div class="relative">
+                    <input type="password" id="cp-again" placeholder="Type it again" autocomplete="new-password"
+                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white pr-12">
+                    <button type="button" onclick="window.togglePass('cp-again', this)" class="absolute right-3 top-2.5 text-slate-400 text-[10px]">Show</button>
+                </div>
+            </div>
+            <div id="cp-note" class="text-[10px] text-slate-500"></div>
+            <div class="flex space-x-2">
+                <button onclick="window.submitPasswordChange()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl">Change Password</button>
+                <button onclick="window.closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Cancel</button>
+            </div>
         </div>
 
         <!-- Top-up Modal with Payment Tabs (QR Only)
@@ -2111,7 +2167,8 @@
             // ordinary players, and `role <> 'owner'` in SQL evaluates to NULL
             // for those rows - so a server-side neq would have hidden every
             // real player and shown nobody.
-            registeredPlayersList = (rows || []).filter(p => p.role !== 'owner');
+            registeredPlayersList = (rows || [])
+                .filter(p => p.role !== 'owner' && p.role !== 'staff');
         }
 
         // A player may only edit presentation fields. wallet / wins / xp /
@@ -3388,8 +3445,8 @@
         async function completePasswordRecovery() {
             const newPass = prompt('Enter your new password (at least 6 characters):');
             if (!newPass) return;
-            if (newPass.length < 6) {
-                alert('Password must be at least 6 characters.');
+            if (newPass.length < 8) {
+                alert('Password must be at least 8 characters.');
                 return;
             }
             const { error } = await supabaseClient.auth.updateUser({ password: newPass });
@@ -5627,6 +5684,78 @@
             }
         }
         window.loadWatchList = loadWatchList;
+
+        // Creates a staff admin outright: no registration fee, no approval
+        // queue, and role 'staff' so they never show as a player.
+        async function createStaffAdmin() {
+            const nameEl = document.getElementById('input-staff-name');
+            const mailEl = document.getElementById('input-staff-email');
+            const passEl = document.getElementById('input-staff-pass');
+            const name = (nameEl?.value || '').trim();
+            const email = (mailEl?.value || '').trim().toLowerCase();
+            const tempPassword = passEl?.value || '';
+
+            if (!email || !email.includes('@')) { alert('Enter their email address.'); return; }
+            if (tempPassword.length < 8) {
+                alert('The temporary password must be at least 8 characters.');
+                return;
+            }
+            if (!confirm(`Create a staff admin for ${email}?\n\nThey will be able to approve ` +
+                         `top-ups, cash-outs and registrations, and adjust balances.`)) return;
+
+            const { data, error } = await callFunction('admin-actions',
+                { action: 'createAdminAccount', email, name, tempPassword });
+            if (error) { alert(error); return; }
+
+            if (nameEl) nameEl.value = '';
+            if (mailEl) mailEl.value = '';
+            if (passEl) passEl.value = '';
+            alert(`Staff admin created for ${data.email}.\n\nGive them the temporary password ` +
+                  `you just set, and have them change it with "Change my password" once they ` +
+                  `are signed in.`);
+            await loadAdminList();
+        }
+        window.createStaffAdmin = createStaffAdmin;
+
+        // Any signed-in user can change their own password. Supabase verifies
+        // the session server-side, so this can only ever change your own.
+        function changeMyPassword() {
+            ['cp-new', 'cp-again'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) { el.value = ''; el.type = 'password'; }
+            });
+            const note = document.getElementById('cp-note');
+            if (note) note.innerText = '';
+            openModal('change-password');
+        }
+        window.changeMyPassword = changeMyPassword;
+
+        async function submitPasswordChange() {
+            if (!requireClient()) return;
+            const a = document.getElementById('cp-new');
+            const b = document.getElementById('cp-again');
+            const note = document.getElementById('cp-note');
+            const say = (msg, bad) => {
+                if (note) {
+                    note.innerText = msg;
+                    note.className = 'text-[10px] ' + (bad ? 'text-red-400' : 'text-slate-500');
+                }
+            };
+            const next = a?.value || '';
+            if (next.length < 8) { say('That is shorter than 8 characters.', true); return; }
+            if (next !== (b?.value || '')) { say('Those two do not match.', true); return; }
+
+            say('Changing...', false);
+            const { error } = await supabaseClient.auth.updateUser({ password: next });
+            if (error) { say(error.message, true); return; }
+
+            // Clear them rather than leave a password sitting in the DOM.
+            if (a) a.value = '';
+            if (b) b.value = '';
+            closeModal();
+            alert('Password changed.');
+        }
+        window.submitPasswordChange = submitPasswordChange;
 
         async function addAdminAccount() {
             const input = document.getElementById('input-new-admin');

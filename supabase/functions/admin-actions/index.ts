@@ -257,6 +257,76 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true, admins: data ?? [], you: actor });
   }
 
+  // Creating a second admin from scratch. The alternative - have them register
+  // as a player and then promote them - makes a staff member pay the 50 AC
+  // registration fee, wait in the approval queue, and then sit in the player
+  // directory and on the leaderboard forever. This makes a staff account
+  // directly instead: no fee, no queue, not a player.
+  //
+  // The owner chooses the temporary password and hands it over themselves. It
+  // is never generated or stored anywhere by this function, and the new admin
+  // is expected to change it on first sign-in.
+  if (action === "createAdminAccount") {
+    const email = String(body.email ?? "").trim().toLowerCase();
+    const tempPassword = String(body.tempPassword ?? "");
+    const name = String(body.name ?? "").trim().slice(0, 120) || "Staff";
+
+    if (!email || !email.includes("@")) {
+      return json({ error: "A valid email address is required" }, 400);
+    }
+    if (tempPassword.length < 8) {
+      return json({ error: "The temporary password must be at least 8 characters." }, 400);
+    }
+
+    const { data: existing } = await sb.from("profiles")
+      .select("user_id").eq("email", email).maybeSingle();
+    if (existing) {
+      return json({ error: "That email already has an account. Use Make Admin to " +
+                           "promote it instead of creating a new one." }, 409);
+    }
+
+    // email_confirm so there is no inbox round-trip: the owner is handing the
+    // password over in person, and an unconfirmed account cannot sign in.
+    const { data: created, error: createErr } = await sb.auth.admin.createUser({
+      email,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: { name, nickname: name },
+    });
+    if (createErr || !created?.user) {
+      return json({ error: createErr?.message ?? "Could not create the account" }, 400);
+    }
+    const uid = created.user.id;
+
+    // handle_new_user has just made a pending PLAYER profile for them. Turn it
+    // into a staff one: approved so they can sign in, role 'staff' so they are
+    // kept out of the player directory, the leaderboard and the registration
+    // revenue figure, and no fee because they never paid one.
+    const { error: profErr } = await sb.from("profiles")
+      .update({ status: "active", approved: true, role: "staff",
+                registration_fee: 0, name, nickname: name })
+      .eq("user_id", uid);
+    if (profErr) {
+      // Never leave a half-made account behind: it would be an auth user that
+      // can sign in with no working profile.
+      await sb.auth.admin.deleteUser(uid);
+      return json({ error: `Could not set up the profile: ${profErr.message}` }, 400);
+    }
+
+    const { error: adminErr } = await sb.from("admins")
+      .insert([{ user_id: uid, email }]);
+    if (adminErr) {
+      await sb.from("profiles").delete().eq("user_id", uid);
+      await sb.auth.admin.deleteUser(uid);
+      return json({ error: `Could not grant admin access: ${adminErr.message}` }, 400);
+    }
+
+    await audit("Admin Account Created",
+      `${email} created as a staff admin by ${actor}. They can approve top-ups, ` +
+      `cash-outs and registrations, and adjust balances.`);
+    return json({ ok: true, email, name });
+  }
+
   if (action === "addAdmin") {
     const email = String(body.email ?? "").trim().toLowerCase();
     if (!email) return json({ error: "email required" }, 400);
