@@ -95,6 +95,41 @@ function rnd(n: number) {
   return buf[0] % n;
 }
 
+// ---- the toss ------------------------------------------------------------
+// Commit-reveal. The seed is drawn and its hash published when the duel is
+// created; the caller picks a side afterwards; the outcome comes out of both
+// seeds. Because the commit exists before the call, the arena cannot react to
+// what was called, and because the seed is secret the caller cannot aim.
+// See PROVABLY-FAIR.md.
+const toHex = (b: Uint8Array) =>
+  Array.from(b).map((x) => x.toString(16).padStart(2, "0")).join("");
+
+function randomHex(bytes: number): string {
+  const b = new Uint8Array(bytes);
+  crypto.getRandomValues(b);
+  return toHex(b);
+}
+
+// Hashed over the seed's TEXT, not its decoded bytes, so a player can check it
+// with `echo -n <seed> | sha256sum` and nothing more.
+async function sha256Hex(text: string): Promise<string> {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return toHex(new Uint8Array(d));
+}
+
+async function tossFace(serverSeed: string, clientSeed: string, duelId: string) {
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(serverSeed),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const sig = new Uint8Array(await crypto.subtle.sign(
+    "HMAC", key, new TextEncoder().encode(`${clientSeed}:${duelId}`),
+  ));
+  return (sig[0] & 1) === 0 ? "HEADS" : "TAILS";
+}
+
+const TOSS_SECONDS = 20;
+
 function deckFor(heroId: string, owned: Record<string, boolean>): string[] {
   const deck = [...(HERO_BASE[heroId] ?? HERO_BASE["pyra"])];
   for (const id of (HERO_SHOP[heroId] ?? [])) {
@@ -180,12 +215,27 @@ interface PvpSide {
   hp: number; armor: number; ap: number; poison: number;
   deck: string[]; hand: string[];
 }
+interface TossInfo {
+  commit: string;              // SHA-256 of the seed, published up front
+  caller: "a" | "b";           // who gets to call; the side called is worth nothing
+  startedAt: number;           // epoch ms, for the 20s timeout
+  clientSeed?: string;
+  call?: "HEADS" | "TAILS";
+  face?: "HEADS" | "TAILS";
+  serverSeed?: string;         // written only at the reveal
+  auto?: boolean;              // true when the timeout called on their behalf
+}
+
 interface PvpState {
   mode: "pvp";
   a: PvpSide; b: PvpSide;
   turn: "a" | "b";
   turnNo: number;
   log: string;
+  // Older duels have neither field. They are treated as already playing, so a
+  // duel in flight when this shipped is not stranded waiting for a toss.
+  phase?: "awaiting_toss" | "playing";
+  toss?: TossInfo;
 }
 
 const seatOf = (s: PvpState, uid: string): "a" | "b" | null =>
@@ -228,8 +278,91 @@ function pvpPublicState(s: PvpState, duelId: string, seq: number, stake: number,
     hand: me.hand,                 // never the opponent's
     enemyHandCount: foe.hand.length,
     turn: s.turnNo, log: s.log,
-    myTurn: seat === s.turn,
+    myTurn: s.phase === "awaiting_toss" ? false : seat === s.turn,
+    phase: s.phase ?? "playing",
+    toss: tossView(s, seat),
   };
+}
+
+// Before the reveal this hands out the commit and nothing else - the same
+// discipline that keeps a hand private. Afterwards it hands out everything
+// needed to check the result without our help.
+function tossView(s: PvpState, seat: "a" | "b" | null) {
+  const t = s.toss;
+  if (!t) return null;
+  const pending = s.phase === "awaiting_toss";
+  const callerNick = t.caller === "a" ? s.a.nick : s.b.nick;
+  if (pending) {
+    const left = TOSS_SECONDS - Math.floor((Date.now() - t.startedAt) / 1000);
+    return {
+      pending: true,
+      commit: t.commit,
+      callerIsMe: seat === t.caller,
+      callerNick,
+      secondsLeft: Math.max(0, left),
+    };
+  }
+  const firstSeat = s.turn;
+  return {
+    pending: false,
+    commit: t.commit,
+    serverSeed: t.serverSeed ?? null,
+    clientSeed: t.clientSeed ?? null,
+    call: t.call ?? null,
+    face: t.face ?? null,
+    auto: Boolean(t.auto),
+    callerNick,
+    callerWon: t.call === t.face,
+    firstNick: firstSeat === "a" ? s.a.nick : s.b.nick,
+    firstIsMe: seat === firstSeat,
+    verify: "HMAC_SHA256(serverSeed, clientSeed + ':' + duelId), first byte even = HEADS",
+  };
+}
+
+// Resolve the toss with a conditional update out of awaiting_toss, the same
+// claim-first shape the money queues use. Two polls racing each other, or a
+// call racing its own timeout, cannot both decide it: whoever flips the phase
+// owns the result and the loser simply re-reads what is now there.
+// deno-lint-ignore no-explicit-any
+async function resolveToss(sb: any, duelId: string, ps: PvpState, seq: number,
+                           call: "HEADS" | "TAILS", clientSeed: string, auto: boolean) {
+  const t = ps.toss;
+  if (!t) return null;
+
+  const { data: secret } = await sb.from("duel_toss_secrets")
+    .select("server_seed").eq("duel_id", duelId).maybeSingle();
+  if (!secret?.server_seed) return null;
+
+  const face = await tossFace(secret.server_seed, clientSeed, duelId) as "HEADS" | "TAILS";
+  const callerWins = face === call;
+  const firstSeat: "a" | "b" = callerWins ? t.caller : (t.caller === "a" ? "b" : "a");
+  const firstNick = firstSeat === "a" ? ps.a.nick : ps.b.nick;
+
+  const next: PvpState = {
+    ...ps,
+    turn: firstSeat,
+    phase: "playing",
+    log: `${auto ? "No call in time, so HEADS was called" : `${t.caller === "a" ? ps.a.nick : ps.b.nick} called ${call}`}` +
+         ` - the coin came up ${face}. ${firstNick} moves first.`,
+    toss: { ...t, call, clientSeed, face, serverSeed: secret.server_seed, auto },
+  };
+
+  const { data: claimed } = await sb.from("duel_sessions")
+    .update({
+      state: next,
+      seq: seq + 1,
+      turn_user_id: firstSeat === "a" ? ps.a.userId : ps.b.userId,
+      toss_call: call, toss_client_seed: clientSeed, toss_face: face,
+      toss_server_seed: secret.server_seed,
+      toss_called_at: new Date().toISOString(), toss_auto: auto,
+      last_action_at: new Date().toISOString(),
+    })
+    .eq("id", duelId)
+    .filter("state->>phase", "eq", "awaiting_toss")
+    .select("id");
+
+  if (!claimed?.length) return null;   // someone else resolved it first
+  return { next, seq: seq + 1 };
 }
 
 function newSide(userId: string, nick: string, heroId: string, owned: Record<string, boolean>): PvpSide {
@@ -387,13 +520,22 @@ Deno.serve(async (req: Request) => {
         const iAmA = rnd(2) === 0;
         const meSide  = newSide(uid, myNick, myHero, owned);
         const foeSide = newSide(foe.user_id, foe.nickname ?? "Challenger", foeHero, foeOwned);
+
+        // Draw the seed and publish only its hash. Turn order is no longer
+        // decided here at all - it comes out of the toss, after one of them
+        // has called a side.
+        const serverSeed = randomHex(32);
+        const tossCommit = await sha256Hex(serverSeed);
+
         const pvp: PvpState = {
           mode: "pvp",
           a: iAmA ? meSide : foeSide,
           b: iAmA ? foeSide : meSide,
-          turn: rnd(2) === 0 ? "a" : "b",
+          turn: "a",                      // placeholder; the toss sets this
           turnNo: 1,
-          log: "Opponent found. The duel begins.",
+          log: "Opponent found. Coin toss to decide who moves first.",
+          phase: "awaiting_toss",
+          toss: { commit: tossCommit, caller: "a", startedAt: Date.now() },
         };
 
         // Insert first: the one-active-duel trigger is what stops either side
@@ -402,11 +544,24 @@ Deno.serve(async (req: Request) => {
         const { data: duelRow, error: duelErr } = await sb.from("duel_sessions")
           .insert([{ user_id: pvp.a.userId, opponent_user_id: pvp.b.userId,
                      mode: "pvp", stake, opponent: foe.nickname,
-                     turn_user_id: pvp.turn === "a" ? pvp.a.userId : pvp.b.userId,
+                     turn_user_id: null,          // nobody is up until the toss lands
+                     toss_commit: tossCommit,
+                     toss_caller: pvp.a.userId,
                      state: pvp, seq: 1 }])
           .select("id").single();
 
         if (duelErr || !duelRow) {
+          await sb.from("matchmaking_queue").delete().eq("id", waiting.id);
+          return json({ waiting: false, retry: true });
+        }
+
+        // The seed goes in a table with no policies, keyed to the duel. If it
+        // cannot be stored there is nothing to reveal later, so the duel is
+        // undone rather than started on a promise we cannot keep.
+        const { error: seedErr } = await sb.from("duel_toss_secrets")
+          .insert([{ duel_id: duelRow.id, server_seed: serverSeed }]);
+        if (seedErr) {
+          await sb.from("duel_sessions").delete().eq("id", duelRow.id);
           await sb.from("matchmaking_queue").delete().eq("id", waiting.id);
           return json({ waiting: false, retry: true });
         }
@@ -465,7 +620,7 @@ Deno.serve(async (req: Request) => {
 
   // Everything past this point needs a duel to act on, so an action that is
   // not one of these is a bad request, not a missing duel.
-  if (!["start", "getState", "surrender", "playCard", "endTurn"].includes(action)) {
+  if (!["start", "getState", "surrender", "playCard", "endTurn", "tossCall"].includes(action)) {
     return json({ error: `Unknown action: ${action}` }, 400);
   }
 
@@ -493,7 +648,8 @@ Deno.serve(async (req: Request) => {
   const stake = Number(duel.stake);
 
   if (duel.mode === "pvp") {
-    const ps = duel.state as PvpState;
+    let ps = duel.state as PvpState;
+    let seq = duel.seq;
     const seat = seatOf(ps, uid);
     if (!seat) return json({ error: "Not your duel" }, 403);
     const me  = seat === "a" ? ps.a : ps.b;
@@ -501,7 +657,57 @@ Deno.serve(async (req: Request) => {
     const foeSeat: "a" | "b" = seat === "a" ? "b" : "a";
 
     const sendState = (extra: Record<string, unknown> = {}) =>
-      json({ ...pvpPublicState(ps, duel.id, duel.seq, stake, uid), ...extra });
+      json({ ...pvpPublicState(ps, duel.id, seq, stake, uid), ...extra });
+
+    // Whoever lost the race to resolve the toss needs the result that is now
+    // on the row, not the stale copy they arrived with.
+    const reread = async () => {
+      const { data: fresh } = await sb.from("duel_sessions")
+        .select("state, seq").eq("id", duel.id).maybeSingle();
+      if (fresh) { ps = fresh.state as PvpState; seq = fresh.seq; }
+    };
+
+    // ---- the coin toss -------------------------------------------------
+    // Duels created before this shipped have no phase and are already playing,
+    // so they fall straight past this block.
+    if ((ps.phase ?? "playing") === "awaiting_toss" && ps.toss) {
+      const t = ps.toss;
+      const expired = Date.now() - t.startedAt > TOSS_SECONDS * 1000;
+
+      if (action === "tossCall") {
+        if (seat !== t.caller) return json({ error: "Your opponent is calling this one" }, 403);
+        const call = String(body.call ?? "").toUpperCase();
+        if (call !== "HEADS" && call !== "TAILS") {
+          return json({ error: "Call HEADS or TAILS" }, 400);
+        }
+        // The client brings its own entropy. It cannot aim with it - the seed
+        // it would need is still secret - but it means neither side alone
+        // decided the outcome.
+        const cs = String(body.clientSeed ?? "");
+        if (!/^[0-9a-fA-F]{16,64}$/.test(cs)) {
+          return json({ error: "clientSeed must be 16-64 hex characters" }, 400);
+        }
+        const out = await resolveToss(sb, duel.id, ps, seq, call as "HEADS" | "TAILS", cs.toLowerCase(), false);
+        if (out) { ps = out.next; seq = out.seq; } else { await reread(); }
+        return sendState();
+      }
+
+      // Both stakes are escrowed before the toss, so a caller who walks away
+      // must not strand them. Any poll past the deadline calls HEADS on their
+      // behalf and starts the duel. The result stays just as checkable - only
+      // the choice of side was made for them, and that is worth nothing.
+      if (expired && (action === "getState" || action === "start")) {
+        const out = await resolveToss(sb, duel.id, ps, seq, "HEADS", randomHex(16), true);
+        if (out) { ps = out.next; seq = out.seq; } else { await reread(); }
+        return sendState();
+      }
+
+      if (action === "playCard" || action === "endTurn" || action === "surrender") {
+        return json({ error: "The coin has not landed yet" }, 409);
+      }
+    } else if (action === "tossCall") {
+      return json({ error: "This toss has already been called" }, 409);
+    }
 
     if (action === "start" || action === "getState") return sendState();
 
